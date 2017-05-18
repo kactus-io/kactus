@@ -26,7 +26,7 @@ const replacements = {
 const outputDir = 'out'
 
 const commonConfig = {
-  externals: [ '7zip' ],
+  externals: [ '7zip', 'kactus-cli', 'klaw-sync', 'jszip' ],
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, '..', outputDir),

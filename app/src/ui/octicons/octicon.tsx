@@ -17,6 +17,11 @@ interface IOcticonProps {
   readonly className?: string
 
   /**
+   * An optional onClick handler
+   */
+  readonly onClick?: () => void
+
+  /**
    * An optional string to use as a tooltip for the icon
    */
   readonly title?: string
@@ -68,7 +73,7 @@ export class Octicon extends React.Component<IOcticonProps, void> {
     const className = classNames('octicon', this.props.className)
 
     return (
-      <svg aria-hidden='true' className={className} version='1.1' viewBox={viewBox}>
+      <svg aria-hidden='true' className={className} version='1.1' viewBox={viewBox} onClick={this.props.onClick}>
         <path d={symbol.d}>
           { this.renderTitle() }
         </path>

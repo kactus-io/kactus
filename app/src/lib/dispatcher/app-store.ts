@@ -16,6 +16,7 @@ import {
   SelectionType,
   ICheckoutProgress,
   Progress,
+  IKactusState,
 } from '../app-state'
 import { Account } from '../../models/account'
 import { Repository } from '../../models/repository'
@@ -49,6 +50,8 @@ import { WindowState, getWindowState } from '../window-state'
 import { structuralEquals } from '../equality'
 import { fatalError } from '../fatal-error'
 import { updateMenuState } from '../menu-update'
+import { getKactusStatus } from '../kactus'
+import { IKactusFile, parseFile, importFolder } from 'kactus-cli'
 
 import {
   getGitDir,
@@ -262,6 +265,11 @@ export class AppStore {
         contextualCommitMessage: null,
         commitMessage: null,
       },
+      kactus: {
+        files: new Array<IKactusFile>(),
+        selectedFileID: null,
+        config: {},
+      },
       selectedSection: RepositorySection.Changes,
       branchesState: {
         tip: { kind: TipState.Unknown },
@@ -315,6 +323,14 @@ export class AppStore {
       const changesState = state.changesState
       const newState = merge(changesState, fn(changesState))
       return { changesState: newState }
+    })
+  }
+
+  private updateKactusState<K extends keyof IKactusState>(repository: Repository, fn: (kactusState: IKactusState) => Pick<IKactusState, K>) {
+    this.updateRepositoryState(repository, state => {
+      const kactus = state.kactus
+      const newState = merge(kactus, fn(kactus))
+      return { kactus: newState }
     })
   }
 
@@ -723,6 +739,18 @@ export class AppStore {
       return
     }
 
+    const kactusStatus = await getKactusStatus(repository)
+
+    if (kactusStatus.files) {
+      this.updateKactusState(repository, state => {
+        return {
+          config: kactusStatus.config,
+          files: kactusStatus.files,
+          selectedFileID: state.selectedFileID,
+        }
+      })
+    }
+
     this.updateChangesState(repository, state => {
 
       // Populate a map for all files in the current working directory state
@@ -791,6 +819,37 @@ export class AppStore {
     this.emitUpdate()
 
     this.updateChangesDiffForCurrentSelection(repository)
+  }
+
+	/** This shouldn't be called directly. See `Dispatcher`. */
+  public async _parseSketchFile(repository: Repository, path: string): Promise<void> {
+    const kactusConfig = this.getRepositoryState(repository).kactus.config
+    await parseFile(path + '.sketch', kactusConfig)
+    await this._loadStatus(repository)
+    this.emitUpdate()
+  }
+
+	/** This shouldn't be called directly. See `Dispatcher`. */
+  public async _importSketchFile(repository: Repository, path: string): Promise<void> {
+    const kactusConfig = this.getRepositoryState(repository).kactus.config
+    await importFolder(path, kactusConfig)
+    await this._loadStatus(repository)
+    this.emitUpdate()
+    this.emitUpdate()
+  }
+
+	/** This shouldn't be called directly. See `Dispatcher`. */
+  public async _ignoreSketchFile(repository: Repository, path: string): Promise<void> {
+    // TODO change and store config
+    this.emitUpdate()
+  }
+
+	/** This shouldn't be called directly. See `Dispatcher`. */
+  public async _changeSketchFileSelection(repository: Repository, selectedFile: IKactusFile | null): Promise<void> {
+    this.updateKactusState(repository, state => (
+      { selectedFileID: selectedFile ? selectedFile.id : null }
+    ))
+    this.emitUpdate()
   }
 
   /**

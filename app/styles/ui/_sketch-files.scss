@@ -1,0 +1,9 @@
+.sketch-file-action {
+  color: var(--text-secondary-color);
+  cursor: not-allowed;
+
+  &.active {
+    color: var(--text-color);
+    cursor: pointer;
+  }
+}

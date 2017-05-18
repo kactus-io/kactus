@@ -2,6 +2,7 @@ import * as Path from 'path'
 
 import { ipcRenderer, remote, shell } from 'electron'
 import { Disposable } from 'event-kit'
+import { IKactusFile } from 'kactus-cli'
 
 import { Account, IAccount } from '../../models/account'
 import { Repository, IRepository } from '../../models/repository'
@@ -254,7 +255,27 @@ export class Dispatcher {
     return this.appStore._changeRepositorySection(repository, section)
   }
 
-  /** Change the currently selected file in Changes. */
+  /** Parse a Sketch File. */
+  public parseSketchFile(repository: Repository, path: string): Promise<void> {
+    return this.appStore._parseSketchFile(repository, path)
+  }
+
+	/** Import a Sketch File. */
+  public importSketchFile(repository: Repository, path: string): Promise<void> {
+    return this.appStore._importSketchFile(repository, path)
+  }
+
+	/** Ignore a Sketch File. */
+  public ignoreSketchFile(repository: Repository, path: string): Promise<void> {
+    return this.appStore._ignoreSketchFile(repository, path)
+  }
+
+	/** Change the currently selected file in SketchFiles. */
+  public changeSketchFileSelection(repository: Repository, selectedFile: IKactusFile): Promise<void> {
+    return this.appStore._changeSketchFileSelection(repository, selectedFile)
+  }
+
+	/** Change the currently selected file in Changes. */
   public changeChangesSelection(repository: Repository, selectedFile: WorkingDirectoryFileChange): Promise<void> {
     return this.appStore._changeChangesSelection(repository, selectedFile)
   }

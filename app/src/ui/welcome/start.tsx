@@ -2,7 +2,7 @@ import * as React from 'react'
 import { WelcomeStep } from './welcome'
 import { LinkButton } from '../lib/link-button'
 
-const CreateAccountURL = 'https://github.com/join?source=github-desktop'
+const CreateAccountURL = 'https://github.com/join?source=kactus'
 
 interface IStartProps {
   readonly advance: (step: WelcomeStep) => void
@@ -14,11 +14,11 @@ export class Start extends React.Component<IStartProps, void> {
     return (
       <div id='start'>
         <h1 className='welcome-title'>
-          Welcome to GitHub&nbsp;Desktop
+          Welcome to Kactus
         </h1>
         <p className='welcome-text'>
-          GitHub Desktop is a seamless way to contribute to projects on GitHub
-          and GitHub Enterprise. Sign in below to get started with your existing
+          Kactus is a seamless way to collaborate with your team on GitHub
+          and GitHub Enterprise . Sign in below to get started with your existing
           projects.
         </p>
 

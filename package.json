@@ -1,7 +1,7 @@
 {
   "repository": {
     "type": "git",
-    "url": "https://github.com/desktop/desktop.git"
+    "url": "https://github.com/kactus-io/desktop.git"
   },
   "description": "GitHub Desktop build dependencies",
   "scripts": {
@@ -28,9 +28,9 @@
     "rebuild-hard:prod": "npm run clean-slate && npm run build:prod"
   },
   "author": {
-    "name": "GitHub, Inc.",
-    "email": "opensource+desktop@github.com",
-    "url": "https://desktop.github.com/"
+    "name": "Mathieu Dutour",
+    "email": "mathieu@dutour.me",
+    "url": "http://mathieu.dutour.me"
   },
   "license": "MIT",
   "engines": {

@@ -12,6 +12,7 @@ import { ICommitMessage } from './dispatcher/git-store'
 import { IMenu } from '../models/app-menu'
 import { IRemote } from '../models/remote'
 import { WindowState } from './window-state'
+import { IKactusConfig, IKactusFile } from 'kactus-cli'
 
 export { ICommitMessage }
 export { IAheadBehind }
@@ -196,6 +197,7 @@ export enum RepositorySection {
 export interface IRepositoryState {
   readonly historyState: IHistoryState
   readonly changesState: IChangesState
+  readonly kactus: IKactusState
   readonly selectedSection: RepositorySection
 
   /**
@@ -403,6 +405,18 @@ export interface IHistoryState {
   readonly changedFiles: ReadonlyArray<FileChange>
 
   readonly diff: IDiff | null
+}
+
+export interface IKactusState {
+  readonly files: Array<IKactusFile>
+
+  /**
+   * The ID of the selected file. The file itself can be looked up in
+   * `workingDirectory`.
+   */
+  readonly selectedFileID: string | null
+
+  readonly config: IKactusConfig
 }
 
 export interface IChangesState {
