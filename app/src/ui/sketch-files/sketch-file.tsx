@@ -6,6 +6,7 @@ import { showContextualMenu, IMenuItem } from '../main-process-proxy'
 
 interface ISketchFileProps {
   readonly path: string
+  readonly id: string
   readonly parsed: boolean
   readonly imported: boolean
   readonly onImport: (path: string) => void
@@ -28,7 +29,7 @@ export class SketchFile extends React.Component<ISketchFileProps, void> {
     return (
       <div className='file' onContextMenu={this.onContextMenu}>
 
-        <label className='path'><PathText path={this.props.path} availableWidth={availablePathWidth} /></label>
+        <label className='path'><PathText path={this.props.id} availableWidth={availablePathWidth} /></label>
 
         <Octicon symbol={OcticonSymbol.fold}
                  className={'sketch-file-action' + (this.props.parsed ? ' active' : '')}

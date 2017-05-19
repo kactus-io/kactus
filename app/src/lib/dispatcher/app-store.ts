@@ -566,7 +566,7 @@ export class AppStore {
       }
     }
 
-    const diff = await getCommitDiff(repository, file, sha)
+    const diff = await getCommitDiff(repository, stateBeforeLoad.kactus.files, file, sha)
 
     const stateAfterLoad = this.getRepositoryState(repository)
 
@@ -866,7 +866,7 @@ export class AppStore {
     const selectedFileBeforeLoad = changesStateBeforeLoad.workingDirectory.findFileWithID(selectedFileIDBeforeLoad)
     if (!selectedFileBeforeLoad) { return }
 
-    const diff = await getWorkingDirectoryDiff(repository, selectedFileBeforeLoad)
+    const diff = await getWorkingDirectoryDiff(repository, stateBeforeLoad.kactus.files, selectedFileBeforeLoad)
 
     const stateAfterLoad = this.getRepositoryState(repository)
     const changesState = stateAfterLoad.changesState
@@ -918,7 +918,7 @@ export class AppStore {
     const result = await this.isCommitting(repository, () => {
       return gitStore.performFailableOperation(() => {
         const commitMessage = formatCommitMessage(message)
-        return createCommit(repository, commitMessage, files)
+        return createCommit(repository, state.kactus.files, commitMessage, files)
       })
     })
 

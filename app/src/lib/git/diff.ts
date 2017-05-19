@@ -1,5 +1,6 @@
 import * as Path from 'path'
 import * as Fs from 'fs'
+import { IKactusFile } from 'kactus-cli'
 
 import { git, IGitExecutionOptions } from './core'
 import { getBlobContents } from './show'
@@ -21,13 +22,13 @@ const imageFileExtensions = new Set([ '.png', '.jpg', '.jpeg', '.gif' ])
  * @param commitish A commit SHA or some other identifier that ultimately dereferences
  *                  to a commit.
  */
-export function getCommitDiff(repository: Repository, file: FileChange, commitish: string): Promise<IDiff> {
+export function getCommitDiff(repository: Repository, kactusFiles: Array<IKactusFile>, file: FileChange, commitish: string): Promise<IDiff> {
 
   const args = [ 'log', commitish, '-m', '-1', '--first-parent', '--patch-with-raw', '-z', '--no-color', '--', file.path ]
 
   return git(args, repository.path, 'getCommitDiff')
     .then(value => diffFromRawDiffOutput(value.stdout))
-    .then(diff => convertDiff(repository, file, diff, commitish))
+    .then(diff => convertDiff(repository, kactusFiles, file, diff, commitish))
 }
 
 /**
@@ -35,7 +36,7 @@ export function getCommitDiff(repository: Repository, file: FileChange, commitis
  * compared against HEAD if it's tracked, if not it'll be compared to an empty file meaning
  * that all content in the file will be treated as additions.
  */
-export function getWorkingDirectoryDiff(repository: Repository, file: WorkingDirectoryFileChange): Promise<IDiff> {
+export function getWorkingDirectoryDiff(repository: Repository, kactusFiles: Array<IKactusFile>, file: WorkingDirectoryFileChange): Promise<IDiff> {
 
   let opts: IGitExecutionOptions | undefined
   let args: Array<string>
@@ -71,7 +72,7 @@ export function getWorkingDirectoryDiff(repository: Repository, file: WorkingDir
 
   return git(args, repository.path, 'getWorkingDirectoryDiff', opts)
     .then(value => diffFromRawDiffOutput(value.stdout))
-    .then(diff => convertDiff(repository, file, diff, 'HEAD'))
+    .then(diff => convertDiff(repository, kactusFiles, file, diff, 'HEAD'))
 }
 
 async function getImageDiff(repository: Repository, file: FileChange, commitish: string): Promise<IImageDiff> {
@@ -120,7 +121,7 @@ async function getImageDiff(repository: Repository, file: FileChange, commitish:
   }
 }
 
-export async function convertDiff(repository: Repository, file: FileChange, diff: IRawDiff, commitish: string): Promise<IDiff> {
+export async function convertDiff(repository: Repository, kactusFiles: Array<IKactusFile>, file: FileChange, diff: IRawDiff, commitish: string): Promise<IDiff> {
   if (diff.isBinary) {
     const extension = Path.extname(file.path)
 
@@ -131,6 +132,17 @@ export async function convertDiff(repository: Repository, file: FileChange, diff
       }
     } else {
       return getImageDiff(repository, file, commitish)
+    }
+  }
+
+  const kactusFile = kactusFiles.find(f => (file.path).indexOf(f.id + '/') === 0)
+
+  if (kactusFile) {
+    return {
+      kind: DiffType.Sketch,
+      text: diff.contents,
+      hunks: diff.hunks,
+      sketchFile: kactusFile,
     }
   }
 

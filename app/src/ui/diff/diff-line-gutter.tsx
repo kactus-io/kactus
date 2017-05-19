@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { ITextDiff, DiffLine, DiffLineType } from '../../models/diff'
+import { ITextDiff, DiffLine, DiffLineType, ISketchDiff } from '../../models/diff'
 import { diffHunkForIndex, findInteractiveDiffRange } from './diff-explorer'
 import { hoverCssClass, selectedLineClass } from './selection/selection'
 import { assertNever } from '../../lib/fatal-error'
@@ -30,7 +30,7 @@ interface IDiffGutterProps {
   /**
    * The diff currently displayed in the app
    */
-  readonly diff: ITextDiff
+  readonly diff: ITextDiff | ISketchDiff
 
   /**
    * Callback to apply hover effect to specific lines in the diff
@@ -49,7 +49,7 @@ interface IDiffGutterProps {
   /**
    * Callback to signal when the mouse button is pressed on this element
    */
-  readonly onMouseDown: (index: number, diff: ITextDiff, isRangeSelection: boolean) => void
+  readonly onMouseDown: (index: number, diff: ITextDiff | ISketchDiff, isRangeSelection: boolean) => void
 
   /**
    * Callback to signal when the mouse is hovering over this element

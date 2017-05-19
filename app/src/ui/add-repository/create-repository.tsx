@@ -5,6 +5,7 @@ import * as FSE from 'fs-extra'
 
 import { Dispatcher } from '../../lib/dispatcher'
 import { initGitRepository, createCommit, getStatus, getAuthorIdentity } from '../../lib/git'
+import { getKactusStatus } from '../../lib/kactus'
 import { sanitizedRepositoryName } from './sanitized-repository-name'
 import { TextBox } from '../lib/text-box'
 import { ButtonGroup } from '../lib/button-group'
@@ -189,10 +190,11 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
 
     try {
       const status = await getStatus(repository)
+      const kactusStatus = await getKactusStatus(repository)
       const wd = status.workingDirectory
       const files = wd.files
       if (files.length > 0) {
-        await createCommit(repository, 'Initial commit', files)
+        await createCommit(repository, kactusStatus.files, 'Initial commit', files)
       }
     } catch (e) {
       logError(`createRepository: initial commit failed at ${fullPath}`, e)

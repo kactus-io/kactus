@@ -3,14 +3,15 @@ import { stageFiles } from './add'
 import { Repository } from '../../models/repository'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { unstageAll } from './reset'
+import { IKactusFile } from 'kactus-cli'
 
-export async function createCommit(repository: Repository, message: string, files: ReadonlyArray<WorkingDirectoryFileChange>): Promise<boolean> {
+export async function createCommit(repository: Repository, kactusFiles: Array<IKactusFile>, message: string, files: ReadonlyArray<WorkingDirectoryFileChange>): Promise<boolean> {
   // Clear the staging area, our diffs reflect the difference between the
   // working directory and the last commit (if any) so our commits should
   // do the same thing.
   await unstageAll(repository)
 
-  await stageFiles(repository, files)
+  await stageFiles(repository, kactusFiles, files)
 
   try {
     await git([ 'commit', '-F',  '-' ] , repository.path, 'createCommit', { stdin: message })

@@ -1,3 +1,4 @@
+import { IKactusFile } from 'kactus-cli'
 import { assertNever } from '../lib/fatal-error'
 
 export enum DiffType {
@@ -9,11 +10,24 @@ export enum DiffType {
   Binary,
   /** change to a repository which is included as a submodule of this repository */
   Submodule,
+  /** change to a repository which is included as a submodule of this repository */
+  Sketch,
 }
 
 /** indicate what a line in the diff represents */
 export enum DiffLineType {
   Context, Add, Delete, Hunk,
+}
+
+export interface ISketchDiff {
+  readonly kind: DiffType.Sketch
+  /** The unified text diff - including headers and context */
+  readonly text: string
+  /** The diff contents organized by hunk - how the git CLI outputs to the caller */
+  readonly hunks: ReadonlyArray<DiffHunk>
+  readonly sketchFile: IKactusFile
+  readonly previousPreview?: Image
+  readonly currentPreview?: Image
 }
 
 
@@ -49,7 +63,8 @@ export interface IBinaryDiff {
 export type IDiff =
   ITextDiff |
   IImageDiff |
-  IBinaryDiff
+  IBinaryDiff |
+  ISketchDiff
 
 /** track details related to each line in the diff */
 export class DiffLine {

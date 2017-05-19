@@ -12,7 +12,7 @@ import { CodeMirrorHost } from './code-mirror-host'
 import { Repository } from '../../models/repository'
 
 import { FileChange, WorkingDirectoryFileChange, FileStatus } from '../../models/status'
-import { DiffSelection, DiffType, IDiff, IImageDiff, ITextDiff } from '../../models/diff'
+import { DiffSelection, DiffType, IDiff, IImageDiff, ITextDiff, ISketchDiff } from '../../models/diff'
 import { Dispatcher } from '../../lib/dispatcher/dispatcher'
 
 import { diffLineForIndex, diffHunkForIndex, findInteractiveDiffRange } from './diff-explorer'
@@ -199,7 +199,7 @@ export class Diff extends React.Component<IDiffProps, void> {
   /**
    * start a selection gesture based on the current interation
    */
-  private startSelection = (file: WorkingDirectoryFileChange, diff: ITextDiff, index: number, isRangeSelection: boolean) => {
+  private startSelection = (file: WorkingDirectoryFileChange, diff: ITextDiff | ISketchDiff, index: number, isRangeSelection: boolean) => {
     const snapshot = file.selection
     const selected = snapshot.isSelected(index)
     const desiredSelection = !selected
@@ -251,7 +251,7 @@ export class Diff extends React.Component<IDiffProps, void> {
     this.selection = null
   }
 
-  private onGutterMouseDown = (index: number, diff: ITextDiff, isRangeSelection: boolean) => {
+  private onGutterMouseDown = (index: number, diff: ITextDiff | ISketchDiff, isRangeSelection: boolean) => {
     if (!(this.props.file instanceof WorkingDirectoryFileChange)) {
       fatalError('must not start selection when selected file is not a WorkingDirectoryFileChange')
       return
@@ -275,7 +275,7 @@ export class Diff extends React.Component<IDiffProps, void> {
     this.selection.paint(this.cachedGutterElements)
   }
 
-  private onDiffTextMouseMove = (ev: MouseEvent, diff: ITextDiff, index: number) => {
+  private onDiffTextMouseMove = (ev: MouseEvent, diff: ITextDiff | ISketchDiff, index: number) => {
     const isActive = this.isMouseCursorNearGutter(ev)
     if (isActive === null) {
       return
@@ -299,7 +299,7 @@ export class Diff extends React.Component<IDiffProps, void> {
     this.updateRangeHoverState(range.start, range.end, isActive)
   }
 
-  private onDiffTextMouseDown = (ev: MouseEvent, diff: ITextDiff, index: number) => {
+  private onDiffTextMouseDown = (ev: MouseEvent, diff: ITextDiff | ISketchDiff, index: number) => {
     const isActive = this.isMouseCursorNearGutter(ev)
 
     if (isActive) {
@@ -318,7 +318,7 @@ export class Diff extends React.Component<IDiffProps, void> {
     }
   }
 
-  private onDiffTextMouseLeave = (ev: MouseEvent, diff: ITextDiff, index: number) => {
+  private onDiffTextMouseLeave = (ev: MouseEvent, diff: ITextDiff | ISketchDiff, index: number) => {
     const range = findInteractiveDiffRange(diff, index)
     if (!range) {
       console.error('unable to find range for given index in diff')
@@ -352,7 +352,7 @@ export class Diff extends React.Component<IDiffProps, void> {
     }
 
     const diff = this.props.diff
-    if (diff.kind !== DiffType.Text) {
+    if (diff.kind !== DiffType.Text && diff.kind !== DiffType.Sketch ) {
       return
     }
 
@@ -510,7 +510,7 @@ export class Diff extends React.Component<IDiffProps, void> {
       dispatcher={this.props.dispatcher} />
   }
 
-  private renderTextDiff(diff: ITextDiff) {
+  private renderTextDiff(diff: ITextDiff | ISketchDiff) {
       const options: IEditorConfigurationExtra = {
         lineNumbers: false,
         readOnly: true,
@@ -570,6 +570,26 @@ export class Diff extends React.Component<IDiffProps, void> {
 
     if (diff.kind === DiffType.Binary) {
       return this.renderBinaryFile()
+    }
+
+    if (diff.kind === DiffType.Sketch) {
+      console.log(diff)
+
+      if (diff.hunks.length === 0) {
+        if (this.props.file.status === FileStatus.New) {
+          return <div className='panel empty'>
+             The file is empty
+            </div>
+        }
+
+        if (this.props.file.status === FileStatus.Renamed) {
+          return <div className='panel renamed'>
+             The file was renamed but not changed
+            </div>
+        }
+      }
+
+      return this.renderTextDiff(diff)
     }
 
     if (diff.kind === DiffType.Text) {

@@ -19,7 +19,7 @@ async function parseDiff(diff: string): Promise<ITextDiff> {
   const rawDiff =  parser.parse(diff)
   const repository = new Repository('', -1, null, false)
   const fileChange = new FileChange('file.txt', FileStatus.Modified)
-  const output = await convertDiff(repository, fileChange, rawDiff, 'HEAD')
+  const output = await convertDiff(repository, [], fileChange, rawDiff, 'HEAD')
   expect(output.kind === DiffType.Text)
   return output as ITextDiff
 }
@@ -41,7 +41,7 @@ describe('patch formatting', () => {
       const unselectedFile = DiffSelection.fromInitialSelection(DiffSelectionType.None)
       const file = new WorkingDirectoryFileChange(modifiedFile, FileStatus.Modified, unselectedFile)
 
-      const diff = await getWorkingDirectoryDiff(repository!, file)
+      const diff = await getWorkingDirectoryDiff(repository!, [], file)
 
       expect(diff.kind === DiffType.Text)
 
@@ -67,7 +67,7 @@ describe('patch formatting', () => {
       const unselectedFile = DiffSelection.fromInitialSelection(DiffSelectionType.None)
       const file = new WorkingDirectoryFileChange(modifiedFile, FileStatus.Modified, unselectedFile)
 
-      const diff = await getWorkingDirectoryDiff(repository!, file)
+      const diff = await getWorkingDirectoryDiff(repository!, [], file)
 
       expect(diff.kind === DiffType.Text)
 
@@ -94,7 +94,7 @@ describe('patch formatting', () => {
       const unselectedFile = DiffSelection.fromInitialSelection(DiffSelectionType.None)
       const file = new WorkingDirectoryFileChange(modifiedFile, FileStatus.Modified, unselectedFile)
 
-      const diff = await getWorkingDirectoryDiff(repository!, file)
+      const diff = await getWorkingDirectoryDiff(repository!, [], file)
 
       expect(diff.kind === DiffType.Text)
 
@@ -120,7 +120,7 @@ describe('patch formatting', () => {
       const unselectedFile = DiffSelection.fromInitialSelection(DiffSelectionType.None)
       const file = new WorkingDirectoryFileChange(modifiedFile, FileStatus.Modified, unselectedFile)
 
-      const diff = await getWorkingDirectoryDiff(repository!, file)
+      const diff = await getWorkingDirectoryDiff(repository!, [], file)
 
       expect(diff.kind === DiffType.Text)
 

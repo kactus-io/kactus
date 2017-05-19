@@ -31,6 +31,7 @@ export class SketchFilesList extends React.Component<ISketchFilesListProps, void
     return (
       <SketchFile
         path={file.path}
+        id={file.id}
         parsed={file.parsed}
         imported={file.imported}
         key={file.id}

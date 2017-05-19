@@ -7,7 +7,15 @@ import { Repository } from '../models/repository'
  */
 export async function getKactusStatus(repository: Repository): Promise<IKactusStatusResult> {
   return Promise.resolve().then(() => {
-    console.log(find(repository.path))
-    return find(repository.path)
+    const kactus = find(repository.path)
+    return {
+      config: kactus.config,
+      files: kactus.files.map(f => {
+        return {
+          ...f,
+          id: f.path.replace(repository.path, '').replace(/^\//, ''),
+        }
+      }),
+    }
   })
 }

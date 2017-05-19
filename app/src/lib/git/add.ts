@@ -3,6 +3,7 @@ import { FileStatus, WorkingDirectoryFileChange } from '../../models/status'
 import { Repository } from '../../models/repository'
 import { DiffSelectionType } from '../../models/diff'
 import { applyPatchToIndex } from './apply'
+import { IKactusFile } from 'kactus-cli'
 
 export async function addFileToIndex(repository: Repository, file: WorkingDirectoryFileChange): Promise<void> {
 
@@ -26,12 +27,12 @@ export async function addFileToIndex(repository: Repository, file: WorkingDirect
  * Stage all the given files by either staging the entire path or by applying
  * a patch.
  */
-export async function stageFiles(repository: Repository, files: ReadonlyArray<WorkingDirectoryFileChange>): Promise<void> {
+export async function stageFiles(repository: Repository, kactusFiles: Array<IKactusFile>, files: ReadonlyArray<WorkingDirectoryFileChange>): Promise<void> {
   for (const file of files) {
     if (file.selection.getSelectionType() === DiffSelectionType.All) {
       await addFileToIndex(repository, file)
     } else {
-      await applyPatchToIndex(repository, file)
+      await applyPatchToIndex(repository, kactusFiles, file)
     }
   }
 }

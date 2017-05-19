@@ -35,7 +35,7 @@ export class SketchFilesSidebar extends React.Component<ISketchFilesSidebarProps
     const selectedFileID = kactus.selectedFileID
 
     return (
-      <div id='changes-sidebar-contents' style={{ height: 150 }}>
+      <div id='changes-sidebar-contents' style={{ flexBasis: 150, flexGrow: 0 }}>
         <SketchFilesList
           files={kactus.files}
           selectedFileID={selectedFileID}
