@@ -1,9 +1,21 @@
 .sketch-file-action {
   color: var(--text-secondary-color);
   cursor: not-allowed;
+  padding: 3px;
+  height: 25px;
+
+  path {
+    cursor: not-allowed;
+  }
 
   &.active {
     color: var(--text-color);
     cursor: pointer;
+    padding: 3px;
+    height: 25px;
+
+    path {
+      cursor: pointer;
+    }
   }
 }
