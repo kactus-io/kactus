@@ -14,7 +14,7 @@ import { Row } from '../lib/row'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { writeDefaultReadme } from './write-default-readme'
 import { Select } from '../lib/select'
-import { getGitIgnoreNames, writeGitIgnore } from './gitignores'
+import { getGitIgnoreNames, writeGitIgnore, KactusGitIgnoreTextValue } from './gitignores'
 import { ILicense, getLicenses, writeLicense } from './licenses'
 import { writeGitAttributes } from './git-attributes'
 import { getDefaultDir, setDefaultDir } from '../lib/default-dir'
@@ -25,6 +25,9 @@ import { logError } from '../../lib/logging/renderer'
 
 /** The sentinel value used to indicate no gitignore should be used. */
 const NoGitIgnoreValue = 'None'
+
+/** The sentinel value used to indicate the kactus gitignore should be used. */
+const KactusGitIgnoreValue = 'Kactus'
 
 /** The sentinel value used to indicate no license should be used. */
 const NoLicenseValue: ILicense = {
@@ -72,7 +75,7 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
       createWithReadme: false,
       creating: false,
       gitIgnoreNames: null,
-      gitIgnore: NoGitIgnoreValue,
+      gitIgnore: KactusGitIgnoreValue,
       licenses: null,
       license: NoLicenseValue.name,
     }
@@ -154,7 +157,11 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
     const gitIgnore = this.state.gitIgnore
     if (gitIgnore !== NoGitIgnoreValue) {
       try {
-        await writeGitIgnore(fullPath, gitIgnore)
+        if (gitIgnore === KactusGitIgnoreValue) {
+          await writeGitIgnore(fullPath, null, KactusGitIgnoreTextValue)
+        } else {
+          await writeGitIgnore(fullPath, gitIgnore)
+        }
       } catch (e) {
         logError(`createRepository: unable to write .gitignore file at ${fullPath}`, e)
         this.props.dispatcher.postError(e)
@@ -237,7 +244,7 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
 
   private renderGitIgnores() {
     const gitIgnores = this.state.gitIgnoreNames || []
-    const options = [ NoGitIgnoreValue, ...gitIgnores ]
+    const options = [ KactusGitIgnoreValue, NoGitIgnoreValue, ...gitIgnores ]
 
     return (
       <Row>

@@ -58,10 +58,10 @@ async function getGitIgnoreText(name: string): Promise<string> {
 }
 
 /** Write the named gitignore to the repository. */
-export async function writeGitIgnore(repositoryPath: string, name: string): Promise<void> {
+export async function writeGitIgnore(repositoryPath: string, name: string | null, value?: string): Promise<void> {
   const fullPath = Path.join(repositoryPath, '.gitignore')
 
-  const text = await getGitIgnoreText(name)
+  const text = name ? (await getGitIgnoreText(name)) : value
 
   return new Promise<void>((resolve, reject) => {
     Fs.writeFile(fullPath, text, err => {
@@ -73,3 +73,34 @@ export async function writeGitIgnore(repositoryPath: string, name: string): Prom
     })
   })
 }
+
+export const KactusGitIgnoreTextValue = `*.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Sketch files
+*.sketch
+`
