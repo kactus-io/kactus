@@ -10,6 +10,13 @@
     flex-basis: 100vh;
     overflow: hidden;
   }
+
+  .sketch-diff-checkbox {
+    height: 29px;
+    padding: 6px;
+    background: var(--box-selected-background-color);
+    border-bottom: var(--base-border);
+  }
 }
 
 /** The container for the CodeMirror element. */
