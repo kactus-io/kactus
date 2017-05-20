@@ -85,6 +85,9 @@ const commitSummaryWidthConfigKey: string = 'commit-summary-width'
 const confirmRepoRemovalDefault: boolean = true
 const confirmRepoRemovalKey: string = 'confirmRepoRemoval'
 
+const showAdvancedDiffsDefault: boolean = false
+const showAdvancedDiffsKey: string = 'showAdvancedDiffs'
+
 export class AppStore {
   private emitter = new Emitter()
 
@@ -151,6 +154,8 @@ export class AppStore {
 
   /** The function to resolve the current Open in Desktop flow. */
   private resolveOpenInDesktop: ((repository: Repository | null) => void) | null = null
+
+  private showAdvancedDiffs: boolean = showAdvancedDiffsDefault
 
   public constructor(gitHubUserStore: GitHubUserStore, cloningRepositoriesStore: CloningRepositoriesStore, emojiStore: EmojiStore, issuesStore: IssuesStore, statsStore: StatsStore, signInStore: SignInStore) {
     this.gitHubUserStore = gitHubUserStore
@@ -393,6 +398,7 @@ export class AppStore {
       highlightAccessKeys: this.highlightAccessKeys,
       isUpdateAvailableBannerVisible: this.isUpdateAvailableBannerVisible,
       confirmRepoRemoval: this.confirmRepoRemoval,
+      showAdvancedDiffs: this.showAdvancedDiffs,
     }
   }
 
@@ -720,6 +726,12 @@ export class AppStore {
     this.confirmRepoRemoval = confirmRepoRemovalValue === null
       ? confirmRepoRemovalDefault
       : confirmRepoRemovalValue === '1'
+
+    const showAdvancedDiffsValue = localStorage.getItem(showAdvancedDiffsKey)
+
+    this.showAdvancedDiffs = showAdvancedDiffsValue === null
+      ? showAdvancedDiffsDefault
+      : showAdvancedDiffsValue === '1'
 
     if (initialLoad) {
       // For the intitial load, synchronously emit the update so that the window
@@ -1844,5 +1856,13 @@ export class AppStore {
     }
 
     return result
+  }
+
+  public _toggleAdvancedDiffs(): Promise<void> {
+    this.showAdvancedDiffs = !this.showAdvancedDiffs
+    localStorage.setItem(showAdvancedDiffsKey, this.showAdvancedDiffs ? '1' : '0')
+    this.emitUpdate()
+
+    return Promise.resolve()
   }
 }

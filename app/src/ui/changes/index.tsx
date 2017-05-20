@@ -15,6 +15,7 @@ interface IChangesProps {
   readonly file: WorkingDirectoryFileChange | null
   readonly diff: IDiff | null
   readonly dispatcher: Dispatcher
+  readonly showAdvancedDiffs: boolean
 }
 
 export class Changes extends React.Component<IChangesProps, void> {
@@ -49,6 +50,7 @@ export class Changes extends React.Component<IChangesProps, void> {
 
         <div className='diff-wrapper'>
           <Diff repository={this.props.repository}
+            showAdvancedDiffs={this.props.showAdvancedDiffs}
             file={file}
             readOnly={false}
             onIncludeChanged={this.onDiffLineIncludeChanged}

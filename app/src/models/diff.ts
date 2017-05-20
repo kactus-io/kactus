@@ -26,8 +26,8 @@ export interface ISketchDiff {
   /** The diff contents organized by hunk - how the git CLI outputs to the caller */
   readonly hunks: ReadonlyArray<DiffHunk>
   readonly sketchFile: IKactusFile
-  readonly previousPreview?: Image
-  readonly currentPreview?: Image
+  readonly previous?: Image
+  readonly current?: Image
 }
 
 

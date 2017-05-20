@@ -114,6 +114,9 @@ export interface IAppState {
 
   /** Whether we should show a confirmation dialog */
   readonly confirmRepoRemoval: boolean
+
+  /** Whether we should show the text diffs for a sketch file */
+  readonly showAdvancedDiffs: boolean
 }
 
 export enum PopupType {
@@ -264,6 +267,7 @@ export type Progress = IGenericProgress
   | IFetchProgress
   | IPullProgress
   | IPushProgress
+  | IExportProgress
 
 /**
  * Base interface containing all the properties that progress events
@@ -312,6 +316,16 @@ export interface ICheckoutProgress extends IProgress {
 
   /** The branch that's currently being checked out */
   readonly targetBranch: string
+}
+
+/**
+ * An object describing the progression of a commit export operation
+ */
+export interface IExportProgress extends IProgress {
+  kind: 'export'
+
+  /** The commit that's currently being checked out */
+  readonly targetCommit: string
 }
 
 /**

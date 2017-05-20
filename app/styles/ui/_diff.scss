@@ -1,5 +1,17 @@
 @import "../mixins";
 
+.sketch-diff-wrapper {
+  display: flex;
+  flex-grow: 1;
+  min-width: 0;
+  flex-direction: column;
+
+  .diff-code-mirror {
+    flex-basis: 100vh;
+    overflow: hidden;
+  }
+}
+
 /** The container for the CodeMirror element. */
 .diff-code-mirror {
   flex-grow: 1;

@@ -903,4 +903,8 @@ export class Dispatcher {
       })
     }
   }
+
+  public toggleAdvancedDiffs(): Promise<void> {
+    return this.appStore._toggleAdvancedDiffs()
+  }
 }

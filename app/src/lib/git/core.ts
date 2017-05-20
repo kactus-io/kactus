@@ -114,8 +114,8 @@ export async function git(args: string[], path: string, name: string, options?: 
   if (console.debug && startTime) {
     const rawTime = performance.now() - startTime
     if (rawTime > 100) {
-     const timeInSeconds = (rawTime / 1000).toFixed(3)
-     console.debug(`executing: ${commandName} (took ${timeInSeconds}s)`)
+      const timeInSeconds = (rawTime / 1000).toFixed(3)
+      console.debug(`executing: ${commandName} (took ${timeInSeconds}s)`)
     }
   }
 

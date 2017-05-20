@@ -25,6 +25,7 @@ import { RangeSelection } from './selection/range-selection-strategy'
 import { Octicon, OcticonSymbol } from '../octicons'
 
 import { fatalError } from '../../lib/fatal-error'
+import { Checkbox, CheckboxValue } from '../lib/checkbox'
 
 import { RangeSelectionSizePixels } from './edge-detection'
 
@@ -54,6 +55,8 @@ interface IDiffProps {
 
   /** propagate errors up to the main application */
   readonly dispatcher: Dispatcher
+
+  readonly showAdvancedDiffs: boolean
 }
 
 /** A component which renders a diff for a file. */
@@ -486,7 +489,7 @@ export class Diff extends React.Component<IDiffProps, void> {
     this.restoreScrollPosition(cm)
   }
 
-  private renderImage(imageDiff: IImageDiff) {
+  private renderImage(imageDiff: IImageDiff | ISketchDiff) {
     if (imageDiff.current && imageDiff.previous) {
       return <ModifiedImageDiff
                 current={imageDiff.current}
@@ -573,7 +576,6 @@ export class Diff extends React.Component<IDiffProps, void> {
     }
 
     if (diff.kind === DiffType.Sketch) {
-      console.log(diff)
 
       if (diff.hunks.length === 0) {
         if (this.props.file.status === FileStatus.New) {
@@ -589,7 +591,15 @@ export class Diff extends React.Component<IDiffProps, void> {
         }
       }
 
-      return this.renderTextDiff(diff)
+      return <div className='sketch-diff-wrapper'>
+        <div>
+          <Checkbox
+            label='Show advanced text diffs'
+            value={this.props.showAdvancedDiffs ? CheckboxValue.Off : CheckboxValue.On}
+            onChange={() => this.props.dispatcher.toggleAdvancedDiffs()} />
+        </div>
+        {this.props.showAdvancedDiffs ? this.renderImage(diff) : this.renderTextDiff(diff)}
+      </div>
     }
 
     if (diff.kind === DiffType.Text) {

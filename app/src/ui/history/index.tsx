@@ -24,6 +24,7 @@ interface IHistoryProps {
   readonly localCommitSHAs: ReadonlyArray<string>
   readonly commitSummaryWidth: number
   readonly gitHubUsers: Map<string, IGitHubUser>
+  readonly showAdvancedDiffs: boolean
 }
 
 interface IHistoryState {
@@ -79,6 +80,7 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
 
     return (
       <Diff repository={this.props.repository}
+        showAdvancedDiffs={this.props.showAdvancedDiffs}
         file={file}
         diff={diff}
         readOnly={true}
