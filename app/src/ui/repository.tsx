@@ -20,7 +20,7 @@ interface IRepositoryProps {
   readonly commitSummaryWidth: number
   readonly issuesStore: IssuesStore
   readonly gitHubUserStore: GitHubUserStore
-  readonly showAdavancedDiffs: boolean
+  readonly showAdvancedDiffs: boolean
 }
 
 const enum Tab {
@@ -130,7 +130,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
         width={this.props.sidebarWidth}
         onReset={this.handleSidebarWidthReset}
         onResize={this.handleSidebarResize}>
-				{this.renderSketchFiles()}
+        {this.renderSketchFiles()}
         {this.renderTabs()}
         {this.renderSidebarContents()}
       </Resizable>
@@ -148,13 +148,13 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
       return <Changes
         repository={this.props.repository}
         dispatcher={this.props.dispatcher}
-        showAdvancedDiffs={this.props.showAdavancedDiffs}
+        showAdvancedDiffs={this.props.showAdvancedDiffs}
         file={selectedFile}
         diff={diff}
       />
     } else if (selectedSection === RepositorySection.History) {
       return <History repository={this.props.repository}
-        showAdvancedDiffs={this.props.showAdavancedDiffs}
+        showAdvancedDiffs={this.props.showAdvancedDiffs}
         dispatcher={this.props.dispatcher}
         history={this.props.state.historyState}
         emoji={this.props.emoji}
