@@ -620,6 +620,11 @@ export class AppStore {
     // The selected repository could have changed while we were refreshing.
     if (this.selectedRepository !== repository) { return null }
 
+    // "Clone in Desktop" from a cold start can trigger this twice, and
+    // for edge cases where _selectRepository is re-entract, calling this here
+    // ensures we clean up the existing background fetcher correctly (if set)
+    this.stopBackgroundFetching()
+
     this.startBackgroundFetching(repository, !previouslySelectedRepository)
     this.refreshMentionables(repository)
 
@@ -1752,12 +1757,10 @@ export class AppStore {
   }
 
   /** Set whether the user has opted out of stats reporting. */
-  public setStatsOptOut(optOut: boolean): Promise<void> {
-    this.statsStore.setOptOut(optOut)
+  public async setStatsOptOut(optOut: boolean): Promise<void> {
+    await this.statsStore.setOptOut(optOut)
 
     this.emitUpdate()
-
-    return Promise.resolve()
   }
 
   public _setConfirmRepoRemoval(confirmRepoRemoval: boolean): Promise<void> {
