@@ -311,7 +311,7 @@ function fileExists(path: string): Promise<boolean> {
 }
 
 async function getOldSketchPreview(sketchFile: IKactusFile, repository: Repository, file: string, commitish: string) {
-  // TODO handle HEAD commitish
+  // TODO(mathieudutour) handle HEAD commitish
   const storagePath = Path.join(remote.app.getPath('userData'), 'previews', String(repository.id), commitish)
   const sketchStoragePath = Path.join(storagePath, sketchFile.id)
 

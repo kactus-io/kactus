@@ -882,7 +882,7 @@ export class AppStore {
 
 	/** This shouldn't be called directly. See `Dispatcher`. */
   public async _ignoreSketchFile(repository: Repository, path: string): Promise<void> {
-    // TODO change and store config
+    // TODO(mathieudutour) change and store config
     this.emitUpdate()
   }
 
