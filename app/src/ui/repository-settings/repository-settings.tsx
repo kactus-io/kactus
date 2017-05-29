@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { IKactusConfig } from 'kactus-cli'
 import { TabBar } from '../tab-bar'
 import { Remote } from './remote'
 import { GitIgnore } from './git-ignore'
@@ -12,17 +13,20 @@ import { ButtonGroup } from '../lib/button-group'
 import { Dialog, DialogError, DialogFooter } from '../dialog'
 import { NoRemote } from './no-remote'
 import { logError } from '../../lib/logging/renderer'
+import { KactusConfig } from './kactus-config'
 
 interface IRepositorySettingsProps {
   readonly dispatcher: Dispatcher
   readonly remote: IRemote | null
   readonly repository: Repository
   readonly onDismissed: () => void
+  readonly kactusConfig: IKactusConfig
 }
 
 enum RepositorySettingsTab {
   Remote = 0,
   IgnoredFiles,
+  Kactus,
 }
 
 interface IRepositorySettingsState {
@@ -32,6 +36,8 @@ interface IRepositorySettingsState {
   readonly ignoreTextHasChanged: boolean
   readonly disabled: boolean
   readonly errors?: ReadonlyArray<JSX.Element | string>
+  readonly kactusConfig: string
+  readonly kactusHasChanged: boolean
 }
 
 export class RepositorySettings extends React.Component<IRepositorySettingsProps, IRepositorySettingsState> {
@@ -44,6 +50,8 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
       ignoreText: null,
       ignoreTextHasChanged: false,
       disabled: false,
+      kactusConfig: JSON.stringify(props.kactusConfig),
+      kactusHasChanged: false,
     }
   }
 
@@ -53,7 +61,7 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
       this.setState({ ignoreText })
     } catch (e) {
       logError(`RepositorySettings: unable to read .gitignore file at ${this.props.repository.path}`, e)
-      this.setState({ errors: [ `Could not read .gitignore: ${e}` ] })
+      this.setState({ errors: [`Could not read .gitignore: ${e}`] })
     }
   }
 
@@ -83,7 +91,8 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
 
         <TabBar onTabClicked={this.onTabClicked} selectedIndex={this.state.selectedTab}>
           <span>Remote</span>
-          <span>{ __DARWIN__ ? 'Ignored Files' : 'Ignored files'}</span>
+          <span>{__DARWIN__ ? 'Ignored Files' : 'Ignored files'}</span>
+          <span>Kactus</span>
         </TabBar>
 
         {this.renderActiveTab()}
@@ -122,7 +131,7 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
             />
           )
         } else {
-          return <NoRemote onPublish={this.onPublish}/>
+          return <NoRemote onPublish={this.onPublish} />
         }
       }
       case RepositorySettingsTab.IgnoredFiles: {
@@ -130,6 +139,13 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
           text={this.state.ignoreText}
           onIgnoreTextChanged={this.onIgnoreTextChanged}
           onShowExamples={this.onShowGitIgnoreExamples}
+        />
+      }
+      case RepositorySettingsTab.Kactus: {
+        return <KactusConfig
+          config={this.state.kactusConfig}
+          onKactusChanged={this.onKactusChanged}
+          onShowKactusDoc={this.onShowKactusDoc}
         />
       }
     }
@@ -143,6 +159,10 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
 
   private onShowGitIgnoreExamples = () => {
     this.props.dispatcher.openInBrowser('https://git-scm.com/docs/gitignore')
+  }
+
+  private onShowKactusDoc = () => {
+    this.props.dispatcher.openInBrowser('https://kactus.io/docs/kactus.json')
   }
 
   private onSubmit = async () => {
@@ -174,6 +194,21 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
       }
     }
 
+    if (this.state.kactusHasChanged) {
+      try {
+        JSON.parse(this.state.kactusConfig)
+        try {
+          await this.props.dispatcher.saveKactusConfig(this.props.repository, this.state.kactusConfig)
+        } catch (e) {
+          logError(`RepositorySettings: unable to save kactus config at ${this.props.repository.path}`, e)
+          errors.push(`Failed saving the kactus.json file: ${e}`)
+        }
+      } catch (e) {
+        logError(`RepositorySettings: unable to parse kactus config`, e)
+        errors.push(`Couldn't parse the kactus config: ${e}`)
+      }
+    }
+
     if (!errors.length) {
       this.props.onDismissed()
     } else {
@@ -195,6 +230,10 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
 
   private onIgnoreTextChanged = (text: string) => {
     this.setState({ ignoreText: text, ignoreTextHasChanged: true })
+  }
+
+  private onKactusChanged = (text: string) => {
+    this.setState({ kactusConfig: text, kactusHasChanged: true })
   }
 
   private onTabClicked = (index: number) => {

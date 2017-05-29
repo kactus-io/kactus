@@ -1,3 +1,5 @@
+import * as Fs from 'fs'
+import * as Path from 'path'
 import { exec } from 'child_process'
 import { IKactusStatusResult, find } from 'kactus-cli'
 import { Repository } from '../models/repository'
@@ -10,6 +12,8 @@ const SKETCHTOOL_PATH = '/Applications/Sketch.app/Contents/Resources/sketchtool/
 export async function getKactusStatus(repository: Repository): Promise<IKactusStatusResult> {
   return Promise.resolve().then(() => {
     const kactus = find(repository.path)
+    console.log(repository.path)
+    console.log(kactus)
     return {
       config: kactus.config,
       files: kactus.files.map(f => {
@@ -63,6 +67,20 @@ export async function generateLayerPreview(file: string, id: string, output: str
         return reject(err)
       }
       resolve(output + '/' + id + '.png')
+    })
+  })
+}
+
+export async function saveKactusConfig(repository: Repository, content: string): Promise<void> {
+  const configPath = Path.join(repository.path, 'kactus.json')
+
+  return new Promise<void>((resolve, reject) => {
+    Fs.writeFile(configPath, content, err => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve()
+      }
     })
   })
 }

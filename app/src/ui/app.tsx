@@ -706,7 +706,8 @@ export class App extends React.Component<IAppProps, IAppState> {
                 remote={state.remote}
                 dispatcher={this.props.dispatcher}
                 repository={repository}
-                onDismissed={this.onPopupDismissed}/>
+                onDismissed={this.onPopupDismissed}
+                kactusConfig={state.kactus.config}/>
       }
       case PopupType.SignIn:
         return <SignIn

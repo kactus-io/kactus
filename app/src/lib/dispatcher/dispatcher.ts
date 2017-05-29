@@ -26,6 +26,7 @@ import { isGitOnPath } from '../open-shell'
 import { uuid } from '../uuid'
 import { URLActionType, IOpenRepositoryArgs } from '../parse-url'
 import { requestAuthenticatedUser, resolveOAuthRequest, rejectOAuthRequest } from '../../lib/oauth'
+import { saveKactusConfig } from '../kactus'
 
 /**
  * Extend Error so that we can create new Errors with a callstack different from
@@ -655,6 +656,17 @@ export class Dispatcher {
    */
   public async saveGitIgnore(repository: Repository, text: string): Promise<void> {
     await this.appStore._saveGitIgnore(repository, text)
+    await this.appStore._refreshRepository(repository)
+  }
+
+  /**
+   * Persist the given content to the repository's root kactus.json.
+   *
+   * If the repository root doesn't contain a kactus.json file one
+   * will be created, otherwise the current file will be overwritten.
+   */
+  public async saveKactusConfig(repository: Repository, text: string): Promise<void> {
+    await saveKactusConfig(repository, text)
     await this.appStore._refreshRepository(repository)
   }
 

@@ -28,7 +28,7 @@
     "file-uri-to-path": "0.0.2",
     "front-matter": "^2.1.2",
     "fs-extra": "^2.1.2",
-    "kactus-cli": "0.1.4",
+    "kactus-cli": "^0.1.5",
     "keytar": "^4.0.2",
     "moment": "^2.17.1",
     "octokat": "^0.9.0-1",
@@ -49,7 +49,6 @@
     "winston-daily-rotate-file": "^1.4.5"
   },
   "devDependencies": {
-    "amdefine": "1.0.1",
     "devtron": "^1.4.0",
     "electron-debug": "^1.1.0",
     "electron-devtools-installer": "^2.1.0",
