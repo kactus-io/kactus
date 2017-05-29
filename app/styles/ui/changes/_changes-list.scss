@@ -2,6 +2,7 @@
 
 #changes-list {
   min-height: 0;
+  max-height: 150px;
 }
 
 /** A React component holding the currently selected repository's changes */
@@ -38,7 +39,7 @@
       input[type=checkbox] {
         flex-grow: 0;
         flex-shrink: 0;
-      }  
+      }
     }
   }
 }

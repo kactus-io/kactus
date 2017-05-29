@@ -33,13 +33,14 @@ export async function generateDocumentPreview(file: string, output: string): Pro
   })
 }
 
-export async function generatePagePreview(file: string, id: string, output: string): Promise<string> {
+export async function generatePagePreview(file: string, name: string, output: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    exec(SKETCHTOOL_PATH + ' export pages "' + file + '" --item="' + id + '" --output="' + output + '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES', (err, stdout, stderr) => {
+    exec(SKETCHTOOL_PATH + ' export pages "' + file + '" --item="' + name + '" --output="' + output + '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES', (err, stdout, stderr) => {
       if (err) {
         return reject(err)
       }
-      resolve(output + '/' + id + '.png')
+      const id = stdout.replace('Exported', '').trim()
+      resolve(output + '/' + id)
     })
   })
 }

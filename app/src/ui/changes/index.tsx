@@ -5,6 +5,7 @@ import { DiffSelection, IDiff } from '../../models/diff'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { Repository } from '../../models/repository'
 import { Dispatcher } from '../../lib/dispatcher'
+import { IKactusFile } from 'kactus-cli'
 
 // At some point we'll make index.tsx only be exports
 // see https://github.com/desktop/desktop/issues/383
@@ -13,6 +14,7 @@ export { ChangesSidebar } from './sidebar'
 interface IChangesProps {
   readonly repository: Repository
   readonly file: WorkingDirectoryFileChange | null
+  readonly sketchFile: IKactusFile | null
   readonly diff: IDiff | null
   readonly dispatcher: Dispatcher
   readonly showAdvancedDiffs: boolean
@@ -33,7 +35,15 @@ export class Changes extends React.Component<IChangesProps, void> {
   public render() {
     const diff = this.props.diff
     const file = this.props.file
+    const sketchFile = this.props.sketchFile
     const BlankSlateImage = `file:///${__dirname}/static/empty-no-file-selected.svg`
+    if (sketchFile) {
+      return (
+        <div className='panel blankslate' id='diff'>
+          Show some buttons
+        </div>
+      )
+    }
     if (!diff || !file) {
       return (
         <div className='panel blankslate' id='diff'>

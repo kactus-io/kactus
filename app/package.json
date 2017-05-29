@@ -49,6 +49,7 @@
     "winston-daily-rotate-file": "^1.4.5"
   },
   "devDependencies": {
+    "amdefine": "1.0.1",
     "devtron": "^1.4.0",
     "electron-debug": "^1.1.0",
     "electron-devtools-installer": "^2.1.0",

@@ -261,7 +261,7 @@ export class AppStore {
     return this.emitter.on('did-error', fn)
   }
 
-  /** 
+  /**
    * Called when we have reason to suspect that the zoom factor
    * has changed. Note that this doesn't necessarily mean that it
    * has changed with regards to our internal state which is why
@@ -1160,7 +1160,7 @@ export class AppStore {
       return repository
     }
 
-    return await this._checkoutBranch(repository, name)
+    return await this._checkoutBranch(repository, name, { refreshKactus: false })
   }
 
   private updateCheckoutProgress(repository: Repository, checkoutProgress: ICheckoutProgress | null) {
@@ -1172,9 +1172,10 @@ export class AppStore {
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
-  public async _checkoutBranch(repository: Repository, name: string): Promise<Repository> {
+  public async _checkoutBranch(repository: Repository, name: string, options?: { refreshKactus?: boolean }): Promise<Repository> {
     const gitStore = this.getGitStore(repository)
     const kind = 'checkout'
+    const refreshKactus = (options || {}).refreshKactus !== false
 
     await gitStore.performFailableOperation(() => {
       return checkoutBranch(repository, name, (progress) => {
@@ -1186,11 +1187,28 @@ export class AppStore {
       this.updateCheckoutProgress(repository, {
         kind,
         title: __DARWIN__ ? 'Refreshing Repository' : 'Refreshing repository',
-        value: 1,
+        value: refreshKactus ? 0.5 : 1,
         targetBranch: name,
       })
 
       await this._refreshRepository(repository)
+
+      if (refreshKactus) {
+        this.updateCheckoutProgress(repository, {
+          kind: 'checkout',
+          title: __DARWIN__ ? 'Refreshing Sketch Files' : 'Refreshing sketch files',
+          description: 'Updating the sketch files with the latest changes',
+          targetBranch: name,
+          value: 1,
+        })
+
+        const { kactus } = this.getRepositoryState(repository)
+        await Promise.all(
+          kactus.files
+            .filter(f => f.parsed)
+            .map(f => importFolder(f.path, kactus.config)),
+        )
+      }
     } finally {
       this.updateCheckoutProgress(repository, null)
     }
@@ -1490,6 +1508,7 @@ export class AppStore {
 
           const refreshStartProgress = pullWeight + fetchWeight
           const refreshTitle = __DARWIN__ ? 'Refreshing Repository' : 'Refreshing repository'
+          const kactusTitle = __DARWIN__ ? 'Refreshing Sketch Files' : 'Refreshing sketch files'
 
           this.updatePushPullFetchProgress(repository, {
             kind: 'generic',
@@ -1498,6 +1517,20 @@ export class AppStore {
           })
 
           await this._refreshRepository(repository)
+
+          this.updatePushPullFetchProgress(repository, {
+            kind: 'generic',
+            title: kactusTitle,
+            description: 'Updating the sketch files with the latest changes',
+            value: refreshStartProgress + refreshWeight * 0.2,
+          })
+
+          const { kactus } = this.getRepositoryState(repository)
+          await Promise.all(
+            kactus.files
+              .filter(f => f.parsed)
+              .map(f => importFolder(f.path, kactus.config)),
+          )
 
           this.updatePushPullFetchProgress(repository, {
             kind: 'generic',

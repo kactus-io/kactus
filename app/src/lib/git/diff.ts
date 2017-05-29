@@ -129,8 +129,10 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
   let current: Image | undefined = undefined
   let previous: Image | undefined = undefined
 
+  const name = Path.basename(file.path)
+
   // Are we looking at a file in the working directory or a file in a commit?
-  if (file instanceof WorkingDirectoryFileChange) {
+  if (file instanceof WorkingDirectoryFileChange && name !== 'document.json') {
     // No idea what to do about this, a conflicted binary (presumably) file.
     // Ideally we'd show all three versions and let the user pick but that's
     // a bit out of scope for now.
@@ -153,7 +155,7 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
       // look for that file.
       previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, 'HEAD')
     }
-  } else {
+  } else if (name !== 'document.json') {
     // File status can't be conflicted for a file in a commit
     if (file.status !== FileStatus.Deleted) {
       current = await getOldSketchPreview(kactusFile, repository, file.path, commitish)
@@ -286,6 +288,8 @@ async function generatePreview(sketchFilePath: string, file: string, storagePath
     path = await generatePagePreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
   } else if (name === 'artboard.json') {
     path = await generateArtboardPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
+  } else if (name === 'shapeGroup.json') {
+    path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
   } else {
     path = await generateLayerPreview(sketchFilePath, name.replace('.json', ''), storagePath)
   }
@@ -330,7 +334,7 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
   let path
   if (name === 'document.json') {
     path = Path.join(sketchStoragePath, 'document.png')
-  } else if (name === 'page.json' || name === 'artboard.json') {
+  } else if (name === 'page.json' || name === 'artboard.json' || name === 'shapeGroup.json') {
     path = Path.join(sketchStoragePath, Path.basename(Path.dirname(file)) + '.png')
   } else {
     path = Path.join(sketchStoragePath, name.replace('.json', '') + '.png')

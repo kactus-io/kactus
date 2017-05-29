@@ -1,1 +1,0 @@
-export { SketchFilesSidebar } from './sidebar'

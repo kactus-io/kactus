@@ -165,7 +165,7 @@ interface IListProps {
   /** Whether or not selection should follow pointer device */
   readonly selectOnHover?: boolean
 
-  /** 
+  /**
    * Whether or not to explicitly move focus to a row if it was selected
    * by hovering (has no effect if selectOnHover is not set). Defaults to
    * true if not defined.
@@ -579,7 +579,6 @@ export class List extends React.Component<IListProps, IListState> {
       <Grid
         aria-label={null!}
         key='grid'
-        role={null!}
         ref={this.onGridRef}
         autoContainerWidth
         width={width}

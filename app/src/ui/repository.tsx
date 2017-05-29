@@ -4,7 +4,6 @@ import { TipState } from '../models/tip'
 import { UiView } from './ui-view'
 import { Changes, ChangesSidebar } from './changes'
 import { History, HistorySidebar } from './history'
-import { SketchFilesSidebar } from './sketch-files'
 import { Resizable } from './resizable'
 import { TabBar } from './tab-bar'
 import { IRepositoryState as IRepositoryModelState, RepositorySection } from '../lib/app-state'
@@ -30,19 +29,6 @@ const enum Tab {
 }
 
 export class RepositoryView extends React.Component<IRepositoryProps, void> {
-
-  private renderSketchFiles(): JSX.Element {
-    // -1 Because of right hand side border
-    const availableWidth = this.props.sidebarWidth - 1
-
-    return (
-      <SketchFilesSidebar
-        repository={this.props.repository}
-        dispatcher={this.props.dispatcher}
-        kactus={this.props.state.kactus}
-        availableWidth={availableWidth} />
-    )
-  }
 
   private renderTabs(): JSX.Element {
     const hasChanges = this.props.state.changesState.workingDirectory.files.length > 0
@@ -77,6 +63,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
     return (
       <ChangesSidebar
         repository={this.props.repository}
+        kactus={this.props.state.kactus}
         dispatcher={this.props.dispatcher}
         changes={this.props.state.changesState}
         branch={branch ? branch.name : null}
@@ -131,7 +118,6 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
         width={this.props.sidebarWidth}
         onReset={this.handleSidebarWidthReset}
         onResize={this.handleSidebarResize}>
-        {this.renderSketchFiles()}
         {this.renderTabs()}
         {this.renderSidebarContents()}
       </Resizable>
@@ -152,6 +138,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
         showAdvancedDiffs={this.props.showAdvancedDiffs}
         file={selectedFile}
         diff={diff}
+        sketchFile={null}
       />
     } else if (selectedSection === RepositorySection.History) {
       return <History repository={this.props.repository}

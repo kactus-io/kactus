@@ -20,13 +20,13 @@ import { installDevGlobals } from './install-globals'
 import { reportUncaughtException, sendErrorReport } from './main-process-proxy'
 import { getOS } from '../lib/get-os'
 import { getGUID } from '../lib/stats'
-import { enableSourceMaps } from '../lib/enable-source-maps'
+// import { enableSourceMaps } from '../lib/enable-source-maps'
 
 if (__DEV__) {
   installDevGlobals()
 }
 
-enableSourceMaps()
+// enableSourceMaps()
 
 // Tell dugite where to find the git environment,
 // see https://github.com/desktop/dugite/pull/85

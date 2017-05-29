@@ -9,10 +9,11 @@ import { CommitIdentity } from '../../models/commit-identity'
 import { Commit } from '../../models/commit'
 import { UndoCommit } from './undo-commit'
 import { IAutocompletionProvider, EmojiAutocompletionProvider, IssuesAutocompletionProvider, UserAutocompletionProvider } from '../autocompletion'
-import { ICommitMessage } from '../../lib/app-state'
+import { ICommitMessage, IKactusState } from '../../lib/app-state'
 import { ClickSource } from '../list'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { CSSTransitionGroup } from 'react-transition-group'
+import { SketchFilesList } from './sketch-files-list'
 
 /**
  * The timeout for the animation of the enter/leave animation for Undo.
@@ -24,6 +25,7 @@ const UndoCommitAnimationTimeout = 500
 
 interface IChangesSidebarProps {
   readonly repository: Repository
+  readonly kactus: IKactusState
   readonly changes: IChangesState
   readonly dispatcher: Dispatcher
   readonly commitAuthor: CommitIdentity | null
@@ -153,6 +155,23 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, void> 
     }
   }
 
+  private onSketchFileSelectionChanged = (row: number) => {
+    const file = this.props.kactus.files[row]
+    this.props.dispatcher.changeSketchFileSelection(this.props.repository, file)
+  }
+
+  private onSketchParse = (path: string) => {
+    this.props.dispatcher.parseSketchFile(this.props.repository, path)
+  }
+
+  private onSketchImport = (path: string) => {
+    this.props.dispatcher.importSketchFile(this.props.repository, path)
+  }
+
+  private onSketchIgnore = (path: string) => {
+    this.props.dispatcher.ignoreSketchFile(this.props.repository, path)
+  }
+
   private renderMostRecentLocalCommit() {
     const commit = this.props.mostRecentLocalCommit
     let child: JSX.Element | null = null
@@ -192,6 +211,15 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, void> 
 
     return (
       <div id='changes-sidebar-contents'>
+        <SketchFilesList
+          files={this.props.kactus.files}
+          selectedFileID={selectedFileID}
+          onFileSelectionChanged={this.onSketchFileSelectionChanged}
+          onParse={this.onSketchParse}
+          onImport={this.onSketchImport}
+          availableWidth={this.props.availableWidth}
+          onIgnore={this.onSketchIgnore}
+        />
         <ChangesList
           dispatcher={this.props.dispatcher}
           repository={this.props.repository}
