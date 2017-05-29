@@ -50,7 +50,7 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
       ignoreText: null,
       ignoreTextHasChanged: false,
       disabled: false,
-      kactusConfig: JSON.stringify(props.kactusConfig),
+      kactusConfig: JSON.stringify(props.kactusConfig, null, '  '),
       kactusHasChanged: false,
     }
   }
