@@ -858,6 +858,9 @@ export class AppStore {
     this.updateChangesState(repository, state => (
       { selectedFileID: selectedFile ? selectedFile.id : null, diff: null }
     ))
+    this.updateKactusState(repository, state => (
+      { selectedFileID: null }
+    ))
     this.emitUpdate()
 
     this.updateChangesDiffForCurrentSelection(repository)
@@ -891,7 +894,12 @@ export class AppStore {
     this.updateKactusState(repository, state => (
       { selectedFileID: selectedFile ? selectedFile.id : null }
     ))
+    this.updateChangesState(repository, state => (
+      { selectedFileID: null }
+    ))
     this.emitUpdate()
+
+    this.updateChangesDiffForCurrentSelection(repository)
   }
 
   /**

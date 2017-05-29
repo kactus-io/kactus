@@ -132,13 +132,16 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
       const selectedFileID = changesState.selectedFileID
       const selectedFile = selectedFileID ? changesState.workingDirectory.findFileWithID(selectedFileID) : null
       const diff = changesState.diff
+      const kactusState = this.props.state.kactus
+      const selectedSketchFileID = kactusState.selectedFileID
+      const selectedSketchFile = selectedSketchFileID ? (kactusState.files.find(f => f.id === selectedSketchFileID) || null) : null
       return <Changes
         repository={this.props.repository}
         dispatcher={this.props.dispatcher}
         showAdvancedDiffs={this.props.showAdvancedDiffs}
         file={selectedFile}
         diff={diff}
-        sketchFile={null}
+        sketchFile={selectedSketchFile}
       />
     } else if (selectedSection === RepositorySection.History) {
       return <History repository={this.props.repository}
