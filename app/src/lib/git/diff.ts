@@ -4,6 +4,7 @@ import { remote } from 'electron'
 import { IKactusFile, importFolder } from 'kactus-cli'
 
 import { git, IGitExecutionOptions } from './core'
+import { getHEADsha } from './get-HEAD-sha'
 import { getBlobContents } from './show'
 import { exportTreeAtCommit } from './export'
 
@@ -311,7 +312,10 @@ function fileExists(path: string): Promise<boolean> {
 }
 
 async function getOldSketchPreview(sketchFile: IKactusFile, repository: Repository, file: string, commitish: string) {
-  // TODO(mathieudutour) handle HEAD commitish
+  if (commitish === 'HEAD') {
+    commitish = await getHEADsha(repository)
+  }
+
   const storagePath = Path.join(remote.app.getPath('userData'), 'previews', String(repository.id), commitish)
   const sketchStoragePath = Path.join(storagePath, sketchFile.id)
 
