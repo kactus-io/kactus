@@ -580,7 +580,7 @@ async function getNote(): Promise<string> {
     log.error(`getNote: unable to resolve machine username, using '${localUsername}' as a fallback`, e)
   }
 
-  return `GitHub Desktop on ${localUsername}@${OS.hostname()}`
+  return `Kactus on ${localUsername}@${OS.hostname()}`
 }
 
 /**

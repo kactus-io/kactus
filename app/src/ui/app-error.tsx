@@ -135,9 +135,9 @@ export class AppError extends React.Component<IAppErrorProps, IAppErrorState> {
 
       return (
         <div>
-          <p>GitHub Desktop encountered an uncaught exception, leaving it in an invalid state.</p>
+          <p>Kactus encountered an uncaught exception, leaving it in an invalid state.</p>
           <p>
-            This has been reported to the team, but if you encounter this repeatedly please report this issue to the GitHub Desktop <LinkButton uri='https://github.com/desktop/desktop/issues'>issue tracker</LinkButton>.
+            This has been reported to the team, but if you encounter this repeatedly please report this issue to the Kactus <LinkButton uri='https://github.com/kactus-io/kactus/issues'>issue tracker</LinkButton>.
           </p>
           {errorDetails}
           <p>Due to this error, the application will now quit and will need to be restarted.</p>

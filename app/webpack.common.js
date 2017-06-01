@@ -124,7 +124,7 @@ const askPassConfig = merge({}, commonConfig, {
   entry: { 'ask-pass': path.resolve(__dirname, 'src/ask-pass/main') },
   target: 'node',
   plugins: [
-    new webpack.DefinePlugin(Object.assign({ }, replacements, { '__PROCESS_KIND__': JSON.stringify('askpass') })),    
+    new webpack.DefinePlugin(Object.assign({ }, replacements, { '__PROCESS_KIND__': JSON.stringify('askpass') })),
   ]
 })
 
@@ -133,7 +133,7 @@ const crashConfig = merge({}, commonConfig, {
   target: 'electron-renderer',
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'GitHub Desktop',
+      title: 'Kactus',
       filename: 'crash.html',
       chunks: ['crash']
     }),

@@ -18,9 +18,9 @@ import {
 } from '../lib/dispatcher'
 import { API } from '../lib/api'
 import { sendErrorReport, reportUncaughtException } from '../ui/main-process-proxy'
-import { enableSourceMaps } from '../lib/enable-source-maps'
+// import { enableSourceMaps } from '../lib/enable-source-maps'
 
-enableSourceMaps()
+// enableSourceMaps()
 
 process.on('uncaughtException', (error: Error) => {
   console.error('Uncaught exception', error)

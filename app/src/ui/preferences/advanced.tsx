@@ -44,7 +44,7 @@ export class Advanced extends React.Component<IAdvancedPreferencesProps, IAdvanc
   public reportDesktopUsageLabel() {
     return (
       <span>
-        Help GitHub Desktop improve by submitting <LinkButton uri={SamplesURL}>anonymous usage data</LinkButton>
+        Help Kactus improve by submitting <LinkButton uri={SamplesURL}>anonymous usage data</LinkButton>
       </span>
     )
   }

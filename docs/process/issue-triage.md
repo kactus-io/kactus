@@ -35,7 +35,7 @@ work should proceed:
  - user experience - ensure things are consistent, discoverable
  - quality - ensure the change does not adversely affect other features
 
-e.g. GitHub Desktop should support worktrees as a first class feature.
+e.g. Kactus should support worktrees as a first class feature.
 
 For work that we may evaluate post-1.0, we will label the issue `future-work`
 and close it out, to keep our short-term backlog under control.
@@ -45,4 +45,4 @@ and close it out, to keep our short-term backlog under control.
 We anticipate ideas or suggestions that don't align with how we see the
 application evolving, so we may close issues with an explanation of why.
 
-e.g. GitHub Desktop should support working with Mercurial repositories.
+e.g. Kactus should support working with Mercurial repositories.

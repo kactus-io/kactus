@@ -3,6 +3,7 @@ import { Repository } from '../../models/repository'
 import { DiffSelectionType } from '../../models/diff'
 import { applyPatchToIndex } from './apply'
 import { FileStatus, WorkingDirectoryFileChange } from '../../models/status'
+import { IKactusFile } from 'kactus-cli'
 
 interface IUpdateIndexOptions {
   /**
@@ -99,7 +100,7 @@ async function updateIndex(repository: Repository, paths: ReadonlyArray<string>,
  * the job of this function is to set up the index in such a way that it
  * reflects what the user has selected in the app.
  */
-export async function stageFiles(repository: Repository, files: ReadonlyArray<WorkingDirectoryFileChange>): Promise<void> {
+export async function stageFiles(repository: Repository, kactusFiles: Array<IKactusFile>, files: ReadonlyArray<WorkingDirectoryFileChange>): Promise<void> {
   const normal = []
   const oldRenamed = []
   const partial = []
@@ -147,7 +148,7 @@ export async function stageFiles(repository: Repository, files: ReadonlyArray<Wo
   // has logic to support that scenario.
   if (partial.length) {
     for (const file of partial) {
-      await applyPatchToIndex(repository, file)
+      await applyPatchToIndex(repository, kactusFiles, file)
     }
   }
 }

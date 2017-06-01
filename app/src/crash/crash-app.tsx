@@ -35,7 +35,7 @@ interface ICrashAppState {
 // will have to be reflected in the welcome flow as well.
 const BottomImageUri = `file:///${__dirname}/static/welcome-illustration-left-bottom.svg`
 
-const issuesUri = 'https://github.com/desktop/desktop/issues'
+const issuesUri = 'https://github.com/kactus-io/kactus/issues'
 
 /**
  * Formats an error by attempting to strip out user-identifiable information
@@ -73,11 +73,11 @@ function prepareErrorMessage(error: Error) {
 
 /**
  * The root component for our crash process.
- * 
+ *
  * The crash process is responsible for presenting the user with an
  * error after the main process or any renderer process has crashed due
  * to an uncaught exception or when the main renderer has failed to load.
- * 
+ *
  * Exercise caution when working with the crash process. If the crash
  * process itself crashes we've failed.
  */
@@ -112,8 +112,8 @@ export class CrashApp extends React.Component<ICrashAppProps, ICrashAppState> {
 
   private renderTitle() {
     const message = this.state.type === 'launch'
-      ? 'GitHub Desktop failed to launch'
-      : 'GitHub Desktop encountered an error'
+      ? 'Kactus failed to launch'
+      : 'Kactus encountered an error'
 
     return (
       <header>
@@ -127,18 +127,18 @@ export class CrashApp extends React.Component<ICrashAppProps, ICrashAppState> {
     if (this.state.type === 'launch') {
       return (
         <p>
-          GitHub Desktop encountered a catastrophic error that prevents it from
+          Kactus encountered a catastrophic error that prevents it from
           launching. This has been reported to the team, but if you encounter this
           repeatedly please report this issue to the
-          GitHub Desktop <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
+          Kactus <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
         </p>
       )
     } else {
       return (
         <p>
-          GitHub Desktop has encountered an unrecoverable error and will need to restart.
+          Kactus has encountered an unrecoverable error and will need to restart.
           This has been reported to the team, but if you encounter this repeatedly please
-          report this issue to the GitHub Desktop <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
+          report this issue to the Kactus <LinkButton uri={issuesUri}>issue tracker</LinkButton>.
         </p>
       )
     }

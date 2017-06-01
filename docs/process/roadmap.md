@@ -8,6 +8,6 @@ Along with that, we'll be working on feedback and issues reported from the
 public beta. But feel free to open issues and start discussions on things
 you'd like to see in the app.
 
-Over time, we'll be using [Milestones](https://github.com/desktop/desktop/milestones)
+Over time, we'll be using [Milestones](https://github.com/kactus-io/kactus/milestones)
 to define the scope for each release, so that people will have visibility into
 how work is progressing.

@@ -15,10 +15,10 @@ import { LogLevel } from '../lib/logging/log-level'
 import { log as writeLog } from './log'
 import { formatError } from '../lib/logging/format-error'
 import { reportError } from './exception-reporting'
-import { enableSourceMaps } from '../lib/enable-source-maps'
+// import { enableSourceMaps } from '../lib/enable-source-maps'
 import { now } from './now'
 
-enableSourceMaps()
+// enableSourceMaps()
 
 let mainWindow: AppWindow | null = null
 let sharedProcess: SharedProcess | null = null
@@ -69,9 +69,9 @@ function uncaughtException(error: Error) {
       type: 'error',
       title: __DARWIN__ ? `Unrecoverable Error` : 'Unrecoverable error',
       message:
-        `GitHub Desktop has encountered an unrecoverable error and will need to restart.\n\n` +
+        `Kactus has encountered an unrecoverable error and will need to restart.\n\n` +
         `This has been reported to the team, but if you encounter this repeatedly please report ` +
-        `this issue to the GitHub Desktop issue tracker.\n\n${error.stack || error.message}`,
+        `this issue to the Kactus issue tracker.\n\n${error.stack || error.message}`,
     }, (response) => {
       if (!__DEV__) {
         app.relaunch()

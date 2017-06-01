@@ -10,10 +10,10 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
 
   if (__DARWIN__) {
     template.push({
-      label: 'GitHub Desktop',
+      label: 'Kactus',
       submenu: [
         {
-          label: 'About GitHub Desktop',
+          label: 'About Kactus',
           click: emit('show-about'),
           id: 'about',
         },
@@ -282,7 +282,7 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
   const submitIssueItem: Electron.MenuItemOptions = {
     label: __DARWIN__ ? 'Report Issue…' : 'Report issue…',
     click() {
-      shell.openExternal('https://github.com/desktop/desktop/issues/new')
+      shell.openExternal('https://github.com/kactus-io/kactus/issues/new')
     },
   }
 
@@ -326,7 +326,7 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
         ...helpItems,
         separator,
         {
-          label: '&About GitHub Desktop',
+          label: '&About Kactus',
           click: emit('show-about'),
           id: 'about',
         },

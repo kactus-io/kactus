@@ -1,9 +1,9 @@
 {
   "repository": {
     "type": "git",
-    "url": "https://github.com/kactus-io/desktop.git"
+    "url": "https://github.com/kactus-io/kactus.git"
   },
-  "description": "GitHub Desktop build dependencies",
+  "description": "Kactus build dependencies",
   "scripts": {
     "test:integration": "cross-env TEST_ENV=1 ELECTRON_NO_ATTACH_CONSOLE=1 mocha -t 10000 --compilers ts:ts-node/register,tsx:ts-node/register app/test/integration/*.ts",
     "test:unit": "cross-env TEST_ENV=1 ELECTRON_NO_ATTACH_CONSOLE=1 electron-mocha -t 10000 --renderer --compilers ts:ts-node/register,tsx:ts-node/register --require ./app/test/globals.ts app/test/unit/*.ts app/test/unit/git/*.ts app/test/unit/progress/*.ts app/test/unit/main-process/* app/test/unit/*.tsx",
