@@ -12,7 +12,6 @@ import { Button } from '../lib/button'
 import { ButtonGroup } from '../lib/button-group'
 import { Dialog, DialogError, DialogFooter } from '../dialog'
 import { NoRemote } from './no-remote'
-import { logError } from '../../lib/logging/renderer'
 import { KactusConfig } from './kactus-config'
 
 interface IRepositorySettingsProps {
@@ -60,8 +59,8 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
       const ignoreText = await this.props.dispatcher.readGitIgnore(this.props.repository)
       this.setState({ ignoreText })
     } catch (e) {
-      logError(`RepositorySettings: unable to read .gitignore file at ${this.props.repository.path}`, e)
-      this.setState({ errors: [`Could not read .gitignore: ${e}`] })
+      log.error(`RepositorySettings: unable to read .gitignore file at ${this.props.repository.path}`, e)
+      this.setState({ errors: [ `Could not read .gitignore: ${e}` ] })
     }
   }
 
@@ -179,7 +178,7 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
             this.state.remote.url,
           )
         } catch (e) {
-          logError(`RepositorySettings: unable to set remote URL at ${this.props.repository.path}`, e)
+          log.error(`RepositorySettings: unable to set remote URL at ${this.props.repository.path}`, e)
           errors.push(`Failed setting the remote URL: ${e}`)
         }
       }
@@ -189,7 +188,7 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
       try {
         await this.props.dispatcher.saveGitIgnore(this.props.repository, this.state.ignoreText || '')
       } catch (e) {
-        logError(`RepositorySettings: unable to save gitignore at ${this.props.repository.path}`, e)
+        log.error(`RepositorySettings: unable to save gitignore at ${this.props.repository.path}`, e)
         errors.push(`Failed saving the .gitignore file: ${e}`)
       }
     }
@@ -200,11 +199,11 @@ export class RepositorySettings extends React.Component<IRepositorySettingsProps
         try {
           await this.props.dispatcher.saveKactusConfig(this.props.repository, this.state.kactusConfig)
         } catch (e) {
-          logError(`RepositorySettings: unable to save kactus config at ${this.props.repository.path}`, e)
+          log.error(`RepositorySettings: unable to save kactus config at ${this.props.repository.path}`, e)
           errors.push(`Failed saving the kactus.json file: ${e}`)
         }
       } catch (e) {
-        logError(`RepositorySettings: unable to parse kactus config`, e)
+        log.error(`RepositorySettings: unable to parse kactus config`, e)
         errors.push(`Couldn't parse the kactus config: ${e}`)
       }
     }

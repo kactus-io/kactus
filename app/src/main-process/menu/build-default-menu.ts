@@ -1,9 +1,8 @@
-import * as Path from 'path'
-import { shell, Menu, ipcMain, app } from 'electron'
+import { shell, Menu, ipcMain } from 'electron'
 import { SharedProcess } from '../../shared-process/shared-process'
 import { ensureItemIds } from './ensure-item-ids'
 import { MenuEvent } from './menu-event'
-import { LogFolder } from '../../lib/logging/logger'
+import { getLogPath } from '../../lib/logging/get-log-path'
 
 export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
   const template = new Array<Electron.MenuItemOptions>()
@@ -13,7 +12,11 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
     template.push({
       label: 'GitHub Desktop',
       submenu: [
-        { label: 'About GitHub Desktop', click: emit('show-about') },
+        {
+          label: 'About GitHub Desktop',
+          click: emit('show-about'),
+          id: 'about',
+        },
         separator,
         {
           label: 'Preferences…',
@@ -41,17 +44,20 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
     submenu: [
       {
         label: __DARWIN__ ? 'New Repository…' : 'New &repository…',
+        id: 'new-repository',
         click: emit('create-repository'),
         accelerator: 'CmdOrCtrl+N',
       },
       separator,
       {
         label: __DARWIN__ ? 'Add Local Repository…' : 'Add &local repository…',
+        id: 'add-local-repository',
         accelerator: 'CmdOrCtrl+O',
         click: emit('add-local-repository'),
       },
       {
         label: __DARWIN__ ? 'Clone Repository…' : 'Clo&ne repository…',
+        id: 'clone-repository',
         accelerator: 'CmdOrCtrl+Shift+O',
         click: emit('clone-repository'),
       },
@@ -283,8 +289,7 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
   const showLogsItem: Electron.MenuItemOptions = {
     label: __DARWIN__ ? 'Show Logs in Finder' : 'S&how logs in Explorer',
     click() {
-      const path = Path.join(app.getPath('userData'), LogFolder)
-      shell.showItemInFolder(path)
+      shell.showItemInFolder(getLogPath())
     },
   }
 
@@ -320,7 +325,11 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
       submenu: [
         ...helpItems,
         separator,
-        { label: '&About GitHub Desktop', click: emit('show-about') },
+        {
+          label: '&About GitHub Desktop',
+          click: emit('show-about'),
+          id: 'about',
+        },
       ],
     })
   }

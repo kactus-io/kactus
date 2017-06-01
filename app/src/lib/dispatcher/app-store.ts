@@ -1,6 +1,5 @@
 import { Emitter, Disposable } from 'event-kit'
 import { ipcRenderer, remote } from 'electron'
-import * as Path from 'path'
 import {
   IRepositoryState,
   IHistoryState,
@@ -54,7 +53,6 @@ import { getKactusStatus } from '../kactus'
 import { IKactusFile, parseFile, importFolder } from 'kactus-cli'
 
 import {
-  getGitDir,
   getAuthorIdentity,
   pull as pullRepo,
   push as pushRepo,
@@ -69,7 +67,6 @@ import {
   getBranchAheadBehind,
   createCommit,
   checkoutBranch,
-  getRemotes,
 } from '../git'
 
 import { openShell } from '../open-shell'
@@ -663,7 +660,7 @@ export class AppStore {
     try {
       await this._issuesStore.fetchIssues(repository, user)
     } catch (e) {
-      console.warn(`Unable to fetch issues for ${repository.fullName}: ${e}`)
+      log.warn(`Unable to fetch issues for ${repository.fullName}: ${e}`)
     }
   }
 
@@ -1279,17 +1276,6 @@ export class AppStore {
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
-  public async _validatedRepositoryPath(path: string): Promise<string | null> {
-    try {
-      const gitDir = await getGitDir(path)
-      return gitDir ? Path.dirname(gitDir) : null
-    } catch (e) {
-      this.emitError(e)
-      return null
-    }
-  }
-
-  /** This shouldn't be called directly. See `Dispatcher`. */
   public async _renameBranch(repository: Repository, branch: Branch, newName: string): Promise<void> {
     const gitStore = this.getGitStore(repository)
     await gitStore.performFailableOperation(() => renameBranch(repository, branch, newName))
@@ -1355,12 +1341,10 @@ export class AppStore {
           branch: branch.name,
         })
 
-        const remotes = await getRemotes(repository)
-
         // Let's say that a push takes roughly twice as long as a fetch,
         // this is of course highly inaccurate.
         let pushWeight = 2.5
-        let fetchWeight = 1 * remotes.length
+        let fetchWeight = 1
 
         // Let's leave 10% at the end for refreshing
         const refreshWeight = 0.1
@@ -1381,7 +1365,7 @@ export class AppStore {
             })
           })
 
-          await gitStore.fetchRemotes(account, remotes, false, (fetchProgress) => {
+          await gitStore.fetchRemotes(account, [ remote ], false, (fetchProgress) => {
             this.updatePushPullFetchProgress(repository, {
               ...fetchProgress,
               value: pushWeight + fetchProgress.value * fetchWeight,
@@ -1478,13 +1462,10 @@ export class AppStore {
         })
 
         try {
-          const otherRemotes = (await getRemotes(repository))
-            .filter(r => r.name !== remote.name)
-
           // Let's say that a pull takes twice as long as a fetch,
           // this is of course highly inaccurate.
           let pullWeight = 2
-          let fetchWeight = 1 * otherRemotes.length
+          let fetchWeight = 1
 
           // Let's leave 10% at the end for refreshing
           const refreshWeight = 0.1
@@ -1502,17 +1483,6 @@ export class AppStore {
                 value: progress.value * pullWeight,
               })
             }))
-
-          const fetchStartProgress = fetchWeight
-
-          await gitStore.fetchRemotes(account, otherRemotes, false, progress => {
-            this.updatePushPullFetchProgress(repository, {
-              ...progress,
-              title: progress.title,
-              description: progress.description,
-              value: fetchStartProgress + progress.value * fetchWeight,
-            })
-          })
 
           const refreshStartProgress = pullWeight + fetchWeight
           const refreshTitle = __DARWIN__ ? 'Refreshing Repository' : 'Refreshing repository'
@@ -1676,7 +1646,7 @@ export class AppStore {
         const fetchWeight = 0.9
         const refreshWeight = 0.1
 
-        await gitStore.fetchAll(account, backgroundTask, (progress) => {
+        await gitStore.fetch(account, backgroundTask, (progress) => {
           this.updatePushPullFetchProgress(repository, {
             ...progress,
             value: progress.value * fetchWeight,
