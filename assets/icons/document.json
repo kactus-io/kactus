@@ -1,0 +1,65 @@
+{
+  "_class": "document",
+  "do_objectID": "F82CAAF4-0E94-448B-ABC3-CD4874730724",
+  "assets": {
+    "_class": "assetCollection",
+    "colors": [
+      {
+        "_class": "color",
+        "alpha": 1,
+        "blue": 0.6901960784313725,
+        "green": 0.9568627450980393,
+        "red": 0.6862745098039216
+      },
+      {
+        "_class": "color",
+        "alpha": 1,
+        "blue": 0.3529411764705881,
+        "green": 0.8980392156862745,
+        "red": 0.3568627450980392
+      },
+      {
+        "_class": "color",
+        "alpha": 1,
+        "blue": 0.2470588235294118,
+        "green": 0.6784313725490196,
+        "red": 0.2431372549019608
+      },
+      {
+        "_class": "color",
+        "alpha": 1,
+        "blue": 0.0823529411764706,
+        "green": 0.09803921568627451,
+        "red": 0.0784313725490196
+      }
+    ],
+    "gradients": [],
+    "imageCollection": {
+      "_class": "imageCollection",
+      "images": {}
+    },
+    "images": []
+  },
+  "enableLayerInteraction": true,
+  "enableSliceInteraction": true,
+  "foreignSymbols": [],
+  "layerStyles": {
+    "_class": "sharedStyleContainer",
+    "objects": []
+  },
+  "layerSymbols": {
+    "_class": "symbolContainer",
+    "objects": []
+  },
+  "layerTextStyles": {
+    "_class": "sharedTextStyleContainer",
+    "objects": []
+  },
+  "pages": [
+    {
+      "_class": "MSJSONFileReference",
+      "_ref_class": "MSImmutablePage",
+      "_ref": "pages/DA19C149-3860-4A55-BCFA-1EE71ADB28CF"
+    }
+  ]
+}
