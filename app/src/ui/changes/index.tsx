@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Diff } from '../diff'
 import { ChangedFileDetails } from './changed-file-details'
+import { SketchFileView } from './sketch-file-view'
 import { DiffSelection, IDiff } from '../../models/diff'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { Repository } from '../../models/repository'
@@ -18,6 +19,7 @@ interface IChangesProps {
   readonly diff: IDiff | null
   readonly dispatcher: Dispatcher
   readonly showAdvancedDiffs: boolean
+
 }
 
 export class Changes extends React.Component<IChangesProps, void> {
@@ -32,17 +34,21 @@ export class Changes extends React.Component<IChangesProps, void> {
     this.props.dispatcher.changeFileLineSelection(this.props.repository, file, diffSelection)
   }
 
+  private onSketchParse = (path: string) => {
+    this.props.dispatcher.parseSketchFile(this.props.repository, path)
+  }
+
+  private onSketchImport = (path: string) => {
+    this.props.dispatcher.importSketchFile(this.props.repository, path)
+  }
+
   public render() {
     const diff = this.props.diff
     const file = this.props.file
     const sketchFile = this.props.sketchFile
     const BlankSlateImage = `file:///${__dirname}/static/empty-no-file-selected.svg`
     if (sketchFile) {
-      return (
-        <div className='panel blankslate' id='diff'>
-          Show some buttons
-        </div>
-      )
+      return <SketchFileView sketchFile={sketchFile} onExport={this.onSketchParse} onImport={this.onSketchImport} />
     }
     if (!diff || !file) {
       return (
