@@ -12,8 +12,6 @@ const SKETCHTOOL_PATH = '/Applications/Sketch.app/Contents/Resources/sketchtool/
 export async function getKactusStatus(repository: Repository): Promise<IKactusStatusResult> {
   return Promise.resolve().then(() => {
     const kactus = find(repository.path)
-    console.log(repository.path)
-    console.log(kactus)
     return {
       config: kactus.config,
       files: kactus.files.map(f => {
