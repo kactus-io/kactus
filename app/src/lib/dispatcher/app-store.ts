@@ -67,6 +67,7 @@ import {
   getBranchAheadBehind,
   createCommit,
   checkoutBranch,
+  getDefaultRemote,
 } from '../git'
 
 import { openShell } from '../open-shell'
@@ -660,7 +661,7 @@ export class AppStore {
     try {
       await this._issuesStore.fetchIssues(repository, user)
     } catch (e) {
-      log.warn(`Unable to fetch issues for ${repository.fullName}: ${e}`)
+      log.warn(`Unable to fetch issues for ${repository.fullName}`, e)
     }
   }
 
@@ -1259,9 +1260,7 @@ export class AppStore {
   }
 
   private async guessGitHubRepository(repository: Repository): Promise<GitHubRepository | null> {
-    const gitStore = this.getGitStore(repository)
-    const remote = gitStore.remote
-
+    const remote = await getDefaultRemote(repository)
     return remote ? matchGitHubRepository(this.accounts, remote.url) : null
   }
 
