@@ -5,7 +5,7 @@
 </div>
 <br />
 <div align="center">
-  <strong>A proper version control tool for designers,</strong>
+  <strong>A proper version control tool for designers</strong>
 </div>
 
 
