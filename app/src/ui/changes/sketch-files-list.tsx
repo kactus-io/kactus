@@ -13,6 +13,7 @@ interface ISketchFilesListProps {
   readonly onParse: (path: string) => void
   readonly onImport: (path: string) => void
   readonly onIgnore: (path: string) => void
+  readonly onOpen: (path: string) => void
 
   readonly availableWidth: number
 
@@ -38,6 +39,7 @@ export class SketchFilesList extends React.Component<ISketchFilesListProps, void
         onImport={this.props.onImport}
         onParse={this.props.onParse}
         onIgnore={this.props.onIgnore}
+        onOpen={this.props.onOpen}
         availableWidth={this.props.availableWidth}
       />
     )

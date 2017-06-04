@@ -1795,6 +1795,11 @@ export class AppStore {
     return shell.openExternal(url)
   }
 
+  /** Takes a path and opens it using the system default application */
+  public _openSketchFile(path: string) {
+    return shell.openItem(path)
+  }
+
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _saveGitIgnore(repository: Repository, text: string): Promise<void> {
     const gitStore = this.getGitStore(repository)

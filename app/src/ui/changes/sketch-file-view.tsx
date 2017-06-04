@@ -5,11 +5,9 @@ import { Octicon, OcticonSymbol } from '../octicons'
 import { IKactusFile } from 'kactus-cli'
 
 interface ISketchFileViewProps {
-  /** A function to call when the user chooses to create a repository. */
   readonly onExport: (path: string) => void
-
-  /** A function to call when the user chooses to clone a repository. */
   readonly onImport: (path: string) => void
+  readonly onOpenSketchFile: (path: string) => void
 
   readonly sketchFile: IKactusFile
 
@@ -25,6 +23,14 @@ export class SketchFileView extends React.Component<ISketchFileViewProps, void> 
           {this.props.sketchFile.id}
         </div>
         <div className='content'>
+
+          <div className='callout'>
+            <Octicon symbol={OcticonSymbol.ruby} />
+            <div>Open the file in Sketch</div>
+            <Button onClick={() => this.props.onOpenSketchFile(this.props.sketchFile.path)} disabled={!this.props.sketchFile.imported}>
+              {__DARWIN__ ? 'Open File' : 'Open file'}
+            </Button>
+          </div>
 
           <div className='callout'>
             <Octicon symbol={OcticonSymbol.fold} />

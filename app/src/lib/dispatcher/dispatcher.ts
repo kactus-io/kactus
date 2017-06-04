@@ -632,6 +632,11 @@ export class Dispatcher {
     return this.appStore._openInBrowser(url)
   }
 
+  /** Open the path in Sketch */
+  public openSketchFile(path: string) {
+    return this.appStore._openSketchFile(path + '.sketch')
+  }
+
   /** Add the pattern to the repository's gitignore. */
   public ignore(repository: Repository, pattern: string): Promise<void> {
     return this.appStore._ignore(repository, pattern)

@@ -172,6 +172,10 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, void> 
     this.props.dispatcher.ignoreSketchFile(this.props.repository, path)
   }
 
+  private onSketchOpen = (path: string) => {
+    this.props.dispatcher.openSketchFile(path)
+  }
+
   private renderMostRecentLocalCommit() {
     const commit = this.props.mostRecentLocalCommit
     let child: JSX.Element | null = null
@@ -218,6 +222,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, void> 
           onFileSelectionChanged={this.onSketchFileSelectionChanged}
           onParse={this.onSketchParse}
           onImport={this.onSketchImport}
+          onOpen={this.onSketchOpen}
           availableWidth={this.props.availableWidth}
           onIgnore={this.onSketchIgnore}
         />

@@ -42,13 +42,17 @@ export class Changes extends React.Component<IChangesProps, void> {
     this.props.dispatcher.importSketchFile(this.props.repository, path)
   }
 
+  private onOpenSketchFile = (path: string) => {
+    this.props.dispatcher.openSketchFile(path)
+  }
+
   public render() {
     const diff = this.props.diff
     const file = this.props.file
     const sketchFile = this.props.sketchFile
     const BlankSlateImage = `file:///${__dirname}/static/empty-no-file-selected.svg`
     if (sketchFile) {
-      return <SketchFileView sketchFile={sketchFile} onExport={this.onSketchParse} onImport={this.onSketchImport} />
+      return <SketchFileView sketchFile={sketchFile} onExport={this.onSketchParse} onImport={this.onSketchImport} onOpenSketchFile={this.onOpenSketchFile} />
     }
     if (!diff || !file) {
       return (

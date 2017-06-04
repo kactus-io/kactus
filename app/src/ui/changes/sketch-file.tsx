@@ -12,6 +12,7 @@ interface ISketchFileProps {
   readonly onImport: (path: string) => void
   readonly onParse: (path: string) => void
   readonly onIgnore: (path: string) => void
+  readonly onOpen: (path: string) => void
   readonly availableWidth: number
 }
 
@@ -61,6 +62,10 @@ export class SketchFile extends React.Component<ISketchFileProps, void> {
       {
         label: 'Ignore',
         action: () => this.props.onIgnore(this.props.path),
+      },
+      {
+        label: 'Open',
+        action: () => this.props.onOpen(this.props.path),
       },
     ]
 
