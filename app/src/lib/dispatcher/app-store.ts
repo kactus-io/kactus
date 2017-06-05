@@ -296,6 +296,8 @@ export class AppStore {
         files: new Array<IKactusFile>(),
         selectedFileID: null,
         config: {},
+        isImporting: false,
+        isParsing: false
       },
       selectedSection: RepositorySection.Changes,
       branchesState: {
@@ -866,19 +868,20 @@ export class AppStore {
 
 	/** This shouldn't be called directly. See `Dispatcher`. */
   public async _parseSketchFile(repository: Repository, path: string): Promise<void> {
-    const kactusConfig = this.getRepositoryState(repository).kactus.config
-    await parseFile(path + '.sketch', kactusConfig)
-    await this._loadStatus(repository)
-    this.emitUpdate()
+    await this.isParsing(repository, async () => {
+      const kactusConfig = this.getRepositoryState(repository).kactus.config
+      await parseFile(path + '.sketch', kactusConfig)
+      await this._loadStatus(repository)
+    })
   }
 
 	/** This shouldn't be called directly. See `Dispatcher`. */
   public async _importSketchFile(repository: Repository, path: string): Promise<void> {
-    const kactusConfig = this.getRepositoryState(repository).kactus.config
-    await importFolder(path, kactusConfig)
-    await this._loadStatus(repository)
-    this.emitUpdate()
-    this.emitUpdate()
+    await this.isImporting(repository, async () => {
+      const kactusConfig = this.getRepositoryState(repository).kactus.config
+      await importFolder(path, kactusConfig)
+      await this._loadStatus(repository)
+    })
   }
 
 	/** This shouldn't be called directly. See `Dispatcher`. */
@@ -1417,6 +1420,38 @@ export class AppStore {
       return await fn()
     } finally {
       this.updateRepositoryState(repository, state => ({ isCommitting: false }))
+      this.emitUpdate()
+    }
+  }
+
+  private async isParsing(repository: Repository, fn: () => Promise<void>): Promise<boolean | void> {
+    const state = this.getRepositoryState(repository)
+    // ensure the user doesn't try and parse again
+    if (state.kactus.isParsing || state.kactus.isImporting) { return }
+
+    this.updateKactusState(repository, state => ({ isParsing: true }))
+    this.emitUpdate()
+
+    try {
+      return await fn()
+    } finally {
+      this.updateKactusState(repository, state => ({ isParsing: false }))
+      this.emitUpdate()
+    }
+  }
+
+  private async isImporting(repository: Repository, fn: () => Promise<void>): Promise<boolean | void> {
+    const state = this.getRepositoryState(repository)
+    // ensure the user doesn't try and import again
+    if (state.kactus.isImporting || state.kactus.isImporting) { return }
+
+    this.updateKactusState(repository, state => ({ isImporting: true }))
+    this.emitUpdate()
+
+    try {
+      return await fn()
+    } finally {
+      this.updateKactusState(repository, state => ({ isImporting: false }))
       this.emitUpdate()
     }
   }

@@ -3,6 +3,7 @@ import { UiView } from '../ui-view'
 import { Button } from '../lib/button'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { IKactusFile } from 'kactus-cli'
+import { Loading } from '../lib/loading'
 
 interface ISketchFileViewProps {
   readonly onExport: (path: string) => void
@@ -11,8 +12,8 @@ interface ISketchFileViewProps {
 
   readonly sketchFile: IKactusFile
 
-  /** A function to call when the user chooses to add a local repository. */
-  // readonly onAdd: () => void
+  readonly isImporting: boolean
+  readonly isParsing: boolean
 }
 
 export class SketchFileView extends React.Component<ISketchFileViewProps, void> {
@@ -36,7 +37,7 @@ export class SketchFileView extends React.Component<ISketchFileViewProps, void> 
             <Octicon symbol={OcticonSymbol.fold} />
             <div>Regenerate Sketch file from JSON</div>
             <Button onClick={() => this.props.onImport(this.props.sketchFile.path)} disabled={!this.props.sketchFile.parsed}>
-              {__DARWIN__ ? 'Regenerate Sketch File' : 'Regenerate Sketch file'}
+              {this.props.isImporting ? <Loading /> : null} {__DARWIN__ ? 'Regenerate Sketch File' : 'Regenerate Sketch file'}
             </Button>
           </div>
 
@@ -44,7 +45,7 @@ export class SketchFileView extends React.Component<ISketchFileViewProps, void> 
             <Octicon symbol={OcticonSymbol.unfold} />
             <div>Export Sketch file to JSON</div>
             <Button onClick={() => this.props.onExport(this.props.sketchFile.path)} disabled={!this.props.sketchFile.imported}>
-              {__DARWIN__ ? 'Export Sketch File' : 'Export Sketch file'}
+              {this.props.isParsing ? <Loading /> : null} {__DARWIN__ ? 'Export Sketch File' : 'Export Sketch file'}
             </Button>
           </div>
 

@@ -7,7 +7,9 @@ import { showContextualMenu, IMenuItem } from '../main-process-proxy'
 interface ISketchFileProps {
   readonly path: string
   readonly id: string
+  readonly isParsing: boolean
   readonly parsed: boolean
+  readonly isImporting: boolean
   readonly imported: boolean
   readonly onImport: (path: string) => void
   readonly onParse: (path: string) => void
@@ -32,12 +34,12 @@ export class SketchFile extends React.Component<ISketchFileProps, void> {
 
         <label className='path'><PathText path={this.props.id} availableWidth={availablePathWidth} /></label>
 
-        <Octicon symbol={OcticonSymbol.fold}
-                 className={'sketch-file-action' + (this.props.parsed ? ' active' : '')}
+        <Octicon symbol={this.props.isImporting ? OcticonSymbol.sync : OcticonSymbol.fold}
+                 className={'sketch-file-action' + (this.props.parsed ? ' active' : '') + (this.props.isImporting ? ' spin' : '')}
                  onClick={() => this.props.parsed && this.props.onImport(this.props.path)}
                  title='Regenerate Sketch File From JSON' />
-        <Octicon symbol={OcticonSymbol.unfold}
-                 className={'sketch-file-action' + (this.props.imported ? ' active' : '')}
+        <Octicon symbol={this.props.isParsing ? OcticonSymbol.sync : OcticonSymbol.unfold}
+                 className={'sketch-file-action' + (this.props.imported ? ' active' : '') + (this.props.isParsing ? ' spin' : '')}
                  onClick={() => this.props.imported && this.props.onParse(this.props.path)}
                  title='Export Sketch To JSON' />
       </div>

@@ -19,7 +19,8 @@ interface IChangesProps {
   readonly diff: IDiff | null
   readonly dispatcher: Dispatcher
   readonly showAdvancedDiffs: boolean
-
+  readonly isImporting: boolean
+  readonly isParsing: boolean
 }
 
 export class Changes extends React.Component<IChangesProps, void> {
@@ -52,7 +53,13 @@ export class Changes extends React.Component<IChangesProps, void> {
     const sketchFile = this.props.sketchFile
     const BlankSlateImage = `file:///${__dirname}/static/empty-no-file-selected.svg`
     if (sketchFile) {
-      return <SketchFileView sketchFile={sketchFile} onExport={this.onSketchParse} onImport={this.onSketchImport} onOpenSketchFile={this.onOpenSketchFile} />
+      return <SketchFileView
+              isParsing={this.props.isParsing}
+              isImporting={this.props.isImporting}
+              sketchFile={sketchFile}
+              onExport={this.onSketchParse}
+              onImport={this.onSketchImport}
+              onOpenSketchFile={this.onOpenSketchFile} />
     }
     if (!diff || !file) {
       return (

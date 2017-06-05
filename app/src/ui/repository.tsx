@@ -136,6 +136,8 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
       const selectedSketchFileID = kactusState.selectedFileID
       const selectedSketchFile = selectedSketchFileID ? (kactusState.files.find(f => f.id === selectedSketchFileID) || null) : null
       return <Changes
+        isImporting={kactusState.isImporting}
+        isParsing={kactusState.isParsing}
         repository={this.props.repository}
         dispatcher={this.props.dispatcher}
         showAdvancedDiffs={this.props.showAdvancedDiffs}

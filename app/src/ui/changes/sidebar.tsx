@@ -223,6 +223,8 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, void> 
           onParse={this.onSketchParse}
           onImport={this.onSketchImport}
           onOpen={this.onSketchOpen}
+          isParsing={this.props.kactus.isParsing}
+          isImporting={this.props.kactus.isImporting}
           availableWidth={this.props.availableWidth}
           onIgnore={this.onSketchIgnore}
         />

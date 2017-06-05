@@ -437,6 +437,8 @@ export interface IKactusState {
   readonly selectedFileID: string | null
 
   readonly config: IKactusConfig
+  readonly isParsing: boolean
+  readonly isImporting: boolean
 }
 
 export interface IChangesState {
