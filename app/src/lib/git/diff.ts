@@ -296,7 +296,7 @@ async function getImage(path: string): Promise<Image> {
 }
 
 async function generatePreview(sketchFilePath: string, file: string, storagePath: string, type: string) {
-  let path
+  let path: string
   if (type === 'document') {
     path = await generateDocumentPreview(sketchFilePath, storagePath)
   } else if (type === 'page') {
@@ -309,7 +309,7 @@ async function generatePreview(sketchFilePath: string, file: string, storagePath
     const name = Path.basename(file)
     path = await generateLayerPreview(sketchFilePath, name.replace('.json', ''), storagePath)
   }
-  return getImage(path!)
+  return getImage(path)
 }
 
 function getWorkingDirectorySketchPreview(sketchFile: IKactusFile, repository: Repository, file: FileChange, type: string) {
@@ -349,7 +349,7 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
     await importFolder(sketchStoragePath, config)
   }
 
-  let path
+  let path: string
   if (type === 'document') {
     path = Path.join(sketchStoragePath, 'document.png')
   } else if (type === 'page' || type === 'artboard' || type === 'shapeGroup') {
@@ -359,7 +359,7 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
     path = Path.join(sketchStoragePath, name.replace('.json', '') + '.png')
   }
 
-  if (path && (await fileExists(path))) {
+  if (await fileExists(path)) {
     return getImage(path)
   }
 
