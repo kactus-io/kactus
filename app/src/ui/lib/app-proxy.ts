@@ -6,6 +6,7 @@ let name: string | null = null
 let path: string | null = null
 let userDataPath: string | null = null
 let documentsPath: string | null = null
+let tempPath: string | null = null
 
 function getApp(): Electron.App {
   if (!app) {
@@ -65,6 +66,19 @@ export function getUserDataPath(): string {
   }
 
   return userDataPath
+}
+
+/**
+ * Get the path to the temp data.
+ *
+ * This is preferrable to using `remote` directly because we cache the result.
+ */
+export function getTempPath(): string {
+  if (!tempPath) {
+    tempPath = getApp().getPath('temp')
+  }
+
+  return tempPath
 }
 
 /**

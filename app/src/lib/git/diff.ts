@@ -15,6 +15,7 @@ import { DiffType, IRawDiff, IDiff, IImageDiff, Image, ISketchDiff } from '../..
 import { DiffParser } from '../diff-parser'
 import { generateDocumentPreview, generateArtboardPreview, generateLayerPreview, generatePagePreview } from '../kactus'
 import { mkdirP } from '../mkdirP'
+import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
 
 /**
  *  Defining the list of known extensions we can render inside the app
@@ -313,7 +314,7 @@ async function generatePreview(sketchFilePath: string, file: string, storagePath
 }
 
 function getWorkingDirectorySketchPreview(sketchFile: IKactusFile, repository: Repository, file: FileChange, type: string) {
-  const storagePath = Path.join(remote.app.getPath('temp'), 'kactus', String(repository.id), sketchFile.id)
+  const storagePath = Path.join(getTempPath(), 'kactus', String(repository.id), sketchFile.id)
   const sketchFilePath = sketchFile.path + '.sketch'
   return generatePreview(sketchFilePath, file.path, storagePath, type)
 }
@@ -331,13 +332,13 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
     commitish = await getHEADsha(repository)
   }
 
-  const storagePath = Path.join(remote.app.getPath('userData'), 'previews', String(repository.id), commitish)
+  const storagePath = Path.join(getUserDataPath(), 'previews', String(repository.id), commitish)
   const sketchStoragePath = Path.join(storagePath, sketchFile.id)
 
   const alreadyExported = await fileExists(Path.join(sketchStoragePath, 'document.json'))
   if (!alreadyExported) {
     await mkdirP(storagePath)
-    await exportTreeAtCommit(repository, commitish, Path.join(remote.app.getPath('userData'), 'previews', String(repository.id)))
+    await exportTreeAtCommit(repository, commitish, Path.join(getUserDataPath(), 'previews', String(repository.id)))
   }
 
   const sketchFilesAlreadyImported = await fileExists(sketchStoragePath + '.sketch')
