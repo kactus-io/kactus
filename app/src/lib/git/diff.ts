@@ -132,6 +132,19 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
 
   const name = Path.basename(file.path)
 
+  let type: 'document' | 'page' | 'artboard' | 'layer' | 'shapeGroup'
+  if (name === 'document.json') {
+    type = 'document'
+  } else if (name === 'page.json') {
+    type = 'page'
+  } else if (name === 'artboard.json') {
+    type = 'artboard'
+  } else if (name === 'shapeGroup.json') {
+    type = 'shapeGroup'
+  } else {
+    type = 'layer'
+  }
+
   // Are we looking at a file in the working directory or a file in a commit?
   if (file instanceof WorkingDirectoryFileChange && name !== 'document.json') {
     // No idea what to do about this, a conflicted binary (presumably) file.
@@ -143,23 +156,24 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
         text: diff.contents,
         hunks: diff.hunks,
         sketchFile: kactusFile,
+        type: type,
       }
     }
 
     // Does it even exist in the working directory?
     if (file.status !== FileStatus.Deleted) {
-      current = await getWorkingDirectorySketchPreview(kactusFile, repository, file)
+      current = await getWorkingDirectorySketchPreview(kactusFile, repository, file, type)
     }
 
     if (file.status !== FileStatus.New) {
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
-      previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, 'HEAD')
+      previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, 'HEAD', type)
     }
   } else if (name !== 'document.json') {
     // File status can't be conflicted for a file in a commit
     if (file.status !== FileStatus.Deleted) {
-      current = await getOldSketchPreview(kactusFile, repository, file.path, commitish)
+      current = await getOldSketchPreview(kactusFile, repository, file.path, commitish, type)
     }
 
     // File status can't be conflicted for a file in a commit
@@ -168,7 +182,7 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
       //
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
-      previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, `${commitish}^`)
+      previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, `${commitish}^`, type)
     }
   }
 
@@ -179,6 +193,7 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
     sketchFile: kactusFile,
     previous: previous,
     current: current,
+    type: type,
   }
 }
 
@@ -280,27 +295,27 @@ async function getImage(path: string): Promise<Image> {
   return diff
 }
 
-async function generatePreview(sketchFilePath: string, file: string, storagePath: string) {
-  const name = Path.basename(file)
+async function generatePreview(sketchFilePath: string, file: string, storagePath: string, type: string) {
   let path
-  if (name === 'document.json') {
+  if (type === 'document') {
     path = await generateDocumentPreview(sketchFilePath, storagePath)
-  } else if (name === 'page.json') {
+  } else if (type === 'page') {
     path = await generatePagePreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
-  } else if (name === 'artboard.json') {
+  } else if (type === 'artboard') {
     path = await generateArtboardPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
-  } else if (name === 'shapeGroup.json') {
+  } else if (type === 'shapeGroup') {
     path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
   } else {
+    const name = Path.basename(file)
     path = await generateLayerPreview(sketchFilePath, name.replace('.json', ''), storagePath)
   }
   return getImage(path!)
 }
 
-function getWorkingDirectorySketchPreview(sketchFile: IKactusFile, repository: Repository, file: FileChange) {
+function getWorkingDirectorySketchPreview(sketchFile: IKactusFile, repository: Repository, file: FileChange, type: string) {
   const storagePath = Path.join(remote.app.getPath('temp'), 'kactus', String(repository.id), sketchFile.id)
   const sketchFilePath = sketchFile.path + '.sketch'
-  return generatePreview(sketchFilePath, file.path, storagePath)
+  return generatePreview(sketchFilePath, file.path, storagePath, type)
 }
 
 function fileExists(path: string): Promise<boolean> {
@@ -311,7 +326,7 @@ function fileExists(path: string): Promise<boolean> {
   })
 }
 
-async function getOldSketchPreview(sketchFile: IKactusFile, repository: Repository, file: string, commitish: string) {
+async function getOldSketchPreview(sketchFile: IKactusFile, repository: Repository, file: string, commitish: string, type: string) {
   if (commitish === 'HEAD') {
     commitish = await getHEADsha(repository)
   }
@@ -334,13 +349,13 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
     await importFolder(sketchStoragePath, config)
   }
 
-  const name = Path.basename(file)
   let path
-  if (name === 'document.json') {
+  if (type === 'document') {
     path = Path.join(sketchStoragePath, 'document.png')
-  } else if (name === 'page.json' || name === 'artboard.json' || name === 'shapeGroup.json') {
+  } else if (type === 'page' || type === 'artboard' || type === 'shapeGroup') {
     path = Path.join(sketchStoragePath, Path.basename(Path.dirname(file)) + '.png')
   } else {
+    const name = Path.basename(file)
     path = Path.join(sketchStoragePath, name.replace('.json', '') + '.png')
   }
 
@@ -348,5 +363,5 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
     return getImage(path)
   }
 
-  return await generatePreview(sketchStoragePath + '.sketch', file, sketchStoragePath)
+  return await generatePreview(sketchStoragePath + '.sketch', file, sketchStoragePath, type)
 }

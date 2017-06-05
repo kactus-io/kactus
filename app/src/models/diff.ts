@@ -28,6 +28,7 @@ export interface ISketchDiff {
   readonly sketchFile: IKactusFile
   readonly previous?: Image
   readonly current?: Image
+  readonly type: 'document' | 'page' | 'artboard' | 'layer' | 'shapeGroup'
 }
 
 
@@ -53,6 +54,7 @@ export interface IImageDiff {
    * Will be undefined for a deleted image
    */
   readonly current?: Image
+  readonly type?: string
 }
 
 export interface IBinaryDiff {

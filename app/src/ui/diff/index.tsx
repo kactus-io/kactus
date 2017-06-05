@@ -492,16 +492,17 @@ export class Diff extends React.Component<IDiffProps, void> {
   private renderImage(imageDiff: IImageDiff | ISketchDiff) {
     if (imageDiff.current && imageDiff.previous) {
       return <ModifiedImageDiff
+                type={imageDiff.type}
                 current={imageDiff.current}
                 previous={imageDiff.previous} />
     }
 
     if (imageDiff.current && this.props.file.status === FileStatus.New) {
-      return <NewImageDiff current={imageDiff.current} />
+      return <NewImageDiff type={imageDiff.type} current={imageDiff.current} />
     }
 
     if (imageDiff.previous && this.props.file.status === FileStatus.Deleted) {
-      return <DeletedImageDiff previous={imageDiff.previous} />
+      return <DeletedImageDiff type={imageDiff.type} previous={imageDiff.previous} />
     }
 
     return null
