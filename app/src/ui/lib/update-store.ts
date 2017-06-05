@@ -1,4 +1,5 @@
 import { remote, ipcRenderer } from 'electron'
+import * as os from 'os'
 
 // Given that `autoUpdater` is entirely async anyways, I *think* it's safe to
 // use with `remote`.
@@ -31,7 +32,7 @@ export interface IUpdateState {
   lastSuccessfulCheck: Date | null
 }
 
-const UpdatesURLBase = 'https://central.github.com/api/deployments/desktop/desktop/latest'
+const UpdatesURLBase = 'https://kactus-autoupdater.herokuapp.com/update'
 
 /** A store which contains the current state of the auto updater. */
 class UpdateStore {
@@ -143,7 +144,7 @@ class UpdateStore {
   }
 
   private getFeedURL(username: string): string {
-    return `${UpdatesURLBase}?version=${getVersion()}&username=${username}`
+    return `${UpdatesURLBase}/${os.platform()}_${os.arch()}/${getVersion()}?username=${username}`
   }
 
   /**
