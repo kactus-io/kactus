@@ -62,7 +62,7 @@ github.getOrCreateDraftRelease(token, repo, tag, branchName)
 
 function uploadOSXAssets (releaseId) {
   const uploads = [
-    github.updateAsset(token, repo, releaseId, distInfo.getOSXZipName())
+    github.updateAsset(token, repo, releaseId, distInfo.getOSXZipPath())
   ]
   return Promise.all(uploads)
 }
