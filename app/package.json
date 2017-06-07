@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/kactus-io/kactus.git"
   },
-  "description": "A tool to bring proper version control to designers",
+  "description": "A proper version control tool for designers",
   "author": {
     "name": "Mathieu Dutour",
     "email": "mathieu@dutour.me",
