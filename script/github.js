@@ -43,7 +43,7 @@ function options (token, url, method) {
 }
 
 module.exports = {
-  getOrCreateDraftRelease: function (token, repo, tag, branch) {
+  getOrCreateDraftRelease: function (token, repo, tag, branch, changelog) {
     return request(options(token, 'https://api.github.com/repos/' + repo + '/releases/tags/' + tag)).then(function (res) {
       return res
     }).catch(function () {
@@ -51,6 +51,7 @@ module.exports = {
       opts.json = {
         tag_name: tag,
         target_commitish: branch,
+        body: '* ' + changelog.join('\n* '),
         name: tag,
         draft: true
       }

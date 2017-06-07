@@ -43,7 +43,7 @@ if (process.platform === 'darwin') {
 var releaseId
 var tag = 'v' + distInfo.getVersion();
 
-github.getOrCreateDraftRelease(token, repo, tag, branchName)
+github.getOrCreateDraftRelease(token, repo, tag, branchName, require('../changelog.json')[distInfo.getVersion()])
   .then(function (res) {
     releaseId = res.id
     return uploadPromise(releaseId)
