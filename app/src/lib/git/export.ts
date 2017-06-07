@@ -27,7 +27,7 @@ export async function exportTreeAtCommit(repository: Repository, commitish: stri
       cwd: output,
       encoding: 'utf8',
       maxBuffer: 10 * 1024 * 1024,
-    };
+    }
     execFile('/usr/bin/tar', [ '-x', '-f', archive, '-C', commitish ], execOptions, (err) => {
       if (err) {
         return reject(err)

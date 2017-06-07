@@ -297,7 +297,7 @@ export class AppStore {
         selectedFileID: null,
         config: {},
         isImporting: false,
-        isParsing: false
+        isParsing: false,
       },
       selectedSection: RepositorySection.Changes,
       branchesState: {
