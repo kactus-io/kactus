@@ -75,7 +75,7 @@ function getUserDataPath () {
 }
 
 function getWindowsIdentifierName () {
-  return 'GitHubDesktop'
+  return 'KactusDesktop'
 }
 
 module.exports = {
