@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/kactus-io/kactus.git"
   },
-  "description": "Extend your GitHub workflow beyond your browser with GitHub Desktop",
+  "description": "A tool to bring proper version control to designers",
   "author": {
     "name": "Mathieu Dutour",
     "email": "mathieu@dutour.me",
