@@ -25,7 +25,7 @@ function getVersion () {
 
 function getOSXZipName () {
   const productName = getProductName()
-  return `${productName}.zip`
+  return `${productName}-macos.zip`
 }
 
 function getOSXZipPath () {
