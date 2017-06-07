@@ -9,7 +9,7 @@
 </div>
 
 
-[![Travis Build Status](https://travis-ci.com/kactus-io/kactus.svg?token=bruh3Kp8xZqr5CQ5et3q&branch=master)](https://travis-ci.com/kactus-io/kactus)
+[![Travis Build Status](https://travis-ci.org/kactus-io/kactus.svg?branch=master)](https://travis-ci.org/kactus-io/kactus)
 
 Kactus is a tool to bring proper version control _(as in git)_ to designers _(only sketch users for now, but we need to start somewhere, right?)_.
 
