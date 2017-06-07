@@ -21,14 +21,14 @@ This new tool is on the next level:
 
 ![GitHub Desktop screenshot - Windows](https://cloud.githubusercontent.com/assets/359239/26094502/a1f56d02-3a5d-11e7-8799-23c7ba5e5106.png)
 
-## Where can I get it?
+## :cactus: Where can I get it?
 
 Download the installer for your OS:
 
  - [macOS](https://github.com/kactus-io/kactus/releases)
 
 
-## I have a problem with Kactus
+## :cactus: I have a problem with Kactus
 
 First, please search the [open issues](https://github.com/kactus-io/kactus/issues?q=is%3Aopen)
 and [closed issues](https://github.com/kactus-io/kactus/issues?q=is%3Aclosed)
@@ -38,7 +38,7 @@ If you can't find an issue that matches what you're seeing, open a [new issue](h
 and fill out the template to provide us with enough information to investigate
 further.
 
-## How can I contribute to Kactus?
+## :cactus: How can I contribute to Kactus?
 
 The [CONTRIBUTING.md](./CONTRIBUTING.md) document will help you get setup and
 familiar with the source. The [documentation](docs/) folder also contains more
@@ -46,11 +46,11 @@ resources relevant to the project.
 
 If you're looking for something to work on, check out the [up-for-grabs](https://github.com/kactus-io/kactus/issues?q=is%3Aopen+is%3Aissue+label%3Aup-for-grabs) label.
 
-## More Resources
+## :cactus: More Resources
 
 See [kactus.io](https://kactus.io) for more product-oriented
 information about GitHub Desktop.
 
-## License
+## :cactus: License
 
 **[MIT](LICENSE)**
