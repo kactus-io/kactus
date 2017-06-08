@@ -14,7 +14,7 @@ Recommended packages:
 
 ### [Visual Studio Code](https://code.visualstudio.com/)
 
-The Desktop repository includes a list of recommended extensions:
+The Kactus repository includes a list of recommended extensions:
 
 1. Select the _Extension_ view, select *Show Workspace Recommended Extensions* from the dropdown menu
 2. Install all the extensions

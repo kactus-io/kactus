@@ -30,7 +30,7 @@ export enum GitStatusEntry {
   UpdatedButUnmerged,
 }
 
-/** The file status as represented in GitHub Desktop. */
+/** The file status as represented in Kactus. */
 export enum AppFileStatus {
   New,
   Modified,

@@ -41,7 +41,7 @@ interface IAboutState {
   readonly updateState: IUpdateState
 }
 
-const releaseNotesUri = 'https://desktop.github.com/release-notes/'
+const releaseNotesUri = 'https://kactus.io/release-notes/'
 
 /**
  * A dialog that presents information about the

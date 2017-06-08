@@ -41,7 +41,7 @@ export class Advanced extends React.Component<IAdvancedPreferencesProps, IAdvanc
     this.props.onConfirmRepoRemovalSet(value)
   }
 
-  public reportDesktopUsageLabel() {
+  public reportKactusUsageLabel() {
     return (
       <span>
         Help Kactus improve by submitting <LinkButton uri={SamplesURL}>anonymous usage data</LinkButton>
@@ -54,7 +54,7 @@ export class Advanced extends React.Component<IAdvancedPreferencesProps, IAdvanc
       <DialogContent>
         <Row>
           <Checkbox
-            label={this.reportDesktopUsageLabel()}
+            label={this.reportKactusUsageLabel()}
             value={this.state.reportingOptOut ? CheckboxValue.Off : CheckboxValue.On}
             onChange={this.onReportingOptOutChanged} />
         </Row>

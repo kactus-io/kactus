@@ -44,7 +44,7 @@ There are also [additional resources](tooling.md) to
 configure your favourite editor to work nicely with the Kactus
 repository.
 
-## Building Desktop
+## Building Kactus
 
 After cloning the repository, the typical workflow to get up running
 is as follows:

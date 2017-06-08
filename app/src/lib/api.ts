@@ -25,7 +25,7 @@ const Scopes = [
 ]
 
 /** The note URL used for authorizations the app creates. */
-const NoteURL = 'https://desktop.github.com/'
+const NoteURL = 'https://kactus.io/'
 
 /**
  * The plugins we'll use with Octokat.
@@ -598,7 +598,7 @@ async function getNote(): Promise<string> {
 /**
  * Map a repository's URL to the endpoint associated with it. For example:
  *
- * https://github.com/desktop/desktop -> https://api.github.com
+ * https://github.com/kactus-io/kactus -> https://api.github.com
  * http://github.mycompany.com/my-team/my-project -> http://github.mycompany.com/api
  */
 export function getEndpointForRepository(url: string): string {

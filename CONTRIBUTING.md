@@ -1,13 +1,13 @@
-# Contributing to GitHub Desktop
+# Contributing to Kactus
 
 :+1: :tada: :sparkling_heart: Thanks for your interest! :sparkling_heart: :tada: :+1:
 
-The following is a set of guidelines for contributing to GitHub Desktop and its
-related projects, which are hosted in the [Desktop Organization](https://github.com/desktop)
+The following is a set of guidelines for contributing to Kactus and its
+related projects, which are hosted in the [Kactus Organization](https://github.com/kactus-io)
 on GitHub. These are just guidelines, not rules. Use your best judgment, and
 feel free to propose changes to this document in a pull request.
 
-Note that GitHub Desktop is currently a public beta, so everything is likely to
+Note that Kactus is currently a public alpha, so everything is likely to
 change over time as we learn and refine how we work with the community.
 
 #### Table Of Contents
@@ -30,17 +30,16 @@ change over time as we learn and refine how we work with the community.
 
 This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code.
-Please report unacceptable behavior to [opensource+desktop@github.com](mailto:opensource+desktop@github.com).
+Please report unacceptable behavior to [opensource+desktop@kactus.io](mailto:opensource+desktop@kactus.io).
 
-### The Beta Roadmap
+### The Alpha Roadmap
 
-Currently GitHub Desktop is in a public beta, and the team is focused on
-triaging reported issues and working towards a 1.0 milestone - where the
-application can be used in place of the classic Mac and Windows applications.
-You can follow this progress progress under the [Milestones](https://github.com/desktop/desktop/milestones)
+Currently Kactus is in a public alpha, and the team is focused on
+triaging reported issues and working towards a 1.0 milestone.
+You can follow this progress progress under the [Milestones](https://github.com/kactus-io/kactus/milestones)
 tab.
 
-We're still thinking about where we want to take GitHub Desktop after we reach
+We're still thinking about where we want to take Kactus after we reach
 this 1.0 milestone. If you have ideas or suggestions please read the [Suggesting Enhancements](#suggesting-enhancements)
 section below to understand how to contribute your feedback.
 
@@ -48,7 +47,7 @@ section below to understand how to contribute your feedback.
 
 ### Reporting Bugs
 
-This section guides you through submitting a bug report for GitHub Desktop.
+This section guides you through submitting a bug report for Kactus.
 Following these guidelines helps maintainers and the community understand your
 report :pencil:, reproduce the behavior :computer: :computer:, and find related
 reports :mag_right:.
@@ -61,7 +60,7 @@ it asks for helps us resolve issues faster.
 
 #### Before Submitting A Bug Report
 
-**Perform a [cursory search](https://github.com/desktop/desktop/labels/bug)**
+**Perform a [cursory search](https://github.com/kactus-io/kactus/labels/bug)**
 to see if the problem has already been reported. If it does exist, add a
 :thumbsup: to the issue to indicate this is also an issue for you, and add a
 comment to the existing issue if there is extra information you can contribute.
@@ -70,7 +69,7 @@ comment to the existing issue if there is extra information you can contribute.
 
 Bugs are tracked as [GitHub issues](https://guides.github.com/features/issues/).
 
-Simply create an issue on the [GitHub Desktop issue tracker](https://github.com/desktop/desktop/issues)
+Simply create an issue on the [Kactus issue tracker](https://github.com/kactus-io/kactus/issues)
 and fill out the provided [issue template](../../.github/ISSUE_TEMPLATE.md).
 
 The information we are interested in includes:
@@ -83,7 +82,7 @@ The information we are interested in includes:
 ### Suggesting Enhancements
 
 This section guides you through submitting an enhancement suggestion for
-GitHub Desktop, including completely new features and minor improvements to
+Kactus, including completely new features and minor improvements to
 existing functionality. Following these guidelines helps maintainers and the
 community understand your suggestion :pencil: and find related suggestions
 :mag_right:.
@@ -96,7 +95,7 @@ that you imagine you would take if the feature you're requesting existed.
 
 #### Before Submitting An Enhancement Suggestion
 
-**Perform a [cursory search](https://github.com/desktop/desktop/labels/enhancement)**
+**Perform a [cursory search](https://github.com/kactus-io/kactus/labels/enhancement)**
 to see if the enhancement has already been suggested. If it has, add a
 :thumbsup: to indicate your interest in it, or comment if there is additional
 information you would like to add.
@@ -105,7 +104,7 @@ information you would like to add.
 
 Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com/features/issues/).
 
-Simply create an issue on the [GitHub Desktop issue tracker](https://github.com/desktop/desktop/issues)
+Simply create an issue on the [Kactus issue tracker](https://github.com/kactus-io/kactus/issues)
 and provide the following information:
 
 * **Use a clear and descriptive title** for the issue to identify the
@@ -113,9 +112,9 @@ and provide the following information:
 * **Provide a step-by-step description of the suggested enhancement** in as
   much detail as possible. This additional context helps the maintainers to
   understand the enhancement from your perspective
-* **Explain why this enhancement would be useful** to GitHub Desktop users.
+* **Explain why this enhancement would be useful** to Kactus users.
 * **Include screenshots and animated GIFs** if relevent to help you demonstrate
-  the steps or point out the part of GitHub Desktop which the suggestion is
+  the steps or point out the part of Kactus which the suggestion is
   related to. You can use [this tool](http://www.cockos.com/licecap/) to record
   GIFs on macOS and Windows.
 * **List some other applications where this enhancement exists, if applicable.**
@@ -130,7 +129,7 @@ bugs that can be categorised as tasks that:
  - have a narrow scope and/or easy reproduction steps
  - can be worked on independent of other tasks
 
-These issues will be labelled as [`up-for-grabs`](https://github.com/desktop/desktop/labels/up-for-grabs)
+These issues will be labelled as [`up-for-grabs`](https://github.com/kactus-io/kactus/labels/up-for-grabs)
 in the repository. If you are interested in contributing to the project, please
 comment on the issue to let the maintainers (and community) know you are
 interested in picking this up.
@@ -146,25 +145,23 @@ pull requests.
 
 | Label name | :mag_right: | Description |
 | --- | --- | --- |
-| `enhancement` | [search](https://github.com/desktop/desktop/labels/enhancement) | Feature requests. |
-| `bug` | [search](https://github.com/desktop/desktop/labels/bug)  | Confirmed bugs or reports that are very likely to be bugs. |
-| `question` | [search](https://github.com/desktop/desktop/labels/question)  | Questions more than bug reports or feature requests (e.g. how do I do X). |
-| `more-information-needed` | [search](https://github.com/desktop/desktop/labels/more-information-needed) | More information needs to be collected about these problems or feature requests (e.g. steps to reproduce). |
-| `needs-reproduction` | [search](https://github.com/desktop/desktop/labels/needs-reproduction)  | Likely bugs, but haven't been reliably reproduced. |
-| `macOS` | [search](https://github.com/desktop/desktop/labels/macOS)  | Issues specific to macOS users. |
-| `Windows` | [search](https://github.com/desktop/desktop/labels/Windows)  | Issues specific to Windows users. |
+| `enhancement` | [search](https://github.com/kactus-io/kactus/labels/enhancement) | Feature requests. |
+| `bug` | [search](https://github.com/kactus-io/kactus/labels/bug)  | Confirmed bugs or reports that are very likely to be bugs. |
+| `question` | [search](https://github.com/kactus-io/kactus/labels/question)  | Questions more than bug reports or feature requests (e.g. how do I do X). |
+| `more-information-needed` | [search](https://github.com/kactus-io/kactus/labels/more-information-needed) | More information needs to be collected about these problems or feature requests (e.g. steps to reproduce). |
+| `needs-reproduction` | [search](https://github.com/kactus-io/kactus/labels/needs-reproduction)  | Likely bugs, but haven't been reliably reproduced. |
 
 #### Topics
 
 | Label name | :mag_right: | Description |
 | --- | --- | --- |
-| `up-for-grabs` | [search](https://github.com/desktop/desktop/labels/up-for-grabs)  | Issues marked as ideal for external contributors. |
-| `polish` | [search](https://github.com/desktop/desktop/labels/polish) | Issues not critical to the application but would provide a better experience if resolved. |
-| `tech-debt` | [search](https://github.com/desktop/desktop/labels/tech-debt) | Issues related to code or architecture decisions. |
-| `design` | [search](https://github.com/desktop/desktop/labels/design)  | Issues that require some design input from the maintainers as part of completing the work. |
+| `up-for-grabs` | [search](https://github.com/kactus-io/kactus/labels/up-for-grabs)  | Issues marked as ideal for external contributors. |
+| `polish` | [search](https://github.com/kactus-io/kactus/labels/polish) | Issues not critical to the application but would provide a better experience if resolved. |
+| `tech-debt` | [search](https://github.com/kactus-io/kactus/labels/tech-debt) | Issues related to code or architecture decisions. |
+| `design` | [search](https://github.com/kactus-io/kactus/labels/design)  | Issues that require some design input from the maintainers as part of completing the work. |
 
 #### Workflow
 
 | Label name | :mag_right: | Description |
 | --- | --- | --- |
-| `ready-for-review` | [search](https://github.com/desktop/desktop/labels/ready-for-review)  | Pull Requests that are ready to be reviewed by the maintainers. |
+| `ready-for-review` | [search](https://github.com/kactus-io/kactus/labels/ready-for-review)  | Pull Requests that are ready to be reviewed by the maintainers. |

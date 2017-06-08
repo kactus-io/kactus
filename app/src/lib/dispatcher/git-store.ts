@@ -721,7 +721,7 @@ export class GitStore {
     const modifiedFiles = files.filter(f => CommittedStatuses.has(f.status))
 
     if (modifiedFiles.length) {
-      // in case any files have been staged outside Desktop - renames and copies do this by default
+      // in case any files have been staged outside Kactus - renames and copies do this by default
       await this.performFailableOperation(() => reset(this.repository, GitResetMode.Mixed, 'HEAD'))
 
       const pathsToCheckout = modifiedFiles.map(f => {

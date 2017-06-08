@@ -61,7 +61,7 @@ export interface IBinaryDiff {
   readonly kind: DiffType.Binary
 }
 
-/** The union of diff types that can be rendered in Desktop */
+/** The union of diff types that can be rendered in Kactus */
 export type IDiff =
   ITextDiff |
   IImageDiff |

@@ -59,5 +59,5 @@ export function request(endpoint: string, authorization: string | null, method: 
 /** Get the user agent to use for all requests. */
 export function getUserAgent() {
   const platform = __DARWIN__ ? 'Macintosh' : 'Windows'
-  return `GitHubDesktop/${appProxy.getVersion()} (${platform})`
+  return `Kactus/${appProxy.getVersion()} (${platform})`
 }

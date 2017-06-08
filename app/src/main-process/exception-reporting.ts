@@ -1,6 +1,6 @@
 import { app, net } from 'electron'
 
-const ErrorEndpoint = 'https://central.github.com/api/desktop/exception'
+const ErrorEndpoint = 'https://kactus.io/api/usage/desktop/exception'
 
 /** Report the error to Central. */
 export async function reportError(error: Error, extra?: { [key: string]: string }) {
