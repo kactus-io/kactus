@@ -19,6 +19,8 @@ export enum DiffLineType {
   Context, Add, Delete, Hunk,
 }
 
+export type IKactusFileType = 'document' | 'page' | 'artboard' | 'layer' | 'shapeGroup'
+
 export interface ISketchDiff {
   readonly kind: DiffType.Sketch
   /** The unified text diff - including headers and context */
@@ -28,7 +30,7 @@ export interface ISketchDiff {
   readonly sketchFile: IKactusFile
   readonly previous?: Image
   readonly current?: Image
-  readonly type: 'document' | 'page' | 'artboard' | 'layer' | 'shapeGroup'
+  readonly type: IKactusFileType
 }
 
 

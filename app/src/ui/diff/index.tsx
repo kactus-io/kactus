@@ -596,10 +596,10 @@ export class Diff extends React.Component<IDiffProps, void> {
         <div className='sketch-diff-checkbox'>
           <Checkbox
             label={__DARWIN__ ? 'Show Advanced Text Diffs' : 'Show advanced text diffs'}
-            value={this.props.showAdvancedDiffs ? CheckboxValue.Off : CheckboxValue.On}
+            value={this.props.showAdvancedDiffs ? CheckboxValue.On : CheckboxValue.Off}
             onChange={() => this.props.dispatcher.toggleAdvancedDiffs()} />
         </div>
-        {this.props.showAdvancedDiffs ? this.renderImage(diff) : this.renderTextDiff(diff)}
+        {this.props.showAdvancedDiffs ? this.renderTextDiff(diff) : this.renderImage(diff)}
       </div>
     }
 

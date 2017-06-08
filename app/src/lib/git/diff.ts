@@ -10,7 +10,7 @@ import { exportTreeAtCommit } from './export'
 
 import { Repository } from '../../models/repository'
 import { WorkingDirectoryFileChange, FileChange, AppFileStatus } from '../../models/status'
-import { DiffType, IRawDiff, IDiff, IImageDiff, Image, ISketchDiff } from '../../models/diff'
+import { DiffType, IRawDiff, IDiff, IImageDiff, Image, ISketchDiff, IKactusFileType } from '../../models/diff'
 
 import { DiffParser } from '../diff-parser'
 import { generateDocumentPreview, generateArtboardPreview, generateLayerPreview, generatePagePreview } from '../kactus'
@@ -133,7 +133,7 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
 
   const name = Path.basename(file.path)
 
-  let type: 'document' | 'page' | 'artboard' | 'layer' | 'shapeGroup'
+  let type: IKactusFileType
   if (name === 'document.json') {
     type = 'document'
   } else if (name === 'page.json') {
@@ -147,7 +147,7 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
   }
 
   // Are we looking at a file in the working directory or a file in a commit?
-  if (file instanceof WorkingDirectoryFileChange && name !== 'document.json') {
+  if (file instanceof WorkingDirectoryFileChange) {
     // No idea what to do about this, a conflicted binary (presumably) file.
     // Ideally we'd show all three versions and let the user pick but that's
     // a bit out of scope for now.
@@ -296,24 +296,29 @@ async function getImage(path: string): Promise<Image> {
   return diff
 }
 
-async function generatePreview(sketchFilePath: string, file: string, storagePath: string, type: string) {
+async function generatePreview(sketchFilePath: string, file: string, storagePath: string, type: IKactusFileType) {
   let path: string
-  if (type === 'document') {
-    path = await generateDocumentPreview(sketchFilePath, storagePath)
-  } else if (type === 'page') {
-    path = await generatePagePreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
-  } else if (type === 'artboard') {
-    path = await generateArtboardPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
-  } else if (type === 'shapeGroup') {
-    path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
-  } else {
-    const name = Path.basename(file)
-    path = await generateLayerPreview(sketchFilePath, name.replace('.json', ''), storagePath)
+  try {
+    if (type === 'document') {
+      path = await generateDocumentPreview(sketchFilePath, storagePath)
+    } else if (type === 'page') {
+      path = await generatePagePreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
+    } else if (type === 'artboard') {
+      path = await generateArtboardPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
+    } else if (type === 'shapeGroup') {
+      path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
+    } else {
+      const name = Path.basename(file)
+      path = await generateLayerPreview(sketchFilePath, name.replace('.json', ''), storagePath)
+    }
+  } catch (e) {
+    console.error(e)
+    return undefined
   }
   return getImage(path)
 }
 
-function getWorkingDirectorySketchPreview(sketchFile: IKactusFile, repository: Repository, file: FileChange, type: string) {
+function getWorkingDirectorySketchPreview(sketchFile: IKactusFile, repository: Repository, file: FileChange, type: IKactusFileType) {
   const storagePath = Path.join(getTempPath(), 'kactus', String(repository.id), sketchFile.id)
   const sketchFilePath = sketchFile.path + '.sketch'
   return generatePreview(sketchFilePath, file.path, storagePath, type)
@@ -327,7 +332,7 @@ function fileExists(path: string): Promise<boolean> {
   })
 }
 
-async function getOldSketchPreview(sketchFile: IKactusFile, repository: Repository, file: string, commitish: string, type: string) {
+async function getOldSketchPreview(sketchFile: IKactusFile, repository: Repository, file: string, commitish: string, type: IKactusFileType) {
   if (commitish === 'HEAD') {
     commitish = await getHEADsha(repository)
   }
