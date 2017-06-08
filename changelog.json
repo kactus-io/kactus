@@ -1,6 +1,8 @@
 {
   "releases": {
+    "0.1.0-alpha4": [],
     "0.1.0-alpha3": [
+      "[Fix] Handle sketch files with images"
     ],
     "0.1.0-alpha2": [
       "[New] Bunch of stuff"
