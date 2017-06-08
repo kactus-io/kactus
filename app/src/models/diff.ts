@@ -1,6 +1,12 @@
 import { IKactusFile } from 'kactus-cli'
 import { assertNever } from '../lib/fatal-error'
 
+/**
+ * V8 has a limit on the size of string it can create, and unless we want to
+ * trigger an unhandled exception we need to do the encoding conversion by hand
+ */
+export const maximumDiffStringSize = 268435441
+
 export enum DiffType {
   /** changes to a text file, which may be partially selected for commit */
   Text,
@@ -8,10 +14,12 @@ export enum DiffType {
   Image,
   /** changes to an unknown file format, which Git is unable to present in a human-friendly format */
   Binary,
-  /** change to a repository which is included as a submodule of this repository */
+  /** change to a sketch file */
   Submodule,
   /** change to a repository which is included as a submodule of this repository */
   Sketch,
+  /** diff too large to render in app */
+  TooLarge,
 }
 
 /** indicate what a line in the diff represents */
@@ -63,12 +71,23 @@ export interface IBinaryDiff {
   readonly kind: DiffType.Binary
 }
 
+export interface IDiffTooLarge {
+  readonly kind: DiffType.TooLarge
+  /**
+   * The length of the diff output from Git which exceeds the runtime limits:
+   *
+   * 268435441 bytes = 256MB - 15 bytes
+   */
+  readonly length: number
+}
+
 /** The union of diff types that can be rendered in Kactus */
 export type IDiff =
   ITextDiff |
   IImageDiff |
   IBinaryDiff |
-  ISketchDiff
+  ISketchDiff |
+  IDiffTooLarge
 
 /** track details related to each line in the diff */
 export class DiffLine {

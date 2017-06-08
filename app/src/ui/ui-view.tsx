@@ -6,7 +6,7 @@ interface IUiViewProps extends React.HTMLProps<HTMLDivElement> { }
 /**
  * High order component for housing a View.
  *
- * In Desktop we currently define a view as a component which occupies
+ * In Kactus we currently define a view as a component which occupies
  * the entire app save for the sidebar and minus any currently active
  * popovers and of which there's only ever one single instance active
  * at any point in time.

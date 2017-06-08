@@ -63,7 +63,7 @@ export class Acknowledgements extends React.Component<IAcknowledgementsProps, IA
   private renderLicenses(licenses: Licenses) {
     const elements = []
     for (const [ index, key ] of Object.keys(licenses).sort().entries()) {
-      // The first entry is Desktop itself. We don't need to thank us.
+      // The first entry is Kactus itself. We don't need to thank us.
       if (index === 0) { continue }
 
       const license = licenses[key]
