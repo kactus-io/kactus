@@ -132,5 +132,7 @@ function sourceMappedStackTrace(error: Error): string | undefined {
     return error.stack
   }
 
-  return prepareStackTraceWithSourceMap(error, frames)
+  // TODO(mathieudutour): fix this
+  // return prepareStackTraceWithSourceMap(error, frames)
+  return prepareStackTrace(error, frames)
 }
