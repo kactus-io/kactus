@@ -43,7 +43,7 @@ var tag = 'v' + distInfo.getVersion();
 
 console.log('Uploading ' + tag + '…')
 
-github.getOrCreateDraftRelease(token, repo, tag, branchName, require('../changelog.json')[distInfo.getVersion()] || [])
+github.getOrCreateDraftRelease(token, repo, tag, branchName, require('../changelog.json').releases[distInfo.getVersion()] || [])
   .then(function (res) {
     releaseId = res.id
     return uploadPromise(releaseId)
