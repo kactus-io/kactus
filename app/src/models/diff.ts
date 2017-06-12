@@ -28,7 +28,7 @@ export enum DiffLineType {
 }
 
 export enum IKactusFileType {
-  Document, Page, Artboard, Layer, ShapeGroup, Group
+  Document, Page, Artboard, Layer, ShapeGroup, Group,
 }
 
 export interface ISketchDiff {
