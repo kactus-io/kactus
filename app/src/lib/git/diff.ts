@@ -164,6 +164,8 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
     type = 'artboard'
   } else if (name === 'shapeGroup.json') {
     type = 'shapeGroup'
+  } else if (name === 'group.json') {
+    type = 'group'
   } else {
     type = 'layer'
   }
@@ -365,6 +367,8 @@ async function generatePreview(sketchFilePath: string, file: string, storagePath
       path = await generateArtboardPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
     } else if (type === 'shapeGroup') {
       path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
+    } else if (type === 'group') {
+      path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
     } else {
       const name = Path.basename(file)
       path = await generateLayerPreview(sketchFilePath, name.replace('.json', ''), storagePath)
@@ -416,7 +420,7 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
   let path: string
   if (type === 'document') {
     path = Path.join(sketchStoragePath, 'document.png')
-  } else if (type === 'page' || type === 'artboard' || type === 'shapeGroup') {
+  } else if (type === 'page' || type === 'artboard' || type === 'shapeGroup' || type === 'group') {
     path = Path.join(sketchStoragePath, Path.basename(Path.dirname(file)) + '.png')
   } else {
     const name = Path.basename(file)

@@ -27,7 +27,7 @@ export enum DiffLineType {
   Context, Add, Delete, Hunk,
 }
 
-export type IKactusFileType = 'document' | 'page' | 'artboard' | 'layer' | 'shapeGroup'
+export type IKactusFileType = 'document' | 'page' | 'artboard' | 'layer' | 'shapeGroup' | 'group'
 
 export interface ISketchDiff {
   readonly kind: DiffType.Sketch
