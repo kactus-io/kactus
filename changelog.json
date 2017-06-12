@@ -1,6 +1,9 @@
 {
   "releases": {
-    "0.1.0-alpha4": [],
+    "0.1.0-alpha5": [],
+    "0.1.0-alpha4": [
+      "[New] Brand new image diffs"
+    ],
     "0.1.0-alpha3": [
       "[Fix] Handle sketch files with images"
     ],
