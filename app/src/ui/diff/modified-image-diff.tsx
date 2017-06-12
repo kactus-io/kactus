@@ -129,7 +129,7 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
 
   private render2Up(height: number, width: number, widthContainer: number) {
     return (
-      <div className='image-diff_inner--two-up' style={{ height }}>
+      <div className='image-diff_inner--two-up'>
         <div className='image-diff__before'>
           <div className='image-diff__header'>Deleted</div>
           {renderImage(this.props.previous, {
@@ -223,7 +223,7 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
           })}
         </div>
         <input
-          style={{ margin: `${height + 10}px auto 0` }}
+          style={{ margin: `${height + 10}px 0 0 ${(width - 129) / 2}px` }}
           type='range'
           max={1} min={0} value={this.state.value} step={0.001}
           onChange={this.handleValueChange} />

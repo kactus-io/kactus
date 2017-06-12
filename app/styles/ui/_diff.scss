@@ -273,12 +273,14 @@
 
   &--two-up {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
 
     .image-diff__before {
+      margin-right: 7.5px;
       color: #f77;
     }
     .image-diff__after {
+      margin-left: 7.5px;
       color: #63c363;
     }
 
