@@ -13,6 +13,7 @@ interface IPathLabelProps {
   readonly status: AppFileStatus
 
   readonly availableWidth?: number
+  readonly type?: string
 }
 
 /** The pixel width reserved to give the resize arrow padding on either side. */
@@ -40,13 +41,19 @@ export class PathLabel extends React.Component<IPathLabelProps, void> {
       const segmentWidth = availableWidth ? (availableWidth / 2) - ResizeArrowPadding : undefined
       return (
         <label {...props}>
+          {this.props.type && <span className='path-type'>{this.props.type}</span>}
           <PathText path={this.props.oldPath} availableWidth={segmentWidth} />
           <Octicon className='rename-arrow' symbol={OcticonSymbol.arrowRight} />
           <PathText path={this.props.path} availableWidth={segmentWidth} />
         </label>
       )
     } else {
-      return <label {...props}><PathText path={this.props.path} availableWidth={availableWidth} /></label>
+      return (
+        <label {...props}>
+          {this.props.type && <span className='path-type'>{this.props.type}</span>}
+          <PathText path={this.props.path} availableWidth={availableWidth} />
+        </label>
+      )
     }
   }
 }
