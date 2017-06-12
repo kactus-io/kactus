@@ -16,6 +16,7 @@ import {
   ICheckoutProgress,
   Progress,
   IKactusState,
+  ImageDiffType,
 } from '../app-state'
 import { Account } from '../../models/account'
 import { Repository } from '../../models/repository'
@@ -86,6 +87,9 @@ const confirmRepoRemovalKey: string = 'confirmRepoRemoval'
 const showAdvancedDiffsDefault: boolean = false
 const showAdvancedDiffsKey: string = 'showAdvancedDiffs'
 
+const imageDiffTypeDefault: number = 0
+const imageDiffTypeKey: string = 'imageDiffType'
+
 export class AppStore {
   private emitter = new Emitter()
 
@@ -155,6 +159,8 @@ export class AppStore {
   private resolveOpenInDesktop: ((repository: Repository | null) => void) | null = null
 
   private showAdvancedDiffs: boolean = showAdvancedDiffsDefault
+
+  private imageDiffType: ImageDiffType = imageDiffTypeDefault
 
   public constructor(gitHubUserStore: GitHubUserStore, cloningRepositoriesStore: CloningRepositoriesStore, emojiStore: EmojiStore, issuesStore: IssuesStore, statsStore: StatsStore, signInStore: SignInStore) {
     this.gitHubUserStore = gitHubUserStore
@@ -424,6 +430,7 @@ export class AppStore {
       isUpdateAvailableBannerVisible: this.isUpdateAvailableBannerVisible,
       confirmRepoRemoval: this.confirmRepoRemoval,
       showAdvancedDiffs: this.showAdvancedDiffs,
+      imageDiffType: this.imageDiffType,
     }
   }
 
@@ -762,6 +769,12 @@ export class AppStore {
     this.showAdvancedDiffs = showAdvancedDiffsValue === null
       ? showAdvancedDiffsDefault
       : showAdvancedDiffsValue === '1'
+
+    const imageDiffTypeValue = localStorage.getItem(imageDiffTypeKey)
+
+    this.imageDiffType = imageDiffTypeValue === null
+      ? imageDiffTypeDefault
+      : parseInt(imageDiffTypeValue)
 
     if (initialLoad) {
       // For the intitial load, synchronously emit the update so that the window
@@ -1960,6 +1973,14 @@ export class AppStore {
   public _toggleAdvancedDiffs(): Promise<void> {
     this.showAdvancedDiffs = !this.showAdvancedDiffs
     localStorage.setItem(showAdvancedDiffsKey, this.showAdvancedDiffs ? '1' : '0')
+    this.emitUpdate()
+
+    return Promise.resolve()
+  }
+
+  public _changeImageDiffType(type: ImageDiffType): Promise<void> {
+    this.imageDiffType = type
+    localStorage.setItem(imageDiffTypeKey, JSON.stringify(this.imageDiffType))
     this.emitUpdate()
 
     return Promise.resolve()

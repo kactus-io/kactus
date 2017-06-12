@@ -23,6 +23,13 @@ export enum SelectionType {
   MissingRepository,
 }
 
+export enum ImageDiffType {
+  TwoUp,
+  Swipe,
+  OnionSkin,
+  Difference,
+}
+
 export type PossibleSelections = { type: SelectionType.Repository, repository: Repository, state: IRepositoryState } |
                                  { type: SelectionType.CloningRepository, repository: CloningRepository, progress: ICloneProgress } |
                                  { type: SelectionType.MissingRepository, repository: Repository }
@@ -123,6 +130,9 @@ export interface IAppState {
 
   /** Whether we should show the text diffs for a sketch file */
   readonly showAdvancedDiffs: boolean
+
+  /** Type of the image diff */
+  readonly imageDiffType: ImageDiffType
 }
 
 export enum PopupType {

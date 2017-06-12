@@ -21,6 +21,7 @@ interface IRepositoryProps {
   readonly issuesStore: IssuesStore
   readonly gitHubUserStore: GitHubUserStore
   readonly showAdvancedDiffs: boolean
+  readonly imageDiffType: number
 }
 
 const enum Tab {
@@ -140,6 +141,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
         isParsing={kactusState.isParsing}
         repository={this.props.repository}
         dispatcher={this.props.dispatcher}
+        imageDiffType={this.props.imageDiffType}
         showAdvancedDiffs={this.props.showAdvancedDiffs}
         file={selectedFile}
         diff={diff}
@@ -147,6 +149,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
       />
     } else if (selectedSection === RepositorySection.History) {
       return <History repository={this.props.repository}
+        imageDiffType={this.props.imageDiffType}
         showAdvancedDiffs={this.props.showAdvancedDiffs}
         dispatcher={this.props.dispatcher}
         history={this.props.state.historyState}

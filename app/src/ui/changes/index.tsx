@@ -21,6 +21,7 @@ interface IChangesProps {
   readonly showAdvancedDiffs: boolean
   readonly isImporting: boolean
   readonly isParsing: boolean
+  readonly imageDiffType: number
 }
 
 export class Changes extends React.Component<IChangesProps, void> {
@@ -79,6 +80,7 @@ export class Changes extends React.Component<IChangesProps, void> {
 
         <div className='diff-wrapper'>
           <Diff repository={this.props.repository}
+            imageDiffType={this.props.imageDiffType}
             showAdvancedDiffs={this.props.showAdvancedDiffs}
             file={file}
             readOnly={false}

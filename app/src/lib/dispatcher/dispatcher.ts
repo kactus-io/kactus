@@ -8,7 +8,7 @@ import { Account, IAccount } from '../../models/account'
 import { Repository, IRepository } from '../../models/repository'
 import { WorkingDirectoryFileChange, FileChange } from '../../models/status'
 import { DiffSelection } from '../../models/diff'
-import { RepositorySection, Popup, PopupType, Foldout, FoldoutType } from '../app-state'
+import { RepositorySection, Popup, PopupType, Foldout, FoldoutType, ImageDiffType } from '../app-state'
 import { Action } from './actions'
 import { AppStore } from './app-store'
 import { CloningRepository } from './cloning-repositories-store'
@@ -932,5 +932,9 @@ export class Dispatcher {
 
   public toggleAdvancedDiffs(): Promise<void> {
     return this.appStore._toggleAdvancedDiffs()
+  }
+
+  public changeImageDiffType(type: ImageDiffType): Promise<void> {
+    return this.appStore._changeImageDiffType(type)
   }
 }

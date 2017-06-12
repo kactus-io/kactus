@@ -57,6 +57,7 @@ interface IDiffProps {
   readonly dispatcher: Dispatcher
 
   readonly showAdvancedDiffs: boolean
+  readonly imageDiffType: number
 }
 
 /** A component which renders a diff for a file. */
@@ -492,6 +493,8 @@ export class Diff extends React.Component<IDiffProps, void> {
   private renderImage(imageDiff: IImageDiff | ISketchDiff) {
     if (imageDiff.current && imageDiff.previous) {
       return <ModifiedImageDiff
+                onChangeDiffType={(type) => this.props.dispatcher.changeImageDiffType(type)}
+                diffType={this.props.imageDiffType}
                 type={imageDiff.type}
                 current={imageDiff.current}
                 previous={imageDiff.previous} />

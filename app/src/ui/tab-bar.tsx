@@ -9,6 +9,8 @@ interface ITabBarProps {
   readonly onTabClicked: (index: number) => void
 
   readonly children?: ReadonlyArray<JSX.Element>
+
+  readonly type?: 'tabs' | 'switch'
 }
 
 /** The tab bar component. */
@@ -18,7 +20,7 @@ export class TabBar extends React.Component<ITabBarProps, void> {
 
   public render() {
     return (
-      <div className='tab-bar' role='tablist'>
+      <div className={'tab-bar ' + (this.props.type || 'tabs')} role='tablist'>
         {this.renderItems()}
       </div>
     )

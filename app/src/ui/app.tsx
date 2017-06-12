@@ -1044,6 +1044,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     if (selectedState.type === SelectionType.Repository) {
       return (
         <RepositoryView repository={selectedState.repository}
+                        imageDiffType={this.state.imageDiffType}
                         showAdvancedDiffs={this.state.showAdvancedDiffs}
                         state={selectedState.state}
                         dispatcher={this.props.dispatcher}
