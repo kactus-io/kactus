@@ -157,17 +157,17 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
 
   let type: IKactusFileType
   if (name === 'document.json') {
-    type = 'document'
+    type = IKactusFileType.Document
   } else if (name === 'page.json') {
-    type = 'page'
+    type = IKactusFileType.Page
   } else if (name === 'artboard.json') {
-    type = 'artboard'
+    type = IKactusFileType.Artboard
   } else if (name === 'shapeGroup.json') {
-    type = 'shapeGroup'
+    type = IKactusFileType.ShapeGroup
   } else if (name === 'group.json') {
-    type = 'group'
+    type = IKactusFileType.Group
   } else {
-    type = 'layer'
+    type = IKactusFileType.Layer
   }
 
   // Are we looking at a file in the working directory or a file in a commit?
@@ -359,15 +359,15 @@ async function getImage(path: string): Promise<Image> {
 async function generatePreview(sketchFilePath: string, file: string, storagePath: string, type: IKactusFileType) {
   let path: string
   try {
-    if (type === 'document') {
+    if (type === IKactusFileType.Document) {
       path = await generateDocumentPreview(sketchFilePath, storagePath)
-    } else if (type === 'page') {
+    } else if (type === IKactusFileType.Page) {
       path = await generatePagePreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
-    } else if (type === 'artboard') {
+    } else if (type === IKactusFileType.Artboard) {
       path = await generateArtboardPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
-    } else if (type === 'shapeGroup') {
+    } else if (type === IKactusFileType.ShapeGroup) {
       path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
-    } else if (type === 'group') {
+    } else if (type === IKactusFileType.Group) {
       path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
     } else {
       const name = Path.basename(file)
@@ -418,9 +418,9 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
   }
 
   let path: string
-  if (type === 'document') {
+  if (type === IKactusFileType.Document) {
     path = Path.join(sketchStoragePath, 'document.png')
-  } else if (type === 'page' || type === 'artboard' || type === 'shapeGroup' || type === 'group') {
+  } else if (type === IKactusFileType.Page || type === IKactusFileType.Artboard || type === IKactusFileType.ShapeGroup || type === IKactusFileType.Group) {
     path = Path.join(sketchStoragePath, Path.basename(Path.dirname(file)) + '.png')
   } else {
     const name = Path.basename(file)

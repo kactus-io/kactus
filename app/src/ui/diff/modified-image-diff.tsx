@@ -8,7 +8,6 @@ import { TabBar } from '../tab-bar'
 interface IModifiedImageDiffProps {
   readonly previous: Image
   readonly current: Image
-  readonly type?: string
   readonly diffType: ImageDiffType
   readonly onChangeDiffType: (type: number) => void
 }

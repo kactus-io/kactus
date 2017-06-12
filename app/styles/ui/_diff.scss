@@ -267,6 +267,35 @@
     width: 350px;
     margin: 10px auto 0;
   }
+
+  .image-diff__before {
+    color: #f77;
+  }
+  .image-diff__after {
+    color: #63c363;
+  }
+
+  .image-diff__before,
+  .image-diff__after {
+    text-align: center;
+
+    img {
+      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUAQMAAAC3R49OAAAABlBMVEX5+fn///8pDrwNAAAAFElEQVQI12NgsP/AQAz+f4CBGAwAJIIdTTn0+w0AAAAASUVORK5CYII=);
+      border: 1px solid currentColor;
+    }
+  }
+
+  .image-diff__header {
+    font-weight: var(--font-weight-semibold);
+    padding-bottom: 10px;
+  }
+
+  .image-diff__footer {
+    color: var(--text-secondary-color);
+    .strong {
+      font-weight: var(--font-weight-semibold);
+    }
+  }
 }
 
 .image-diff_inner {
@@ -277,32 +306,9 @@
 
     .image-diff__before {
       margin-right: 7.5px;
-      color: #f77;
     }
     .image-diff__after {
       margin-left: 7.5px;
-      color: #63c363;
-    }
-
-    .image-diff__before,
-    .image-diff__after {
-      img {
-        border: 1px solid currentColor;
-      }
-    }
-
-    .image-diff__header {
-      text-align: center;
-      font-weight: var(--font-weight-semibold);
-      padding-bottom: 10px;
-    }
-
-    .image-diff__footer {
-      text-align: center;
-      color: var(--text-secondary-color);
-      .strong {
-        font-weight: var(--font-weight-semibold);
-      }
     }
   }
 
@@ -314,6 +320,10 @@
       position: absolute;
       top: 0;
       left: 0;
+      img : {
+        border: 0;
+        background: transparent;
+      }
     }
   }
 
@@ -326,6 +336,11 @@
     .image-diff__after {
       position: absolute;
       margin: 0;
+
+      img {
+        border: 0;
+        background: transparent;
+      }
     }
 
     .image-diff__before {
@@ -345,6 +360,10 @@
       background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUAQMAAAC3R49OAAAABlBMVEX5+fn///8pDrwNAAAAFElEQVQI12NgsP/AQAz+f4CBGAwAJIIdTTn0+w0AAAAASUVORK5CYII=);
       position: absolute;
       margin: 0;
+      img {
+        border: 0;
+        background: transparent;
+      }
     }
 
     .image-diff__before {

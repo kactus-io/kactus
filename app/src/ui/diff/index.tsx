@@ -495,17 +495,16 @@ export class Diff extends React.Component<IDiffProps, void> {
       return <ModifiedImageDiff
                 onChangeDiffType={(type) => this.props.dispatcher.changeImageDiffType(type)}
                 diffType={this.props.imageDiffType}
-                type={imageDiff.type}
                 current={imageDiff.current}
                 previous={imageDiff.previous} />
     }
 
     if (imageDiff.current && this.props.file.status === AppFileStatus.New) {
-      return <NewImageDiff type={imageDiff.type} current={imageDiff.current} />
+      return <NewImageDiff current={imageDiff.current} />
     }
 
     if (imageDiff.previous && this.props.file.status === AppFileStatus.Deleted) {
-      return <DeletedImageDiff type={imageDiff.type} previous={imageDiff.previous} />
+      return <DeletedImageDiff previous={imageDiff.previous} />
     }
 
     return null

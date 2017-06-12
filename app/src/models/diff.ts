@@ -27,7 +27,9 @@ export enum DiffLineType {
   Context, Add, Delete, Hunk,
 }
 
-export type IKactusFileType = 'document' | 'page' | 'artboard' | 'layer' | 'shapeGroup' | 'group'
+export enum IKactusFileType {
+  Document, Page, Artboard, Layer, ShapeGroup, Group
+}
 
 export interface ISketchDiff {
   readonly kind: DiffType.Sketch
@@ -87,7 +89,6 @@ export interface IImageDiff {
    * Will be undefined for a deleted image
    */
   readonly current?: Image
-  readonly type?: string
 }
 
 export interface IBinaryDiff {
