@@ -1,5 +1,7 @@
 {
-  "unreleased": [],
+  "unreleased": [
+    "[New] Create a new sketch file with all the kactus options"
+  ],
   "releases": {
     "0.1.0-alpha4": [
       "[New] Brand new image diffs"
