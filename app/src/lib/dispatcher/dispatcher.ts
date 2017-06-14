@@ -937,4 +937,9 @@ export class Dispatcher {
   public changeImageDiffType(type: ImageDiffType): Promise<void> {
     return this.appStore._changeImageDiffType(type)
   }
+
+  /** create a new Sketch File. */
+  public createNewSketchFile(repository: Repository, path: string): Promise<void> {
+    return this.appStore._createNewSketchFile(repository, path)
+  }
 }

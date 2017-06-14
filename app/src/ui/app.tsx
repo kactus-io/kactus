@@ -33,6 +33,7 @@ import { AppError } from './app-error'
 import { MissingRepository } from './missing-repository'
 import { AddExistingRepository, CreateRepository, CloneRepository } from './add-repository'
 import { CreateBranch } from './create-branch'
+import { CreateSketchFile } from './create-sketch-file'
 import { SignIn } from './sign-in'
 import { InstallGit } from './install-git'
 import { About } from './about'
@@ -189,6 +190,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       case 'clone-repository': return this.showCloneRepo()
       case 'show-about': return this.showAbout()
       case 'boomtown': return this.boomtown()
+      case 'create-sketch-file': return this.showCreateSketchFile()
     }
 
     return assertNever(name, `Unknown menu event name: ${name}`)
@@ -752,6 +754,17 @@ export class App extends React.Component<IAppProps, IAppState> {
                 onDismissed={this.onPopupDismissed}
                 dispatcher={this.props.dispatcher} />
       }
+      case PopupType.CreateSketchFile: {
+        const state = this.props.appStore.getRepositoryState(popup.repository)
+        const repository = popup.repository
+
+        return <CreateSketchFile
+                key='create-sketch-file'
+                allFiles={state.kactus.files}
+                repository={repository}
+                onDismissed={this.onPopupDismissed}
+                dispatcher={this.props.dispatcher} />
+      }
       case PopupType.InstallGit:
         return (
           <InstallGit
@@ -969,6 +982,21 @@ export class App extends React.Component<IAppProps, IAppState> {
     const repository = selection.repository
 
     return this.props.dispatcher.showPopup({ type: PopupType.CreateBranch, repository })
+  }
+
+  private showCreateSketchFile = () => {
+    const selection = this.state.selectedState
+
+    // NB: This should never happen but in the case someone
+    // manages to delete the last repository while the drop down is
+    // open we'll just bail here.
+    if (!selection || selection.type !== SelectionType.Repository) {
+      return
+    }
+
+    const repository = selection.repository
+
+    return this.props.dispatcher.showPopup({ type: PopupType.CreateSketchFile, repository })
   }
 
   private onBranchDropdownStateChanged = (newState: DropdownState) => {

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { SketchFile } from './sketch-file'
 import { List, ClickSource } from '../list'
+import { Octicon, OcticonSymbol } from '../octicons'
 
 import { IKactusFile } from 'kactus-cli'
 
@@ -14,6 +15,7 @@ interface ISketchFilesListProps {
   readonly onImport: (path: string) => void
   readonly onIgnore: (path: string) => void
   readonly onOpen: (path: string) => void
+  readonly onCreateSketchFile: () => void
   readonly isParsing: boolean
   readonly isImporting: boolean
 
@@ -62,6 +64,10 @@ export class SketchFilesList extends React.Component<ISketchFilesListProps, void
           <label className='changed-files-count'>
             {filesDescription}
           </label>
+          <Octicon symbol={OcticonSymbol.plus}
+                 className='sketch-file-action active'
+                 onClick={this.props.onCreateSketchFile}
+                 title='Create a new sketch file' />
         </div>
 
         <List id='changes-list'

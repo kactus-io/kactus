@@ -1,3 +1,4 @@
+import * as Path from 'path'
 import { Emitter, Disposable } from 'event-kit'
 import { ipcRenderer, remote } from 'electron'
 import {
@@ -51,7 +52,7 @@ import { structuralEquals } from '../equality'
 import { fatalError } from '../fatal-error'
 import { updateMenuState } from '../menu-update'
 import { getKactusStatus } from '../kactus'
-import { IKactusFile, parseFile, importFolder } from 'kactus-cli'
+import { IKactusFile, parseFile, importFolder, createNewFile } from 'kactus-cli'
 
 import {
   getAuthorIdentity,
@@ -1985,5 +1986,13 @@ export class AppStore {
     this.emitUpdate()
 
     return Promise.resolve()
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _createNewSketchFile(repository: Repository, path: string): Promise<void> {
+    const kactusConfig = this.getRepositoryState(repository).kactus.config
+    console.log(Path.join(repository.path, path))
+    await createNewFile(Path.join(repository.path, path), kactusConfig)
+    await this._loadStatus(repository)
   }
 }

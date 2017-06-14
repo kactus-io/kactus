@@ -16,6 +16,7 @@
     border-bottom: 1px solid var(--box-border-color);
     padding: 0 var(--spacing);
     height: 29px;
+    position: relative;
 
     .checkbox-component {
       align-items: center;
@@ -40,6 +41,14 @@
         flex-grow: 0;
         flex-shrink: 0;
       }
+    }
+
+    .sketch-file-action {
+      position: absolute;
+      right: 0;
+      padding: 5px 10px;
+      text-align: center;
+      height: 29px;
     }
   }
 }

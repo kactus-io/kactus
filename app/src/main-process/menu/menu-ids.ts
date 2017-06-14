@@ -22,4 +22,5 @@ export type MenuIDs =
   'new-repository' |
   'add-local-repository' |
   'clone-repository' |
-  'about'
+  'about' |
+  'create-sketch-file'

@@ -193,12 +193,16 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
     if (file.status !== AppFileStatus.New) {
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
-      previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, 'HEAD', type)
+      try {
+        previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, 'HEAD', type)
+      } catch (e) {}
     }
-  } else if (name !== 'document.json') {
+  } else {
     // File status can't be conflicted for a file in a commit
     if (file.status !== AppFileStatus.Deleted) {
-      current = await getOldSketchPreview(kactusFile, repository, file.path, commitish, type)
+      try {
+        current = await getOldSketchPreview(kactusFile, repository, file.path, commitish, type)
+      } catch (e) {}
     }
 
     // File status can't be conflicted for a file in a commit
@@ -207,7 +211,9 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
       //
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
-      previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, `${commitish}^`, type)
+      try {
+        previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, `${commitish}^`, type)
+      } catch (e) {}
     }
   }
 
@@ -375,7 +381,7 @@ async function generatePreview(sketchFilePath: string, file: string, storagePath
     }
   } catch (e) {
     console.error(e)
-    return undefined
+    return Promise.resolve(undefined)
   }
   return getImage(path)
 }

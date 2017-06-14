@@ -184,6 +184,10 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, void> 
     this.props.dispatcher.openSketchFile(path)
   }
 
+  private onCreateSketchFile = () => {
+    return this.props.dispatcher.showPopup({ type: PopupType.CreateSketchFile, repository: this.props.repository })
+  }
+
   private renderMostRecentLocalCommit() {
     const commit = this.props.mostRecentLocalCommit
     let child: JSX.Element | null = null
@@ -235,6 +239,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, void> 
           isImporting={this.props.kactus.isImporting}
           availableWidth={this.props.availableWidth}
           onIgnore={this.onSketchIgnore}
+          onCreateSketchFile={this.onCreateSketchFile}
         />
         <ChangesList
           dispatcher={this.props.dispatcher}

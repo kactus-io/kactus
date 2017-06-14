@@ -48,6 +48,11 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
         click: emit('create-repository'),
         accelerator: 'CmdOrCtrl+N',
       },
+      {
+        label: __DARWIN__ ? 'New Sketch File…' : 'New &sketch file…',
+        id: 'create-sketch-file',
+        click: emit('create-sketch-file'),
+      },
       separator,
       {
         label: __DARWIN__ ? 'Add Local Repository…' : 'Add &local repository…',
