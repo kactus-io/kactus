@@ -1,8 +1,9 @@
 {
-  "unreleased": [
-    "[New] Create a new sketch file with all the kactus options"
-  ],
+  "unreleased": [],
   "releases": {
+    "0.1.0-alpha5": [
+      "[New] Create a new sketch file with all the kactus options"
+    ],
     "0.1.0-alpha4": [
       "[New] Brand new image diffs"
     ],
