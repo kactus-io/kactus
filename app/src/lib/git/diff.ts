@@ -202,7 +202,7 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
     if (file.status !== AppFileStatus.Deleted) {
       try {
         current = await getOldSketchPreview(kactusFile, repository, file.path, commitish, type)
-      } catch (e) {}
+      } catch (e) {console.log(e)}
     }
 
     // File status can't be conflicted for a file in a commit
@@ -213,7 +213,7 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
       // look for that file.
       try {
         previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, `${commitish}^`, type)
-      } catch (e) {}
+      } catch (e) {console.log(e)}
     }
   }
 
