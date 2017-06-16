@@ -19,7 +19,7 @@ This new tool is on the next level:
 - you can publish some pages on the internet and import them in another project _(soon)_!
 
 
-![GitHub Desktop screenshot - Windows](https://cloud.githubusercontent.com/assets/359239/26094502/a1f56d02-3a5d-11e7-8799-23c7ba5e5106.png)
+![Kactus screenshot - macOS](https://user-images.githubusercontent.com/3254314/27239480-68e03bb4-52d1-11e7-8687-089d4cafdbe9.png)
 
 ## :cactus: Where can I get it?
 
