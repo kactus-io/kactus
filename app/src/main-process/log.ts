@@ -7,6 +7,12 @@ import { LogLevel } from '../lib/logging/log-level'
 
 require('winston-daily-rotate-file')
 
+/**
+ * The maximum number of log files we should have on disk before pruning old
+ * ones.
+ */
+const MaxLogFiles = 14
+
 /** resolve the log file location based on the current environment */
 function getLogFilePath(directory: string): string {
   const environment = process.env.NODE_ENV || 'production'
@@ -34,6 +40,7 @@ function initializeWinston(path: string): winston.LogMethod {
     prepend: true,
     // log everything interesting (info and up)
     level: 'info',
+    maxFiles: MaxLogFiles,
   })
 
   const consoleLogger = new winston.transports.Console({

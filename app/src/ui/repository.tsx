@@ -3,6 +3,7 @@ import { Repository as Repo } from '../models/repository'
 import { TipState } from '../models/tip'
 import { UiView } from './ui-view'
 import { Changes, ChangesSidebar } from './changes'
+import { NoChanges } from './changes/no-changes'
 import { History, HistorySidebar } from './history'
 import { Resizable } from './resizable'
 import { TabBar } from './tab-bar'
@@ -136,17 +137,24 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
       const kactusState = this.props.state.kactus
       const selectedSketchFileID = kactusState.selectedFileID
       const selectedSketchFile = selectedSketchFileID ? (kactusState.files.find(f => f.id === selectedSketchFileID) || null) : null
-      return <Changes
-        isImporting={kactusState.isImporting}
-        isParsing={kactusState.isParsing}
-        repository={this.props.repository}
-        dispatcher={this.props.dispatcher}
-        imageDiffType={this.props.imageDiffType}
-        showAdvancedDiffs={this.props.showAdvancedDiffs}
-        file={selectedFile}
-        diff={diff}
-        sketchFile={selectedSketchFile}
-      />
+
+      if (!changesState.workingDirectory.files.length || !selectedFile || !diff) {
+        return <NoChanges
+          onOpenRepository={this.openRepository}
+        />
+      } else {
+        return <Changes
+          isImporting={kactusState.isImporting}
+          isParsing={kactusState.isParsing}
+          repository={this.props.repository}
+          dispatcher={this.props.dispatcher}
+          imageDiffType={this.props.imageDiffType}
+          showAdvancedDiffs={this.props.showAdvancedDiffs}
+          file={selectedFile}
+          diff={diff}
+          sketchFile={selectedSketchFile}
+        />
+      }
     } else if (selectedSection === RepositorySection.History) {
       return <History repository={this.props.repository}
         imageDiffType={this.props.imageDiffType}
@@ -171,6 +179,10 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
         {this.renderContent()}
       </UiView>
     )
+  }
+
+  private openRepository = () => {
+    this.props.dispatcher.revealInFileManager(this.props.repository, '')
   }
 
   private onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {

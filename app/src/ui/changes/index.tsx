@@ -14,9 +14,9 @@ export { ChangesSidebar } from './sidebar'
 
 interface IChangesProps {
   readonly repository: Repository
-  readonly file: WorkingDirectoryFileChange | null
   readonly sketchFile: IKactusFile | null
-  readonly diff: IDiff | null
+  readonly file: WorkingDirectoryFileChange
+  readonly diff: IDiff
   readonly dispatcher: Dispatcher
   readonly showAdvancedDiffs: boolean
   readonly isImporting: boolean
@@ -28,11 +28,6 @@ export class Changes extends React.Component<IChangesProps, void> {
 
   private onDiffLineIncludeChanged = (diffSelection: DiffSelection) => {
     const file = this.props.file
-    if (!file) {
-      console.error('Diff line selection changed despite no file. This is a deep mystery.')
-      return
-    }
-
     this.props.dispatcher.changeFileLineSelection(this.props.repository, file, diffSelection)
   }
 
@@ -52,7 +47,7 @@ export class Changes extends React.Component<IChangesProps, void> {
     const diff = this.props.diff
     const file = this.props.file
     const sketchFile = this.props.sketchFile
-    const BlankSlateImage = `file:///${__dirname}/static/empty-no-file-selected.svg`
+
     if (sketchFile) {
       return <SketchFileView
               isParsing={this.props.isParsing}
@@ -61,14 +56,6 @@ export class Changes extends React.Component<IChangesProps, void> {
               onExport={this.onSketchParse}
               onImport={this.onSketchImport}
               onOpenSketchFile={this.onOpenSketchFile} />
-    }
-    if (!diff || !file) {
-      return (
-        <div className='panel blankslate' id='diff'>
-          <img src={BlankSlateImage} className='blankslate-image' />
-          No file selected
-        </div>
-      )
     }
 
     return (
@@ -88,8 +75,8 @@ export class Changes extends React.Component<IChangesProps, void> {
             onIncludeChanged={this.onDiffLineIncludeChanged}
             diff={diff}
             dispatcher={this.props.dispatcher} />
-         </div>
-       </div>
+        </div>
+      </div>
     )
   }
 }
