@@ -49,7 +49,7 @@ If you're looking for something to work on, check out the [up-for-grabs](https:/
 
 ## :cactus: More Resources
 
-See [kactus.io](https://kactus.io) for more product-oriented
+See [kactus.io](http://kactus.io) for more product-oriented
 information about Kactus.
 
 ## :cactus: License
