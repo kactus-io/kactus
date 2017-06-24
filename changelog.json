@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.0-alpha6": [
+      "[New] Add a sketch plugin to open the file in Kactus",
+      "[Fixed] Correct URL for the usage reporting"
+    ],
     "0.1.0-alpha5": [
       "[New] Create a new sketch file with all the kactus options"
     ],
