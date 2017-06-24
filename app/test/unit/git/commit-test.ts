@@ -41,8 +41,6 @@ describe('git/commit', () => {
   beforeEach(async () => {
     const testRepoPath = setupFixtureRepository('test-repo')
     repository = new Repository(testRepoPath, -1, null, false)
-    await GitProcess.exec([ 'config' , 'user.name', 'Cai Hsu' ], repository.path)
-    await GitProcess.exec([ 'config' , 'user.email', 'cai.hsu@not-a-real-site.com' ], repository.path)
   })
 
   after(() => {
@@ -145,9 +143,6 @@ describe('git/commit', () => {
 
     beforeEach(async () => {
       const testRepoPath = setupFixtureRepository('repo-with-changes')
-      await GitProcess.exec([ 'config' , 'user.name', 'Steffen Feierabend' ], testRepoPath)
-      await GitProcess.exec([ 'config' , 'user.email', 'steffen.feierabend@not-a-real-site.com' ], testRepoPath)
-
       repository = new Repository(testRepoPath, -1, null, false)
     })
 
