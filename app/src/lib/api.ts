@@ -28,7 +28,7 @@ enum HttpStatusCode {
 }
 
 /** The note URL used for authorizations the app creates. */
-const NoteURL = 'https://kactus.io/'
+const NoteURL = 'http://kactus.io/'
 
 /**
  * Information about a repository as returned by the GitHub API.

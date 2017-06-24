@@ -1,0 +1,30 @@
+{
+	"compatibleVersion": 3,
+	"bundleVersion": 1,
+  "appcast": false,
+	"commands": [
+		{
+			"name": "Export",
+			"identifier": "export",
+			"script": "./export.js"
+		},
+    {
+			"name": "Import",
+			"identifier": "import",
+			"script": "./import.js"
+		},
+    {
+			"name": "Open Kactus",
+			"identifier": "open-kactus",
+			"script": "./open-kactus.js"
+		}
+	],
+	"menu": {
+		"title": "🌵 Kactus",
+		"items": [
+			"export",
+      "import",
+      "open-kactus"
+		]
+	}
+}

@@ -866,7 +866,7 @@ export class Dispatcher {
         }
         break
 
-      case 'open-repository-from-path':
+      case 'open-repository-from-path': {
         const state = this.appStore.getState()
         const repositories = state.repositories
         const existingRepository = repositories.find(r => {
@@ -888,6 +888,40 @@ export class Dispatcher {
           })
         }
         break
+      }
+
+      case 'open-sketch-file': {
+        const state = this.appStore.getState()
+        const repositories = state.repositories
+        const existingRepository = repositories.find(r => {
+          if (__WIN32__) {
+            // Windows is guaranteed to be case-insensitive so we can be a
+            // bit more accepting.
+            return Path.normalize(action.path).toLowerCase().indexOf(Path.normalize(r.path).toLowerCase()) === 0
+          } else {
+            return Path.normalize(action.path).indexOf(Path.normalize(r.path)) === 0
+          }
+        })
+
+        if (existingRepository) {
+          this.selectRepository(existingRepository)
+          if (existingRepository instanceof Repository) {
+            const repositoryState = this.appStore.getRepositoryState(existingRepository)
+            const existingFile = repositoryState.kactus.files.find(f => {
+              return Path.normalize(f.path + '.sketch') === Path.normalize(action.path)
+            })
+            if (existingFile) {
+              this.changeSketchFileSelection(existingRepository, existingFile)
+            }
+          }
+        } else {
+          return this.showPopup({
+            type: PopupType.AddRepository,
+            path: Path.dirname(action.path),
+          })
+        }
+        break
+      }
 
       default:
         const unknownAction: IUnknownAction = action

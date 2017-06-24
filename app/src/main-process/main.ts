@@ -17,9 +17,11 @@ import { log as writeLog } from './log'
 import { formatError } from '../lib/logging/format-error'
 import { reportError } from './exception-reporting'
 import { enableSourceMaps, withSourceMappedStack } from '../lib/source-map-support'
+import { symlinkSketchPlugin } from '../lib/symlink-sketch-plugin'
 import { now } from './now'
 
 enableSourceMaps()
+symlinkSketchPlugin()
 
 let mainWindow: AppWindow | null = null
 let sharedProcess: SharedProcess | null = null

@@ -29,6 +29,13 @@ export interface IOpenRepositoryFromPathAction {
   readonly path: string
 }
 
+export interface IOpenSketchFileAction {
+  readonly name: 'open-sketch-file'
+
+  /** The local path to open. */
+  readonly path: string
+}
+
 export interface IUnknownAction {
   readonly name: 'unknown'
 }
@@ -38,6 +45,7 @@ export type URLActionType =
   | IOpenRepositoryFromURLAction
   | IOpenRepositoryFromPathAction
   | IUnknownAction
+  | IOpenSketchFileAction
 
 export function parseAppURL(url: string): URLActionType {
   const parsedURL = URL.parse(url, true)
@@ -95,6 +103,13 @@ export function parseAppURL(url: string): URLActionType {
   if (actionName === 'openlocalrepo') {
     return {
       name: 'open-repository-from-path',
+      path: decodeURIComponent(parsedPath),
+    }
+  }
+
+  if (actionName === 'opensketchfile') {
+    return {
+      name: 'open-sketch-file',
       path: decodeURIComponent(parsedPath),
     }
   }

@@ -1,0 +1,28 @@
+{
+	"name": "kactus",
+	"version": "0.1.0",
+	"description": "Kactus plugin",
+	"main": "../out/plugin.sketchplugin",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "skpm build"
+	},
+	"keywords": [
+		"kactus",
+		"sketch",
+		"plugin"
+	],
+	"author": {
+    "name": "Mathieu Dutour",
+    "email": "mathieu@dutour.me",
+    "url": "http://mathieu.dutour.me"
+  },
+	"license": "MIT",
+	"engines": {
+		"sketch": ">=3.0"
+	},
+	"manifest": "src/manifest.json",
+	"devDependencies": {
+		"skpm": "^0.9.15"
+	}
+}
