@@ -10,6 +10,7 @@
 
 
 [![Travis Build Status](https://travis-ci.org/kactus-io/kactus.svg?branch=master)](https://travis-ci.org/kactus-io/kactus)
+![Sketch.app](https://img.shields.io/badge/Sketch.app-43-brightgreen.svg)
 
 Kactus is a tool to bring proper version control _(as in git)_ to designers _(only sketch users for now, but we need to start somewhere, right?)_.
 
