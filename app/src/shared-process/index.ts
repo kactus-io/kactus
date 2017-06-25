@@ -44,7 +44,8 @@ async function updateAccounts() {
     const api = API.fromAccount(account)
     const newAccount = await api.fetchAccount()
     const emails = await api.fetchEmails()
-    return new Account(account.login, account.endpoint, account.token, emails, newAccount.avatar_url, newAccount.id, newAccount.name)
+    const unlockedKactus = await api.checkUnlockedKactus(newAccount, emails)
+    return new Account(account.login, account.endpoint, account.token, emails, newAccount.avatar_url, newAccount.id, newAccount.name, unlockedKactus)
   })
   broadcastUpdate()
 }
@@ -57,6 +58,10 @@ register('get-accounts', () => accountsStore.getAll())
 
 register('add-account', async ({ account }: IAddAccountAction) => {
   await accountsStore.addAccount(Account.fromJSON(account))
+  await updateAccounts()
+})
+
+register('check-unlocked-kactus', async () => {
   await updateAccounts()
 })
 

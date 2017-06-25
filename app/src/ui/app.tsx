@@ -47,11 +47,14 @@ import { ConfirmRemoveRepository } from '../ui/remove-repository/confirm-remove-
 import { sendReady } from './main-process-proxy'
 import { TermsAndConditions } from './terms-and-conditions'
 import { ZoomInfo } from './window/zoom-info'
+import { PremiumUpsell } from './premium-upsell'
 
 /** The interval at which we should check for updates. */
 const UpdateCheckInterval = 1000 * 60 * 60 * 4
 
 const SendStatsInterval = 1000 * 60 * 60 * 4
+
+const CkeckKactusInterval = 1000 * 60 * 60
 
 interface IAppProps {
   readonly dispatcher: Dispatcher
@@ -108,6 +111,10 @@ export class App extends React.Component<IAppProps, IAppState> {
           this.props.dispatcher.reportStats()
 
           setInterval(() => this.props.dispatcher.reportStats(), SendStatsInterval)
+
+          this.props.dispatcher.checkKactusUnlockStatus()
+
+          setInterval(() => this.props.dispatcher.checkKactusUnlockStatus(), CkeckKactusInterval)
         })
       }, { timeout: ReadyDelay })
     })
@@ -815,6 +822,14 @@ export class App extends React.Component<IAppProps, IAppState> {
           <ConfirmRemoveRepository
             repository={repo}
             onConfirmation={this.onConfirmRepoRemoval}
+            onDismissed={this.onPopupDismissed}
+          />
+        )
+      case PopupType.PremiumUpsell:
+        return (
+          <PremiumUpsell
+            user={this.state.accounts[0]}
+            dispatcher={this.props.dispatcher}
             onDismissed={this.onPopupDismissed}
           />
         )

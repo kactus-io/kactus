@@ -50,7 +50,11 @@ export interface IUpdateRepositoryPathAction {
   readonly path: string
 }
 
+export interface ICheckUnlockedKactusAction {
+  name: 'check-unlocked-kactus'
+}
+
 export type Action = IGetAccountsAction | IGetRepositoriesAction |
                      IAddRepositoriesAction | IUpdateGitHubRepositoryAction |
                      IRemoveRepositoriesAction | IAddAccountAction | IRemoveAccountAction |
-                     IUpdateRepositoryMissingAction | IUpdateRepositoryPathAction
+                     IUpdateRepositoryMissingAction | IUpdateRepositoryPathAction | ICheckUnlockedKactusAction

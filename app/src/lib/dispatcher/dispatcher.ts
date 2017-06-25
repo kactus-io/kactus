@@ -361,6 +361,14 @@ export class Dispatcher {
       account = this.appStore.getAccountForRepository(updatedRepository)
     }
 
+    if (
+      updatedRepository.gitHubRepository && updatedRepository.gitHubRepository.private &&
+      account && !account.unlockedKactus
+    ) {
+      await this.showPopup({ type: PopupType.PremiumUpsell })
+      throw new Error('Not authorized')
+    }
+
     return fn(updatedRepository, account)
   }
 
@@ -999,5 +1007,10 @@ export class Dispatcher {
   /** create a new Sketch File. */
   public createNewSketchFile(repository: Repository, path: string): Promise<void> {
     return this.appStore._createNewSketchFile(repository, path)
+  }
+
+  /** Check the unlocked kactus status */
+  public async checkKactusUnlockStatus(): Promise<void> {
+    return this.dispatchToSharedProcess<void>({ name: 'check-unlocked-kactus' })
   }
 }

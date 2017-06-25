@@ -7,6 +7,9 @@ declare const __OAUTH_CLIENT_ID__: string | undefined
 /** The OAuth secret the app should use. */
 declare const __OAUTH_SECRET__: string | undefined
 
+/** The stripe key the app should use */
+declare const __STRIPE_KEY__: string | undefined
+
 /** Is the app being built to run on Darwin? */
 declare const __DARWIN__: boolean
 
@@ -141,3 +144,58 @@ declare namespace Electron {
   }
 
 }
+
+interface ICard {
+  id: string
+  object: string
+  address_city: string | null
+  address_country: string | null
+  address_line1: string | null
+  address_line1_check: string | null
+  address_line2: string | null
+  address_state: string | null
+  address_zip: string | null
+  address_zip_check: string | null
+  brand: string
+  country: string
+  cvc_check: string
+  dynamic_last4: string | null
+  exp_month: number
+  exp_year: number
+  funding: string
+  last4: string
+  metadata: {}
+  name: string
+  tokenization_method: string | null
+}
+
+declare interface IToken {
+  id: string
+  object: string
+  card: ICard
+  client_ip: string
+  created: number
+  email: string
+  livemode: boolean
+  type: string
+  used: boolean
+}
+
+declare interface IStripeCheckout {
+  open(props: {
+    token: (token: IToken) => void,
+    opened: () => void,
+    closed: () => void,
+    name: string,
+    amount: number,
+    email?: string,
+    bitcoin: boolean,
+  }): void
+  close(): void
+}
+
+interface IStripeCheckoutToConfigure {
+  configure(params: {key?: string}): IStripeCheckout
+}
+
+declare const StripeCheckout: IStripeCheckoutToConfigure

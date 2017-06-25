@@ -30,6 +30,8 @@ enum HttpStatusCode {
 /** The note URL used for authorizations the app creates. */
 const NoteURL = 'http://kactus.io/'
 
+const KactusAPIEndpoint = `https://api.kactus.io/${process.env.NODE_ENV === 'production' ? 'v1' : 'dev'}`
+
 /**
  * Information about a repository as returned by the GitHub API.
  */
@@ -107,6 +109,15 @@ export interface IServerMetadata {
    * must go through the OAuth flow to authenticate.
    */
   readonly verifiable_password_authentication: boolean
+}
+
+/** The users we get from the kactus endpoint. */
+export interface IAPIKactusUser {
+  readonly githubId: string
+
+  readonly stripeId: string | null
+
+  readonly unlocked: boolean
 }
 
 /** The server response when handling the OAuth callback (with code) to obtain an access token */
@@ -401,6 +412,23 @@ export class API {
       return null
     }
   }
+
+  /** Fetch wether the user has full access to Kactus or not */
+  public async checkUnlockedKactus(user: IAPIUser, emails: ReadonlyArray<IEmail>): Promise<boolean> {
+    try {
+      const path = `${KactusAPIEndpoint}/${user.id}`
+      const response = await fetch(path)
+      if (response.status === HttpStatusCode.NotFound) {
+        log.warn(`fetchAll: '${path}' returned a 404`)
+        return false
+      }
+      const kactusUser = await parsedResponse<IAPIKactusUser>(response)
+      return kactusUser.unlocked
+    } catch (e) {
+      log.warn(`checkUnlockedKactus: failed for ${user.login}`, e)
+      return false
+    }
+  }
 }
 
 export enum AuthorizationResponseKind {
@@ -503,7 +531,8 @@ export async function fetchUser(endpoint: string, token: string): Promise<Accoun
   try {
     const user = await api.fetchAccount()
     const emails = await api.fetchEmails()
-    return new Account(user.login, endpoint, token, emails, user.avatar_url, user.id, user.name)
+    const unlockedKactus = await api.checkUnlockedKactus(user, emails)
+    return new Account(user.login, endpoint, token, emails, user.avatar_url, user.id, user.name, unlockedKactus)
   } catch (e) {
     log.warn(`fetchUser: failed with endpoint ${endpoint}`, e)
     throw e

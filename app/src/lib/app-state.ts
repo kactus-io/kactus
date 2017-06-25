@@ -155,6 +155,7 @@ export enum PopupType {
   RemoveRepository,
   TermsAndConditions,
   CreateSketchFile,
+  PremiumUpsell,
 }
 
 export type Popup = { type: PopupType.RenameBranch, repository: Repository, branch: Branch } |
@@ -175,7 +176,8 @@ export type Popup = { type: PopupType.RenameBranch, repository: Repository, bran
                     { type: PopupType.UntrustedCertificate, certificate: Electron.Certificate, url: string } |
                     { type: PopupType.RemoveRepository, repository: Repository } |
                     { type: PopupType.TermsAndConditions } |
-                    { type: PopupType.CreateSketchFile, repository: Repository }
+                    { type: PopupType.CreateSketchFile, repository: Repository } |
+                    { type: PopupType.PremiumUpsell }
 
 export enum FoldoutType {
   Repository,
