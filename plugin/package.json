@@ -13,10 +13,10 @@
 		"plugin"
 	],
 	"author": {
-    "name": "Mathieu Dutour",
-    "email": "mathieu@dutour.me",
-    "url": "http://mathieu.dutour.me"
-  },
+		"name": "Mathieu Dutour",
+		"email": "mathieu@dutour.me",
+		"url": "http://mathieu.dutour.me"
+	},
 	"license": "MIT",
 	"engines": {
 		"sketch": ">=3.0"

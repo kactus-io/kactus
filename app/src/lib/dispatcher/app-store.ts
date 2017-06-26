@@ -1991,7 +1991,6 @@ export class AppStore {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _createNewSketchFile(repository: Repository, path: string): Promise<void> {
     const kactusConfig = this.getRepositoryState(repository).kactus.config
-    console.log(Path.join(repository.path, path))
     await createNewFile(Path.join(repository.path, path), kactusConfig)
     await this._loadStatus(repository)
   }

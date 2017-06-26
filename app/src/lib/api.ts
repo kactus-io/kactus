@@ -115,9 +115,15 @@ export interface IServerMetadata {
 export interface IAPIKactusUser {
   readonly githubId: string
 
+  readonly email: string
+
+  readonly login: string
+
   readonly stripeId: string | null
 
-  readonly unlocked: boolean
+  readonly valid: boolean
+
+  readonly createdAt: Date
 }
 
 /** The server response when handling the OAuth callback (with code) to obtain an access token */
@@ -423,7 +429,7 @@ export class API {
         return false
       }
       const kactusUser = await parsedResponse<IAPIKactusUser>(response)
-      return kactusUser.unlocked
+      return kactusUser.valid
     } catch (e) {
       log.warn(`checkUnlockedKactus: failed for ${user.login}`, e)
       return false

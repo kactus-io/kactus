@@ -42,7 +42,7 @@ export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremium
   }
 
   private onToken = (token: IToken) => {
-    this.props.dispatcher.unlockKactus(token.id, token.email)
+    // this.props.dispatcher.unlockKactus(token.id, token.email)
   }
 
   public render() {

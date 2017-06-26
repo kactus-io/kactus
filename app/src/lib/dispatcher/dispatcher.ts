@@ -361,13 +361,13 @@ export class Dispatcher {
       account = this.appStore.getAccountForRepository(updatedRepository)
     }
 
-    if (
-      updatedRepository.gitHubRepository && updatedRepository.gitHubRepository.private &&
-      account && !account.unlockedKactus
-    ) {
-      await this.showPopup({ type: PopupType.PremiumUpsell })
-      throw new Error('Not authorized')
-    }
+    // if (
+    //   updatedRepository.gitHubRepository && updatedRepository.gitHubRepository.private &&
+    //   account && !account.unlockedKactus
+    // ) {
+    //   await this.showPopup({ type: PopupType.PremiumUpsell })
+    //   throw new Error('Not authorized')
+    // }
 
     return fn(updatedRepository, account)
   }

@@ -138,7 +138,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, void> {
       const selectedSketchFileID = kactusState.selectedFileID
       const selectedSketchFile = selectedSketchFileID ? (kactusState.files.find(f => f.id === selectedSketchFileID) || null) : null
 
-      if (!changesState.workingDirectory.files.length || !selectedFile || !diff) {
+      if (!selectedSketchFile && (!changesState.workingDirectory.files.length || !selectedFile || !diff)) {
         return <NoChanges
           onOpenRepository={this.openRepository}
         />
