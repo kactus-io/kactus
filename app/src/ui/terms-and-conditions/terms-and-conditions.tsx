@@ -41,19 +41,19 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
     return (
       <Dialog
         id='terms-and-conditions'
-        title='GitHub Open Source Applications Terms and Conditions'
+        title='Kactus Terms and Conditions'
         onSubmit={this.props.onDismissed}
         onDismissed={this.props.onDismissed}
       >
         <DialogContent onRef={this.onDialogContainerRef}>
           <p>
-            These GitHub Open Source Applications Terms and Conditions
-            ("Application Terms") are a legal agreement between you (either as
-            an individual or on behalf of an entity) and GitHub, Inc. regarding
-            your use of GitHub's applications, such as GitHub Desktop™ and
-            associated documentation ("Software"). These Application Terms apply
-            to the executable code version of the Software. Source code for the
-            Software is available separately and free of charge under open
+            These Kactus Terms and Conditions ("Application Terms") are a
+            legal agreement between you (either as an individual or on behalf
+            of an entity) and GitHub, Inc. regarding your use of
+            Kactus and associated documentation ("Software").
+            These Application Terms apply to the executable code
+            version of the Software. Source code for the Software is
+            available separately and free of charge under open
             source software license agreements. If you do not agree to all of
             the terms in these Application Terms, do not download, install, use,
             or copy the Software.
@@ -85,39 +85,38 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
 
           <p>
             To the extent the terms of the licenses applicable to open source
-            components require GitHub to make an offer to provide source code in
+            components require Kactus to make an offer to provide source code in
             connection with the Software, such offer is hereby made, and you may
-            exercise it by contacting GitHub: <LinkButton uri='https://github.com/contact'>
-            https://github.com/contact</LinkButton>.
+            exercise it by contacting Kactus: <LinkButton uri='http://kactus.io/contact'>
+            http://kactus.io/contact</LinkButton>.
           </p>
 
           <p>
-            Unless otherwise agreed to in writing with GitHub, your agreement
-            with GitHub will always include, at a minimum, these Application
+            Unless otherwise agreed to in writing with Kactus, your agreement
+            with Kactus will always include, at a minimum, these Application
             Terms. Open source software licenses for the Software's source code
             constitute separate written agreements. To the limited extent that
             the open source software licenses expressly supersede these
             Application Terms, the open source licenses govern your agreement
-            with GitHub for the use of the Software or specific included
+            with Kactus for the use of the Software or specific included
             components of the Software.
           </p>
 
-          <h2>GitHub's Logos</h2>
+          <h2>Kactus's Logos</h2>
 
           <p>
-            The license grant included with the Software is not for GitHub's
-            trademarks, which include the Software logo designs. GitHub reserves
-            all trademark and copyright rights in and to all GitHub trademarks.
-            GitHub's logos include, for instance, the stylized designs that
+            The license grant included with the Software is not for Kactus's
+            trademarks, which include the Software logo designs. Kactus reserves
+            all trademark and copyright rights in and to all Kactus trademarks.
+            Kactus's logos include, for instance, the stylized designs that
             include "logo" in the file title in the "logos" folder.
           </p>
 
           <p>
-            The names GitHub, GitHub Desktop, GitHub for Mac, GitHub for
-            Windows, Atom, the Octocat, and related GitHub logos and/or stylized
-            names are trademarks of GitHub. You agree not to display or use
-            these trademarks in any manner without GitHub's prior, written
-            permission, except as allowed by GitHub's Logos and Usage Policy: <LinkButton uri='https://github.com/logos'>https://github.com/logos</LinkButton>.
+            The names Kactus, Kactus.io, and related Kactus logos and/or stylized
+            names are trademarks of Kactus. You agree not to display or use
+            these trademarks in any manner without Kactus's prior, written
+            permission, except as allowed by Kactus's Logos and Usage Policy: <LinkButton uri='http://kactus.io/logos'>http://kactus.io/logos</LinkButton>.
           </p>
 
           <h2>Privacy</h2>
@@ -125,8 +124,8 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
           <p>
             The Software may collect personal information. You may control what
             information the Software collects in the settings panel. If the
-            Software does collect personal information on GitHub's behalf,
-            GitHub will process that information in accordance with the
+            Software does collect personal information on Kactus's behalf,
+            Kactus will process that information in accordance with the
             <LinkButton uri='https://help.github.com/articles/github-privacy-statement/'>GitHub Privacy Statement</LinkButton>.
           </p>
 
@@ -137,7 +136,7 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
           <p>
             The Software may include an auto-update service ("Service"). If you
             choose to use the Service or you download Software that
-            automatically enables the Service, GitHub will automatically update
+            automatically enables the Service, Kactus will automatically update
             the Software when a new version is available.
           </p>
 
@@ -146,7 +145,7 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
           <p>
             THE SERVICE IS PROVIDED ON AN "AS IS" BASIS, AND NO WARRANTY, EITHER
             EXPRESS OR IMPLIED, IS GIVEN. YOUR USE OF THE SERVICE IS AT YOUR
-            SOLE RISK. GitHub does not warrant that (i) the Service will meet
+            SOLE RISK. Kactus does not warrant that (i) the Service will meet
             your specific requirements; (ii) the Service is fully compatible
             with any particular platform; (iii) your use of the Service will be
             uninterrupted, timely, secure, or error-free; (iv) the results that
@@ -158,7 +157,7 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
           </p>
 
           <p>
-            YOU EXPRESSLY UNDERSTAND AND AGREE THAT GITHUB SHALL NOT BE LIABLE
+            YOU EXPRESSLY UNDERSTAND AND AGREE THAT KACTUS SHALL NOT BE LIABLE
             FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR
             EXEMPLARY DAMAGES, INCLUDING BUT NOT LIMITED TO, DAMAGES FOR LOSS OF
             PROFITS, GOODWILL, USE, DATA OR OTHER INTANGIBLE LOSSES (EVEN IF
@@ -174,9 +173,9 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
           </p>
 
           <p>
-            GitHub reserves the right at any time and from time to time to
+            Kactus reserves the right at any time and from time to time to
             modify or discontinue, temporarily or permanently, the Service (or
-            any part thereof) with or without notice. GitHub shall not be liable
+            any part thereof) with or without notice. Kactus shall not be liable
             to you or to any third-party for any price change, suspension or
             discontinuance of the Service.
           </p>
@@ -185,7 +184,7 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
 
           <ol>
             <li>
-              No Waiver. The failure of GitHub to exercise or enforce any right
+              No Waiver. The failure of Kactus to exercise or enforce any right
               or provision of these Application Terms shall not constitute a
               waiver of such right or provision.
             </li>
@@ -194,7 +193,7 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
               Entire Agreement. These Application Terms, together with any
               applicable Privacy Notices, constitutes the entire agreement
               between you and GitHub and governs your use of the Software,
-              superseding any prior agreements between you and GitHub
+              superseding any prior agreements between you and Kactus
               (including, but not limited to, any prior versions of the
               Application Terms).
             </li>
@@ -217,25 +216,25 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
             <li>
               No Modifications; Complete Agreement. These Application Terms may
               only be modified by a written amendment signed by an authorized
-              representative of GitHub, or by the posting by GitHub of a revised
+              representative of Kactus, or by the posting by Kactus of a revised
               version. These Application Terms, together with any applicable
-              Open Source Licenses and Notices and GitHub's Privacy Statement,
+              Open Source Licenses and Notices and Kactus's Privacy Statement,
               represent the complete and exclusive statement of the agreement
               between you and us. These Application Terms supersede any proposal
               or prior agreement oral or written, and any other communications
-              between you and GitHub relating to the subject matter of these
+              between you and Kactus relating to the subject matter of these
               terms.
             </li>
 
             <li>
-              License to GitHub Policies. These Application Terms are licensed
+              License to Kactus Policies. These Application Terms are licensed
               under the <LinkButton uri='https://creativecommons.org/licenses/by/4.0/'>Creative Commons Attribution license</LinkButton>.
               You may use it freely under the terms of the Creative Commons license.
             </li>
 
             <li>
               Contact Us. Please send any questions about these Application
-              Terms to <LinkButton uri='https://github.com/contact'>support@github.com</LinkButton>.
+              Terms to <LinkButton uri='http://kactus.io/contact'>support@kactus.io</LinkButton>.
             </li>
           </ol>
         </DialogContent>

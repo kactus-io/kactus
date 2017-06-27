@@ -101,7 +101,7 @@ export class Acknowledgements extends React.Component<IAcknowledgementsProps, IA
 
     let desktopLicense: JSX.Element | null = null
     if (licenses) {
-      const key = `desktop@${this.props.applicationVersion}`
+      const key = `kactus@${this.props.applicationVersion}`
       const entry = licenses[key]
       desktopLicense = <p className='license-text'>{entry.sourceText}</p>
     }
