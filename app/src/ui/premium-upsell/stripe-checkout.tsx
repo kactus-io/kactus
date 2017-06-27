@@ -17,6 +17,8 @@ interface IStripeCheckoutState {
 let stripeHandler: IStripeCheckout | undefined
 
 export class Checkout extends React.Component<IStripeCheckoutProps, IStripeCheckoutState> {
+  private _success: boolean
+
   public constructor (props: IStripeCheckoutProps) {
     super(props)
     this.state = {
@@ -47,7 +49,9 @@ export class Checkout extends React.Component<IStripeCheckoutProps, IStripeCheck
   }
 
   private onClosed = () => {
-    this.props.onDismissed()
+    if (!this._success) {
+      this.props.onDismissed()
+    }
   }
 
   private onOpened = () => {
@@ -55,10 +59,15 @@ export class Checkout extends React.Component<IStripeCheckoutProps, IStripeCheck
     this.props.onLoaded()
   }
 
+  private onToken = (token: IToken) => {
+    this._success = true
+    this.props.onToken(token)
+  }
+
   private showStripeDialog = () => {
     const primaryEmail = this.props.user && this.props.user.emails.find(e => e.primary)
     stripeHandler!.open({
-      token: this.props.onToken,
+      token: this.onToken,
       opened: this.onOpened,
       closed: this.onClosed,
       name: 'Kactus',

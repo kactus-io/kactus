@@ -30,7 +30,7 @@ export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremium
   }
 
   public componentWillUpdate = (nextProps: IPremiumUpsellProps) => {
-    if (nextProps.isUnlockingKactusFullAccess && nextProps.isUnlockingKactusFullAccess !== this.props.isUnlockingKactusFullAccess) {
+    if (!nextProps.isUnlockingKactusFullAccess && this.props.isUnlockingKactusFullAccess) {
       setTimeout(() => this.props.onDismissed(), 1000)
     }
   }
@@ -76,7 +76,6 @@ export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremium
           id='premium-upsell'
           title='Full potential of Kactus unlocked!'
           onDismissed={this.props.onDismissed}
-          loading
         >
           <DialogContent>
             Congrats, thanks!
