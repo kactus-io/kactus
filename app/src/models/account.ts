@@ -54,9 +54,14 @@ export class Account implements IAccount {
     this.avatarURL = avatarURL
     this.id = id
     this.name = name
+    this.unlockedKactus = unlockedKactus
   }
 
   public withToken(token: string): Account {
     return new Account(this.login, this.endpoint, token, this.emails, this.avatarURL, this.id, this.name, this.unlockedKactus)
+  }
+
+  public unlockKactus(): Account {
+    return new Account(this.login, this.endpoint, this.token, this.emails, this.avatarURL, this.id, this.name, true)
   }
 }

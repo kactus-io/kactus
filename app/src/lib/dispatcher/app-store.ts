@@ -25,7 +25,7 @@ import { GitHubRepository } from '../../models/github-repository'
 import { FileChange, WorkingDirectoryStatus, WorkingDirectoryFileChange } from '../../models/status'
 import { DiffSelection, DiffSelectionType, DiffType } from '../../models/diff'
 import { matchGitHubRepository } from '../../lib/repository-matching'
-import { API, getAccountForEndpoint, IAPIUser } from '../../lib/api'
+import { API, getAccountForEndpoint, IAPIUser, unlockKactusFullAccess } from '../../lib/api'
 import { caseInsensitiveCompare } from '../compare'
 import { Branch, BranchType } from '../../models/branch'
 import { TipState } from '../../models/tip'
@@ -163,6 +163,8 @@ export class AppStore {
   private showAdvancedDiffs: boolean = showAdvancedDiffsDefault
 
   private imageDiffType: ImageDiffType = imageDiffTypeDefault
+
+  private isUnlockingKactusFullAccess: boolean = false
 
   public constructor(gitHubUserStore: GitHubUserStore, cloningRepositoriesStore: CloningRepositoriesStore, emojiStore: EmojiStore, issuesStore: IssuesStore, statsStore: StatsStore, signInStore: SignInStore) {
     this.gitHubUserStore = gitHubUserStore
@@ -433,6 +435,7 @@ export class AppStore {
       confirmRepoRemoval: this.confirmRepoRemoval,
       showAdvancedDiffs: this.showAdvancedDiffs,
       imageDiffType: this.imageDiffType,
+      isUnlockingKactusFullAccess: this.isUnlockingKactusFullAccess,
     }
   }
 
@@ -1993,5 +1996,23 @@ export class AppStore {
     const kactusConfig = this.getRepositoryState(repository).kactus.config
     await createNewFile(Path.join(repository.path, path), kactusConfig)
     await this._loadStatus(repository)
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _unlockKactus(user: Account, token: string, email: string, updateSharedState: () => Promise<void>): Promise<void> {
+    this.isUnlockingKactusFullAccess = true
+    this.emitUpdate()
+    const result = await unlockKactusFullAccess(user, token, email)
+    if (result) {
+      this.accounts = this.accounts.map(a => {
+        if (a.id === user.id) {
+          return a.unlockKactus()
+        }
+        return a
+      })
+      await updateSharedState()
+    }
+    this.isUnlockingKactusFullAccess = false
+    this.emitUpdate()
   }
 }

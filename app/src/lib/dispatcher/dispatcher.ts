@@ -361,13 +361,13 @@ export class Dispatcher {
       account = this.appStore.getAccountForRepository(updatedRepository)
     }
 
-    // if (
-    //   updatedRepository.gitHubRepository && updatedRepository.gitHubRepository.private &&
-    //   account && !account.unlockedKactus
-    // ) {
-    //   await this.showPopup({ type: PopupType.PremiumUpsell })
-    //   throw new Error('Not authorized')
-    // }
+    if (
+      updatedRepository.gitHubRepository && updatedRepository.gitHubRepository.private &&
+      account && !account.unlockedKactus
+    ) {
+      await this.showPopup({ type: PopupType.PremiumUpsell })
+      throw new Error('Not authorized')
+    }
 
     return fn(updatedRepository, account)
   }
@@ -1012,5 +1012,18 @@ export class Dispatcher {
   /** Check the unlocked kactus status */
   public async checkKactusUnlockStatus(): Promise<void> {
     return this.dispatchToSharedProcess<void>({ name: 'check-unlocked-kactus' })
+  }
+
+  public async unlockKactus(user: Account, token: string, email: string): Promise<void> {
+    try {
+      await this.appStore._unlockKactus(
+        user,
+        token,
+        email,
+        () => this.dispatchToSharedProcess<void>({ name: 'unlock-kactus', account: user }),
+      )
+    } catch (e) {
+      this.postError(e)
+    }
   }
 }

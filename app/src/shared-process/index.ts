@@ -15,8 +15,9 @@ import {
   IRemoveAccountAction,
   IUpdateRepositoryMissingAction,
   IUpdateRepositoryPathAction,
+  IUnlockKactusAction,
 } from '../lib/dispatcher'
-import { API } from '../lib/api'
+import { API, checkUnlockedKactus } from '../lib/api'
 import { sendErrorReport, reportUncaughtException } from '../ui/main-process-proxy'
 import { enableSourceMaps, withSourceMappedStack } from '../lib/source-map-support'
 
@@ -44,7 +45,7 @@ async function updateAccounts() {
     const api = API.fromAccount(account)
     const newAccount = await api.fetchAccount()
     const emails = await api.fetchEmails()
-    const unlockedKactus = await api.checkUnlockedKactus(newAccount, emails)
+    const unlockedKactus = await checkUnlockedKactus(newAccount)
     return new Account(account.login, account.endpoint, account.token, emails, newAccount.avatar_url, newAccount.id, newAccount.name, unlockedKactus)
   })
   broadcastUpdate()
@@ -63,6 +64,15 @@ register('add-account', async ({ account }: IAddAccountAction) => {
 
 register('check-unlocked-kactus', async () => {
   await updateAccounts()
+})
+
+register('unlock-kactus', async ({ account }: IUnlockKactusAction) => {
+  await accountsStore.map(async (_account: Account) => {
+    if (_account.id === account.id) {
+      return Account.fromJSON(account)
+    }
+    return _account
+  })
 })
 
 register('remove-account', async ({ account }: IRemoveAccountAction) => {

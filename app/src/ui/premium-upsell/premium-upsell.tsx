@@ -10,7 +10,8 @@ interface IPremiumUpsellProps {
   /** A function called when the dialog is dismissed. */
   readonly onDismissed: () => void
   readonly dispatcher: Dispatcher
-  readonly user?: Account
+  readonly user: Account
+  readonly isUnlockingKactusFullAccess: boolean
 }
 
 interface IPremiumUpsellState {
@@ -28,6 +29,12 @@ export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremium
     }
   }
 
+  public componentWillUpdate = (nextProps: IPremiumUpsellProps) => {
+    if (nextProps.isUnlockingKactusFullAccess && nextProps.isUnlockingKactusFullAccess !== this.props.isUnlockingKactusFullAccess) {
+      setTimeout(() => this.props.onDismissed(), 1000)
+    }
+  }
+
   private showCheckout = () => {
     this.setState({
       loadingCheckout: true,
@@ -42,11 +49,42 @@ export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremium
   }
 
   private onToken = (token: IToken) => {
-    // this.props.dispatcher.unlockKactus(token.id, token.email)
+    this.props.dispatcher.unlockKactus(this.props.user, token.id, token.email)
   }
 
   public render() {
     const { loadingCheckout, showingCheckout } = this.state
+
+    if (this.props.isUnlockingKactusFullAccess) {
+      return (
+        <Dialog
+          id='premium-upsell'
+          title='Unlocking the full potential of Kactus'
+          onDismissed={this.props.onDismissed}
+          loading
+        >
+          <DialogContent>
+            Loading here
+          </DialogContent>
+        </Dialog>
+      )
+    }
+
+    if (this.props.user.unlockedKactus) {
+      return (
+        <Dialog
+          id='premium-upsell'
+          title='Full potential of Kactus unlocked!'
+          onDismissed={this.props.onDismissed}
+          loading
+        >
+          <DialogContent>
+            Congrats, thanks!
+          </DialogContent>
+        </Dialog>
+      )
+    }
+
     return (
       <div>
         {(loadingCheckout || showingCheckout) &&

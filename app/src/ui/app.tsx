@@ -831,6 +831,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             user={this.state.accounts[0]}
             dispatcher={this.props.dispatcher}
             onDismissed={this.onPopupDismissed}
+            isUnlockingKactusFullAccess={this.state.isUnlockingKactusFullAccess}
           />
         )
       case PopupType.TermsAndConditions:

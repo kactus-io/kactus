@@ -3,7 +3,7 @@ import * as URL from 'url'
 import { Account } from '../models/account'
 import { IEmail } from '../models/email'
 
-import { request, parsedResponse, HTTPMethod, APIError, urlWithQueryString } from './http'
+import { request, parsedResponse, HTTPMethod, APIError, urlWithQueryString, getUserAgent } from './http'
 import { AuthenticationMode } from './2fa'
 import { uuid } from './uuid'
 
@@ -112,7 +112,7 @@ export interface IServerMetadata {
 }
 
 /** The users we get from the kactus endpoint. */
-export interface IAPIKactusUser {
+interface IAPIKactusNestedUser {
   readonly githubId: string
 
   readonly email: string
@@ -124,6 +124,12 @@ export interface IAPIKactusUser {
   readonly valid: boolean
 
   readonly createdAt: Date
+}
+
+export interface IAPIKactusUser {
+  readonly ok: boolean
+
+  readonly user: IAPIKactusNestedUser
 }
 
 /** The server response when handling the OAuth callback (with code) to obtain an access token */
@@ -418,23 +424,6 @@ export class API {
       return null
     }
   }
-
-  /** Fetch wether the user has full access to Kactus or not */
-  public async checkUnlockedKactus(user: IAPIUser, emails: ReadonlyArray<IEmail>): Promise<boolean> {
-    try {
-      const path = `${KactusAPIEndpoint}/${user.id}`
-      const response = await fetch(path)
-      if (response.status === HttpStatusCode.NotFound) {
-        log.warn(`fetchAll: '${path}' returned a 404`)
-        return false
-      }
-      const kactusUser = await parsedResponse<IAPIKactusUser>(response)
-      return kactusUser.valid
-    } catch (e) {
-      log.warn(`checkUnlockedKactus: failed for ${user.login}`, e)
-      return false
-    }
-  }
 }
 
 export enum AuthorizationResponseKind {
@@ -537,7 +526,7 @@ export async function fetchUser(endpoint: string, token: string): Promise<Accoun
   try {
     const user = await api.fetchAccount()
     const emails = await api.fetchEmails()
-    const unlockedKactus = await api.checkUnlockedKactus(user, emails)
+    const unlockedKactus = await checkUnlockedKactus(user)
     return new Account(user.login, endpoint, token, emails, user.avatar_url, user.id, user.name, unlockedKactus)
   } catch (e) {
     log.warn(`fetchUser: failed with endpoint ${endpoint}`, e)
@@ -661,5 +650,47 @@ export async function requestOAuthToken(endpoint: string, state: string, code: s
   } catch (e) {
     log.warn(`requestOAuthToken: failed with endpoint ${endpoint}`, e)
     return null
+  }
+}
+
+/** Fetch wether the user has full access to Kactus or not */
+export async function checkUnlockedKactus(user: IAPIUser): Promise<boolean> {
+  try {
+    const path = `${KactusAPIEndpoint}/${user.id}`
+    const response = await fetch(path)
+    if (response.status === HttpStatusCode.NotFound) {
+      log.warn(`fetchAll: '${path}' returned a 404`)
+      return false
+    }
+    const kactusUser = await parsedResponse<IAPIKactusUser>(response)
+    return kactusUser.user.valid
+  } catch (e) {
+    log.warn(`checkUnlockedKactus: failed for ${user.login}`, e)
+    return false
+  }
+}
+
+/** Unlock kactus. */
+export async function unlockKactusFullAccess(account: Account, token: string, email: string): Promise<boolean> {
+  try {
+    const path = `${KactusAPIEndpoint}/unlock`
+    const response = await fetch(path, {
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': getUserAgent(),
+      },
+      method: 'post',
+      body: JSON.stringify({
+        token,
+        githubId: account.id,
+        email,
+        login: account.login,
+      }),
+    })
+    const res = await parsedResponse<{ok: boolean}>(response)
+    return res.ok
+  } catch (e) {
+    log.warn(`unlockKactusFullAccess: failed for ${account.login}`, e)
+    return false
   }
 }

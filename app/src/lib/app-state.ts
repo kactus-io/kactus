@@ -133,6 +133,8 @@ export interface IAppState {
 
   /** Type of the image diff */
   readonly imageDiffType: ImageDiffType
+
+  readonly isUnlockingKactusFullAccess: boolean
 }
 
 export enum PopupType {

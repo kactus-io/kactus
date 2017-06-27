@@ -104,7 +104,7 @@ export function request(endpoint: string, token: string | null, method: HTTPMeth
 }
 
 /** Get the user agent to use for all requests. */
-function getUserAgent() {
+export function getUserAgent() {
   const platform = __DARWIN__ ? 'Macintosh' : 'Windows'
   return `Kactus/${appProxy.getVersion()} (${platform})`
 }
