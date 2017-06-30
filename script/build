@@ -86,7 +86,7 @@ function packageApp (callback) {
       {
         name: distInfo.getBundleID(),
         schemes: [
-          isProductionBuild ? 'x-github-desktop-auth': 'x-github-desktop-dev-auth',
+          isProductionBuild ? 'x-kactus-auth': 'x-kactus-dev-auth',
           'x-github-client',
           'github-mac',
           'kactus'

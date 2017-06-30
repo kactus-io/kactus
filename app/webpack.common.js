@@ -7,8 +7,8 @@ const CleanWebpackPlugin = require('clean-webpack-plugin')
 const webpack = require('webpack')
 const merge = require('webpack-merge')
 
-const devClientId = '3a723b10ac5575cc5bb9'
-const devClientSecret = '22c34d87789a365981ed921352a7b9a8c3f69d54'
+const devClientId = 'e2192ac9bf572ac04bfb'
+const devClientSecret = 'c9b11bb47ee91ef08545a5355658b37a100d46e1'
 const devStripeKey = 'pk_test_wqDaZ2Vc1Vlja0RflUevsa9K'
 
 const environment = process.env.NODE_ENV || 'development'
