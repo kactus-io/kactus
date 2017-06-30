@@ -27,7 +27,10 @@ interface ICreateBranchState {
 }
 
 /** The Create Branch component. */
-export class CreateSketchFile extends React.Component<ICreateSketchFileProps, ICreateBranchState> {
+export class CreateSketchFile extends React.Component<
+  ICreateSketchFileProps,
+  ICreateBranchState
+> {
   public constructor(props: ICreateSketchFileProps) {
     super(props)
 
@@ -40,32 +43,42 @@ export class CreateSketchFile extends React.Component<ICreateSketchFileProps, IC
 
   public render() {
     const proposedName = this.state.proposedName
-    const disabled = !proposedName.length || !!this.state.currentError || /^\s*$/.test(this.state.proposedName)
+    const disabled =
+      !proposedName.length ||
+      !!this.state.currentError ||
+      /^\s*$/.test(this.state.proposedName)
     const error = this.state.currentError
 
     return (
       <Dialog
-        id='create-sketch-file'
+        id="create-sketch-file"
         title={__DARWIN__ ? 'Create a Sketch File' : 'Create a sketch file'}
         onSubmit={this.createFile}
         onDismissed={this.props.onDismissed}
         loading={this.state.isCreatingFile}
         disabled={this.state.isCreatingFile}
       >
-        {error ? <DialogError>{error.message}</DialogError> : null}
+        {error
+          ? <DialogError>
+              {error.message}
+            </DialogError>
+          : null}
 
         <DialogContent>
           <Row>
             <TextBox
-              label='Name'
+              label="Name"
               autoFocus={true}
-              onChange={this.onFileNameChange} />
+              onChange={this.onFileNameChange}
+            />
           </Row>
         </DialogContent>
 
         <DialogFooter>
           <ButtonGroup>
-            <Button type='submit' disabled={disabled}>{__DARWIN__ ? 'Create File' : 'Create file'}</Button>
+            <Button type="submit" disabled={disabled}>
+              {__DARWIN__ ? 'Create File' : 'Create file'}
+            </Button>
             <Button onClick={this.props.onDismissed}>Cancel</Button>
           </ButtonGroup>
         </DialogFooter>
@@ -89,7 +102,10 @@ export class CreateSketchFile extends React.Component<ICreateSketchFileProps, IC
 
     if (name.length > 0) {
       this.setState({ isCreatingFile: true })
-      await this.props.dispatcher.createNewSketchFile(this.props.repository, name)
+      await this.props.dispatcher.createNewSketchFile(
+        this.props.repository,
+        name
+      )
       this.props.onDismissed()
     }
   }

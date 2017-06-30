@@ -8,7 +8,7 @@ update this process.
 
 ## The Process
 
-1. Ensure the release notes for `RELEASE_VERSION` in [`changelog.json`](../changelog.json) are up-to-date.
-1. Bump `version` in [`app/package.json`](../app/package.json) to `RELEASE_VERSION`.
+1. Ensure the release notes for `RELEASE_VERSION` in [`changelog.json`](../../changelog.json) are up-to-date.
+1. Bump `version` in [`app/package.json`](../../app/package.json) to `RELEASE_VERSION`.
 1. Commit & push the changes.
 1. Checkout a new branch `__release-NAME-OF-THE-RELEASE` and push it

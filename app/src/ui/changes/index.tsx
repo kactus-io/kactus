@@ -24,11 +24,14 @@ interface IChangesProps {
   readonly imageDiffType: number
 }
 
-export class Changes extends React.Component<IChangesProps, void> {
-
+export class Changes extends React.Component<IChangesProps, {}> {
   private onDiffLineIncludeChanged = (diffSelection: DiffSelection) => {
     const file = this.props.file
-    this.props.dispatcher.changeFileLineSelection(this.props.repository, file!, diffSelection)
+    this.props.dispatcher.changeFileLineSelection(
+      this.props.repository,
+      file!,
+      diffSelection
+    )
   }
 
   private onSketchParse = (path: string) => {
@@ -49,33 +52,39 @@ export class Changes extends React.Component<IChangesProps, void> {
     const sketchFile = this.props.sketchFile
 
     if (sketchFile) {
-      return <SketchFileView
-              isParsing={this.props.isParsing}
-              isImporting={this.props.isImporting}
-              sketchFile={sketchFile}
-              onExport={this.onSketchParse}
-              onImport={this.onSketchImport}
-              onOpenSketchFile={this.onOpenSketchFile} />
+      return (
+        <SketchFileView
+          isParsing={this.props.isParsing}
+          isImporting={this.props.isImporting}
+          sketchFile={sketchFile}
+          onExport={this.onSketchParse}
+          onImport={this.onSketchImport}
+          onOpenSketchFile={this.onOpenSketchFile}
+        />
+      )
     }
 
     if (file && diff) {
       return (
-        <div className='changed-file'>
+        <div className="changed-file">
           <ChangedFileDetails
             path={file.path}
             oldPath={file.oldPath}
             status={file.status}
-            diff={diff} />
+            diff={diff}
+          />
 
-          <div className='diff-wrapper'>
-            <Diff repository={this.props.repository}
+          <div className="diff-wrapper">
+            <Diff
+              repository={this.props.repository}
               imageDiffType={this.props.imageDiffType}
               showAdvancedDiffs={this.props.showAdvancedDiffs}
               file={file}
               readOnly={false}
               onIncludeChanged={this.onDiffLineIncludeChanged}
               diff={diff}
-              dispatcher={this.props.dispatcher} />
+              dispatcher={this.props.dispatcher}
+            />
           </div>
         </div>
       )

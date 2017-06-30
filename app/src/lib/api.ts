@@ -3,7 +3,14 @@ import * as URL from 'url'
 import { Account } from '../models/account'
 import { IEmail } from '../models/email'
 
-import { request, parsedResponse, HTTPMethod, APIError, urlWithQueryString, getUserAgent } from './http'
+import {
+  request,
+  parsedResponse,
+  HTTPMethod,
+  APIError,
+  urlWithQueryString,
+  getUserAgent,
+} from './http'
 import { AuthenticationMode } from './2fa'
 import { uuid } from './uuid'
 
@@ -13,14 +20,13 @@ const ClientID = process.env.TEST_ENV ? '' : __OAUTH_CLIENT_ID__
 const ClientSecret = process.env.TEST_ENV ? '' : __OAUTH_SECRET__
 
 if (!ClientID || !ClientID.length || !ClientSecret || !ClientSecret.length) {
-  log.warn(`DESKTOP_OAUTH_CLIENT_ID and/or DESKTOP_OAUTH_CLIENT_SECRET is undefined. You won't be able to authenticate new users.`)
+  log.warn(
+    `DESKTOP_OAUTH_CLIENT_ID and/or DESKTOP_OAUTH_CLIENT_SECRET is undefined. You won't be able to authenticate new users.`
+  )
 }
 
 /** The OAuth scopes we need. */
-const Scopes = [
-  'repo',
-  'user',
-]
+const Scopes = ['repo', 'user']
 
 enum HttpStatusCode {
   NotModified = 304,
@@ -30,7 +36,10 @@ enum HttpStatusCode {
 /** The note URL used for authorizations the app creates. */
 const NoteURL = 'http://kactus.io/'
 
-const KactusAPIEndpoint = `https://api.kactus.io/${process.env.NODE_ENV === 'production' ? 'v1' : 'dev'}`
+const KactusAPIEndpoint = `https://api.kactus.io/${process.env.NODE_ENV ===
+'production'
+  ? 'v1'
+  : 'dev'}`
 
 /**
  * Information about a repository as returned by the GitHub API.
@@ -210,7 +219,10 @@ export class API {
   }
 
   /** Fetch a repo by its owner and name. */
-  public async fetchRepository(owner: string, name: string): Promise<IAPIRepository | null> {
+  public async fetchRepository(
+    owner: string,
+    name: string
+  ): Promise<IAPIRepository | null> {
     try {
       const response = await this.request('GET', `repos/${owner}/${name}`)
       if (response.status === HttpStatusCode.NotFound) {
@@ -249,9 +261,7 @@ export class API {
       const response = await this.request('GET', apiPath)
       const result = await parsedResponse<ReadonlyArray<IAPIEmail>>(response)
 
-      return Array.isArray(result)
-        ? result
-        : []
+      return Array.isArray(result) ? result : []
     } catch (e) {
       log.warn(`fetchEmails: failed with endpoint ${this.endpoint}`, e)
       return []
@@ -259,7 +269,11 @@ export class API {
   }
 
   /** Fetch a commit from the repository. */
-  public async fetchCommit(owner: string, name: string, sha: string): Promise<IAPICommit | null> {
+  public async fetchCommit(
+    owner: string,
+    name: string,
+    sha: string
+  ): Promise<IAPICommit | null> {
     try {
       const path = `repos/${owner}/${name}/commits/${sha}`
       const response = await this.request('GET', path)
@@ -306,7 +320,12 @@ export class API {
   }
 
   /** Create a new GitHub repository with the given properties. */
-  public async createRepository(org: IAPIUser | null, name: string, description: string, private_: boolean): Promise<IAPIRepository> {
+  public async createRepository(
+    org: IAPIUser | null,
+    name: string,
+    description: string,
+    private_: boolean
+  ): Promise<IAPIRepository> {
     try {
       const apiPath = org ? `orgs/${org.login}/repos` : 'user/repos'
       const response = await this.request('POST', apiPath, {
@@ -326,11 +345,16 @@ export class API {
    * Fetch the issues with the given state that have been created or updated
    * since the given date.
    */
-  public async fetchIssues(owner: string, name: string, state: 'open' | 'closed' | 'all', since: Date | null): Promise<ReadonlyArray<IAPIIssue>> {
-
-    const params = since && !isNaN(since.getTime())
-      ? { since: toGitHubIsoDateString(since) }
-      : { }
+  public async fetchIssues(
+    owner: string,
+    name: string,
+    state: 'open' | 'closed' | 'all',
+    since: Date | null
+  ): Promise<ReadonlyArray<IAPIIssue>> {
+    const params =
+      since && !isNaN(since.getTime())
+        ? { since: toGitHubIsoDateString(since) }
+        : {}
 
     const url = urlWithQueryString(`repos/${owner}/${name}/issues`, params)
     try {
@@ -373,7 +397,12 @@ export class API {
   }
 
   /** Make an authenticated request to the client's endpoint with its token. */
-  private request(method: HTTPMethod, path: string, body?: Object, customHeaders?: Object): Promise<Response> {
+  private request(
+    method: HTTPMethod,
+    path: string,
+    body?: Object,
+    customHeaders?: Object
+  ): Promise<Response> {
     return request(this.endpoint, this.token, method, path, body, customHeaders)
   }
 
@@ -381,7 +410,10 @@ export class API {
    * Get the allowed poll interval for fetching. If an error occurs it will
    * return null.
    */
-  public async getFetchPollInterval(owner: string, name: string): Promise<number | null> {
+  public async getFetchPollInterval(
+    owner: string,
+    name: string
+  ): Promise<number | null> {
     const path = `repos/${owner}/${name}/git`
     try {
       const response = await this.request('HEAD', path)
@@ -398,10 +430,14 @@ export class API {
   }
 
   /** Fetch the mentionable users for the repository. */
-  public async fetchMentionables(owner: string, name: string, etag: string | null): Promise<IAPIMentionablesResponse | null> {
+  public async fetchMentionables(
+    owner: string,
+    name: string,
+    etag: string | null
+  ): Promise<IAPIMentionablesResponse | null> {
     // NB: this custom `Accept` is required for the `mentionables` endpoint.
     const headers: any = {
-      'Accept': 'application/vnd.github.jerry-maguire-preview',
+      Accept: 'application/vnd.github.jerry-maguire-preview',
     }
 
     if (etag) {
@@ -411,12 +447,16 @@ export class API {
     try {
       const path = `repos/${owner}/${name}/mentionables/users`
       const response = await this.request('GET', path, undefined, headers)
-      if (response.status === HttpStatusCode.NotModified) { return null }
+      if (response.status === HttpStatusCode.NotModified) {
+        return null
+      }
       if (response.status === HttpStatusCode.NotFound) {
         log.warn(`fetchAll: '${path}' returned a 404`)
         return null
       }
-      const users = await parsedResponse<ReadonlyArray<IAPIMentionableUser>>(response)
+      const users = await parsedResponse<ReadonlyArray<IAPIMentionableUser>>(
+        response
+      )
       const responseEtag = response.headers.get('etag')
       return { users, etag: responseEtag || '' }
     } catch (e) {
@@ -436,36 +476,52 @@ export enum AuthorizationResponseKind {
   EnterpriseTooOld,
 }
 
-export type AuthorizationResponse = { kind: AuthorizationResponseKind.Authorized, token: string } |
-                                    { kind: AuthorizationResponseKind.Failed, response: Response } |
-                                    { kind: AuthorizationResponseKind.TwoFactorAuthenticationRequired, type: AuthenticationMode } |
-                                    { kind: AuthorizationResponseKind.Error, response: Response } |
-                                    { kind: AuthorizationResponseKind.UserRequiresVerification } |
-                                    { kind: AuthorizationResponseKind.PersonalAccessTokenBlocked } |
-                                    { kind: AuthorizationResponseKind.EnterpriseTooOld }
+export type AuthorizationResponse =
+  | { kind: AuthorizationResponseKind.Authorized; token: string }
+  | { kind: AuthorizationResponseKind.Failed; response: Response }
+  | {
+      kind: AuthorizationResponseKind.TwoFactorAuthenticationRequired
+      type: AuthenticationMode
+    }
+  | { kind: AuthorizationResponseKind.Error; response: Response }
+  | { kind: AuthorizationResponseKind.UserRequiresVerification }
+  | { kind: AuthorizationResponseKind.PersonalAccessTokenBlocked }
+  | { kind: AuthorizationResponseKind.EnterpriseTooOld }
 
 /**
  * Create an authorization with the given login, password, and one-time
  * password.
  */
-export async function createAuthorization(endpoint: string, login: string, password: string, oneTimePassword: string | null): Promise<AuthorizationResponse> {
+export async function createAuthorization(
+  endpoint: string,
+  login: string,
+  password: string,
+  oneTimePassword: string | null
+): Promise<AuthorizationResponse> {
   const creds = Buffer.from(`${login}:${password}`, 'utf8').toString('base64')
   const authorization = `Basic ${creds}`
   const optHeader = oneTimePassword ? { 'X-GitHub-OTP': oneTimePassword } : {}
 
   const note = await getNote()
 
-  const response = await request(endpoint, null, 'POST', 'authorizations', {
-    'scopes': Scopes,
-    'client_id': ClientID,
-    'client_secret': ClientSecret,
-    'note': note,
-    'note_url': NoteURL,
-    'fingerprint': uuid(),
-  }, {
-    'Authorization': authorization,
-    ...optHeader,
-  })
+  const response = await request(
+    endpoint,
+    null,
+    'POST',
+    'authorizations',
+    {
+      scopes: Scopes,
+      client_id: ClientID,
+      client_secret: ClientSecret,
+      note: note,
+      note_url: NoteURL,
+      fingerprint: uuid(),
+    },
+    {
+      Authorization: authorization,
+      ...optHeader,
+    }
+  )
 
   try {
     const result = await parsedResponse<IAPIAuthorization>(response)
@@ -484,9 +540,15 @@ export async function createAuthorization(endpoint: string, login: string, passw
           const type = pieces[1].trim()
           switch (type) {
             case 'app':
-              return { kind: AuthorizationResponseKind.TwoFactorAuthenticationRequired, type: AuthenticationMode.App }
+              return {
+                kind: AuthorizationResponseKind.TwoFactorAuthenticationRequired,
+                type: AuthenticationMode.App,
+              }
             case 'sms':
-              return { kind: AuthorizationResponseKind.TwoFactorAuthenticationRequired, type: AuthenticationMode.Sms }
+              return {
+                kind: AuthorizationResponseKind.TwoFactorAuthenticationRequired,
+                type: AuthenticationMode.Sms,
+              }
             default:
               return { kind: AuthorizationResponseKind.Failed, response }
           }
@@ -498,19 +560,28 @@ export async function createAuthorization(endpoint: string, login: string, passw
 
     const apiError = e instanceof APIError && e.apiError
     if (apiError) {
-      if (response.status === 403 && apiError.message === 'This API can only be accessed with username and password Basic Auth') {
+      if (
+        response.status === 403 &&
+        apiError.message ===
+          'This API can only be accessed with username and password Basic Auth'
+      ) {
         // Authorization API does not support providing personal access tokens
         return { kind: AuthorizationResponseKind.PersonalAccessTokenBlocked }
       } else if (response.status === 422) {
         if (apiError.errors) {
           for (const error of apiError.errors) {
-            const isExpectedResource = error.resource.toLowerCase() === 'oauthaccess'
+            const isExpectedResource =
+              error.resource.toLowerCase() === 'oauthaccess'
             const isExpectedField = error.field.toLowerCase() === 'user'
             if (isExpectedField && isExpectedResource) {
-              return { kind: AuthorizationResponseKind.UserRequiresVerification }
+              return {
+                kind: AuthorizationResponseKind.UserRequiresVerification,
+              }
             }
           }
-        } else if (apiError.message === 'Invalid OAuth application client_id or secret.') {
+        } else if (
+          apiError.message === 'Invalid OAuth application client_id or secret.'
+        ) {
           return { kind: AuthorizationResponseKind.EnterpriseTooOld }
         }
       }
@@ -521,13 +592,25 @@ export async function createAuthorization(endpoint: string, login: string, passw
 }
 
 /** Fetch the user authenticated by the token. */
-export async function fetchUser(endpoint: string, token: string): Promise<Account> {
+export async function fetchUser(
+  endpoint: string,
+  token: string
+): Promise<Account> {
   const api = new API(endpoint, token)
   try {
     const user = await api.fetchAccount()
     const emails = await api.fetchEmails()
     const unlockedKactus = await checkUnlockedKactus(user)
-    return new Account(user.login, endpoint, token, emails, user.avatar_url, user.id, user.name, unlockedKactus)
+    return new Account(
+      user.login,
+      endpoint,
+      token,
+      emails,
+      user.avatar_url,
+      user.id,
+      user.name,
+      unlockedKactus
+    )
   } catch (e) {
     log.warn(`fetchUser: failed with endpoint ${endpoint}`, e)
     throw e
@@ -535,7 +618,9 @@ export async function fetchUser(endpoint: string, token: string): Promise<Accoun
 }
 
 /** Get metadata from the server. */
-export async function fetchMetadata(endpoint: string): Promise<IServerMetadata | null> {
+export async function fetchMetadata(
+  endpoint: string
+): Promise<IServerMetadata | null> {
   const url = `${endpoint}/meta`
 
   try {
@@ -550,7 +635,10 @@ export async function fetchMetadata(endpoint: string): Promise<IServerMetadata |
 
     return result
   } catch (e) {
-    log.error(`fetchMetadata: unable to load metadata from '${url}' as a fallback`, e)
+    log.error(
+      `fetchMetadata: unable to load metadata from '${url}' as a fallback`,
+      e
+    )
     return null
   }
 }
@@ -561,7 +649,10 @@ async function getNote(): Promise<string> {
   try {
     localUsername = await username()
   } catch (e) {
-    log.error(`getNote: unable to resolve machine username, using '${localUsername}' as a fallback`, e)
+    log.error(
+      `getNote: unable to resolve machine username, using '${localUsername}' as a fallback`,
+      e
+    )
   }
 
   return `Kactus on ${localUsername}@${OS.hostname()}`
@@ -626,25 +717,41 @@ export function getDotComAPIEndpoint(): string {
 }
 
 /** Get the account for the endpoint. */
-export function getAccountForEndpoint(accounts: ReadonlyArray<Account>, endpoint: string): Account | null {
+export function getAccountForEndpoint(
+  accounts: ReadonlyArray<Account>,
+  endpoint: string
+): Account | null {
   return accounts.find(a => a.endpoint === endpoint) || null
 }
 
-export function getOAuthAuthorizationURL(endpoint: string, state: string): string {
+export function getOAuthAuthorizationURL(
+  endpoint: string,
+  state: string
+): string {
   const urlBase = getHTMLURL(endpoint)
   const scope = encodeURIComponent(Scopes.join(' '))
   return `${urlBase}/login/oauth/authorize?client_id=${ClientID}&scope=${scope}&state=${state}`
 }
 
-export async function requestOAuthToken(endpoint: string, state: string, code: string): Promise<string | null> {
+export async function requestOAuthToken(
+  endpoint: string,
+  state: string,
+  code: string
+): Promise<string | null> {
   try {
     const urlBase = getHTMLURL(endpoint)
-    const response = await request(urlBase, null, 'POST', 'login/oauth/access_token', {
-      'client_id': ClientID,
-      'client_secret': ClientSecret,
-      'code': code,
-      'state': state,
-    })
+    const response = await request(
+      urlBase,
+      null,
+      'POST',
+      'login/oauth/access_token',
+      {
+        client_id: ClientID,
+        client_secret: ClientSecret,
+        code: code,
+        state: state,
+      }
+    )
     const result = await parsedResponse<IAPIAccessToken>(response)
     return result.access_token
   } catch (e) {
@@ -671,7 +778,11 @@ export async function checkUnlockedKactus(user: IAPIUser): Promise<boolean> {
 }
 
 /** Unlock kactus. */
-export async function unlockKactusFullAccess(account: Account, token: string, email: string): Promise<boolean> {
+export async function unlockKactusFullAccess(
+  account: Account,
+  token: string,
+  email: string
+): Promise<boolean> {
   try {
     const path = `${KactusAPIEndpoint}/unlock`
     const response = await fetch(path, {
@@ -687,7 +798,7 @@ export async function unlockKactusFullAccess(account: Account, token: string, em
         login: account.login,
       }),
     })
-    const res = await parsedResponse<{ok: boolean}>(response)
+    const res = await parsedResponse<{ ok: boolean }>(response)
     return res.ok
   } catch (e) {
     log.warn(`unlockKactusFullAccess: failed for ${account.login}`, e)

@@ -35,9 +35,12 @@ declare const __PROCESS_KIND__: 'main' | 'ui' | 'shared' | 'crash' | 'askpass'
  * Request an idle callback. See https://developer.mozilla.org/en-US/docs/Web/API/Window/requestIdleCallback
  * for more information.
  */
-declare function requestIdleCallback(fn: () => void, options?: { timeout: number }): number
+declare function requestIdleCallback(
+  fn: () => void,
+  options?: { timeout: number }
+): number
 
-declare interface IDesktopLogger {
+interface IDesktopLogger {
   /**
    * Writes a log message at the 'error' level.
    *
@@ -140,9 +143,11 @@ declare namespace Electron {
 
   // tslint:disable-next-line:interface-name
   interface SystemPreferences {
-    getUserDefault(key: 'AppleActionOnDoubleClick', type: 'string'): AppleActionOnDoubleClickPref
+    getUserDefault(
+      key: 'AppleActionOnDoubleClick',
+      type: 'string'
+    ): AppleActionOnDoubleClickPref
   }
-
 }
 
 interface ICard {
@@ -169,7 +174,7 @@ interface ICard {
   tokenization_method: string | null
 }
 
-declare interface IToken {
+interface IToken {
   id: string
   object: string
   card: ICard
@@ -181,21 +186,21 @@ declare interface IToken {
   used: boolean
 }
 
-declare interface IStripeCheckout {
+interface IStripeCheckout {
   open(props: {
-    token: (token: IToken) => void,
-    opened: () => void,
-    closed: () => void,
-    name: string,
-    amount: number,
-    email?: string,
-    bitcoin: boolean,
+    token: (token: IToken) => void
+    opened: () => void
+    closed: () => void
+    name: string
+    amount: number
+    email?: string
+    bitcoin: boolean
   }): void
   close(): void
 }
 
 interface IStripeCheckoutToConfigure {
-  configure(params: {key?: string}): IStripeCheckout
+  configure(params: { key?: string }): IStripeCheckout
 }
 
 declare const StripeCheckout: IStripeCheckoutToConfigure

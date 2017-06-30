@@ -16,39 +16,63 @@ interface ISketchFileViewProps {
   readonly isParsing: boolean
 }
 
-export class SketchFileView extends React.Component<ISketchFileViewProps, void> {
+export class SketchFileView extends React.Component<
+  ISketchFileViewProps,
+  Readonly<{}>
+> {
+  private handleOpen = () => {
+    this.props.onOpenSketchFile(this.props.sketchFile.path)
+  }
+
+  private handleImport = () => {
+    this.props.onImport(this.props.sketchFile.path)
+  }
+
+  private handleExport = () => {
+    this.props.onExport(this.props.sketchFile.path)
+  }
+
   public render() {
     return (
-      <UiView className='panel blankslate' id='blank-slate'>
-        <div className='title'>
+      <UiView className="panel blankslate" id="blank-slate">
+        <div className="title">
           {this.props.sketchFile.id}
         </div>
-        <div className='content'>
-
-          <div className='callout'>
+        <div className="content">
+          <div className="callout">
             <Octicon symbol={OcticonSymbol.ruby} />
             <div>Open the file in Sketch</div>
-            <Button onClick={() => this.props.onOpenSketchFile(this.props.sketchFile.path)} disabled={!this.props.sketchFile.imported}>
+            <Button
+              onClick={this.handleOpen}
+              disabled={!this.props.sketchFile.imported}
+            >
               {__DARWIN__ ? 'Open File' : 'Open file'}
             </Button>
           </div>
 
-          <div className='callout'>
+          <div className="callout">
             <Octicon symbol={OcticonSymbol.fold} />
             <div>Regenerate Sketch file from JSON</div>
-            <Button onClick={() => this.props.onImport(this.props.sketchFile.path)} disabled={!this.props.sketchFile.parsed}>
-              {this.props.isImporting ? <Loading /> : null} {__DARWIN__ ? 'Regenerate Sketch File' : 'Regenerate Sketch file'}
+            <Button
+              onClick={this.handleImport}
+              disabled={!this.props.sketchFile.parsed}
+            >
+              {this.props.isImporting ? <Loading /> : null}{' '}
+              {__DARWIN__ ? 'Regenerate Sketch File' : 'Regenerate Sketch file'}
             </Button>
           </div>
 
-          <div className='callout'>
+          <div className="callout">
             <Octicon symbol={OcticonSymbol.unfold} />
             <div>Export Sketch file to JSON</div>
-            <Button onClick={() => this.props.onExport(this.props.sketchFile.path)} disabled={!this.props.sketchFile.imported}>
-              {this.props.isParsing ? <Loading /> : null} {__DARWIN__ ? 'Export Sketch File' : 'Export Sketch file'}
+            <Button
+              onClick={this.handleExport}
+              disabled={!this.props.sketchFile.imported}
+            >
+              {this.props.isParsing ? <Loading /> : null}{' '}
+              {__DARWIN__ ? 'Export Sketch File' : 'Export Sketch file'}
             </Button>
           </div>
-
         </div>
 
         {/*<p className='footer'>

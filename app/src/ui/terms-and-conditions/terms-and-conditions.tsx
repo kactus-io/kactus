@@ -9,8 +9,16 @@ interface ITermsAndConditionsProps {
   readonly onDismissed: () => void
 }
 
-export class TermsAndConditions extends React.Component<ITermsAndConditionsProps, void> {
+const contact = 'http://kactus.io/contact'
+const logos = 'http://kactus.io/logos'
+const privacyStatement =
+  'http://kactus.io/privacy-statement/'
+const license = 'https://creativecommons.org/licenses/by/4.0/'
 
+export class TermsAndConditions extends React.Component<
+  ITermsAndConditionsProps,
+  {}
+> {
   private dialogContainerRef: HTMLDivElement | null = null
   private closeButtonRef: HTMLButtonElement | null = null
 
@@ -87,7 +95,7 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
             To the extent the terms of the licenses applicable to open source
             components require Kactus to make an offer to provide source code in
             connection with the Software, such offer is hereby made, and you may
-            exercise it by contacting Kactus: <LinkButton uri='http://kactus.io/contact'>
+            exercise it by contacting Kactus: <LinkButton uri={contact}>
             http://kactus.io/contact</LinkButton>.
           </p>
 
@@ -116,7 +124,8 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
             The names Kactus, Kactus.io, and related Kactus logos and/or stylized
             names are trademarks of Kactus. You agree not to display or use
             these trademarks in any manner without Kactus's prior, written
-            permission, except as allowed by Kactus's Logos and Usage Policy: <LinkButton uri='http://kactus.io/logos'>http://kactus.io/logos</LinkButton>.
+            permission, except as allowed by Kactus's Logos and Usage Policy:
+            <LinkButton uri={logos}>logos</LinkButton>.
           </p>
 
           <h2>Privacy</h2>
@@ -126,7 +135,7 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
             information the Software collects in the settings panel. If the
             Software does collect personal information on Kactus's behalf,
             Kactus will process that information in accordance with the
-            <LinkButton uri='https://help.github.com/articles/github-privacy-statement/'>GitHub Privacy Statement</LinkButton>.
+            <LinkButton uri={privacyStatement}>Kactus Privacy Statement</LinkButton>.
           </p>
 
           <h2>Additional Services</h2>
@@ -228,20 +237,22 @@ export class TermsAndConditions extends React.Component<ITermsAndConditionsProps
 
             <li>
               License to Kactus Policies. These Application Terms are licensed
-              under the <LinkButton uri='https://creativecommons.org/licenses/by/4.0/'>Creative Commons Attribution license</LinkButton>.
+              under the <LinkButton uri={license}>Creative Commons Attribution license</LinkButton>.
               You may use it freely under the terms of the Creative Commons license.
             </li>
 
             <li>
               Contact Us. Please send any questions about these Application
-              Terms to <LinkButton uri='http://kactus.io/contact'>support@kactus.io</LinkButton>.
+              Terms to <LinkButton uri={contact}>support@kactus.io</LinkButton>.
             </li>
           </ol>
         </DialogContent>
 
         <DialogFooter>
           <ButtonGroup>
-            <Button type='submit' onButtonRef={this.onCloseButtonRef}>Close</Button>
+            <Button type="submit" onButtonRef={this.onCloseButtonRef}>
+              Close
+            </Button>
           </ButtonGroup>
         </DialogFooter>
       </Dialog>

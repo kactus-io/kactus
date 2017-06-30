@@ -5,7 +5,13 @@ import * as FSE from 'fs-extra'
 
 import { Dispatcher } from '../../lib/dispatcher'
 import { getKactusStatus } from '../../lib/kactus'
-import { initGitRepository, createCommit, getStatus, getAuthorIdentity, isGitRepository } from '../../lib/git'
+import {
+  initGitRepository,
+  createCommit,
+  getStatus,
+  getAuthorIdentity,
+  isGitRepository,
+} from '../../lib/git'
 import { sanitizedRepositoryName } from './sanitized-repository-name'
 import { TextBox } from '../lib/text-box'
 import { ButtonGroup } from '../lib/button-group'
@@ -14,7 +20,11 @@ import { Row } from '../lib/row'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { writeDefaultReadme } from './write-default-readme'
 import { Select } from '../lib/select'
-import { getGitIgnoreNames, writeGitIgnore, KactusGitIgnoreTextValue } from './gitignores'
+import {
+  getGitIgnoreNames,
+  writeGitIgnore,
+  KactusGitIgnoreTextValue,
+} from './gitignores'
 import { ILicense, getLicenses, writeLicense } from './licenses'
 import { writeGitAttributes } from './git-attributes'
 import { getDefaultDir, setDefaultDir } from '../lib/default-dir'
@@ -75,7 +85,10 @@ interface ICreateRepositoryState {
 }
 
 /** The Create New Repository component. */
-export class CreateRepository extends React.Component<ICreateRepositoryProps, ICreateRepositoryState> {
+export class CreateRepository extends React.Component<
+  ICreateRepositoryProps,
+  ICreateRepositoryState
+> {
   public constructor(props: ICreateRepositoryProps) {
     super(props)
 
@@ -117,9 +130,13 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
   }
 
   private showFilePicker = async () => {
-    const directory: string[] | null = remote.dialog.showOpenDialog({ properties: [ 'createDirectory', 'openDirectory' ] })
+    const directory: string[] | null = remote.dialog.showOpenDialog({
+      properties: ['createDirectory', 'openDirectory'],
+    })
 
-    if (!directory) { return }
+    if (!directory) {
+      return
+    }
 
     const path = directory[0]
     const isRepository = await isGitRepository(path)
@@ -129,18 +146,21 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
 
   private ensureDirectory(directory: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-        FSE.ensureDir(directory, (err) => {
-          if (err) {
-            return reject(err)
-          }
+      FSE.ensureDir(directory, err => {
+        if (err) {
+          return reject(err)
+        }
 
-          return resolve()
-        })
+        return resolve()
+      })
     })
   }
 
   private createRepository = async () => {
-    const fullPath = Path.join(this.state.path, sanitizedRepositoryName(this.state.name))
+    const fullPath = Path.join(
+      this.state.path,
+      sanitizedRepositoryName(this.state.name)
+    )
     try {
       await this.ensureDirectory(fullPath)
       this.setState({ ...this.state, isValidPath: true })
@@ -149,7 +169,10 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
         return this.setState({ ...this.state, isValidPath: false })
       }
 
-      log.error(`createRepository: the directory at ${fullPath} is not valid`, e)
+      log.error(
+        `createRepository: the directory at ${fullPath} is not valid`,
+        e
+      )
       return this.props.dispatcher.postError(e)
     }
 
@@ -159,12 +182,17 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
       await initGitRepository(fullPath)
     } catch (e) {
       this.setState({ ...this.state, creating: false })
-      log.error(`createRepository: unable to initialize a Git repository at ${fullPath}`, e)
+      log.error(
+        `createRepository: unable to initialize a Git repository at ${fullPath}`,
+        e
+      )
       return this.props.dispatcher.postError(e)
     }
 
-    const repositories = await this.props.dispatcher.addRepositories([ fullPath ])
-    if (repositories.length < 1) { return }
+    const repositories = await this.props.dispatcher.addRepositories([fullPath])
+    if (repositories.length < 1) {
+      return
+    }
 
     const repository = repositories[0]
 
@@ -186,13 +214,18 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
           await writeGitIgnore(fullPath, gitIgnore)
         }
       } catch (e) {
-        log.error(`createRepository: unable to write .gitignore file at ${fullPath}`, e)
+        log.error(
+          `createRepository: unable to write .gitignore file at ${fullPath}`,
+          e
+        )
         this.props.dispatcher.postError(e)
       }
     }
 
-    const licenseName = (this.state.license === NoLicenseValue.name ? null : this.state.license)
-    const license = (this.state.licenses || []).find(l => l.name === licenseName)
+    const licenseName =
+      this.state.license === NoLicenseValue.name ? null : this.state.license
+    const license = (this.state.licenses || [])
+      .find(l => l.name === licenseName)
 
     if (license) {
       try {
@@ -201,7 +234,7 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
         await writeLicense(fullPath, license, {
           fullname: author ? author.name : '',
           email: author ? author.email : '',
-          year: (new Date()).getFullYear().toString(),
+          year: new Date().getFullYear().toString(),
           description: '',
           project: this.state.name,
         })
@@ -214,7 +247,10 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
     try {
       await writeGitAttributes(fullPath)
     } catch (e) {
-      log.error(`createRepository: unable to write .gitattributes at ${fullPath}`, e)
+      log.error(
+        `createRepository: unable to write .gitattributes at ${fullPath}`,
+        e
+      )
       this.props.dispatcher.postError(e)
     }
 
@@ -224,7 +260,12 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
       const wd = status.workingDirectory
       const files = wd.files
       if (files.length > 0) {
-        await createCommit(repository, kactusStatus.files, 'Initial commit', files)
+        await createCommit(
+          repository,
+          kactusStatus.files,
+          'Initial commit',
+          files
+        )
       }
     } catch (e) {
       log.error(`createRepository: initial commit failed at ${fullPath}`, e)
@@ -239,16 +280,23 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
     this.props.onDismissed()
   }
 
-  private onCreateWithReadmeChange = (event: React.FormEvent<HTMLInputElement>) => {
-    this.setState({ ...this.state, createWithReadme: event.currentTarget.checked })
+  private onCreateWithReadmeChange = (
+    event: React.FormEvent<HTMLInputElement>
+  ) => {
+    this.setState({
+      ...this.state,
+      createWithReadme: event.currentTarget.checked,
+    })
   }
 
   private renderSanitizedName() {
     const sanitizedName = sanitizedRepositoryName(this.state.name)
-    if (this.state.name === sanitizedName) { return null }
+    if (this.state.name === sanitizedName) {
+      return null
+    }
 
     return (
-      <Row className='warning-helper-text'>
+      <Row className="warning-helper-text">
         <Octicon symbol={OcticonSymbol.alert} />
         Will be created as {sanitizedName}
       </Row>
@@ -267,16 +315,20 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
 
   private renderGitIgnores() {
     const gitIgnores = this.state.gitIgnoreNames || []
-    const options = [ KactusGitIgnoreValue, NoGitIgnoreValue, ...gitIgnores ]
+    const options = [KactusGitIgnoreValue, NoGitIgnoreValue, ...gitIgnores]
 
     return (
       <Row>
         <Select
-          label={ __DARWIN__ ? 'Git Ignore' : 'Git ignore' }
+          label={__DARWIN__ ? 'Git Ignore' : 'Git ignore'}
           value={this.state.gitIgnore}
           onChange={this.onGitIgnoreChange}
         >
-          {options.map(n => <option key={n} value={n}>{n}</option>)}
+          {options.map(n =>
+            <option key={n} value={n}>
+              {n}
+            </option>
+          )}
         </Select>
       </Row>
     )
@@ -284,19 +336,30 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
 
   private renderLicenses() {
     const licenses = this.state.licenses || []
-    const featuredLicenses = [ NoLicenseValue, ...(licenses.filter(l => l.featured)) ]
+    const featuredLicenses = [
+      NoLicenseValue,
+      ...licenses.filter(l => l.featured),
+    ]
     const nonFeaturedLicenses = licenses.filter(l => !l.featured)
 
     return (
       <Row>
         <Select
-          label='License'
+          label="License"
           value={this.state.license}
           onChange={this.onLicenseChange}
         >
-          {featuredLicenses.map(l => <option key={l.name} value={l.name}>{l.name}</option>)}
-          <option disabled>────────────────────</option>
-          {nonFeaturedLicenses.map(l => <option key={l.name} value={l.name}>{l.name}</option>)}
+          {featuredLicenses.map(l =>
+            <option key={l.name} value={l.name}>
+              {l.name}
+            </option>
+          )}
+          <option disabled={true}>────────────────────</option>
+          {nonFeaturedLicenses.map(l =>
+            <option key={l.name} value={l.name}>
+              {l.name}
+            </option>
+          )}
         </Select>
       </Row>
     )
@@ -312,8 +375,8 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
 
     return (
       <DialogError>
-          Directory could not be created at this path.
-          You may not have permissions to create a directory here.
+        Directory could not be created at this path. You may not have
+        permissions to create a directory here.
       </DialogError>
     )
   }
@@ -326,10 +389,14 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
     }
 
     return (
-      <Row className='warning-helper-text'>
+      <Row className="warning-helper-text">
         <Octicon symbol={OcticonSymbol.alert} />
         <p>
-          This directory appears to be a Git repository. Would you like to <LinkButton onClick={this.onAddRepositoryClicked}>add this repository</LinkButton> instead?
+          This directory appears to be a Git repository. Would you like to{' '}
+          <LinkButton onClick={this.onAddRepositoryClicked}>
+            add this repository
+          </LinkButton>{' '}
+          instead?
         </p>
       </Row>
     )
@@ -343,23 +410,31 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
   }
 
   public render() {
-    const disabled = this.state.path.length === 0 || this.state.name.length === 0 || this.state.creating || this.state.isRepository
+    const disabled =
+      this.state.path.length === 0 ||
+      this.state.name.length === 0 ||
+      this.state.creating ||
+      this.state.isRepository
 
     return (
       <Dialog
-        id='create-repository'
-        title={__DARWIN__ ? 'Create a New Repository' : 'Create a new repository'}
+        id="create-repository"
+        title={
+          __DARWIN__ ? 'Create a New Repository' : 'Create a new repository'
+        }
         loading={this.state.creating}
         onSubmit={this.createRepository}
-        onDismissed={this.props.onDismissed}>
+        onDismissed={this.props.onDismissed}
+      >
         <DialogContent>
           <Row>
             <TextBox
               value={this.state.name}
-              label='Name'
-              placeholder='repository name'
+              label="Name"
+              placeholder="repository name"
               onChange={this.onNameChanged}
-              autoFocus />
+              autoFocus={true}
+            />
           </Row>
 
           {this.renderSanitizedName()}
@@ -368,8 +443,9 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
             <TextBox
               value={this.state.path}
               label={__DARWIN__ ? 'Local Path' : 'Local path'}
-              placeholder='repository path'
-              onChange={this.onPathChanged} />
+              placeholder="repository path"
+              onChange={this.onPathChanged}
+            />
             <Button onClick={this.showFilePicker}>Choose…</Button>
           </Row>
 
@@ -379,19 +455,23 @@ export class CreateRepository extends React.Component<ICreateRepositoryProps, IC
 
           <Row>
             <Checkbox
-              label='Initialize this repository with a README'
-              value={this.state.createWithReadme ? CheckboxValue.On : CheckboxValue.Off}
-              onChange={this.onCreateWithReadmeChange} />
+              label="Initialize this repository with a README"
+              value={
+                this.state.createWithReadme
+                  ? CheckboxValue.On
+                  : CheckboxValue.Off
+              }
+              onChange={this.onCreateWithReadmeChange}
+            />
           </Row>
 
           {this.renderGitIgnores()}
           {this.renderLicenses()}
-
         </DialogContent>
 
         <DialogFooter>
           <ButtonGroup>
-            <Button type='submit' disabled={disabled}>
+            <Button type="submit" disabled={disabled}>
               {__DARWIN__ ? 'Create Repository' : 'Create repository'}
             </Button>
 

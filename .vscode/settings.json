@@ -17,5 +17,9 @@
         "tslint-rules/**/*.js": true,
         "**/.awcache": true
     },
-    "editor.tabSize": 2
+    "editor.tabSize": 2,
+    "prettier.semi": false,
+    "prettier.singleQuote": true,
+    "prettier.trailingComma": "es5",
+    "prettier.printWidth": 100
 }

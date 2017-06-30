@@ -59,8 +59,15 @@ export interface IUnlockKactusAction {
   readonly account: IAccount
 }
 
-export type Action = IGetAccountsAction | IGetRepositoriesAction |
-                     IAddRepositoriesAction | IUpdateGitHubRepositoryAction |
-                     IRemoveRepositoriesAction | IAddAccountAction | IRemoveAccountAction |
-                     IUpdateRepositoryMissingAction | IUpdateRepositoryPathAction |
-                     ICheckUnlockedKactusAction | IUnlockKactusAction
+export type Action =
+  | IGetAccountsAction
+  | IGetRepositoriesAction
+  | IAddRepositoriesAction
+  | IUpdateGitHubRepositoryAction
+  | IRemoveRepositoriesAction
+  | IAddAccountAction
+  | IRemoveAccountAction
+  | IUpdateRepositoryMissingAction
+  | IUpdateRepositoryPathAction
+  | ICheckUnlockedKactusAction
+  | IUnlockKactusAction

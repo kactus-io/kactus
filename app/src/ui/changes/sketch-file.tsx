@@ -19,7 +19,21 @@ interface ISketchFileProps {
 }
 
 /** a changed file in the working directory for a given repository */
-export class SketchFile extends React.Component<ISketchFileProps, void> {
+export class SketchFile extends React.Component<
+  ISketchFileProps,
+  Readonly<{}>
+> {
+  private handleImport = () => {
+    if (this.props.parsed) {
+      this.props.onImport(this.props.path)
+    }
+  }
+
+  private handleParse = () => {
+    if (this.props.imported) {
+      this.props.onParse(this.props.path)
+    }
+  }
 
   public render() {
     const listItemPadding = 10 * 2
@@ -27,21 +41,43 @@ export class SketchFile extends React.Component<ISketchFileProps, void> {
     const statusWidth = 16
     const filePadding = 5
 
-    const availablePathWidth = this.props.availableWidth - listItemPadding - checkboxWidth - filePadding - statusWidth
+    const availablePathWidth =
+      this.props.availableWidth -
+      listItemPadding -
+      checkboxWidth -
+      filePadding -
+      statusWidth
 
     return (
-      <div className='file' onContextMenu={this.onContextMenu}>
+      <div className="file" onContextMenu={this.onContextMenu}>
+        <label className="path">
+          <PathText path={this.props.id} availableWidth={availablePathWidth} />
+        </label>
 
-        <label className='path'><PathText path={this.props.id} availableWidth={availablePathWidth} /></label>
-
-        <Octicon symbol={this.props.isImporting ? OcticonSymbol.sync : OcticonSymbol.fold}
-                 className={'sketch-file-action' + (this.props.parsed ? ' active' : '') + (this.props.isImporting ? ' spin' : '')}
-                 onClick={() => this.props.parsed && this.props.onImport(this.props.path)}
-                 title='Regenerate Sketch File From JSON' />
-        <Octicon symbol={this.props.isParsing ? OcticonSymbol.sync : OcticonSymbol.unfold}
-                 className={'sketch-file-action' + (this.props.imported ? ' active' : '') + (this.props.isParsing ? ' spin' : '')}
-                 onClick={() => this.props.imported && this.props.onParse(this.props.path)}
-                 title='Export Sketch To JSON' />
+        <Octicon
+          symbol={
+            this.props.isImporting ? OcticonSymbol.sync : OcticonSymbol.fold
+          }
+          className={
+            'sketch-file-action' +
+            (this.props.parsed ? ' active' : '') +
+            (this.props.isImporting ? ' spin' : '')
+          }
+          onClick={this.handleImport}
+          title="Regenerate Sketch File From JSON"
+        />
+        <Octicon
+          symbol={
+            this.props.isParsing ? OcticonSymbol.sync : OcticonSymbol.unfold
+          }
+          className={
+            'sketch-file-action' +
+            (this.props.imported ? ' active' : '') +
+            (this.props.isParsing ? ' spin' : '')
+          }
+          onClick={this.handleParse}
+          title="Export Sketch To JSON"
+        />
       </div>
     )
   }
@@ -56,7 +92,9 @@ export class SketchFile extends React.Component<ISketchFileProps, void> {
         enabled: this.props.imported,
       },
       {
-        label: __DARWIN__ ? 'Regenerate Sketch File From JSON…' : 'Regenerate Sketch File From JSON…',
+        label: __DARWIN__
+          ? 'Regenerate Sketch File From JSON…'
+          : 'Regenerate Sketch File From JSON…',
         action: () => this.props.onImport(this.props.path),
         enabled: this.props.parsed,
       },

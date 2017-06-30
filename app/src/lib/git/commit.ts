@@ -5,7 +5,12 @@ import { WorkingDirectoryFileChange } from '../../models/status'
 import { unstageAll } from './reset'
 import { IKactusFile } from 'kactus-cli'
 
-export async function createCommit(repository: Repository, kactusFiles: Array<IKactusFile>, message: string, files: ReadonlyArray<WorkingDirectoryFileChange>): Promise<boolean> {
+export async function createCommit(
+  repository: Repository,
+  kactusFiles: Array<IKactusFile>,
+  message: string,
+  files: ReadonlyArray<WorkingDirectoryFileChange>
+): Promise<boolean> {
   // Clear the staging area, our diffs reflect the difference between the
   // working directory and the last commit (if any) so our commits should
   // do the same thing.
@@ -14,7 +19,9 @@ export async function createCommit(repository: Repository, kactusFiles: Array<IK
   await stageFiles(repository, kactusFiles, files)
 
   try {
-    await git([ 'commit', '-F',  '-' ] , repository.path, 'createCommit', { stdin: message })
+    await git(['commit', '-F', '-'], repository.path, 'createCommit', {
+      stdin: message,
+    })
     return true
   } catch (e) {
     // Commit failures could come from a pre-commit hook rejection. So display
@@ -27,7 +34,9 @@ export async function createCommit(repository: Repository, kactusFiles: Array<IK
         standardError = `, with output: '${output}'`
       }
       const exitCode = e.result.exitCode
-      const error = new Error(`Commit failed - exit code ${exitCode} received${standardError}`)
+      const error = new Error(
+        `Commit failed - exit code ${exitCode} received${standardError}`
+      )
       error.name = 'commit-failed'
       throw error
     } else {

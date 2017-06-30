@@ -20,7 +20,10 @@ interface IPremiumUpsellState {
   readonly loadingCheckout: boolean
 }
 
-export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremiumUpsellState> {
+export class PremiumUpsell extends React.Component<
+  IPremiumUpsellProps,
+  IPremiumUpsellState
+> {
   public constructor(props: IPremiumUpsellProps) {
     super(props)
     this.state = {
@@ -29,8 +32,11 @@ export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremium
     }
   }
 
-  public componentWillUpdate = (nextProps: IPremiumUpsellProps) => {
-    if (!nextProps.isUnlockingKactusFullAccess && this.props.isUnlockingKactusFullAccess) {
+  public componentWillUpdate(nextProps: IPremiumUpsellProps) {
+    if (
+      !nextProps.isUnlockingKactusFullAccess &&
+      this.props.isUnlockingKactusFullAccess
+    ) {
       setTimeout(() => this.props.onDismissed(), 1000)
     }
   }
@@ -58,14 +64,12 @@ export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremium
     if (this.props.isUnlockingKactusFullAccess) {
       return (
         <Dialog
-          id='premium-upsell'
-          title='Unlocking the full potential of Kactus'
+          id="premium-upsell"
+          title="Unlocking the full potential of Kactus"
           onDismissed={this.props.onDismissed}
-          loading
+          loading={true}
         >
-          <DialogContent>
-            Loading here
-          </DialogContent>
+          <DialogContent>Loading here</DialogContent>
         </Dialog>
       )
     }
@@ -73,13 +77,11 @@ export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremium
     if (this.props.user.unlockedKactus) {
       return (
         <Dialog
-          id='premium-upsell'
-          title='Full potential of Kactus unlocked!'
+          id="premium-upsell"
+          title="Full potential of Kactus unlocked!"
           onDismissed={this.props.onDismissed}
         >
-          <DialogContent>
-            Congrats, thanks!
-          </DialogContent>
+          <DialogContent>Congrats, thanks!</DialogContent>
         </Dialog>
       )
     }
@@ -95,19 +97,17 @@ export class PremiumUpsell extends React.Component<IPremiumUpsellProps, IPremium
           />}
         {!showingCheckout &&
           <Dialog
-            id='premium-upsell'
-            title='Unlock the full potential of Kactus'
+            id="premium-upsell"
+            title="Unlock the full potential of Kactus"
             onSubmit={this.showCheckout}
             onDismissed={this.props.onDismissed}
             loading={loadingCheckout}
           >
-            <DialogContent>
-              Convince me here
-            </DialogContent>
+            <DialogContent>Convince me here</DialogContent>
 
             <DialogFooter>
               <ButtonGroup>
-                <Button type='submit'>Unlock Kactus</Button>
+                <Button type="submit">Unlock Kactus</Button>
                 <Button onClick={this.props.onDismissed}>Not now</Button>
               </ButtonGroup>
             </DialogFooter>

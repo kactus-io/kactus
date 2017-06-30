@@ -10,7 +10,10 @@ import { AsyncInMemoryStore } from '../async-in-memory-store'
 describe('AccountsStore', () => {
   let accountsStore: AccountsStore | null = null
   beforeEach(() => {
-    accountsStore = new AccountsStore(new InMemoryStore(), new AsyncInMemoryStore())
+    accountsStore = new AccountsStore(
+      new InMemoryStore(),
+      new AsyncInMemoryStore()
+    )
   })
 
   describe('adding a new user', () => {

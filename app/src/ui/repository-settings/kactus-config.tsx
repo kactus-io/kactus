@@ -10,21 +10,27 @@ interface IKactusConfigProps {
 }
 
 /** A view for creating or modifying the repository's gitignore file */
-export class KactusConfig extends React.Component<IKactusConfigProps, void> {
-
+export class KactusConfig extends React.Component<
+  IKactusConfigProps,
+  Readonly<{}>
+> {
   public render() {
-
     return (
       <DialogContent>
         <p>
-          The kactus.json file controls which the options used by Kactus. Check out <LinkButton onClick={this.props.onShowKactusDoc}>kactus.io</LinkButton> for
-          more information about the file format.
+          The kactus.json file controls which the options used by Kactus. Check
+          out{' '}
+          <LinkButton onClick={this.props.onShowKactusDoc}>
+            kactus.io
+          </LinkButton>{' '}
+          for more information about the file format.
         </p>
         <TextArea
-          placeholder='Kactus config'
+          placeholder="Kactus config"
           value={this.props.config || '{}'}
           onChange={this.onChange}
-          rows={6} />
+          rows={6}
+        />
       </DialogContent>
     )
   }

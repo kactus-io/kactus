@@ -44,8 +44,9 @@ class UpdateStore {
   private userInitiatedUpdate = true
 
   public constructor() {
-
-    const lastSuccessfulCheckValue = localStorage.getItem(lastSuccessfulCheckKey)
+    const lastSuccessfulCheckValue = localStorage.getItem(
+      lastSuccessfulCheckKey
+    )
 
     if (lastSuccessfulCheckValue) {
       const lastSuccessfulCheckTime = parseInt(lastSuccessfulCheckValue, 10)
@@ -58,9 +59,12 @@ class UpdateStore {
     // We're using our own error event instead of `autoUpdater`s so that we can
     // properly serialize the `Error` object for transport over IPC. See
     // https://github.com/desktop/desktop/issues/1266.
-    ipcRenderer.on('auto-updater-error', (event: Electron.IpcMessageEvent, error: Error) => {
-      this.onAutoUpdaterError(error)
-    })
+    ipcRenderer.on(
+      'auto-updater-error',
+      (event: Electron.IpcMessageEvent, error: Error) => {
+        this.onAutoUpdaterError(error)
+      }
+    )
 
     autoUpdater.on('checking-for-update', this.onCheckingForUpdate)
     autoUpdater.on('update-available', this.onUpdateAvailable)
@@ -72,9 +76,15 @@ class UpdateStore {
     // let's just avoid it.
     if (!process.env.TEST_ENV) {
       window.addEventListener('beforeunload', () => {
-        autoUpdater.removeListener('checking-for-update', this.onCheckingForUpdate)
+        autoUpdater.removeListener(
+          'checking-for-update',
+          this.onCheckingForUpdate
+        )
         autoUpdater.removeListener('update-available', this.onUpdateAvailable)
-        autoUpdater.removeListener('update-not-available', this.onUpdateNotAvailable)
+        autoUpdater.removeListener(
+          'update-not-available',
+          this.onUpdateNotAvailable
+        )
         autoUpdater.removeListener('update-downloaded', this.onUpdateDownloaded)
       })
     }
@@ -131,7 +141,9 @@ class UpdateStore {
   }
 
   private emitError(error: Error) {
-    const updatedError = new ErrorWithMetadata(error, { backgroundTask: !this.userInitiatedUpdate })
+    const updatedError = new ErrorWithMetadata(error, {
+      backgroundTask: !this.userInitiatedUpdate,
+    })
     this.emitter.emit('error', updatedError)
   }
 

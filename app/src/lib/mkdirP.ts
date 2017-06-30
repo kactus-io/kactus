@@ -3,10 +3,14 @@ import * as Fs from 'fs'
 const _0777 = parseInt('0777', 8)
 
 type IOptions = {
-  mode?: number,
+  mode?: number
 }
 
-export function mkdirP(p: string, opts?: IOptions | number, made?: string): Promise<string> {
+export function mkdirP(
+  p: string,
+  opts?: IOptions | number,
+  made?: string
+): Promise<string> {
   if (!opts || typeof opts !== 'object') {
     opts = { mode: opts }
   }
@@ -14,13 +18,13 @@ export function mkdirP(p: string, opts?: IOptions | number, made?: string): Prom
   let mode = opts.mode
 
   if (mode === undefined) {
-      mode = _0777 & (~process.umask())
+    mode = _0777 & ~process.umask()
   }
 
   p = Path.resolve(p)
 
   return new Promise((resolve, reject) => {
-    Fs.mkdir(p, mode!, function (err) {
+    Fs.mkdir(p, mode!, function(err) {
       if (!err) {
         resolve(made || p)
         return
@@ -40,14 +44,14 @@ export function mkdirP(p: string, opts?: IOptions | number, made?: string): Prom
         // there already.  If so, then hooray!  If not, then something
         // is borked.
         default:
-          Fs.stat(p, function (er2, stat) {
-              // if the stat fails, then that's super weird.
-              // let the original error be the failure reason.
-              if (er2 || !stat.isDirectory()) {
-                reject(err)
-              } else {
-                resolve(made)
-              }
+          Fs.stat(p, function(er2, stat) {
+            // if the stat fails, then that's super weird.
+            // let the original error be the failure reason.
+            if (er2 || !stat.isDirectory()) {
+              reject(err)
+            } else {
+              resolve(made)
+            }
           })
           break
       }

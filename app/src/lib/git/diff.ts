@@ -8,13 +8,33 @@ import { getBlobContents } from './show'
 import { exportTreeAtCommit } from './export'
 
 import { Repository } from '../../models/repository'
-import { WorkingDirectoryFileChange, FileChange, AppFileStatus } from '../../models/status'
-import { DiffType, IRawDiff, IDiff, IImageDiff, Image, maximumDiffStringSize, LineEndingsChange, parseLineEndingText, ISketchDiff, IKactusFileType } from '../../models/diff'
+import {
+  WorkingDirectoryFileChange,
+  FileChange,
+  AppFileStatus,
+} from '../../models/status'
+import {
+  DiffType,
+  IRawDiff,
+  IDiff,
+  IImageDiff,
+  Image,
+  maximumDiffStringSize,
+  LineEndingsChange,
+  parseLineEndingText,
+  ISketchDiff,
+  IKactusFileType,
+} from '../../models/diff'
 
 import { spawnAndComplete } from './spawn'
 
 import { DiffParser } from '../diff-parser'
-import { generateDocumentPreview, generateArtboardPreview, generateLayerPreview, generatePagePreview } from '../kactus'
+import {
+  generateDocumentPreview,
+  generateArtboardPreview,
+  generateLayerPreview,
+  generatePagePreview,
+} from '../kactus'
 import { mkdirP } from '../mkdirP'
 import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
 
@@ -31,7 +51,7 @@ function isValidBuffer(output: Buffer) {
 /**
  *  Defining the list of known extensions we can render inside the app
  */
-const imageFileExtensions = new Set([ '.png', '.jpg', '.jpeg', '.gif' ])
+const imageFileExtensions = new Set(['.png', '.jpg', '.jpeg', '.gif'])
 
 /**
  * Render the difference between a file in the given commit and its parent
@@ -39,10 +59,30 @@ const imageFileExtensions = new Set([ '.png', '.jpg', '.jpeg', '.gif' ])
  * @param commitish A commit SHA or some other identifier that ultimately dereferences
  *                  to a commit.
  */
-export async function getCommitDiff(repository: Repository, kactusFiles: Array<IKactusFile>, file: FileChange, commitish: string): Promise<IDiff> {
-  const args = [ 'log', commitish, '-m', '-1', '--first-parent', '--patch-with-raw', '-z', '--no-color', '--', file.path ]
+export async function getCommitDiff(
+  repository: Repository,
+  kactusFiles: Array<IKactusFile>,
+  file: FileChange,
+  commitish: string
+): Promise<IDiff> {
+  const args = [
+    'log',
+    commitish,
+    '-m',
+    '-1',
+    '--first-parent',
+    '--patch-with-raw',
+    '-z',
+    '--no-color',
+    '--',
+    file.path,
+  ]
 
-  const { output } = await spawnAndComplete(args, repository.path, 'getCommitDiff')
+  const { output } = await spawnAndComplete(
+    args,
+    repository.path,
+    'getCommitDiff'
+  )
   if (!isValidBuffer(output)) {
     return { kind: DiffType.TooLarge, length: output.length }
   }
@@ -56,7 +96,11 @@ export async function getCommitDiff(repository: Repository, kactusFiles: Array<I
  * compared against HEAD if it's tracked, if not it'll be compared to an empty file meaning
  * that all content in the file will be treated as additions.
  */
-export async function getWorkingDirectoryDiff(repository: Repository, kactusFiles: Array<IKactusFile>, file: WorkingDirectoryFileChange): Promise<IDiff> {
+export async function getWorkingDirectoryDiff(
+  repository: Repository,
+  kactusFiles: Array<IKactusFile>,
+  file: WorkingDirectoryFileChange
+): Promise<IDiff> {
   let successExitCodes: Set<number> | undefined
   let args: Array<string>
 
@@ -74,8 +118,18 @@ export async function getWorkingDirectoryDiff(repository: Repository, kactusFile
     //
     // citation in source:
     // https://github.com/git/git/blob/1f66975deb8402131fbf7c14330d0c7cdebaeaa2/diff-no-index.c#L300
-    successExitCodes = new Set([ 0, 1 ])
-    args = [ 'diff', '--no-ext-diff', '--no-index', '--patch-with-raw', '-z', '--no-color', '--', '/dev/null', file.path ]
+    successExitCodes = new Set([0, 1])
+    args = [
+      'diff',
+      '--no-ext-diff',
+      '--no-index',
+      '--patch-with-raw',
+      '-z',
+      '--no-color',
+      '--',
+      '/dev/null',
+      file.path,
+    ]
   } else if (file.status === AppFileStatus.Renamed) {
     // NB: Technically this is incorrect, the best kind of incorrect.
     // In order to show exactly what will end up in the commit we should
@@ -84,12 +138,34 @@ export async function getWorkingDirectoryDiff(repository: Repository, kactusFile
     // already staged to the renamed file which differs from our other diffs.
     // The closest I got to that was running hash-object and then using
     // git diff <blob> <blob> but that seems a bit excessive.
-    args = [ 'diff', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path ]
+    args = [
+      'diff',
+      '--no-ext-diff',
+      '--patch-with-raw',
+      '-z',
+      '--no-color',
+      '--',
+      file.path,
+    ]
   } else {
-    args = [ 'diff', 'HEAD', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path ]
+    args = [
+      'diff',
+      'HEAD',
+      '--no-ext-diff',
+      '--patch-with-raw',
+      '-z',
+      '--no-color',
+      '--',
+      file.path,
+    ]
   }
 
-  const { output, error } = await spawnAndComplete(args, repository.path, 'getWorkingDirectoryDiff', successExitCodes)
+  const { output, error } = await spawnAndComplete(
+    args,
+    repository.path,
+    'getWorkingDirectoryDiff',
+    successExitCodes
+  )
   if (!isValidBuffer(output)) {
     // we know we can't transform this process output into a diff, so let's
     // just return a placeholder for now that we can display to the user
@@ -100,10 +176,21 @@ export async function getWorkingDirectoryDiff(repository: Repository, kactusFile
   const diffText = diffFromRawDiffOutput(output)
   const lineEndingsChange = parseLineEndingsWarning(error)
 
-  return convertDiff(repository, kactusFiles, file, diffText, 'HEAD', lineEndingsChange)
+  return convertDiff(
+    repository,
+    kactusFiles,
+    file,
+    diffText,
+    'HEAD',
+    lineEndingsChange
+  )
 }
 
-async function getImageDiff(repository: Repository, file: FileChange, commitish: string): Promise<IImageDiff> {
+async function getImageDiff(
+  repository: Repository,
+  file: FileChange,
+  commitish: string
+): Promise<IImageDiff> {
   let current: Image | undefined = undefined
   let previous: Image | undefined = undefined
 
@@ -124,7 +211,11 @@ async function getImageDiff(repository: Repository, file: FileChange, commitish:
     if (file.status !== AppFileStatus.New) {
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
-      previous = await getBlobImage(repository, file.oldPath || file.path, 'HEAD')
+      previous = await getBlobImage(
+        repository,
+        file.oldPath || file.path,
+        'HEAD'
+      )
     }
   } else {
     // File status can't be conflicted for a file in a commit
@@ -138,7 +229,11 @@ async function getImageDiff(repository: Repository, file: FileChange, commitish:
       //
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
-      previous = await getBlobImage(repository, file.oldPath || file.path, `${commitish}^`)
+      previous = await getBlobImage(
+        repository,
+        file.oldPath || file.path,
+        `${commitish}^`
+      )
     }
   }
 
@@ -149,7 +244,13 @@ async function getImageDiff(repository: Repository, file: FileChange, commitish:
   }
 }
 
-async function getSketchDiff(repository: Repository, file: FileChange, diff: IRawDiff, kactusFile: IKactusFile, commitish: string): Promise<ISketchDiff> {
+async function getSketchDiff(
+  repository: Repository,
+  file: FileChange,
+  diff: IRawDiff,
+  kactusFile: IKactusFile,
+  commitish: string
+): Promise<ISketchDiff> {
   let current: Image | undefined = undefined
   let previous: Image | undefined = undefined
 
@@ -187,22 +288,41 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
 
     // Does it even exist in the working directory?
     if (file.status !== AppFileStatus.Deleted) {
-      current = await getWorkingDirectorySketchPreview(kactusFile, repository, file, type)
+      current = await getWorkingDirectorySketchPreview(
+        kactusFile,
+        repository,
+        file,
+        type
+      )
     }
 
     if (file.status !== AppFileStatus.New) {
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
       try {
-        previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, 'HEAD', type)
+        previous = await getOldSketchPreview(
+          kactusFile,
+          repository,
+          file.oldPath || file.path,
+          'HEAD',
+          type
+        )
       } catch (e) {}
     }
   } else {
     // File status can't be conflicted for a file in a commit
     if (file.status !== AppFileStatus.Deleted) {
       try {
-        current = await getOldSketchPreview(kactusFile, repository, file.path, commitish, type)
-      } catch (e) {console.log(e)}
+        current = await getOldSketchPreview(
+          kactusFile,
+          repository,
+          file.path,
+          commitish,
+          type
+        )
+      } catch (e) {
+        console.log(e)
+      }
     }
 
     // File status can't be conflicted for a file in a commit
@@ -212,8 +332,16 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
       try {
-        previous = await getOldSketchPreview(kactusFile, repository, file.oldPath || file.path, `${commitish}^`, type)
-      } catch (e) {console.log(e)}
+        previous = await getOldSketchPreview(
+          kactusFile,
+          repository,
+          file.oldPath || file.path,
+          `${commitish}^`,
+          type
+        )
+      } catch (e) {
+        console.log(e)
+      }
     }
   }
 
@@ -228,7 +356,14 @@ async function getSketchDiff(repository: Repository, file: FileChange, diff: IRa
   }
 }
 
-export async function convertDiff(repository: Repository, kactusFiles: Array<IKactusFile>, file: FileChange, diff: IRawDiff, commitish: string, lineEndingsChange?: LineEndingsChange): Promise<IDiff> {
+export async function convertDiff(
+  repository: Repository,
+  kactusFiles: Array<IKactusFile>,
+  file: FileChange,
+  diff: IRawDiff,
+  commitish: string,
+  lineEndingsChange?: LineEndingsChange
+): Promise<IDiff> {
   if (diff.isBinary) {
     const extension = Path.extname(file.path)
 
@@ -242,7 +377,7 @@ export async function convertDiff(repository: Repository, kactusFiles: Array<IKa
     }
   }
 
-  const kactusFile = kactusFiles.find(f => (file.path).indexOf(f.id + '/') === 0)
+  const kactusFile = kactusFiles.find(f => file.path.indexOf(f.id + '/') === 0)
 
   if (kactusFile) {
     return getSketchDiff(repository, file, diff, kactusFile, commitish)
@@ -274,7 +409,6 @@ function getMediaType(extension: string) {
   return 'text/plain'
 }
 
-
 /**
  * `git diff` will write out messages about the line ending changes it knows
  * about to `stderr` - this rule here will catch this and also the to/from
@@ -289,8 +423,9 @@ const lineEndingsChangeRegex = /warning: (CRLF|CR|LF) will be replaced by (CRLF|
  * @param error A buffer of binary text from a spawned process
  */
 function parseLineEndingsWarning(error: Buffer): LineEndingsChange | undefined {
-
-  if (error.length === 0) { return undefined }
+  if (error.length === 0) {
+    return undefined
+  }
 
   const errorText = error.toString('utf-8')
   const match = lineEndingsChangeRegex.exec(errorText)
@@ -320,17 +455,24 @@ function diffFromRawDiffOutput(output: Buffer): IRawDiff {
   return parser.parse(pieces[pieces.length - 1])
 }
 
-export async function getBlobImage(repository: Repository, path: string, commitish: string): Promise<Image> {
+export async function getBlobImage(
+  repository: Repository,
+  path: string,
+  commitish: string
+): Promise<Image> {
   const extension = Path.extname(path)
   const contents = await getBlobContents(repository, commitish, path)
-  const diff: Image =  {
+  const diff: Image = {
     contents: contents.toString('base64'),
     mediaType: getMediaType(extension),
   }
   return diff
 }
 
-export async function getWorkingDirectoryImage(repository: Repository, file: FileChange): Promise<Image> {
+export async function getWorkingDirectoryImage(
+  repository: Repository,
+  file: FileChange
+): Promise<Image> {
   return getImage(Path.join(repository.path, file.path))
 }
 
@@ -355,29 +497,54 @@ async function getImage(path: string): Promise<Image> {
       resolve(buffer.toString('base64'))
     })
   })
-  const diff: Image =  {
+  const diff: Image = {
     contents: contents,
     mediaType: getMediaType(extension),
   }
   return diff
 }
 
-async function generatePreview(sketchFilePath: string, file: string, storagePath: string, type: IKactusFileType) {
+async function generatePreview(
+  sketchFilePath: string,
+  file: string,
+  storagePath: string,
+  type: IKactusFileType
+) {
   let path: string
   try {
     if (type === IKactusFileType.Document) {
       path = await generateDocumentPreview(sketchFilePath, storagePath)
     } else if (type === IKactusFileType.Page) {
-      path = await generatePagePreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
+      path = await generatePagePreview(
+        sketchFilePath,
+        Path.basename(Path.dirname(file)),
+        storagePath
+      )
     } else if (type === IKactusFileType.Artboard) {
-      path = await generateArtboardPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
+      path = await generateArtboardPreview(
+        sketchFilePath,
+        Path.basename(Path.dirname(file)),
+        storagePath
+      )
     } else if (type === IKactusFileType.ShapeGroup) {
-      path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
+      path = await generateLayerPreview(
+        sketchFilePath,
+        Path.basename(Path.dirname(file)),
+        storagePath
+      )
     } else if (type === IKactusFileType.Group) {
-      path = await generateLayerPreview(sketchFilePath, Path.basename(Path.dirname(file)), storagePath)
+      path = await generateLayerPreview(
+        sketchFilePath,
+        Path.basename(Path.dirname(file)),
+        storagePath
+      )
     } else {
       const name = Path.basename(file)
-      path = await generateLayerPreview(sketchFilePath, name.replace('.json', ''), storagePath)
+      path = await generateLayerPreview(
+        sketchFilePath,
+        name.replace('.json', ''),
+        storagePath
+      )
     }
   } catch (e) {
     console.error(e)
@@ -386,8 +553,18 @@ async function generatePreview(sketchFilePath: string, file: string, storagePath
   return getImage(path)
 }
 
-function getWorkingDirectorySketchPreview(sketchFile: IKactusFile, repository: Repository, file: FileChange, type: IKactusFileType) {
-  const storagePath = Path.join(getTempPath(), 'kactus', String(repository.id), sketchFile.id)
+function getWorkingDirectorySketchPreview(
+  sketchFile: IKactusFile,
+  repository: Repository,
+  file: FileChange,
+  type: IKactusFileType
+) {
+  const storagePath = Path.join(
+    getTempPath(),
+    'kactus',
+    String(repository.id),
+    sketchFile.id
+  )
   const sketchFilePath = sketchFile.path + '.sketch'
   return generatePreview(sketchFilePath, file.path, storagePath, type)
 }
@@ -400,21 +577,40 @@ function fileExists(path: string): Promise<boolean> {
   })
 }
 
-async function getOldSketchPreview(sketchFile: IKactusFile, repository: Repository, file: string, commitish: string, type: IKactusFileType) {
+async function getOldSketchPreview(
+  sketchFile: IKactusFile,
+  repository: Repository,
+  file: string,
+  commitish: string,
+  type: IKactusFileType
+) {
   if (commitish === 'HEAD') {
     commitish = await getHEADsha(repository)
   }
 
-  const storagePath = Path.join(getUserDataPath(), 'previews', String(repository.id), commitish)
+  const storagePath = Path.join(
+    getUserDataPath(),
+    'previews',
+    String(repository.id),
+    commitish
+  )
   const sketchStoragePath = Path.join(storagePath, sketchFile.id)
 
-  const alreadyExported = await fileExists(Path.join(sketchStoragePath, 'document.json'))
+  const alreadyExported = await fileExists(
+    Path.join(sketchStoragePath, 'document.json')
+  )
   if (!alreadyExported) {
     await mkdirP(storagePath)
-    await exportTreeAtCommit(repository, commitish, Path.join(getUserDataPath(), 'previews', String(repository.id)))
+    await exportTreeAtCommit(
+      repository,
+      commitish,
+      Path.join(getUserDataPath(), 'previews', String(repository.id))
+    )
   }
 
-  const sketchFilesAlreadyImported = await fileExists(sketchStoragePath + '.sketch')
+  const sketchFilesAlreadyImported = await fileExists(
+    sketchStoragePath + '.sketch'
+  )
   if (!sketchFilesAlreadyImported) {
     let config
     try {
@@ -426,8 +622,16 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
   let path: string
   if (type === IKactusFileType.Document) {
     path = Path.join(sketchStoragePath, 'document.png')
-  } else if (type === IKactusFileType.Page || type === IKactusFileType.Artboard || type === IKactusFileType.ShapeGroup || type === IKactusFileType.Group) {
-    path = Path.join(sketchStoragePath, Path.basename(Path.dirname(file)) + '.png')
+  } else if (
+    type === IKactusFileType.Page ||
+    type === IKactusFileType.Artboard ||
+    type === IKactusFileType.ShapeGroup ||
+    type === IKactusFileType.Group
+  ) {
+    path = Path.join(
+      sketchStoragePath,
+      Path.basename(Path.dirname(file)) + '.png'
+    )
   } else {
     const name = Path.basename(file)
     path = Path.join(sketchStoragePath, name.replace('.json', '') + '.png')
@@ -437,5 +641,10 @@ async function getOldSketchPreview(sketchFile: IKactusFile, repository: Reposito
     return getImage(path)
   }
 
-  return await generatePreview(sketchStoragePath + '.sketch', file, sketchStoragePath, type)
+  return await generatePreview(
+    sketchStoragePath + '.sketch',
+    file,
+    sketchStoragePath,
+    type
+  )
 }

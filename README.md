@@ -45,7 +45,7 @@ The [CONTRIBUTING.md](./CONTRIBUTING.md) document will help you get setup and
 familiar with the source. The [documentation](docs/) folder also contains more
 resources relevant to the project.
 
-If you're looking for something to work on, check out the [up-for-grabs](https://github.com/kactus-io/kactus/issues?q=is%3Aopen+is%3Aissue+label%3Aup-for-grabs) label.
+If you're looking for something to work on, check out the [accepting-prs](https://github.com/kactus-io/kactus/issues?q=is%3Aopen+is%3Aissue+label%3Aaccepting-prs) label.
 
 ## :cactus: More Resources
 

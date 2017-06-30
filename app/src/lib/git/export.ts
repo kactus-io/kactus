@@ -14,11 +14,14 @@ import { execFile } from 'child_process'
  *
  * @param output - The output path
  */
-export async function exportTreeAtCommit(repository: Repository, commitish: string, output: string): Promise<void> {
-
+export async function exportTreeAtCommit(
+  repository: Repository,
+  commitish: string,
+  output: string
+): Promise<void> {
   const archive = commitish + '.tar'
 
-  const args = [ 'archive', commitish, '-o', Path.join(output, archive) ]
+  const args = ['archive', commitish, '-o', Path.join(output, archive)]
 
   await git(args, repository.path, 'exportCommit')
 
@@ -28,16 +31,21 @@ export async function exportTreeAtCommit(repository: Repository, commitish: stri
       encoding: 'utf8',
       maxBuffer: 10 * 1024 * 1024,
     }
-    execFile('/usr/bin/tar', [ '-x', '-f', archive, '-C', commitish ], execOptions, (err) => {
-      if (err) {
-        return reject(err)
+    execFile(
+      '/usr/bin/tar',
+      ['-x', '-f', archive, '-C', commitish],
+      execOptions,
+      err => {
+        if (err) {
+          return reject(err)
+        }
+        resolve()
       }
-      resolve()
-    })
+    )
   })
 
   await new Promise<void>((resolve, reject) => {
-    Fs.unlink(Path.join(output, archive), (err) => {
+    Fs.unlink(Path.join(output, archive), err => {
       if (err) {
         return reject(err)
       }

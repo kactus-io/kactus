@@ -38,15 +38,33 @@ export class Account implements IAccount {
 
   /** Create a new Account from some JSON. */
   public static fromJSON(obj: IAccount): Account {
-    return new Account(obj.login, obj.endpoint, obj.token, obj.emails, obj.avatarURL, obj.id, obj.name, obj.unlockedKactus)
+    return new Account(
+      obj.login,
+      obj.endpoint,
+      obj.token,
+      obj.emails,
+      obj.avatarURL,
+      obj.id,
+      obj.name,
+      obj.unlockedKactus
+    )
   }
 
   /** Create an account which can be used to perform unauthenticated API actions */
   public static anonymous(): Account {
-    return new Account('', getDotComAPIEndpoint(), '', [ ], '', -1, '', false)
+    return new Account('', getDotComAPIEndpoint(), '', [], '', -1, '', false)
   }
 
-  public constructor(login: string, endpoint: string, token: string, emails: ReadonlyArray<IEmail>, avatarURL: string, id: number, name: string, unlockedKactus: boolean) {
+  public constructor(
+    login: string,
+    endpoint: string,
+    token: string,
+    emails: ReadonlyArray<IEmail>,
+    avatarURL: string,
+    id: number,
+    name: string,
+    unlockedKactus: boolean
+  ) {
     this.login = login
     this.endpoint = endpoint
     this.token = token
@@ -58,10 +76,28 @@ export class Account implements IAccount {
   }
 
   public withToken(token: string): Account {
-    return new Account(this.login, this.endpoint, token, this.emails, this.avatarURL, this.id, this.name, this.unlockedKactus)
+    return new Account(
+      this.login,
+      this.endpoint,
+      token,
+      this.emails,
+      this.avatarURL,
+      this.id,
+      this.name,
+      this.unlockedKactus
+    )
   }
 
   public unlockKactus(): Account {
-    return new Account(this.login, this.endpoint, this.token, this.emails, this.avatarURL, this.id, this.name, true)
+    return new Account(
+      this.login,
+      this.endpoint,
+      this.token,
+      this.emails,
+      this.avatarURL,
+      this.id,
+      this.name,
+      true
+    )
   }
 }

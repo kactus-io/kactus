@@ -9,39 +9,45 @@ interface IStartProps {
 }
 
 /** The first step of the Welcome flow. */
-export class Start extends React.Component<IStartProps, void> {
+export class Start extends React.Component<IStartProps, {}> {
   public render() {
     return (
-      <div id='start'>
-        <h1 className='welcome-title'>
-          Welcome to Kactus
-        </h1>
-        <p className='welcome-text'>
-          Kactus is a seamless way to collaborate with your team on GitHub
-          and GitHub Enterprise . Sign in below to get started with your existing
+      <div id="start">
+        <h1 className="welcome-title">Welcome to Kactus</h1>
+        <p className="welcome-text">
+          Kactus is a seamless way to collaborate with your team on GitHub and
+          GitHub Enterprise . Sign in below to get started with your existing
           projects.
         </p>
 
-        <p className='welcome-text'>
-          New to GitHub? <LinkButton uri={CreateAccountURL}>Create your free account.</LinkButton>
+        <p className="welcome-text">
+          New to GitHub?{' '}
+          <LinkButton uri={CreateAccountURL}>
+            Create your free account.
+          </LinkButton>
         </p>
 
-        <hr className='short-rule' />
+        <hr className="short-rule" />
 
         <div>
-          <LinkButton className='welcome-button' onClick={this.signInToDotCom}>
+          <LinkButton className="welcome-button" onClick={this.signInToDotCom}>
             Sign into GitHub.com
           </LinkButton>
         </div>
 
         <div>
-          <LinkButton className='welcome-button' onClick={this.signInToEnterprise}>
+          <LinkButton
+            className="welcome-button"
+            onClick={this.signInToEnterprise}
+          >
             Sign into GitHub Enterprise
           </LinkButton>
         </div>
 
-        <div className='skip-action-container'>
-          <LinkButton className='skip-button' onClick={this.skip}>Skip this step</LinkButton>
+        <div className="skip-action-container">
+          <LinkButton className="skip-button" onClick={this.skip}>
+            Skip this step
+          </LinkButton>
         </div>
       </div>
     )

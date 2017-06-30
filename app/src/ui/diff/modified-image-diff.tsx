@@ -12,7 +12,10 @@ interface IModifiedImageDiffProps {
   readonly onChangeDiffType: (type: number) => void
 }
 
-const getDimensions = (naturalHeight: number | null, naturalWidth: number | null) => {
+const getDimensions = (
+  naturalHeight: number | null,
+  naturalWidth: number | null
+) => {
   const heightRatio = 1
   const widthRatio = 1
 
@@ -30,14 +33,17 @@ const getDimensions = (naturalHeight: number | null, naturalWidth: number | null
 }
 
 /** A component which renders the changes to an image in the repository */
-export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, {
-  value: number,
-  naturalWidthBefore: number | null,
-  naturalHeightBefore: number | null,
-  naturalWidthAfter: number | null,
-  naturalHeightAfter: number | null,
-}> {
-  private _container: HTMLDivElement
+export class ModifiedImageDiff extends React.Component<
+  IModifiedImageDiffProps,
+  {
+    value: number
+    naturalWidthBefore: number | null
+    naturalHeightBefore: number | null
+    naturalWidthAfter: number | null
+    naturalHeightAfter: number | null
+  }
+> {
+  private _container: HTMLDivElement | null
 
   public constructor(props: IModifiedImageDiffProps) {
     super(props)
@@ -106,31 +112,46 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
       widthBefore,
       heightAfter,
       widthAfter,
-      widthContainer: this._container && this._container.getBoundingClientRect().width || 0,
+      widthContainer:
+        (this._container && this._container.getBoundingClientRect().width) || 0,
     }
+  }
+
+  private onContainerRef = (c: HTMLDivElement | null) => {
+    this._container = c
   }
 
   public render() {
     const { height, width, widthContainer } = this.getScaledDimensions()
-    return <div className='panel image' id='diff' ref={c => this._container = c}>
-      {this.props.diffType === ImageDiffType.TwoUp && this.render2Up(height, width, widthContainer)}
-      {this.props.diffType === ImageDiffType.Swipe && this.renderSwipe(height, width, widthContainer)}
-      {this.props.diffType === ImageDiffType.OnionSkin && this.renderFade(height, width, widthContainer)}
-      {this.props.diffType === ImageDiffType.Difference && this.renderDifference(height, width, widthContainer)}
-      <TabBar selectedIndex={this.props.diffType} onTabClicked={this.props.onChangeDiffType} type='switch'>
-        <span>2-up</span>
-        <span>Swipe</span>
-        <span>Onion Skin</span>
-        <span>Difference</span>
-      </TabBar>
-    </div>
+    return (
+      <div className="panel image" id="diff" ref={this.onContainerRef}>
+        {this.props.diffType === ImageDiffType.TwoUp &&
+          this.render2Up(height, width, widthContainer)}
+        {this.props.diffType === ImageDiffType.Swipe &&
+          this.renderSwipe(height, width, widthContainer)}
+        {this.props.diffType === ImageDiffType.OnionSkin &&
+          this.renderFade(height, width, widthContainer)}
+        {this.props.diffType === ImageDiffType.Difference &&
+          this.renderDifference(height, width, widthContainer)}
+        <TabBar
+          selectedIndex={this.props.diffType}
+          onTabClicked={this.props.onChangeDiffType}
+          type="switch"
+        >
+          <span>2-up</span>
+          <span>Swipe</span>
+          <span>Onion Skin</span>
+          <span>Difference</span>
+        </TabBar>
+      </div>
+    )
   }
 
   private render2Up(height: number, width: number, widthContainer: number) {
     return (
-      <div className='image-diff_inner--two-up'>
-        <div className='image-diff__before'>
-          <div className='image-diff__header'>Deleted</div>
+      <div className="image-diff_inner--two-up">
+        <div className="image-diff__before">
+          <div className="image-diff__header">Deleted</div>
           {renderImage(this.props.previous, {
             onLoad: this.handleImgLoadBefore,
             style: {
@@ -138,12 +159,14 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
               maxWidth: Math.min(width, (widthContainer - 15) / 2),
             },
           })}
-          <div className='image-diff__footer'>
-            <span className='strong'>W:</span> {this.state.naturalWidthBefore}px | <span className='strong'>H:</span> {this.state.naturalHeightBefore}px
+          <div className="image-diff__footer">
+            <span className="strong">W:</span> {this.state.naturalWidthBefore}px
+            | <span className="strong">H:</span>{' '}
+            {this.state.naturalHeightBefore}px
           </div>
         </div>
-        <div className='image-diff__after'>
-          <div className='image-diff__header'>Added</div>
+        <div className="image-diff__after">
+          <div className="image-diff__header">Added</div>
           {renderImage(this.props.current, {
             onLoad: this.handleImgLoadAfter,
             style: {
@@ -151,22 +174,30 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
               maxWidth: Math.min(width, (widthContainer - 15) / 2),
             },
           })}
-          <div className='image-diff__footer'>
-            <span className='strong'>W:</span> {this.state.naturalWidthAfter}px | <span className='strong'>H:</span> {this.state.naturalHeightAfter}px
+          <div className="image-diff__footer">
+            <span className="strong">W:</span> {this.state.naturalWidthAfter}px
+            | <span className="strong">H:</span> {this.state.naturalHeightAfter}px
           </div>
         </div>
       </div>
     )
   }
 
-  private renderDifference(height: number, width: number, widthContainer: number) {
+  private renderDifference(
+    height: number,
+    width: number,
+    widthContainer: number
+  ) {
     return (
-      <div className='image-diff_inner--difference' style={{
-        height,
-        width,
-        left: (widthContainer - width) / 2,
-      }}>
-        <div className='image-diff__before'>
+      <div
+        className="image-diff_inner--difference"
+        style={{
+          height,
+          width,
+          left: (widthContainer - width) / 2,
+        }}
+      >
+        <div className="image-diff__before">
           {renderImage(this.props.previous, {
             onLoad: this.handleImgLoadBefore,
             style: {
@@ -175,7 +206,7 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
             },
           })}
         </div>
-        <div className='image-diff__after'>
+        <div className="image-diff__after">
           {renderImage(this.props.current, {
             onLoad: this.handleImgLoadAfter,
             style: {
@@ -195,12 +226,15 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
       width,
     }
     return (
-      <div className='image-diff_inner--fade' style={{
-        ...style,
-        marginBottom: 30,
-        left: (widthContainer - width) / 2,
-      }}>
-        <div className='image-diff__before' style={style}>
+      <div
+        className="image-diff_inner--fade"
+        style={{
+          ...style,
+          marginBottom: 30,
+          left: (widthContainer - width) / 2,
+        }}
+      >
+        <div className="image-diff__before" style={style}>
           {renderImage(this.props.previous, {
             onLoad: this.handleImgLoadBefore,
             style: {
@@ -209,10 +243,13 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
             },
           })}
         </div>
-        <div className='image-diff__after' style={{
-          ...style,
-          opacity: this.state.value,
-        }}>
+        <div
+          className="image-diff__after"
+          style={{
+            ...style,
+            opacity: this.state.value,
+          }}
+        >
           {renderImage(this.props.current, {
             onLoad: this.handleImgLoadAfter,
             style: {
@@ -223,9 +260,13 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
         </div>
         <input
           style={{ margin: `${height + 10}px 0 0 ${(width - 129) / 2}px` }}
-          type='range'
-          max={1} min={0} value={this.state.value} step={0.001}
-          onChange={this.handleValueChange} />
+          type="range"
+          max={1}
+          min={0}
+          value={this.state.value}
+          step={0.001}
+          onChange={this.handleValueChange}
+        />
       </div>
     )
   }
@@ -236,12 +277,15 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
       width,
     }
     return (
-      <div className='image-diff_inner--swipe' style={{
-        ...style,
-        marginBottom: 30,
-        left: (widthContainer - width) / 2,
-      }}>
-        <div className='image-diff__after' style={style}>
+      <div
+        className="image-diff_inner--swipe"
+        style={{
+          ...style,
+          marginBottom: 30,
+          left: (widthContainer - width) / 2,
+        }}
+      >
+        <div className="image-diff__after" style={style}>
           {renderImage(this.props.current, {
             onLoad: this.handleImgLoadAfter,
             style: {
@@ -250,11 +294,14 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
             },
           })}
         </div>
-        <div className='image-diff--swiper' style={{
-          width: width * (1 - this.state.value),
-          height: height + 10,
-        }}>
-          <div className='image-diff__before' style={style}>
+        <div
+          className="image-diff--swiper"
+          style={{
+            width: width * (1 - this.state.value),
+            height: height + 10,
+          }}
+        >
+          <div className="image-diff__before" style={style}>
             {renderImage(this.props.previous, {
               onLoad: this.handleImgLoadBefore,
               style: {
@@ -266,9 +313,13 @@ export class ModifiedImageDiff extends React.Component<IModifiedImageDiffProps, 
         </div>
         <input
           style={{ margin: `${height + 10}px 0 0 -7px`, width: width + 14 }}
-          type='range'
-          max={1} min={0} value={this.state.value} step={0.001}
-          onChange={this.handleValueChange} />
+          type="range"
+          max={1}
+          min={0}
+          value={this.state.value}
+          step={0.001}
+          onChange={this.handleValueChange}
+        />
       </div>
     )
   }

@@ -7,7 +7,7 @@ https://github.com/kactus-io/kactus/blob/master/CODE_OF_CONDUCT.md
 
 -->
 
-Please summarise the issue in the title, and then use the template below to
+Please summarize the issue in the title, and then use the template below to
 fill out the details so we can reproduce the issue on our end.
 
 ### Description
@@ -44,9 +44,9 @@ about that repository will make it is easier to recreate the issue.
 If you think screenshots or a GIF recording will help demonstrate the issue
 better, feel free to add them here.
 
-**Expected behaviour:** [What you expected to happen]
+**Expected behavior:** [What you expected to happen]
 
-**Actual behaviour:** [What actually happened]
+**Actual behavior:** [What actually happened]
 
 **Reproduces how often:** [What percentage of the time does it reproduce?]
 
