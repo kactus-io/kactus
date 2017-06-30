@@ -7,6 +7,7 @@ interface IStripeCheckoutProps {
   readonly onLoaded: () => void
   readonly user?: Account
   readonly onToken: (token: IToken) => void
+  readonly enterprise: boolean
 }
 
 interface IStripeCheckoutState {
@@ -68,6 +69,7 @@ export class Checkout extends React.Component<
   }
 
   private showStripeDialog = () => {
+    const enterprise = this.props.enterprise
     const primaryEmail =
       this.props.user && this.props.user.emails.find(e => e.primary)
     stripeHandler!.open({
@@ -75,8 +77,8 @@ export class Checkout extends React.Component<
       opened: this.onOpened,
       closed: this.onClosed,
       name: 'Kactus',
-      amount: 500,
-      email: primaryEmail ? primaryEmail.email : undefined,
+      amount: enterprise ? 1199 : 499,
+      email: !enterprise && primaryEmail ? primaryEmail.email : undefined,
       bitcoin: true,
     })
   }

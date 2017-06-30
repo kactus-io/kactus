@@ -12,6 +12,7 @@ interface IPremiumUpsellProps {
   readonly dispatcher: Dispatcher
   readonly user: Account
   readonly isUnlockingKactusFullAccess: boolean
+  readonly enterprise: boolean
 }
 
 interface IPremiumUpsellState {
@@ -55,7 +56,7 @@ export class PremiumUpsell extends React.Component<
   }
 
   private onToken = (token: IToken) => {
-    this.props.dispatcher.unlockKactus(this.props.user, token.id, token.email)
+    this.props.dispatcher.unlockKactus(this.props.user, token.id, token.email, this.props.enterprise)
   }
 
   public render() {
@@ -94,6 +95,7 @@ export class PremiumUpsell extends React.Component<
             onLoaded={this.finishedLoadingCheckout}
             onToken={this.onToken}
             user={this.props.user}
+            enterprise={this.props.enterprise}
           />}
         {!showingCheckout &&
           <Dialog
@@ -103,7 +105,7 @@ export class PremiumUpsell extends React.Component<
             onDismissed={this.props.onDismissed}
             loading={loadingCheckout}
           >
-            <DialogContent>Convince me here</DialogContent>
+            <DialogContent>{this.props.enterprise && 'Enterprise '}Convince me here</DialogContent>
 
             <DialogFooter>
               <ButtonGroup>

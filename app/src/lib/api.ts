@@ -781,7 +781,8 @@ export async function checkUnlockedKactus(user: IAPIUser): Promise<boolean> {
 export async function unlockKactusFullAccess(
   account: Account,
   token: string,
-  email: string
+  email: string,
+  enterprise: boolean
 ): Promise<boolean> {
   try {
     const path = `${KactusAPIEndpoint}/unlock`
@@ -796,6 +797,7 @@ export async function unlockKactusFullAccess(
         githubId: account.id,
         email,
         login: account.login,
+        enterprise,
       }),
     })
     const res = await parsedResponse<{ ok: boolean }>(response)

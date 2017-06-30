@@ -21,7 +21,7 @@ import { AppStore } from './app-store'
 import { CloningRepository } from './cloning-repositories-store'
 import { Branch } from '../../models/branch'
 import { Commit } from '../../models/commit'
-import { IAPIUser } from '../../lib/api'
+import { IAPIUser, getDotComAPIEndpoint } from '../../lib/api'
 import { GitHubRepository } from '../../models/github-repository'
 import { ICommitMessage } from './git-store'
 import { executeMenuItem } from '../../ui/main-process-proxy'
@@ -488,11 +488,21 @@ export class Dispatcher {
 
     if (
       updatedRepository.gitHubRepository &&
+      account &&
+      account.endpoint !== getDotComAPIEndpoint() &&
+      !account.unlockedKactus
+    ) {
+      await this.showPopup({ type: PopupType.PremiumUpsell, enterprise: true })
+      throw new Error('Not authorized')
+    }
+
+    if (
+      updatedRepository.gitHubRepository &&
       updatedRepository.gitHubRepository.private &&
       account &&
       !account.unlockedKactus
     ) {
-      await this.showPopup({ type: PopupType.PremiumUpsell })
+      await this.showPopup({ type: PopupType.PremiumUpsell, enterprise: false })
       throw new Error('Not authorized')
     }
 
@@ -1239,10 +1249,11 @@ export class Dispatcher {
   public async unlockKactus(
     user: Account,
     token: string,
-    email: string
+    email: string,
+    enterprise: boolean
   ): Promise<void> {
     try {
-      await this.appStore._unlockKactus(user, token, email, () =>
+      await this.appStore._unlockKactus(user, token, email, enterprise, () =>
         this.dispatchToSharedProcess<void>({
           name: 'unlock-kactus',
           account: user,

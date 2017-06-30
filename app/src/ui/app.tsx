@@ -1023,6 +1023,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       case PopupType.PremiumUpsell:
         return (
           <PremiumUpsell
+            entrprise={popup.enterprise}
             user={this.state.accounts[0]}
             dispatcher={this.props.dispatcher}
             onDismissed={this.onPopupDismissed}

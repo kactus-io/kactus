@@ -201,7 +201,7 @@ export type Popup =
   | { type: PopupType.RemoveRepository; repository: Repository }
   | { type: PopupType.TermsAndConditions }
   | { type: PopupType.CreateSketchFile; repository: Repository }
-  | { type: PopupType.PremiumUpsell }
+  | { type: PopupType.PremiumUpsell; enterprise: boolean }
 
 export enum FoldoutType {
   Repository,
