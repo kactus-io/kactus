@@ -21,7 +21,7 @@ import { AppStore } from './app-store'
 import { CloningRepository } from './cloning-repositories-store'
 import { Branch } from '../../models/branch'
 import { Commit } from '../../models/commit'
-import { IAPIUser, getDotComAPIEndpoint } from '../../lib/api'
+import { IAPIUser } from '../../lib/api'
 import { GitHubRepository } from '../../models/github-repository'
 import { ICommitMessage } from './git-store'
 import { executeMenuItem } from '../../ui/main-process-proxy'
@@ -42,7 +42,7 @@ import {
   resolveOAuthRequest,
   rejectOAuthRequest,
 } from '../../lib/oauth'
-import { saveKactusConfig } from '../kactus'
+import { saveKactusConfig, shouldShowPremiumUpsell } from '../kactus'
 import { validatedRepositoryPath } from './validated-repository-path'
 
 /**
@@ -486,23 +486,13 @@ export class Dispatcher {
       account = this.appStore.getAccountForRepository(updatedRepository)
     }
 
-    if (
-      updatedRepository.gitHubRepository &&
-      account &&
-      account.endpoint !== getDotComAPIEndpoint() &&
-      !account.unlockedKactus
-    ) {
-      await this.showPopup({ type: PopupType.PremiumUpsell, enterprise: true })
-      throw new Error('Not authorized')
-    }
+    const premiumType = shouldShowPremiumUpsell(updatedRepository, account)
 
-    if (
-      updatedRepository.gitHubRepository &&
-      updatedRepository.gitHubRepository.private &&
-      account &&
-      !account.unlockedKactus
-    ) {
-      await this.showPopup({ type: PopupType.PremiumUpsell, enterprise: false })
+    if (premiumType) {
+      await this.showPopup({
+        type: PopupType.PremiumUpsell,
+        enterprise: premiumType.enterprise,
+      })
       throw new Error('Not authorized')
     }
 
@@ -549,6 +539,16 @@ export class Dispatcher {
     account: Account,
     org: IAPIUser | null
   ): Promise<Repository> {
+    const premiumType = shouldShowPremiumUpsell(repository, account)
+
+    if (premiumType) {
+      await this.showPopup({
+        type: PopupType.PremiumUpsell,
+        enterprise: premiumType.enterprise,
+      })
+      throw new Error('Not authorized')
+    }
+
     await this.appStore._publishRepository(
       repository,
       name,

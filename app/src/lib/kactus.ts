@@ -3,6 +3,8 @@ import * as Path from 'path'
 import { exec } from 'child_process'
 import { IKactusStatusResult, find } from 'kactus-cli'
 import { Repository } from '../models/repository'
+import { Account } from '../models/account'
+import { getDotComAPIEndpoint } from './api'
 
 const SKETCHTOOL_PATH =
   '/Applications/Sketch.app/Contents/Resources/sketchtool/bin/sketchtool'
@@ -140,4 +142,29 @@ export async function saveKactusConfig(
       }
     })
   })
+}
+
+export function shouldShowPremiumUpsell(
+  repository: Repository,
+  account: Account | null
+) {
+  if (
+    repository.gitHubRepository &&
+    account &&
+    account.endpoint !== getDotComAPIEndpoint() &&
+    !account.unlockedKactus
+  ) {
+    return { enterprise: true }
+  }
+
+  if (
+    repository.gitHubRepository &&
+    repository.gitHubRepository.private &&
+    account &&
+    !account.unlockedKactus
+  ) {
+    return { enterprise: false }
+  }
+
+  return false
 }
