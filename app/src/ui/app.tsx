@@ -1279,7 +1279,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       return null
     }
 
-    const releaseNotesUri = 'https://desktop.github.com/release-notes/'
+    const releaseNotesUri = 'http://kactus.io/release-notes/'
 
     return (
       <UpdateAvailable
