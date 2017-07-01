@@ -10,6 +10,7 @@ import { TabBar } from './tab-bar'
 import {
   IRepositoryState as IRepositoryModelState,
   RepositorySection,
+  PopupType
 } from '../lib/app-state'
 import { Dispatcher, IssuesStore, GitHubUserStore } from '../lib/dispatcher'
 import { assertNever } from '../lib/fatal-error'
@@ -126,6 +127,13 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
     this.props.dispatcher.setSidebarWidth(width)
   }
 
+  private handleCreateSketchFile = () => {
+    return this.props.dispatcher.showPopup({
+      type: PopupType.CreateSketchFile,
+      repository: this.props.repository,
+    })
+  }
+
   private renderSidebar(): JSX.Element {
     return (
       <Resizable
@@ -160,7 +168,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
         !selectedSketchFile &&
         (!changesState.workingDirectory.files.length || !selectedFile || !diff)
       ) {
-        return <NoChanges onOpenRepository={this.openRepository} />
+        return <NoChanges onOpenRepository={this.openRepository} onCreateSketchFile={this.handleCreateSketchFile} />
       } else {
         return (
           <Changes
