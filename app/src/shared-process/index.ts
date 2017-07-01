@@ -60,7 +60,7 @@ async function updateAccounts() {
       newAccount.avatar_url,
       newAccount.id,
       newAccount.name,
-      unlockedKactus
+      unlockedKactus === null ? account.unlockedKactus : unlockedKactus
     )
   })
   broadcastUpdate()

@@ -615,7 +615,7 @@ export async function fetchUser(
       user.avatar_url,
       user.id,
       user.name,
-      unlockedKactus
+      unlockedKactus === null ? false : unlockedKactus
     )
   } catch (e) {
     log.warn(`fetchUser: failed with endpoint ${endpoint}`, e)
@@ -767,7 +767,9 @@ export async function requestOAuthToken(
 }
 
 /** Fetch wether the user has full access to Kactus or not */
-export async function checkUnlockedKactus(user: IAPIUser): Promise<boolean> {
+export async function checkUnlockedKactus(
+  user: IAPIUser
+): Promise<boolean | null> {
   try {
     const path = `${KactusAPIEndpoint}/${user.id}`
     const response = await fetch(path)
@@ -779,7 +781,7 @@ export async function checkUnlockedKactus(user: IAPIUser): Promise<boolean> {
     return kactusUser.user.valid
   } catch (e) {
     log.warn(`checkUnlockedKactus: failed for ${user.login}`, e)
-    return false
+    return null
   }
 }
 
