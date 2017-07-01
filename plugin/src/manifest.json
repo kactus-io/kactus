@@ -16,7 +16,8 @@
     {
 			"name": "Open Kactus",
 			"identifier": "open-kactus",
-			"script": "./open-kactus.js"
+			"script": "./open-kactus.js",
+      "shortcut": "cmd k"
 		}
 	],
 	"menu": {
