@@ -5,6 +5,9 @@ import { ButtonGroup } from '../lib/button-group'
 import { Button } from '../lib/button'
 import { Checkout } from './stripe-checkout'
 import { Account } from '../../models/account'
+import { ThrottledScheduler } from '../lib/throttled-scheduler'
+import { fetchCoupon, IAPICoupon } from '../../lib/api'
+import { CouponInput } from './coupon-input'
 
 interface IPremiumUpsellProps {
   /** A function called when the dialog is dismissed. */
@@ -19,17 +22,28 @@ interface IPremiumUpsellState {
   /** A function called when the dialog is dismissed. */
   readonly showingCheckout: boolean
   readonly loadingCheckout: boolean
+  readonly coupon: string
+  readonly plan: string
+  readonly couponState: IAPICoupon | 'loading' | null
 }
 
 export class PremiumUpsell extends React.Component<
   IPremiumUpsellProps,
   IPremiumUpsellState
 > {
+
+  private scheduler = new ThrottledScheduler(200)
+
+  private requestId = 0
+
   public constructor(props: IPremiumUpsellProps) {
     super(props)
     this.state = {
       showingCheckout: false,
       loadingCheckout: false,
+      coupon: '',
+      plan: 'kactus-1-month',
+      couponState: null
     }
   }
 
@@ -40,6 +54,10 @@ export class PremiumUpsell extends React.Component<
     ) {
       setTimeout(() => this.props.onDismissed(), 1000)
     }
+  }
+
+  public componentWillUnmount() {
+    this.scheduler.clear()
   }
 
   private showCheckout = () => {
@@ -56,11 +74,39 @@ export class PremiumUpsell extends React.Component<
   }
 
   private onToken = (token: IToken) => {
-    this.props.dispatcher.unlockKactus(this.props.user, token.id, token.email, this.props.enterprise)
+    this.props.dispatcher.unlockKactus(this.props.user, token.id, {
+      email: token.email,
+      enterprise: this.props.enterprise,
+      coupon: this.state.coupon !== '' ? this.state.coupon : undefined
+    })
+  }
+
+  private onCouponChange = (coupon: string) => {
+    if (coupon === '') {
+      this.scheduler.clear()
+      return this.setState({
+        coupon,
+        couponState: null
+      })
+    }
+
+    this.setState({
+      coupon,
+      couponState: 'loading'
+    })
+
+    this.scheduler.queue(async () => {
+      this.requestId += 1
+      const couponState = await fetchCoupon(coupon, this.requestId)
+      if (couponState.requestId !== this.requestId) { return }
+      this.setState({
+        couponState
+      })
+    })
   }
 
   public render() {
-    const { loadingCheckout, showingCheckout } = this.state
+    const { loadingCheckout, showingCheckout, couponState, coupon } = this.state
 
     if (this.props.isUnlockingKactusFullAccess) {
       return (
@@ -70,7 +116,7 @@ export class PremiumUpsell extends React.Component<
           onDismissed={this.props.onDismissed}
           loading={true}
         >
-          <DialogContent>Loading here</DialogContent>
+          <DialogContent>Hang on, unlocking your account...</DialogContent>
         </Dialog>
       )
     }
@@ -82,10 +128,23 @@ export class PremiumUpsell extends React.Component<
           title="Full potential of Kactus unlocked!"
           onDismissed={this.props.onDismissed}
         >
-          <DialogContent>Congrats, thanks!</DialogContent>
+          <DialogContent>Done, thank! Enjoy Kactus!</DialogContent>
         </Dialog>
       )
     }
+
+    const copy = this.props.enterprise
+      ? ``
+      : (
+        <div>
+          <p>Hey! This feature is only available in the full access version of Kactus.</p>
+          <ul>
+            <li>feature 1</li>
+            <li>feature 2</li>
+          </ul>
+          <CouponInput couponState={couponState} coupon={coupon} onValueChanged={this.onCouponChange} />
+        </div>
+      )
 
     return (
       <div>
@@ -105,11 +164,11 @@ export class PremiumUpsell extends React.Component<
             onDismissed={this.props.onDismissed}
             loading={loadingCheckout}
           >
-            <DialogContent>{this.props.enterprise && 'Enterprise '}Convince me here</DialogContent>
+            <DialogContent>{copy}</DialogContent>
 
             <DialogFooter>
               <ButtonGroup>
-                <Button type="submit">Unlock Kactus</Button>
+                <Button type="submit" disabled={couponState !== 'loading' && (couponState === null || !!couponState.discount)}>Unlock Kactus</Button>
                 <Button onClick={this.props.onDismissed}>Not now</Button>
               </ButtonGroup>
             </DialogFooter>

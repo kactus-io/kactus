@@ -1249,11 +1249,14 @@ export class Dispatcher {
   public async unlockKactus(
     user: Account,
     token: string,
-    email: string,
-    enterprise: boolean
+    options: {
+      email: string
+      enterprise: boolean
+      coupon?: string
+    }
   ): Promise<void> {
     try {
-      await this.appStore._unlockKactus(user, token, email, enterprise, () =>
+      await this.appStore._unlockKactus(user, token, options, () =>
         this.dispatchToSharedProcess<void>({
           name: 'unlock-kactus',
           account: user,

@@ -5,7 +5,7 @@ import { LinkButton } from './link-button'
 
 interface ITextBoxProps {
   /** The label for the input field. */
-  readonly label?: string
+  readonly label?: string | JSX.Element
 
   /**
    * An optional className to be applied to the rendered
@@ -52,8 +52,8 @@ interface ITextBoxProps {
   /**
    * An optional text for a link label element. A link label is, for the purposes
    * of this control an anchor element that's rendered alongside (ie on the same)
-   * row as the the label element. 
-   * 
+   * row as the the label element.
+   *
    * Note that the link label will only be rendered if the textbox has a
    * label text (specified through the label prop). A link label is used for
    * presenting the user with a contextual link related to a specific text

@@ -2422,13 +2422,16 @@ export class AppStore {
   public async _unlockKactus(
     user: Account,
     token: string,
-    email: string,
-    enterprise: boolean,
+    options: {
+      email: string
+      enterprise: boolean
+      coupon?: string
+    },
     updateSharedState: () => Promise<void>
   ): Promise<void> {
     this.isUnlockingKactusFullAccess = true
     this.emitUpdate()
-    const result = await unlockKactusFullAccess(user, token, email, enterprise)
+    const result = await unlockKactusFullAccess(user, token, options)
     if (result) {
       this.accounts = this.accounts.map(a => {
         if (a.id === user.id) {

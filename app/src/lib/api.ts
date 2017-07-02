@@ -165,6 +165,15 @@ interface ISearchResults<T> {
 }
 
 /**
+ * The response for the coupon check
+ */
+export interface IAPICoupon {
+  readonly error?: string
+  readonly discount?: string
+  readonly requestId: number
+}
+
+/**
  * Parses the Link header from GitHub and returns the 'next' path
  * if one is present.
  *
@@ -789,8 +798,11 @@ export async function checkUnlockedKactus(
 export async function unlockKactusFullAccess(
   account: Account,
   token: string,
-  email: string,
-  enterprise: boolean
+  options: {
+    email: string
+    enterprise: boolean
+    coupon?: string
+  }
 ): Promise<boolean> {
   try {
     const path = `${KactusAPIEndpoint}/unlock`
@@ -803,9 +815,10 @@ export async function unlockKactusFullAccess(
       body: JSON.stringify({
         token,
         githubId: account.id,
-        email,
+        email: options.email,
         login: account.login,
-        enterprise,
+        enterprise: options.enterprise,
+        coupon: options.coupon,
       }),
     })
     const res = await parsedResponse<{ ok: boolean }>(response)
@@ -813,5 +826,28 @@ export async function unlockKactusFullAccess(
   } catch (e) {
     log.warn(`unlockKactusFullAccess: failed for ${account.login}`, e)
     return false
+  }
+}
+
+export async function fetchCoupon(
+  coupon: string,
+  requestId: number
+): Promise<IAPICoupon> {
+  try {
+    const path = `${KactusAPIEndpoint}/coupon/${encodeURIComponent(
+      coupon
+    )}?requestId=${requestId}`
+    const response = await fetch(path, {
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': getUserAgent(),
+      },
+      method: 'get',
+    })
+    const res = await parsedResponse<IAPICoupon>(response)
+    return res
+  } catch (e) {
+    log.warn(`fetchCoupon: failed for ${coupon}`, e)
+    throw e
   }
 }
