@@ -15,9 +15,9 @@
 Kactus is a tool to bring proper version control _(as in git)_ to designers _(only sketch users for now, but we need to start somewhere, right?)_.
 
 This new tool is on the next level:
-- it’s bringing the entire git flow to sketch: branches, pull requests, team collaboration (you can work on the same file and automatically merge the changes), etc
-- you can share some pages across multiple sketch files
-- you can publish some pages on the internet and import them in another project _(soon)_!
+- it brings the entire git flow to sketch: branches, pull requests, team collaboration (you can work on the same file and automatically merge the changes), etc
+- you can share pages across multiple sketch files
+- you can publish pages on the internet and import them in another project _(soon)_!
 
 
 ![Kactus screenshot - macOS](https://user-images.githubusercontent.com/3254314/27239695-4615f8f2-52d2-11e7-99df-48867813a49c.png)
