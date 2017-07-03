@@ -8,7 +8,7 @@ import { getGUID } from './get-guid'
 import { Repository } from '../../models/repository'
 import { merge } from '../../lib/merge'
 
-const StatsEndpoint = 'https://api.kactus.io/v1/usage/desktop'
+const StatsEndpoint = 'https://api.kactus.io/v1/usage'
 
 /** The URL to the stats samples page. */
 export const SamplesURL = 'http://kactus.io/usage-data/'
