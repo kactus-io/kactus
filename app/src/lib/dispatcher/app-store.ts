@@ -182,6 +182,8 @@ export class AppStore {
 
   private isUnlockingKactusFullAccess: boolean = false
 
+  private sketchVersion: string | null | undefined
+
   public constructor(
     gitHubUserStore: GitHubUserStore,
     cloningRepositoriesStore: CloningRepositoriesStore,
@@ -495,6 +497,7 @@ export class AppStore {
       showAdvancedDiffs: this.showAdvancedDiffs,
       imageDiffType: this.imageDiffType,
       isUnlockingKactusFullAccess: this.isUnlockingKactusFullAccess,
+      sketchVersion: this.sketchVersion,
     }
   }
 
@@ -835,10 +838,14 @@ export class AppStore {
   public _loadFromSharedProcess(
     accounts: ReadonlyArray<Account>,
     repositories: ReadonlyArray<Repository>,
-    initialLoad: boolean
+    initialLoad: boolean,
+    sketchVersion?: string | null
   ) {
     this.accounts = accounts
     this.repositories = repositories
+    if (typeof sketchVersion !== 'undefined') {
+      this.sketchVersion = sketchVersion
+    }
 
     // doing this that the current user can be found by any of their email addresses
     for (const account of accounts) {

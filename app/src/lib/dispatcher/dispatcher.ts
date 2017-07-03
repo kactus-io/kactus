@@ -42,11 +42,8 @@ import {
   resolveOAuthRequest,
   rejectOAuthRequest,
 } from '../../lib/oauth'
-import {
-  saveKactusConfig,
-  shouldShowPremiumUpsell,
-  openSketch,
-} from '../kactus'
+import { saveKactusConfig, shouldShowPremiumUpsell } from '../kactus'
+import { openSketch, getSketchVersion } from '../sketch'
 import { validatedRepositoryPath } from './validated-repository-path'
 
 /**
@@ -114,7 +111,13 @@ export class Dispatcher {
   public async loadInitialState(): Promise<void> {
     const users = await this.loadUsers()
     const repositories = await this.loadRepositories()
-    this.appStore._loadFromSharedProcess(users, repositories, true)
+    const sketchVersion = await getSketchVersion()
+    this.appStore._loadFromSharedProcess(
+      users,
+      repositories,
+      true,
+      sketchVersion
+    )
   }
 
   private dispatchToSharedProcess<T>(action: Action): Promise<T> {

@@ -108,6 +108,7 @@
     "@types/react-dom": "15.5.1",
     "@types/react-transition-group": "1.1.1",
     "@types/react-virtualized": "9.7.2",
+    "@types/semver": "^5.3.32",
     "@types/ua-parser-js": "^0.7.30",
     "@types/uuid": "^2.0.29",
     "@types/winston": "^2.2.0",

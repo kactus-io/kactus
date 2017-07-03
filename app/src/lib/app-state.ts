@@ -148,6 +148,8 @@ export interface IAppState {
   readonly imageDiffType: ImageDiffType
 
   readonly isUnlockingKactusFullAccess: boolean
+
+  readonly sketchVersion: string | null | undefined
 }
 
 export enum PopupType {

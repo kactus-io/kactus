@@ -5,10 +5,7 @@ import { IKactusStatusResult, find } from 'kactus-cli'
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
 import { getDotComAPIEndpoint } from './api'
-
-const SKETCH_PATH = '/Applications/Sketch.app'
-const SKETCHTOOL_PATH =
-  SKETCH_PATH + '/Contents/Resources/sketchtool/bin/sketchtool'
+import { SKETCHTOOL_PATH } from './sketch'
 
 /**
  *  Retrieve the status for a given repository
@@ -168,15 +165,4 @@ export function shouldShowPremiumUpsell(
   }
 
   return false
-}
-
-export async function openSketch() {
-  return await new Promise<void>((resolve, reject) => {
-    exec('open -a sketch', err => {
-      if (err) {
-        return reject(err)
-      }
-      resolve()
-    })
-  })
 }

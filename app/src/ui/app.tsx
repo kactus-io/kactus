@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { ipcRenderer } from 'electron'
 
+import * as semver from 'semver'
 import { RepositoriesList } from './repositories-list'
 import { RepositoryView } from './repository'
 import { TitleBar } from './window/title-bar'
@@ -38,7 +39,7 @@ import { ILaunchStats } from '../lib/stats'
 import { Welcome } from './welcome'
 import { AppMenuBar } from './app-menu'
 import { findItemByAccessKey, itemIsSelectable } from '../models/app-menu'
-import { UpdateAvailable } from './updates'
+import { UpdateAvailable, SketchVersionOutdated } from './updates'
 import { Preferences } from './preferences'
 import { Account } from '../models/account'
 import { TipState } from '../models/tip'
@@ -1295,6 +1296,27 @@ export class App extends React.Component<IAppProps, IAppState> {
     )
   }
 
+  private renderSketchVersionWarning() {
+    const { sketchVersion } = this.state
+    if (typeof sketchVersion === 'undefined') {
+      return null
+    }
+
+    if (sketchVersion === null) {
+      return (
+        <SketchVersionOutdated dispatcher={this.props.dispatcher} />
+      )
+    }
+
+    if (semver.satisfies(sketchVersion, '>=43.0.0')) {
+      return null
+    }
+
+    return (
+      <SketchVersionOutdated found={sketchVersion} dispatcher={this.props.dispatcher} />
+    )
+  }
+
   private renderToolbar() {
     return (
       <Toolbar id="desktop-app-toolbar">
@@ -1386,6 +1408,7 @@ export class App extends React.Component<IAppProps, IAppState> {
           ? this.renderWelcomeFlow()
           : this.renderApp()}
         {this.renderZoomInfo()}
+        {this.renderSketchVersionWarning()}
       </div>
     )
   }
