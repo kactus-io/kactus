@@ -6,8 +6,9 @@ import { Repository } from '../models/repository'
 import { Account } from '../models/account'
 import { getDotComAPIEndpoint } from './api'
 
+const SKETCH_PATH = '/Applications/Sketch.app'
 const SKETCHTOOL_PATH =
-  '/Applications/Sketch.app/Contents/Resources/sketchtool/bin/sketchtool'
+  SKETCH_PATH + '/Contents/Resources/sketchtool/bin/sketchtool'
 
 /**
  *  Retrieve the status for a given repository
@@ -167,4 +168,15 @@ export function shouldShowPremiumUpsell(
   }
 
   return false
+}
+
+export async function openSketch() {
+  return await new Promise<void>((resolve, reject) => {
+    exec('open -a sketch', err => {
+      if (err) {
+        return reject(err)
+      }
+      resolve()
+    })
+  })
 }

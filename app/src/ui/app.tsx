@@ -272,6 +272,8 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.boomtown()
       case 'create-sketch-file':
         return this.showCreateSketchFile()
+      case 'open-sketch':
+        return this.openSketch()
     }
 
     return assertNever(name, `Unknown menu event name: ${name}`)
@@ -1244,6 +1246,10 @@ export class App extends React.Component<IAppProps, IAppState> {
       type: PopupType.CreateSketchFile,
       repository,
     })
+  }
+
+  private openSketch = () => {
+    return this.props.dispatcher.openSketch()
   }
 
   private onBranchDropdownStateChanged = (newState: DropdownState) => {

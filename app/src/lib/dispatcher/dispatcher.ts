@@ -42,7 +42,11 @@ import {
   resolveOAuthRequest,
   rejectOAuthRequest,
 } from '../../lib/oauth'
-import { saveKactusConfig, shouldShowPremiumUpsell } from '../kactus'
+import {
+  saveKactusConfig,
+  shouldShowPremiumUpsell,
+  openSketch,
+} from '../kactus'
 import { validatedRepositoryPath } from './validated-repository-path'
 
 /**
@@ -1265,5 +1269,9 @@ export class Dispatcher {
     } catch (e) {
       this.postError(e)
     }
+  }
+
+  public async openSketch(): Promise<void> {
+    return openSketch()
   }
 }

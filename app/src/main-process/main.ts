@@ -186,9 +186,9 @@ app.on('ready', () => {
   app.setAsDefaultProtocolClient('x-github-client')
 
   if (__DEV__) {
-    app.setAsDefaultProtocolClient('x-github-desktop-dev-auth')
+    app.setAsDefaultProtocolClient('x-kactus-dev-auth')
   } else {
-    app.setAsDefaultProtocolClient('x-github-desktop-auth')
+    app.setAsDefaultProtocolClient('x-kactus-auth')
   }
 
   // Also support Desktop Classic's protocols.

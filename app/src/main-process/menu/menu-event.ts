@@ -23,3 +23,4 @@ export type MenuEvent =
   | 'show-about'
   | 'boomtown'
   | 'create-sketch-file'
+  | 'open-sketch'

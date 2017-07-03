@@ -137,6 +137,13 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
       },
       separator,
       {
+        label: __DARWIN__ ? 'Open Sketch' : 'Open S&ketch',
+        id: 'open-sketch',
+        accelerator: 'CmdOrCtrl+K',
+        click: emit('open-sketch'),
+      },
+      separator,
+      {
         label: __DARWIN__ ? 'Reset Zoom' : 'Reset zoom',
         accelerator: 'CmdOrCtrl+0',
         click: zoom(ZoomDirection.Reset),
