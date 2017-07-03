@@ -76,7 +76,7 @@ export class Checkout extends React.Component<
       token: this.onToken,
       opened: this.onOpened,
       closed: this.onClosed,
-      name: 'Kactus',
+      panelLabel: 'Unlock ({{amount}}/month)',
       amount: enterprise ? 1199 : 499,
       email: !enterprise && primaryEmail ? primaryEmail.email : undefined,
       bitcoin: true,

@@ -7,7 +7,9 @@ import { Checkout } from './stripe-checkout'
 import { Account } from '../../models/account'
 import { ThrottledScheduler } from '../lib/throttled-scheduler'
 import { fetchCoupon, IAPICoupon } from '../../lib/api'
+import { shell } from '../../lib/dispatcher/app-shell'
 import { CouponInput } from './coupon-input'
+import { LinkButton } from '../lib/link-button'
 
 interface IPremiumUpsellProps {
   /** A function called when the dialog is dismissed. */
@@ -105,6 +107,11 @@ export class PremiumUpsell extends React.Component<
     })
   }
 
+  private onExternalLink = () => {
+    const url = `http://kactus.io/pricing`
+    shell.openExternal(url)
+  }
+
   public render() {
     const { loadingCheckout, showingCheckout, couponState, coupon } = this.state
 
@@ -134,14 +141,28 @@ export class PremiumUpsell extends React.Component<
     }
 
     const copy = this.props.enterprise
-      ? ``
+      ? (
+        <div>
+          <p>Hey! This feature is only available in the enterprise version of Kactus.</p>
+          <ul>
+            <li>Unlimited public repositories</li>
+            <li>No locked-in commitment: you can always generate the sketch files to switch back</li>
+            <li><strong>Unlimited private repositories</strong></li>
+            <li><strong>Support single sign-on and on-premises deployment</strong></li>
+          </ul>
+          <p>More information available <LinkButton onClick={this.onExternalLink}>here</LinkButton>.</p>
+          <CouponInput couponState={couponState} coupon={coupon} onValueChanged={this.onCouponChange} />
+        </div>
+      )
       : (
         <div>
           <p>Hey! This feature is only available in the full access version of Kactus.</p>
           <ul>
-            <li>feature 1</li>
-            <li>feature 2</li>
+            <li>Unlimited public repositories</li>
+            <li>No locked-in commitment: you can always generate the sketch files to switch back</li>
+            <li><strong>Unlimited private repositories</strong></li>
           </ul>
+          <p>More information available <LinkButton onClick={this.onExternalLink}>here</LinkButton>.</p>
           <CouponInput couponState={couponState} coupon={coupon} onValueChanged={this.onCouponChange} />
         </div>
       )
@@ -168,7 +189,7 @@ export class PremiumUpsell extends React.Component<
 
             <DialogFooter>
               <ButtonGroup>
-                <Button type="submit" disabled={couponState !== 'loading' && (couponState === null || !!couponState.discount)}>Unlock Kactus</Button>
+                <Button type="submit" disabled={couponState === 'loading' || (couponState !== null && !!couponState.error)}>Unlock (${this.props.enterprise ? '11.99' : '4.99'}/month)</Button>
                 <Button onClick={this.props.onDismissed}>Not now</Button>
               </ButtonGroup>
             </DialogFooter>

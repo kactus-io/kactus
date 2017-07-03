@@ -191,7 +191,7 @@ interface IStripeCheckout {
     token: (token: IToken) => void
     opened: () => void
     closed: () => void
-    name: string
+    panelLabel: string
     amount: number
     email?: string
     bitcoin: boolean
