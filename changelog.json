@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.1": [
+      "[New] Check the Sketch version and warn if it's not good",
+      "[Fixed] Fix missing buttons to login"
+    ],
     "0.1.0": [
       "[New] Add cmd+k shortcut to open sketch",
       "[New] Add some actions when there is no change",
