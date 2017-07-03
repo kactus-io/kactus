@@ -77,7 +77,7 @@ function packageApp (callback) {
       '/\\.git($|/)',
       '/node_modules/\\.bin($|/)'
     ],
-    'appCopyright': 'Copyright © 2017 Kactus.io.',
+    'appCopyright': 'Copyright © 2017 Mathieu Dutour.',
 
     // macOS
     'appBundleId': distInfo.getBundleID(),

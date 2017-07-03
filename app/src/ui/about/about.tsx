@@ -4,7 +4,6 @@ import { Row } from '../lib/row'
 import { Button } from '../lib/button'
 import { ButtonGroup } from '../lib/button-group'
 import { Dialog, DialogError, DialogContent, DialogFooter } from '../dialog'
-import { Octicon, OcticonSymbol } from '../octicons'
 import { LinkButton } from '../lib/link-button'
 import { updateStore, IUpdateState, UpdateStatus } from '../lib/update-store'
 import { Disposable } from 'event-kit'
@@ -237,7 +236,12 @@ export class About extends React.Component<IAboutProps, IAboutState> {
         {this.renderUpdateErrors()}
         <DialogContent>
           <Row className="logo">
-            <Octicon symbol={OcticonSymbol.markGithub} />
+            <img
+              className="logo"
+              title="Kactus"
+              src={`file:///${__dirname}/static/default-avatar.png`}
+              alt="Kactus logo"
+            />
           </Row>
           <h2>
             {name}
