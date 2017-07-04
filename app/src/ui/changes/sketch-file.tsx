@@ -1,19 +1,15 @@
 import * as React from 'react'
 
 import { PathText } from '../lib/path-text'
-import { Octicon, OcticonSymbol } from '../octicons'
 import { showContextualMenu, IMenuItem } from '../main-process-proxy'
 
 interface ISketchFileProps {
   readonly path: string
   readonly id: string
-  readonly isParsing: boolean
   readonly parsed: boolean
-  readonly isImporting: boolean
   readonly imported: boolean
   readonly onImport: (path: string) => void
   readonly onParse: (path: string) => void
-  readonly onIgnore: (path: string) => void
   readonly onOpen: (path: string) => void
   readonly availableWidth: number
 }
@@ -23,17 +19,6 @@ export class SketchFile extends React.Component<
   ISketchFileProps,
   Readonly<{}>
 > {
-  private handleImport = () => {
-    if (this.props.parsed) {
-      this.props.onImport(this.props.path)
-    }
-  }
-
-  private handleParse = () => {
-    if (this.props.imported) {
-      this.props.onParse(this.props.path)
-    }
-  }
 
   public render() {
     const listItemPadding = 10 * 2
@@ -53,31 +38,6 @@ export class SketchFile extends React.Component<
         <label className="path">
           <PathText path={this.props.id} availableWidth={availablePathWidth} />
         </label>
-
-        <Octicon
-          symbol={
-            this.props.isImporting ? OcticonSymbol.sync : OcticonSymbol.fold
-          }
-          className={
-            'sketch-file-action' +
-            (this.props.parsed ? ' active' : '') +
-            (this.props.isImporting ? ' spin' : '')
-          }
-          onClick={this.handleImport}
-          title="Regenerate Sketch File From JSON"
-        />
-        <Octicon
-          symbol={
-            this.props.isParsing ? OcticonSymbol.sync : OcticonSymbol.unfold
-          }
-          className={
-            'sketch-file-action' +
-            (this.props.imported ? ' active' : '') +
-            (this.props.isParsing ? ' spin' : '')
-          }
-          onClick={this.handleParse}
-          title="Export Sketch To JSON"
-        />
       </div>
     )
   }
@@ -99,10 +59,6 @@ export class SketchFile extends React.Component<
         enabled: this.props.parsed,
       },
       { type: 'separator' },
-      {
-        label: 'Ignore',
-        action: () => this.props.onIgnore(this.props.path),
-      },
       {
         label: 'Open',
         action: () => this.props.onOpen(this.props.path),

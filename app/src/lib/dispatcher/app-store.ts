@@ -951,6 +951,26 @@ export class AppStore {
     const kactusStatus = await getKactusStatus(repository)
 
     if (kactusStatus.files) {
+      // parse the updated files
+      const oldFiles = this.getRepositoryState(repository).kactus.files
+      if (oldFiles) {
+        const modifiedFiles = kactusStatus.files.filter(f => {
+          const oldFile = oldFiles.find(of => of.id === f.id)
+          return (
+            f.lastModified &&
+            (!oldFile || oldFile.lastModified !== f.lastModified)
+          )
+        })
+
+        if (modifiedFiles && modifiedFiles.length) {
+          await Promise.all(
+            modifiedFiles.map(f =>
+              parseFile(f.path + '.sketch', kactusStatus.config)
+            )
+          )
+        }
+      }
+
       this.updateKactusState(repository, state => {
         return {
           config: kactusStatus.config,
@@ -2041,7 +2061,15 @@ export class AppStore {
     const gitStore = this.getGitStore(repository)
     await gitStore.discardChanges(files)
 
-    return this._refreshRepository(repository)
+    await this._refreshRepository(repository)
+
+    // rebuild sketch files
+    const { kactus } = this.getRepositoryState(repository)
+    await Promise.all(
+      kactus.files
+        .filter(f => f.parsed)
+        .map(f => importFolder(f.path, kactus.config))
+    )
   }
 
   public async _undoCommit(

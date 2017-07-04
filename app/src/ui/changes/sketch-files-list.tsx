@@ -13,11 +13,8 @@ interface ISketchFilesListProps {
   readonly onFileSelectionChanged: (row: number) => void
   readonly onParse: (path: string) => void
   readonly onImport: (path: string) => void
-  readonly onIgnore: (path: string) => void
   readonly onOpen: (path: string) => void
   readonly onCreateSketchFile: () => void
-  readonly isParsing: boolean
-  readonly isImporting: boolean
 
   readonly availableWidth: number
 
@@ -44,10 +41,7 @@ export class SketchFilesList extends React.Component<
         key={file.id}
         onImport={this.props.onImport}
         onParse={this.props.onParse}
-        onIgnore={this.props.onIgnore}
         onOpen={this.props.onOpen}
-        isParsing={this.props.isParsing}
-        isImporting={this.props.isImporting}
         availableWidth={this.props.availableWidth}
       />
     )

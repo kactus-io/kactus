@@ -231,10 +231,6 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     this.props.dispatcher.importSketchFile(this.props.repository, path)
   }
 
-  private onSketchIgnore = (path: string) => {
-    this.props.dispatcher.ignoreSketchFile(this.props.repository, path)
-  }
-
   private onSketchOpen = (path: string) => {
     this.props.dispatcher.openSketchFile(path)
   }
@@ -297,10 +293,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           onParse={this.onSketchParse}
           onImport={this.onSketchImport}
           onOpen={this.onSketchOpen}
-          isParsing={this.props.kactus.isParsing}
-          isImporting={this.props.kactus.isImporting}
           availableWidth={this.props.availableWidth}
-          onIgnore={this.onSketchIgnore}
           onCreateSketchFile={this.onCreateSketchFile}
         />
         <ChangesList
