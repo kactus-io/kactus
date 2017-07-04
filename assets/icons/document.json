@@ -43,23 +43,8 @@
   "enableLayerInteraction": true,
   "enableSliceInteraction": true,
   "foreignSymbols": [],
-  "layerStyles": {
-    "_class": "sharedStyleContainer",
-    "objects": []
-  },
   "layerSymbols": {
     "_class": "symbolContainer",
     "objects": []
-  },
-  "layerTextStyles": {
-    "_class": "sharedTextStyleContainer",
-    "objects": []
-  },
-  "pages": [
-    {
-      "_class": "MSJSONFileReference",
-      "_ref_class": "MSImmutablePage",
-      "_ref": "pages/DA19C149-3860-4A55-BCFA-1EE71ADB28CF"
-    }
-  ]
+  }
 }
