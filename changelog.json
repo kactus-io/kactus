@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.2": [
+      "[New] Automatically parse sketch files when changed",
+      "[Improved] Directly show text diff for document.json"
+    ],
     "0.1.1": [
       "[New] Check the Sketch version and warn if it's not good",
       "[Fixed] Fix missing buttons to login"
