@@ -18,6 +18,11 @@
 			"identifier": "open-kactus",
 			"script": "./open-kactus.js",
       "shortcut": "cmd k"
+		},
+    {
+			"name": "Refresh files",
+			"identifier": "refresh-files",
+			"script": "./refresh-files.js"
 		}
 	],
 	"menu": {
