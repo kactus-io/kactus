@@ -63,8 +63,8 @@ import { WindowState, getWindowState } from '../window-state'
 import { structuralEquals } from '../equality'
 import { fatalError } from '../fatal-error'
 import { updateMenuState } from '../menu-update'
-import { getKactusStatus } from '../kactus'
-import { IKactusFile, parseFile, importFolder, createNewFile } from 'kactus-cli'
+import { getKactusStatus, parseSketchFile, importSketchFile } from '../kactus'
+import { IKactusFile, createNewFile } from 'kactus-cli'
 
 import {
   getAuthorIdentity,
@@ -939,7 +939,10 @@ export class AppStore {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _loadStatus(
     repository: Repository,
-    clearPartialState: boolean = false
+    options?: {
+      clearPartialState?: boolean
+      skipParsingModifiedSketchFiles?: boolean
+    }
   ): Promise<void> {
     const gitStore = this.getGitStore(repository)
     const status = await gitStore.loadStatus()
@@ -950,7 +953,10 @@ export class AppStore {
 
     const kactusStatus = await getKactusStatus(repository)
 
-    if (kactusStatus.files) {
+    if (
+      (!options || !options.skipParsingModifiedSketchFiles) &&
+      kactusStatus.files
+    ) {
       // parse the updated files
       const oldFiles = this.getRepositoryState(repository).kactus.files
       if (oldFiles) {
@@ -964,21 +970,19 @@ export class AppStore {
 
         if (modifiedFiles && modifiedFiles.length) {
           await Promise.all(
-            modifiedFiles.map(f =>
-              parseFile(f.path + '.sketch', kactusStatus.config)
-            )
+            modifiedFiles.map(f => parseSketchFile(f.path, kactusStatus.config))
           )
         }
       }
-
-      this.updateKactusState(repository, state => {
-        return {
-          config: kactusStatus.config,
-          files: kactusStatus.files,
-          selectedFileID: state.selectedFileID,
-        }
-      })
     }
+
+    this.updateKactusState(repository, state => {
+      return {
+        config: kactusStatus.config,
+        files: kactusStatus.files,
+        selectedFileID: state.selectedFileID,
+      }
+    })
 
     this.updateChangesState(repository, state => {
       // Populate a map for all files in the current working directory state
@@ -991,7 +995,7 @@ export class AppStore {
         .map(file => {
           const existingFile = filesByID.get(file.id)
           if (existingFile) {
-            if (clearPartialState) {
+            if (options && options.clearPartialState) {
               if (
                 existingFile.selection.getSelectionType() ===
                 DiffSelectionType.Partial
@@ -1075,8 +1079,10 @@ export class AppStore {
   ): Promise<void> {
     await this.isParsing(repository, async () => {
       const kactusConfig = this.getRepositoryState(repository).kactus.config
-      await parseFile(path + '.sketch', kactusConfig)
-      await this._loadStatus(repository)
+      await parseSketchFile(path, kactusConfig)
+      await this._loadStatus(repository, {
+        skipParsingModifiedSketchFiles: true,
+      })
     })
   }
 
@@ -1087,8 +1093,10 @@ export class AppStore {
   ): Promise<void> {
     await this.isImporting(repository, async () => {
       const kactusConfig = this.getRepositoryState(repository).kactus.config
-      await importFolder(path, kactusConfig)
-      await this._loadStatus(repository)
+      await importSketchFile(path, kactusConfig)
+      await this._loadStatus(repository, {
+        skipParsingModifiedSketchFiles: true,
+      })
     })
   }
 
@@ -1366,7 +1374,9 @@ export class AppStore {
     options: { includingStatus: boolean; clearPartialState: boolean }
   ): Promise<void> {
     if (options.includingStatus) {
-      await this._loadStatus(repository, options.clearPartialState)
+      await this._loadStatus(repository, {
+        clearPartialState: options.clearPartialState,
+      })
     }
 
     const gitStore = this.getGitStore(repository)
@@ -1521,7 +1531,7 @@ export class AppStore {
         await Promise.all(
           kactus.files
             .filter(f => f.parsed)
-            .map(f => importFolder(f.path, kactus.config))
+            .map(f => importSketchFile(f.path, kactus.config))
         )
       }
     } finally {
@@ -1933,7 +1943,7 @@ export class AppStore {
           await Promise.all(
             kactus.files
               .filter(f => f.parsed)
-              .map(f => importFolder(f.path, kactus.config))
+              .map(f => importSketchFile(f.path, kactus.config))
           )
 
           this.updatePushPullFetchProgress(repository, {
@@ -2068,7 +2078,7 @@ export class AppStore {
     await Promise.all(
       kactus.files
         .filter(f => f.parsed)
-        .map(f => importFolder(f.path, kactus.config))
+        .map(f => importSketchFile(f.path, kactus.config))
     )
   }
 
@@ -2450,7 +2460,9 @@ export class AppStore {
   ): Promise<void> {
     const kactusConfig = this.getRepositoryState(repository).kactus.config
     await createNewFile(Path.join(repository.path, path), kactusConfig)
-    await this._loadStatus(repository)
+    await this._loadStatus(repository, {
+      skipParsingModifiedSketchFiles: true,
+    })
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */

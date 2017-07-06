@@ -15,6 +15,7 @@ import {
   Foldout,
   FoldoutType,
   ImageDiffType,
+  IAppState,
 } from '../app-state'
 import { Action } from './actions'
 import { AppStore } from './app-store'
@@ -1055,6 +1056,23 @@ export class Dispatcher {
     await this.appStore._setAppFocusState(isFocused)
   }
 
+  private findExistingRepoForFile(state: IAppState, path: string) {
+    const repositories = state.repositories
+    return repositories.find(r => {
+      if (__WIN32__) {
+        // Windows is guaranteed to be case-insensitive so we can be a
+        // bit more accepting.
+        return (
+          Path.normalize(path)
+            .toLowerCase()
+            .indexOf(Path.normalize(r.path).toLowerCase()) === 0
+        )
+      } else {
+        return Path.normalize(path).indexOf(Path.normalize(r.path)) === 0
+      }
+    })
+  }
+
   public async dispatchURLAction(action: URLActionType): Promise<void> {
     switch (action.name) {
       case 'oauth':
@@ -1111,25 +1129,13 @@ export class Dispatcher {
 
       case 'open-sketch-file': {
         const state = this.appStore.getState()
-        const repositories = state.repositories
-        const existingRepository = repositories.find(r => {
-          if (__WIN32__) {
-            // Windows is guaranteed to be case-insensitive so we can be a
-            // bit more accepting.
-            return (
-              Path.normalize(action.path)
-                .toLowerCase()
-                .indexOf(Path.normalize(r.path).toLowerCase()) === 0
-            )
-          } else {
-            return (
-              Path.normalize(action.path).indexOf(Path.normalize(r.path)) === 0
-            )
-          }
-        })
+        const existingRepository = this.findExistingRepoForFile(
+          state,
+          action.path
+        )
 
         if (existingRepository) {
-          this.selectRepository(existingRepository)
+          await this.selectRepository(existingRepository)
           if (existingRepository instanceof Repository) {
             const repositoryState = this.appStore.getRepositoryState(
               existingRepository
@@ -1141,8 +1147,88 @@ export class Dispatcher {
               )
             })
             if (existingFile) {
-              this.changeSketchFileSelection(existingRepository, existingFile)
+              return this.changeSketchFileSelection(
+                existingRepository,
+                existingFile
+              )
             }
+          }
+        } else {
+          return this.showPopup({
+            type: PopupType.AddRepository,
+            path: Path.dirname(action.path),
+          })
+        }
+        break
+      }
+
+      case 'parse-sketch-file': {
+        const state = this.appStore.getState()
+        const existingRepository = this.findExistingRepoForFile(
+          state,
+          action.path
+        )
+
+        if (existingRepository) {
+          await this.selectRepository(existingRepository)
+          if (existingRepository instanceof Repository) {
+            const repositoryState = this.appStore.getRepositoryState(
+              existingRepository
+            )
+            const existingFile = repositoryState.kactus.files.find(f => {
+              return (
+                Path.normalize(f.path + '.sketch') ===
+                Path.normalize(action.path)
+              )
+            })
+            if (existingFile) {
+              await this.changeSketchFileSelection(
+                existingRepository,
+                existingFile
+              )
+              return this.parseSketchFile(existingRepository, existingFile.path)
+            }
+            return this.parseSketchFile(existingRepository, action.path)
+          }
+        } else {
+          return this.showPopup({
+            type: PopupType.AddRepository,
+            path: Path.dirname(action.path),
+          })
+        }
+        break
+      }
+
+      case 'import-sketch-file': {
+        const state = this.appStore.getState()
+        const existingRepository = this.findExistingRepoForFile(
+          state,
+          action.path
+        )
+
+        if (existingRepository) {
+          await this.selectRepository(existingRepository)
+          if (existingRepository instanceof Repository) {
+            const repositoryState = this.appStore.getRepositoryState(
+              existingRepository
+            )
+            const existingFile = repositoryState.kactus.files.find(f => {
+              return (
+                Path.normalize(f.path + '.sketch') ===
+                Path.normalize(action.path)
+              )
+            })
+            if (existingFile) {
+              await this.changeSketchFileSelection(
+                existingRepository,
+                existingFile
+              )
+              return this.importSketchFile(
+                existingRepository,
+                existingFile.path
+              )
+            }
+            return this.importSketchFile(existingRepository, action.path)
           }
         } else {
           return this.showPopup({

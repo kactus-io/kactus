@@ -93,11 +93,16 @@ export class AccountsStore {
         account.name,
         account.unlockedKactus
       )
-      const token = await this.secureStore.getItem(
-        getKeyForAccount(accountWithoutToken),
-        account.login
-      )
-      return accountWithoutToken.withToken(token || '')
+      try {
+        const token = await this.secureStore.getItem(
+          getKeyForAccount(accountWithoutToken),
+          account.login
+        )
+        return accountWithoutToken.withToken(token || '')
+      } catch (err) {
+        console.error(err)
+        return accountWithoutToken
+      }
     })
 
     this.accounts = await Promise.all(accountsWithTokens)

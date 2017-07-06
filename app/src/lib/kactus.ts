@@ -1,7 +1,13 @@
 import * as Fs from 'fs'
 import * as Path from 'path'
 import { exec } from 'child_process'
-import { IKactusStatusResult, find } from 'kactus-cli'
+import {
+  IKactusStatusResult,
+  find,
+  IKactusConfig,
+  parseFile,
+  importFolder,
+} from 'kactus-cli'
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
 import { getDotComAPIEndpoint } from './api'
@@ -165,4 +171,12 @@ export function shouldShowPremiumUpsell(
   }
 
   return false
+}
+
+export function parseSketchFile(path: string, config: IKactusConfig) {
+  return parseFile(path + '.sketch', config)
+}
+
+export function importSketchFile(path: string, config: IKactusConfig) {
+  return importFolder(path, config)
 }
