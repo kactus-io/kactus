@@ -1,3 +1,11 @@
+function openFile(path) {
+  NSWorkspace.sharedWorkspace().openURL(NSURL.URLWithString('kactus://parsesketchfile/' + path))
+}
+
 export default function (context) {
-  context.document.showMessage('// TODO: export the sketch file to JSON')
+  if(!context.document.fileURL()) {
+    context.document.showMessage('Open a file first ;)')
+  } else {
+    openFile(context.document.fileURL().path())
+  }
 }

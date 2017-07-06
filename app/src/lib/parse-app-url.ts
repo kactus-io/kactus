@@ -36,6 +36,20 @@ export interface IOpenSketchFileAction {
   readonly path: string
 }
 
+export interface IParseSketchFileAction {
+  readonly name: 'parse-sketch-file'
+
+  /** The local path to open. */
+  readonly path: string
+}
+
+export interface IImportSketchFileAction {
+  readonly name: 'import-sketch-file'
+
+  /** The local path to open. */
+  readonly path: string
+}
+
 export interface IUnknownAction {
   readonly name: 'unknown'
 }
@@ -46,6 +60,8 @@ export type URLActionType =
   | IOpenRepositoryFromPathAction
   | IUnknownAction
   | IOpenSketchFileAction
+  | IParseSketchFileAction
+  | IImportSketchFileAction
 
 export function parseAppURL(url: string): URLActionType {
   const parsedURL = URL.parse(url, true)
@@ -120,6 +136,20 @@ export function parseAppURL(url: string): URLActionType {
   if (actionName === 'opensketchfile') {
     return {
       name: 'open-sketch-file',
+      path: decodeURIComponent(parsedPath),
+    }
+  }
+
+  if (actionName === 'parsesketchfile') {
+    return {
+      name: 'parse-sketch-file',
+      path: decodeURIComponent(parsedPath),
+    }
+  }
+
+  if (actionName === 'importsketchfile') {
+    return {
+      name: 'import-sketch-file',
       path: decodeURIComponent(parsedPath),
     }
   }
