@@ -11,7 +11,7 @@ import {
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
 import { getDotComAPIEndpoint } from './api'
-import { SKETCHTOOL_PATH } from './sketch'
+import { SKETCHTOOL_PATH, runPluginCommand } from './sketch'
 
 /**
  *  Retrieve the status for a given repository
@@ -69,7 +69,7 @@ export async function generatePagePreview(
         name +
         '" --output="' +
         output +
-        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES',
+        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png',
       (err, stdout, stderr) => {
         if (err) {
           return reject(err)
@@ -95,7 +95,7 @@ export async function generateArtboardPreview(
         id +
         '" --output="' +
         output +
-        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --include-symbols=YES',
+        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --include-symbols=YES --formats=png',
       (err, stdout, stderr) => {
         if (err) {
           return reject(err)
@@ -120,7 +120,7 @@ export async function generateLayerPreview(
         id +
         '" --output="' +
         output +
-        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES',
+        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png',
       (err, stdout, stderr) => {
         if (err) {
           return reject(err)
@@ -178,5 +178,10 @@ export function parseSketchFile(path: string, config: IKactusConfig) {
 }
 
 export function importSketchFile(path: string, config: IKactusConfig) {
-  return importFolder(path, config)
+  return importFolder(path, config).then(() => {
+    return runPluginCommand(
+      Path.resolve(__dirname, './plugin.sketchplugin'),
+      'refresh-files'
+    )
+  })
 }

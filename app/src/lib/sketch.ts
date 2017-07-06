@@ -50,3 +50,21 @@ export async function getSketchVersion(): Promise<string | null> {
     })
   })
 }
+
+export async function runPluginCommand(
+  plugin: string,
+  commandIdentifier: string
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    execFile(
+      Path.join(SKETCHTOOL_PATH),
+      ['run', plugin, commandIdentifier, '--without-activating'],
+      err => {
+        if (err) {
+          return reject(err)
+        }
+        return resolve()
+      }
+    )
+  })
+}
