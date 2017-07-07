@@ -186,7 +186,7 @@ export class RepositorySettings extends React.Component<
   }
 
   private onShowKactusDoc = () => {
-    this.props.dispatcher.openInBrowser('http://kactus.io/help#kactus-dot-json')
+    this.props.dispatcher.openInBrowser('http://kactus.io/help/#kactus-dot-json')
   }
 
   private onSubmit = async () => {
