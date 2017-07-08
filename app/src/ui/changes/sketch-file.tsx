@@ -19,7 +19,6 @@ export class SketchFile extends React.Component<
   ISketchFileProps,
   Readonly<{}>
 > {
-
   public render() {
     const listItemPadding = 10 * 2
     const checkboxWidth = 20

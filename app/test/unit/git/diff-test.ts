@@ -32,8 +32,11 @@ import {
 
 import { GitProcess } from 'dugite'
 
-async function getTextDiff(repo: Repository, file: WorkingDirectoryFileChange): Promise<ITextDiff> {
-  const diff = await getWorkingDirectoryDiff(repo, [],  file)
+async function getTextDiff(
+  repo: Repository,
+  file: WorkingDirectoryFileChange
+): Promise<ITextDiff> {
+  const diff = await getWorkingDirectoryDiff(repo, [], file)
   expect(diff.kind === DiffType.Text)
   return diff as ITextDiff
 }
@@ -115,8 +118,14 @@ describe('git/diff', () => {
 
   describe('imageDiff', () => {
     it('changes for images are set', async () => {
-      const diffSelection = DiffSelection.fromInitialSelection(DiffSelectionType.All)
-      const file = new WorkingDirectoryFileChange('modified-image.jpg', AppFileStatus.Modified, diffSelection)
+      const diffSelection = DiffSelection.fromInitialSelection(
+        DiffSelectionType.All
+      )
+      const file = new WorkingDirectoryFileChange(
+        'modified-image.jpg',
+        AppFileStatus.Modified,
+        diffSelection
+      )
       const diff = await getWorkingDirectoryDiff(repository!, [], file)
 
       expect(diff.kind === DiffType.Image)

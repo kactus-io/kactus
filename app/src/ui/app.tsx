@@ -1303,9 +1303,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
 
     if (sketchVersion === null) {
-      return (
-        <SketchVersionOutdated dispatcher={this.props.dispatcher} />
-      )
+      return <SketchVersionOutdated dispatcher={this.props.dispatcher} />
     }
 
     if (semver.satisfies(sketchVersion, '>=43.0.0')) {
@@ -1313,7 +1311,10 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
 
     return (
-      <SketchVersionOutdated found={sketchVersion} dispatcher={this.props.dispatcher} />
+      <SketchVersionOutdated
+        found={sketchVersion}
+        dispatcher={this.props.dispatcher}
+      />
     )
   }
 
