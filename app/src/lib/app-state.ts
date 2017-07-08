@@ -479,6 +479,7 @@ export interface IKactusState {
   readonly config: IKactusConfig
   readonly isParsing: boolean
   readonly isImporting: boolean
+  readonly lastChecked: number | null
 }
 
 export interface IChangesState {

@@ -29,6 +29,7 @@ export async function getKactusStatus(
           id: f.path.replace(repository.path, '').replace(/^\//, ''),
         }
       }),
+      lastChecked: Date.now(),
     }
   })
 }

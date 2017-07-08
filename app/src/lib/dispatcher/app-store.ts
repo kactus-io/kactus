@@ -346,6 +346,7 @@ export class AppStore {
         config: {},
         isImporting: false,
         isParsing: false,
+        lastChecked: null,
       },
       selectedSection: RepositorySection.Changes,
       branchesState: {
@@ -958,10 +959,10 @@ export class AppStore {
       kactusStatus.files
     ) {
       // parse the updated files
-      const oldFiles = this.getRepositoryState(repository).kactus.files
-      if (oldFiles) {
+      const oldKactusState = this.getRepositoryState(repository).kactus
+      if (oldKactusState.lastChecked && oldKactusState.files) {
         const modifiedFiles = kactusStatus.files.filter(f => {
-          const oldFile = oldFiles.find(of => of.id === f.id)
+          const oldFile = oldKactusState.files.find(of => of.id === f.id)
           return (
             f.lastModified &&
             (!oldFile || oldFile.lastModified !== f.lastModified)
