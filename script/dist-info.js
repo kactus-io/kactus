@@ -76,7 +76,7 @@ function getUserDataPath () {
 }
 
 function getWindowsIdentifierName () {
-  return 'KactusDesktop'
+  return 'Kactus'
 }
 
 function getBundleSizes () {
