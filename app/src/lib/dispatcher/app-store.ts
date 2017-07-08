@@ -945,13 +945,6 @@ export class AppStore {
       skipParsingModifiedSketchFiles?: boolean
     }
   ): Promise<void> {
-    const gitStore = this.getGitStore(repository)
-    const status = await gitStore.loadStatus()
-
-    if (!status) {
-      return
-    }
-
     const kactusStatus = await getKactusStatus(repository)
 
     if (
@@ -959,10 +952,10 @@ export class AppStore {
       kactusStatus.files
     ) {
       // parse the updated files
-      const oldKactusState = this.getRepositoryState(repository).kactus
-      if (oldKactusState.lastChecked && oldKactusState.files) {
+      const oldFiles = this.getRepositoryState(repository).kactus.files
+      if (oldFiles) {
         const modifiedFiles = kactusStatus.files.filter(f => {
-          const oldFile = oldKactusState.files.find(of => of.id === f.id)
+          const oldFile = oldFiles.find(of => of.id === f.id)
           return (
             f.lastModified &&
             (!oldFile || oldFile.lastModified !== f.lastModified)
@@ -984,6 +977,13 @@ export class AppStore {
         selectedFileID: state.selectedFileID,
       }
     })
+
+    const gitStore = this.getGitStore(repository)
+    const status = await gitStore.loadStatus()
+
+    if (!status) {
+      return
+    }
 
     this.updateChangesState(repository, state => {
       // Populate a map for all files in the current working directory state
