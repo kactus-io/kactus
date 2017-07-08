@@ -783,7 +783,7 @@ export async function checkUnlockedKactus(
     const path = `${KactusAPIEndpoint}/${user.id}`
     const response = await fetch(path)
     if (response.status === HttpStatusCode.NotFound) {
-      log.warn(`fetchAll: '${path}' returned a 404`)
+      log.warn(`checkUnlockedKactus: '${path}' returned a 404`)
       return false
     }
     const kactusUser = await parsedResponse<IAPIKactusUser>(response)
