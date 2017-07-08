@@ -24,7 +24,7 @@ export class NoChanges extends React.Component<INoChangesProps, {}> {
         <div className="content">
           <div className="callout">
             <Octicon symbol={OcticonSymbol.ruby} />
-            <div>Create a new Sketch File in Sketch</div>
+            <div>Create a new Sketch File</div>
             <Button
               onClick={this.props.onCreateSketchFile}
             >
