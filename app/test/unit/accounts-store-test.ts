@@ -19,7 +19,18 @@ describe('AccountsStore', () => {
   describe('adding a new user', () => {
     it('contains the added user', async () => {
       const newAccountLogin = 'tonald-drump'
-      await accountsStore!.addAccount(new Account(newAccountLogin, '', '', new Array<Email>(), '', 1, '', false))
+      await accountsStore!.addAccount(
+        new Account(
+          newAccountLogin,
+          '',
+          '',
+          new Array<Email>(),
+          '',
+          1,
+          '',
+          false
+        )
+      )
 
       const users = await accountsStore!.getAll()
       expect(users[0].login).to.equal(newAccountLogin)

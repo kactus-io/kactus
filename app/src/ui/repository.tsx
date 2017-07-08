@@ -10,7 +10,7 @@ import { TabBar } from './tab-bar'
 import {
   IRepositoryState as IRepositoryModelState,
   RepositorySection,
-  PopupType
+  PopupType,
 } from '../lib/app-state'
 import { Dispatcher, IssuesStore, GitHubUserStore } from '../lib/dispatcher'
 import { assertNever } from '../lib/fatal-error'
@@ -168,7 +168,12 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
         !selectedSketchFile &&
         (!changesState.workingDirectory.files.length || !selectedFile || !diff)
       ) {
-        return <NoChanges onOpenRepository={this.openRepository} onCreateSketchFile={this.handleCreateSketchFile} />
+        return (
+          <NoChanges
+            onOpenRepository={this.openRepository}
+            onCreateSketchFile={this.handleCreateSketchFile}
+          />
+        )
       } else {
         return (
           <Changes

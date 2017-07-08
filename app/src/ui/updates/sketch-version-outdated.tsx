@@ -17,13 +17,19 @@ export class SketchVersionOutdated extends React.Component<
   {}
 > {
   public render() {
-    const copy = this.props.found ? `Kactus is only compatible with Sketch >= 43. We found ${this.props.found}.` : 'Kactus needs Sketch to function properly and we couldn\'t find it.'
+    const copy = this.props.found
+      ? `Kactus is only compatible with Sketch >= 43. We found ${this.props
+          .found}.`
+      : "Kactus needs Sketch to function properly and we couldn't find it."
     return (
       <div id="update-available" className="active">
         <Octicon className="icon" symbol={OcticonSymbol.ruby} />
 
         <span>
-          {copy} <LinkButton onClick={this.downloadNow}>Download Sketch now</LinkButton>
+          {copy}{' '}
+          <LinkButton onClick={this.downloadNow}>
+            Download Sketch now
+          </LinkButton>
         </span>
       </div>
     )

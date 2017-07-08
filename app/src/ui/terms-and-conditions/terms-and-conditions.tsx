@@ -11,8 +11,7 @@ interface ITermsAndConditionsProps {
 
 const contact = 'http://kactus.io/contact'
 const logos = 'http://kactus.io/logos'
-const privacyStatement =
-  'http://kactus.io/privacy-statement/'
+const privacyStatement = 'http://kactus.io/privacy-statement/'
 const license = 'https://creativecommons.org/licenses/by/4.0/'
 
 export class TermsAndConditions extends React.Component<
@@ -48,20 +47,19 @@ export class TermsAndConditions extends React.Component<
   public render() {
     return (
       <Dialog
-        id='terms-and-conditions'
-        title='Kactus Terms and Conditions'
+        id="terms-and-conditions"
+        title="Kactus Terms and Conditions"
         onSubmit={this.props.onDismissed}
         onDismissed={this.props.onDismissed}
       >
         <DialogContent onRef={this.onDialogContainerRef}>
           <p>
-            These Kactus Terms and Conditions ("Application Terms") are a
-            legal agreement between you (either as an individual or on behalf
-            of an entity) and GitHub, Inc. regarding your use of
-            Kactus and associated documentation ("Software").
-            These Application Terms apply to the executable code
-            version of the Software. Source code for the Software is
-            available separately and free of charge under open
+            These Kactus Terms and Conditions ("Application Terms") are a legal
+            agreement between you (either as an individual or on behalf of an
+            entity) and GitHub, Inc. regarding your use of Kactus and associated
+            documentation ("Software"). These Application Terms apply to the
+            executable code version of the Software. Source code for the
+            Software is available separately and free of charge under open
             source software license agreements. If you do not agree to all of
             the terms in these Application Terms, do not download, install, use,
             or copy the Software.
@@ -95,8 +93,8 @@ export class TermsAndConditions extends React.Component<
             To the extent the terms of the licenses applicable to open source
             components require Kactus to make an offer to provide source code in
             connection with the Software, such offer is hereby made, and you may
-            exercise it by contacting Kactus: <LinkButton uri={contact}>
-            http://kactus.io/contact</LinkButton>.
+            exercise it by contacting Kactus:{' '}
+            <LinkButton uri={contact}>{contact}</LinkButton>.
           </p>
 
           <p>
@@ -121,9 +119,9 @@ export class TermsAndConditions extends React.Component<
           </p>
 
           <p>
-            The names Kactus, Kactus.io, and related Kactus logos and/or stylized
-            names are trademarks of Kactus. You agree not to display or use
-            these trademarks in any manner without Kactus's prior, written
+            The names Kactus, Kactus.io, and related Kactus logos and/or
+            stylized names are trademarks of Kactus. You agree not to display or
+            use these trademarks in any manner without Kactus's prior, written
             permission, except as allowed by Kactus's Logos and Usage Policy:
             <LinkButton uri={logos}>logos</LinkButton>.
           </p>
@@ -135,7 +133,9 @@ export class TermsAndConditions extends React.Component<
             information the Software collects in the settings panel. If the
             Software does collect personal information on Kactus's behalf,
             Kactus will process that information in accordance with the
-            <LinkButton uri={privacyStatement}>Kactus Privacy Statement</LinkButton>.
+            <LinkButton uri={privacyStatement}>
+              Kactus Privacy Statement
+            </LinkButton>.
           </p>
 
           <h2>Additional Services</h2>
@@ -237,8 +237,11 @@ export class TermsAndConditions extends React.Component<
 
             <li>
               License to Kactus Policies. These Application Terms are licensed
-              under the <LinkButton uri={license}>Creative Commons Attribution license</LinkButton>.
-              You may use it freely under the terms of the Creative Commons license.
+              under the{' '}
+              <LinkButton uri={license}>
+                Creative Commons Attribution license
+              </LinkButton>. You may use it freely under the terms of the
+              Creative Commons license.
             </li>
 
             <li>

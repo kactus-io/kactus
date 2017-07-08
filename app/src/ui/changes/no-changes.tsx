@@ -25,19 +25,17 @@ export class NoChanges extends React.Component<INoChangesProps, {}> {
           <div className="callout">
             <Octicon symbol={OcticonSymbol.ruby} />
             <div>Create a new Sketch File</div>
-            <Button
-              onClick={this.props.onCreateSketchFile}
-            >
+            <Button onClick={this.props.onCreateSketchFile}>
               {__DARWIN__ ? 'Create File' : 'create file'}
             </Button>
           </div>
 
           <div className="callout">
             <Octicon symbol={OcticonSymbol.fileDirectory} />
-            <div>Open this repository in {opener}</div>
-            <Button
-              onClick={this.props.onOpenRepository}
-            >
+            <div>
+              Open this repository in {opener}
+            </div>
+            <Button onClick={this.props.onOpenRepository}>
               Open {opener}
             </Button>
           </div>

@@ -36,7 +36,11 @@ import {
 import * as fs from 'fs-extra'
 const temp = require('temp').track()
 
-async function getTextDiff(repo: Repository, kactusFiles: Array<IKactusFile>, file: WorkingDirectoryFileChange): Promise<ITextDiff> {
+async function getTextDiff(
+  repo: Repository,
+  kactusFiles: Array<IKactusFile>,
+  file: WorkingDirectoryFileChange
+): Promise<ITextDiff> {
   const diff = await getWorkingDirectoryDiff(repo, kactusFiles, file)
   expect(diff.kind === DiffType.Text)
   return diff as ITextDiff
@@ -63,7 +67,12 @@ describe('git/commit', () => {
       let files = status.workingDirectory.files
       expect(files.length).to.equal(1)
 
-      await createCommit(repository!, kactusState.files, 'Special commit', files)
+      await createCommit(
+        repository!,
+        kactusState.files,
+        'Special commit',
+        files
+      )
 
       status = await getStatus(repository!)
       files = status.workingDirectory.files
@@ -111,7 +120,12 @@ describe('git/commit', () => {
         files[1].withIncludeAll(true),
       ]
 
-      await createCommit(repo, kactusState.files, 'added two files\n\nthis is a description', allChanges)
+      await createCommit(
+        repo,
+        kactusState.files,
+        'added two files\n\nthis is a description',
+        allChanges
+      )
 
       const statusAfter = await getStatus(repo)
 
@@ -139,7 +153,9 @@ describe('git/commit', () => {
 
       expect(files.length).to.equal(1)
 
-      await createCommit(repo, kactusState.files, 'renamed a file', [ files[0].withIncludeAll(true) ])
+      await createCommit(repo, kactusState.files, 'renamed a file', [
+        files[0].withIncludeAll(true),
+      ])
 
       const statusAfter = await getStatus(repo)
 
@@ -170,7 +186,7 @@ describe('git/commit', () => {
       )
 
       // commit just this change, ignore everything else
-      await createCommit(repository!, [], 'title', [ file ])
+      await createCommit(repository!, [], 'title', [file])
 
       // verify that the HEAD of the repository has moved
       const newTip = (await getCommits(repository!, 'HEAD', 1))[0]
@@ -221,7 +237,7 @@ describe('git/commit', () => {
       const updatedFile = file.withSelection(selection)
 
       // commit just this change, ignore everything else
-      await createCommit(repository!, [], 'title', [ updatedFile ])
+      await createCommit(repository!, [], 'title', [updatedFile])
 
       // verify that the HEAD of the repository has moved
       const newTip = (await getCommits(repository!, 'HEAD', 1))[0]
@@ -274,7 +290,7 @@ describe('git/commit', () => {
       )
 
       // commit just this change, ignore everything else
-      await createCommit(repository!, [], 'title', [ file ])
+      await createCommit(repository!, [], 'title', [file])
 
       // verify that the HEAD of the repository has moved
       const newTip = (await getCommits(repository!, 'HEAD', 1))[0]
@@ -318,7 +334,7 @@ describe('git/commit', () => {
       )
 
       // commit just this change, ignore everything else
-      await createCommit(repository!, [], 'title', [ updatedFile ])
+      await createCommit(repository!, [], 'title', [updatedFile])
 
       // verify that the HEAD of the repository has moved
       const newTip = (await getCommits(repository!, 'HEAD', 1))[0]
@@ -358,7 +374,7 @@ describe('git/commit', () => {
       )
 
       // commit just this change, ignore everything else
-      await createCommit(repository!, [], 'title', [ file ])
+      await createCommit(repository!, [], 'title', [file])
 
       // verify that the HEAD of the repository has moved
       const newTip = (await getCommits(repository!, 'HEAD', 1))[0]
@@ -398,7 +414,9 @@ describe('git/commit', () => {
 
       expect(files.length).to.equal(1)
 
-      await createCommit(repo, [], 'renamed a file', [ files[0].withIncludeAll(true) ])
+      await createCommit(repo, [], 'renamed a file', [
+        files[0].withIncludeAll(true),
+      ])
 
       const statusAfter = await getStatus(repo)
 
@@ -432,13 +450,17 @@ describe('git/commit', () => {
 
       const partiallySelectedFile = files[0].withSelection(selection)
 
-      await createCommit(repo, [], 'renamed a file', [ partiallySelectedFile ])
+      await createCommit(repo, [], 'renamed a file', [partiallySelectedFile])
 
       const statusAfter = await getStatus(repo)
 
       expect(statusAfter.workingDirectory.files.length).to.equal(1)
 
-      const diff = await getTextDiff(repo, [], statusAfter.workingDirectory.files[0])
+      const diff = await getTextDiff(
+        repo,
+        [],
+        statusAfter.workingDirectory.files[0]
+      )
 
       expect(diff.hunks.length).to.equal(1)
       expect(diff.hunks[0].lines.length).to.equal(4)
@@ -465,7 +487,7 @@ describe('git/commit', () => {
 
       const selection = files[0].selection.withSelectAll()
       const selectedFile = files[0].withSelection(selection)
-      await createCommit(repo, [], 'Merge commit!', [ selectedFile ])
+      await createCommit(repo, [], 'Merge commit!', [selectedFile])
 
       const commits = await getCommits(repo, 'HEAD', 5)
       expect(commits[0].parentSHAs.length).to.equal(2)
