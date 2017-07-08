@@ -1,6 +1,12 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.4": [
+      "[Fixed] Remove kactus previews cache when removing a repo",
+      "[Fixed] Fix link to help",
+      "[Fixed] File typo on 'no changes' view",
+      "[Fixed] Fix getting the git status before parsing the sketch files at the very beginning"
+    ],
     "0.1.3": [
       "[Fixed] Previews on sketch 45",
       "[New] Refresh opened sketch files when importing one",
