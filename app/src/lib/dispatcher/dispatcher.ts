@@ -3,6 +3,7 @@ import * as Path from 'path'
 import { ipcRenderer, remote } from 'electron'
 import { Disposable } from 'event-kit'
 import { IKactusFile } from 'kactus-cli'
+import * as rimraf from 'rimraf'
 
 import { Account, IAccount } from '../../models/account'
 import { Repository, IRepository } from '../../models/repository'
@@ -46,6 +47,7 @@ import {
 import { saveKactusConfig, shouldShowPremiumUpsell } from '../kactus'
 import { openSketch, getSketchVersion } from '../sketch'
 import { validatedRepositoryPath } from './validated-repository-path'
+import { getUserDataPath } from '../../ui/lib/app-proxy'
 
 /**
  * Extend Error so that we can create new Errors with a callstack different from
@@ -244,6 +246,17 @@ export class Dispatcher {
       name: 'remove-repositories',
       repositoryIDs,
     })
+
+    const storagePath = Path.join(getUserDataPath(), 'previews')
+
+    // remove kactus previews cache
+    await Promise.all(
+      repositories.map(r => {
+        return new Promise(resolve => {
+          rimraf(Path.join(storagePath, String(r)), () => resolve())
+        })
+      })
+    )
 
     this.showFoldout({ type: FoldoutType.Repository })
   }
