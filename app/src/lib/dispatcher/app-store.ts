@@ -2072,8 +2072,6 @@ export class AppStore {
     const gitStore = this.getGitStore(repository)
     await gitStore.discardChanges(files)
 
-    await this._refreshRepository(repository)
-
     // rebuild sketch files
     const { kactus } = this.getRepositoryState(repository)
     await Promise.all(
@@ -2081,6 +2079,8 @@ export class AppStore {
         .filter(f => f.parsed)
         .map(f => importSketchFile(f.path, kactus.config))
     )
+
+    await this._refreshRepository(repository)
   }
 
   public async _undoCommit(
@@ -2273,7 +2273,15 @@ export class AppStore {
     const gitStore = this.getGitStore(repository)
     await gitStore.merge(branch)
 
-    return this._refreshRepository(repository)
+    // rebuild sketch files
+    const { kactus } = this.getRepositoryState(repository)
+    await Promise.all(
+      kactus.files
+        .filter(f => f.parsed)
+        .map(f => importSketchFile(f.path, kactus.config))
+    )
+
+    await this._refreshRepository(repository)
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */

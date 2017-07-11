@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.5": [
+      "[Fixed] Recreate the sketch files before get the git status when merging a branch"
+    ],
     "0.1.4": [
       "[Fixed] Remove kactus previews cache when removing a repo",
       "[Fixed] Fix link to help",
