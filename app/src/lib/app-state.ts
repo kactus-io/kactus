@@ -173,6 +173,7 @@ export enum PopupType {
   TermsAndConditions,
   CreateSketchFile,
   PremiumUpsell,
+  CLIInstalled,
 }
 
 export type Popup =
@@ -204,6 +205,7 @@ export type Popup =
   | { type: PopupType.TermsAndConditions }
   | { type: PopupType.CreateSketchFile; repository: Repository }
   | { type: PopupType.PremiumUpsell; enterprise: boolean }
+  | { type: PopupType.CLIInstalled }
 
 export enum FoldoutType {
   Repository,

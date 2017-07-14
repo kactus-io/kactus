@@ -39,39 +39,55 @@ if (process.platform === 'darwin') {
 }
 
 var releaseId
-var tag = 'v' + distInfo.getVersion();
+var tag = 'v' + distInfo.getVersion()
 
 console.log('Uploading ' + tag + '…')
 
-github.getOrCreateDraftRelease(token, repo, tag, branchName, require('../changelog.json').releases[distInfo.getVersion()] || [])
-  .then(function (res) {
+github
+  .getOrCreateDraftRelease(
+    token,
+    repo,
+    tag,
+    branchName,
+    require('../changelog.json').releases[distInfo.getVersion()] || []
+  )
+  .then(function(res) {
     releaseId = res.id
     return uploadPromise(releaseId)
   })
   .then(artifacts => {
-    const names = artifacts.map(function(item,index) {
-        return item.name;
+    const names = artifacts.map(function(item, index) {
+      return item.name
     })
     console.log(`Uploaded artifacts: ${names}`)
-    return github.publishRelease(token, repo, releaseId);
+    return github.publishRelease(token, repo, releaseId)
   })
   .catch(e => {
     console.error(`Publishing failed: ${e}`)
     process.exit(1)
   })
 
-function uploadOSXAssets (releaseId) {
+function uploadOSXAssets(releaseId) {
   const uploads = [
-    github.updateAsset(token, repo, releaseId, distInfo.getOSXZipPath())
+    github.updateAsset(token, repo, releaseId, distInfo.getOSXZipPath()),
   ]
   return Promise.all(uploads)
 }
 
-function uploadWindowsAssets (releaseId) {
+function uploadWindowsAssets() {
   const uploads = [
-    github.updateAsset(token, repo, releaseId, distInfo.getWindowsInstallerPath()),
-    github.updateAsset(token, repo, releaseId, distInfo.getWindowsStandalonePath()),
-    github.updateAsset(token, repo, releaseId, distInfo.getWindowsFullNugetPackagePath())
+    upload(
+      distInfo.getWindowsInstallerName(),
+      distInfo.getWindowsInstallerPath()
+    ),
+    upload(
+      distInfo.getWindowsStandaloneName(),
+      distInfo.getWindowsStandalonePath()
+    ),
+    upload(
+      distInfo.getWindowsFullNugetPackageName(),
+      distInfo.getWindowsFullNugetPackagePath()
+    ),
   ]
   return Promise.all(uploads)
 }

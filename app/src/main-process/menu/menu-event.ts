@@ -24,3 +24,4 @@ export type MenuEvent =
   | 'boomtown'
   | 'create-sketch-file'
   | 'open-sketch'
+  | 'install-cli'

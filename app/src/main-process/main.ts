@@ -123,11 +123,22 @@ process.on('uncaughtException', (error: Error) => {
   uncaughtException(error)
 })
 
+let willQuit = false
+
 if (__WIN32__ && process.argv.length > 1) {
-  if (handleSquirrelEvent(process.argv[1])) {
-    app.quit()
+  const arg = process.argv[1]
+  const promise = handleSquirrelEvent(arg)
+  if (promise) {
+    willQuit = true
+    promise
+      .then(() => {
+        app.quit()
+      })
+      .catch(e => {
+        log.error(`Failed handling Squirrel event: ${arg}`, e)
+      })
   } else {
-    handleAppURL(process.argv[1])
+    handleAppURL(arg)
   }
 }
 
@@ -165,6 +176,8 @@ const isDuplicateInstance = app.makeSingleInstance((args, workingDirectory) => {
 })
 
 if (isDuplicateInstance) {
+  willQuit = true
+
   app.quit()
 }
 
@@ -177,13 +190,13 @@ app.on('will-finish-launching', () => {
 })
 
 app.on('ready', () => {
-  if (isDuplicateInstance) {
+  if (willQuit) {
     return
   }
 
   readyTime = now() - launchTime
 
-  app.setAsDefaultProtocolClient('x-github-client')
+  app.setAsDefaultProtocolClient('x-kactus-client')
 
   if (__DEV__) {
     app.setAsDefaultProtocolClient('x-kactus-dev-auth')
@@ -191,7 +204,8 @@ app.on('ready', () => {
     app.setAsDefaultProtocolClient('x-kactus-auth')
   }
 
-  // Also support Desktop Classic's protocols.
+  // Also support Github Desktop's protocols.
+  app.setAsDefaultProtocolClient('x-github-client')
   if (__DARWIN__) {
     app.setAsDefaultProtocolClient('github-mac')
   } else if (__WIN32__) {

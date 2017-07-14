@@ -28,7 +28,8 @@ interface IAboutProps {
    */
   readonly applicationVersion: string
 
-  readonly usernameForUpdateCheck: string
+  /** A function to call to kick off an update check. */
+  readonly onCheckForUpdates: () => void
 
   readonly onShowAcknowledgements: () => void
 
@@ -89,10 +90,6 @@ export class About extends React.Component<IAboutProps, IAboutState> {
     }
   }
 
-  private onCheckForUpdates = () => {
-    updateStore.checkForUpdates(this.props.usernameForUpdateCheck, false)
-  }
-
   private onQuitAndInstall = () => {
     updateStore.quitAndInstallUpdate()
   }
@@ -118,7 +115,7 @@ export class About extends React.Component<IAboutProps, IAboutState> {
 
         return (
           <Row>
-            <Button disabled={disabled} onClick={this.onCheckForUpdates}>
+            <Button disabled={disabled} onClick={this.props.onCheckForUpdates}>
               Check for Updates
             </Button>
           </Row>

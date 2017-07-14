@@ -37,7 +37,9 @@ if (process.platform === 'darwin' && process.env.TRAVIS && !isFork) {
 console.log('Updating our licenses dump…')
 updateLicenseDump(err => {
   if (err) {
-    console.error('Error updating the license dump. This is fatal for a production build.')
+    console.error(
+      'Error updating the license dump. This is fatal for a production build.'
+    )
     console.error(err)
 
     if (isProductionBuild) {
@@ -58,7 +60,7 @@ updateLicenseDump(err => {
   })
 })
 
-function packageApp (callback) {
+function packageApp(callback) {
   const options = {
     name: distInfo.getProductName(),
     platform: process.platform,
@@ -75,34 +77,35 @@ function packageApp (callback) {
       '/node_modules/electron($|/)',
       '/node_modules/electron-packager($|/)',
       '/\\.git($|/)',
-      '/node_modules/\\.bin($|/)'
+      '/node_modules/\\.bin($|/)',
     ],
-    'appCopyright': 'Copyright © 2017 Mathieu Dutour.',
+    appCopyright: 'Copyright © 2017 Mathieu Dutour.',
 
     // macOS
-    'appBundleId': distInfo.getBundleID(),
-    'appCategoryType': 'public.app-category.developer-tools',
-    'protocols': [
+    appBundleId: distInfo.getBundleID(),
+    appCategoryType: 'public.app-category.developer-tools',
+    protocols: [
       {
         name: distInfo.getBundleID(),
         schemes: [
-          isProductionBuild ? 'x-kactus-auth': 'x-kactus-dev-auth',
+          isProductionBuild ? 'x-kactus-auth' : 'x-kactus-dev-auth',
+          'x-kactus-client',
           'x-github-client',
           'github-mac',
-          'kactus'
-        ]
-      }
+          'kactus',
+        ],
+      },
     ],
-    'osxSign': true,
+    osxSign: true,
 
     // Windows
     win32metadata: {
-      'CompanyName': distInfo.getCompanyName(),
-      'FileDescription': '',
-      'OriginalFilename': '',
-      'ProductName': distInfo.getProductName(),
-      'InternalName': distInfo.getProductName()
-    }
+      CompanyName: distInfo.getCompanyName(),
+      FileDescription: '',
+      OriginalFilename: '',
+      ProductName: distInfo.getProductName(),
+      InternalName: distInfo.getProductName(),
+    },
   }
 
   packager(options, (err, appPaths) => {
@@ -114,7 +117,7 @@ function packageApp (callback) {
   })
 }
 
-function copyEmoji () {
+function copyEmoji() {
   const copyImages = () => {
     const source = path.join(projectRoot, 'gemoji', 'images', 'emoji')
     const destination = path.join(outRoot, 'emoji')
@@ -133,7 +136,7 @@ function copyEmoji () {
   copyJson()
 }
 
-function copyStaticResources () {
+function copyStaticResources() {
   const dirName = process.platform
   const platformSpecific = path.join(projectRoot, 'app', 'static', dirName)
   const common = path.join(projectRoot, 'app', 'static', 'common')
@@ -143,13 +146,13 @@ function copyStaticResources () {
   fs.copySync(common, destination, { clobber: false })
 }
 
-function copyDependencies () {
+function copyDependencies() {
   const originalPackage = require(path.join(projectRoot, 'app', 'package.json'))
 
   const commonConfig = require(path.resolve(__dirname, '../app/webpack.common'))
   const externals = commonConfig.externals
   const oldDependencies = originalPackage.dependencies
-  const newDependencies = { }
+  const newDependencies = {}
 
   for (var [name, spec] of Object.entries(oldDependencies)) {
     if (externals.indexOf(name) !== -1) {
@@ -158,7 +161,7 @@ function copyDependencies () {
   }
 
   const oldDevDependencies = originalPackage.devDependencies
-  const newDevDependencies = { }
+  const newDevDependencies = {}
 
   if (!isProductionBuild) {
     for (var [name, spec] of Object.entries(oldDevDependencies)) {
@@ -180,17 +183,25 @@ function copyDependencies () {
     delete updatedPackage.devDependencies
   }
 
-  fs.writeFileSync(path.join(outRoot, 'package.json'), JSON.stringify(updatedPackage))
+  fs.writeFileSync(
+    path.join(outRoot, 'package.json'),
+    JSON.stringify(updatedPackage)
+  )
 
   fs.removeSync(path.resolve(outRoot, 'node_modules'))
 
-  if (Object.keys(newDependencies).length || Object.keys(newDevDependencies).length) {
+  if (
+    Object.keys(newDependencies).length ||
+    Object.keys(newDevDependencies).length
+  ) {
     console.log('  Installing npm dependencies…')
     cp.execSync('npm install', { cwd: outRoot, env: process.env })
   }
 
   if (!isProductionBuild) {
-    console.log('  Installing 7zip (dependency for electron-devtools-installer)')
+    console.log(
+      '  Installing 7zip (dependency for electron-devtools-installer)'
+    )
 
     const sevenZipSource = path.resolve(projectRoot, 'app/node_modules/7zip')
     const sevenZipDestination = path.resolve(outRoot, 'node_modules/7zip')
@@ -206,54 +217,60 @@ function copyDependencies () {
   fs.copySync(path.resolve(projectRoot, 'app/node_modules/dugite/git'), gitDir)
 }
 
-function updateLicenseDump (callback) {
+function updateLicenseDump(callback) {
   const appRoot = path.join(projectRoot, 'app')
   const outPath = path.join(outRoot, 'static', 'licenses.json')
   const licenseOverrides = require('./license-overrides')
 
-  legalEagle({ path: appRoot, overrides: licenseOverrides, omitPermissive: true }, (err, summary) => {
-    if (err) {
-      callback(err)
-      return
-    }
-
-    if (Object.keys(summary).length > 0) {
-      const overridesPath = path.join(__dirname, 'license-overrides.js')
-      let licensesMessage = ''
-      for (const key in summary) {
-        const license = summary[key]
-        licensesMessage += `${key} (${license.repository}): ${license.license}\n`
+  legalEagle(
+    { path: appRoot, overrides: licenseOverrides, omitPermissive: true },
+    (err, summary) => {
+      if (err) {
+        callback(err)
+        return
       }
 
-      const message = `The following dependencies have unknown or non-permissive licenses. Check it out and update ${overridesPath} if appropriate:\n${licensesMessage}`
-      callback(new Error(message))
-    } else {
-      legalEagle({ path: appRoot, overrides: licenseOverrides }, (err, summary) => {
-        if (err) {
-          callback(err)
-          return
+      if (Object.keys(summary).length > 0) {
+        const overridesPath = path.join(__dirname, 'license-overrides.js')
+        let licensesMessage = ''
+        for (const key in summary) {
+          const license = summary[key]
+          licensesMessage += `${key} (${license.repository}): ${license.license}\n`
         }
 
-        // legal-eagle still chooses to ignore the LICENSE at the root
-        // this injects the current license and pins the source URL before we
-        // dump the JSON file to disk
-        const licenseSource = path.join(projectRoot, 'LICENSE')
-        const licenseText = fs.readFileSync(licenseSource, { encoding: 'utf-8' })
-        const appVersion = distInfo.getVersion()
+        const message = `The following dependencies have unknown or non-permissive licenses. Check it out and update ${overridesPath} if appropriate:\n${licensesMessage}`
+        callback(new Error(message))
+      } else {
+        legalEagle(
+          { path: appRoot, overrides: licenseOverrides },
+          (err, summary) => {
+            if (err) {
+              callback(err)
+              return
+            }
 
-        summary[`kactus@${appVersion}`] = {
-          repository: 'https://github.com/kactus-io/kactus',
-          license: 'MIT',
-          source: `https://github.com/kactus-io/kactus/blob/release-${appVersion}/LICENSE`,
-          sourceText: licenseText
-        }
+            // legal-eagle still chooses to ignore the LICENSE at the root
+            // this injects the current license and pins the source URL before we
+            // dump the JSON file to disk
+            const licenseSource = path.join(projectRoot, 'LICENSE')
+            const licenseText = fs.readFileSync(licenseSource, {
+              encoding: 'utf-8',
+            })
+            const appVersion = distInfo.getVersion()
 
-        // inject the desktop/desktop LICENSE from which we forked
-        summary[`desktop@0.6.5`] = {
-          repository: 'https://github.com/desktop/desktop',
-          license: 'MIT',
-          source: `https://github.com/desktop/desktop/blob/master/LICENSE`,
-          sourceText: `Copyright (c) GitHub, Inc.
+            summary[`kactus@${appVersion}`] = {
+              repository: 'https://github.com/kactus-io/kactus',
+              license: 'MIT',
+              source: `https://github.com/kactus-io/kactus/blob/release-${appVersion}/LICENSE`,
+              sourceText: licenseText,
+            }
+
+            // inject the desktop/desktop LICENSE from which we forked
+            summary[`desktop@0.6.5`] = {
+              repository: 'https://github.com/desktop/desktop',
+              license: 'MIT',
+              source: `https://github.com/desktop/desktop/blob/master/LICENSE`,
+              sourceText: `Copyright (c) GitHub, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -272,12 +289,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-`
-        }
+`,
+            }
 
-        fs.writeFileSync(outPath, JSON.stringify(summary), 'utf8')
-        callback(null)
-      })
+            fs.writeFileSync(outPath, JSON.stringify(summary), 'utf8')
+            callback(null)
+          }
+        )
+      }
     }
-  })
+  )
 }
