@@ -366,10 +366,12 @@ export class API {
     state: 'open' | 'closed' | 'all',
     since: Date | null
   ): Promise<ReadonlyArray<IAPIIssue>> {
-    const params =
-      since && !isNaN(since.getTime())
-        ? { since: toGitHubIsoDateString(since) }
-        : {}
+    const params: { [key: string]: string } = {
+      state,
+    }
+    if (since && !isNaN(since.getTime())) {
+      params.since = toGitHubIsoDateString(since)
+    }
 
     const url = urlWithQueryString(`repos/${owner}/${name}/issues`, params)
     try {
@@ -379,6 +381,29 @@ export class API {
       return issues.filter((i: any) => !i.pullRequest)
     } catch (e) {
       log.warn(`fetchIssues: failed for repository ${owner}/${name}`, e)
+      throw e
+    }
+  }
+
+  /**
+   * Fetch the PRs with the given state.
+   */
+  public async fetchPRs(
+    owner: string,
+    name: string,
+    state: 'open' | 'closed' | 'all'
+  ): Promise<ReadonlyArray<IAPIIssue>> {
+    const params = {
+      state,
+    }
+
+    const url = urlWithQueryString(`repos/${owner}/${name}/pulls`, params)
+    try {
+      const pulls = await this.fetchAll<IAPIIssue>(url)
+
+      return pulls
+    } catch (e) {
+      log.warn(`fetchPRs: failed for repository ${owner}/${name}`, e)
       throw e
     }
   }

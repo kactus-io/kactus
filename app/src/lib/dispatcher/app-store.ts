@@ -1352,6 +1352,11 @@ export class AppStore {
         includingStatus: false,
         clearPartialState: false,
       })
+    } else if (section === RepositorySection.Compare) {
+      refreshSectionPromise = this.refreshChangesSection(repository, {
+        includingStatus: false,
+        clearPartialState: false,
+      })
     } else {
       return assertNever(section, `Unknown section: ${section}`)
     }

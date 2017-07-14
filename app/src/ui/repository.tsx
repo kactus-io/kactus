@@ -32,16 +32,20 @@ interface IRepositoryProps {
 const enum Tab {
   Changes = 0,
   History = 1,
+  Compare = 2,
 }
 
 export class RepositoryView extends React.Component<IRepositoryProps, {}> {
   private renderTabs(): JSX.Element {
     const hasChanges =
       this.props.state.changesState.workingDirectory.files.length > 0
+    const hasPRsOpened = false
     const selectedTab =
       this.props.state.selectedSection === RepositorySection.Changes
         ? Tab.Changes
-        : Tab.History
+        : this.props.state.selectedSection === RepositorySection.Compare
+          ? Tab.Compare
+          : Tab.History
 
     return (
       <TabBar selectedIndex={selectedTab} onTabClicked={this.onTabClicked}>
@@ -55,6 +59,15 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
             : null}
         </span>
         <span>History</span>
+        <span className="with-indicator">
+          <span>Compare</span>
+          {hasPRsOpened
+            ? <Octicon
+                className="indicator"
+                symbol={OcticonSymbol.primitiveDot}
+              />
+            : null}
+        </span>
       </TabBar>
     )
   }
@@ -107,6 +120,19 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
     )
   }
 
+  private renderCompareSidebar(): JSX.Element {
+    return (
+      <HistorySidebar
+        repository={this.props.repository}
+        dispatcher={this.props.dispatcher}
+        history={this.props.state.historyState}
+        gitHubUsers={this.props.state.gitHubUsers}
+        emoji={this.props.emoji}
+        commits={this.props.state.commits}
+      />
+    )
+  }
+
   private renderSidebarContents(): JSX.Element {
     const selectedSection = this.props.state.selectedSection
 
@@ -114,6 +140,8 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
       return this.renderChangesSidebar()
     } else if (selectedSection === RepositorySection.History) {
       return this.renderHistorySidebar()
+    } else if (selectedSection === RepositorySection.Compare) {
+      return this.renderCompareSidebar()
     } else {
       return assertNever(selectedSection, 'Unknown repository section')
     }
@@ -204,6 +232,21 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
           gitHubUsers={this.props.state.gitHubUsers}
         />
       )
+    } else if (selectedSection === RepositorySection.Compare) {
+      return (
+        <History
+          repository={this.props.repository}
+          imageDiffType={this.props.imageDiffType}
+          showAdvancedDiffs={this.props.showAdvancedDiffs}
+          dispatcher={this.props.dispatcher}
+          history={this.props.state.historyState}
+          emoji={this.props.emoji}
+          commits={this.props.state.commits}
+          localCommitSHAs={this.props.state.localCommitSHAs}
+          commitSummaryWidth={this.props.commitSummaryWidth}
+          gitHubUsers={this.props.state.gitHubUsers}
+        />
+      )
     } else {
       return assertNever(selectedSection, 'Unknown repository section')
     }
@@ -228,9 +271,11 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
     // as there's only two tabs.
     if (e.ctrlKey && e.key === 'Tab') {
       const section =
-        this.props.state.selectedSection === RepositorySection.History
+        this.props.state.selectedSection === RepositorySection.Compare
           ? RepositorySection.Changes
-          : RepositorySection.History
+          : this.props.state.selectedSection === RepositorySection.History
+            ? RepositorySection.Compare
+            : RepositorySection.History
 
       this.props.dispatcher.changeRepositorySection(
         this.props.repository,
@@ -244,7 +289,9 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
     const section =
       tab === Tab.History
         ? RepositorySection.History
-        : RepositorySection.Changes
+        : tab === Tab.Compare
+          ? RepositorySection.Compare
+          : RepositorySection.Changes
     this.props.dispatcher.changeRepositorySection(
       this.props.repository,
       section
