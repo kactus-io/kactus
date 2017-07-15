@@ -173,6 +173,7 @@ export enum PopupType {
   TermsAndConditions,
   CreateSketchFile,
   PremiumUpsell,
+  PushBranchCommits,
   CLIInstalled,
 }
 
@@ -205,6 +206,12 @@ export type Popup =
   | { type: PopupType.TermsAndConditions }
   | { type: PopupType.CreateSketchFile; repository: Repository }
   | { type: PopupType.PremiumUpsell; enterprise: boolean }
+  | {
+      type: PopupType.PushBranchCommits
+      repository: Repository
+      branch: Branch
+      unPushedCommits?: number
+    }
   | { type: PopupType.CLIInstalled }
 
 export enum FoldoutType {

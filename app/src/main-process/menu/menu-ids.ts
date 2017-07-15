@@ -24,3 +24,4 @@ export type MenuIDs =
   | 'clone-repository'
   | 'about'
   | 'create-sketch-file'
+  | 'create-pull-request'
