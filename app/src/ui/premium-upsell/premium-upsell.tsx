@@ -196,6 +196,15 @@ export class PremiumUpsell extends React.Component<
           />
         </div>
 
+    let price = this.props.enterprise ? 11.99 : 4.99
+    if (couponState && couponState !== 'loading') {
+      if (couponState.percent_off) {
+        price = price * (100 - couponState.percent_off) / 100
+      } else if (couponState.amount_off) {
+        price = Math.max(price - couponState.amount_off, 0)
+      }
+    }
+
     return (
       <div>
         {(loadingCheckout || showingCheckout) &&
@@ -205,6 +214,7 @@ export class PremiumUpsell extends React.Component<
             onToken={this.onToken}
             user={this.props.user}
             enterprise={this.props.enterprise}
+            price={price}
           />}
         {!showingCheckout &&
           <Dialog
@@ -227,7 +237,7 @@ export class PremiumUpsell extends React.Component<
                     (couponState !== null && !!couponState.error)
                   }
                 >
-                  Unlock (${this.props.enterprise ? '11.99' : '4.99'}/month)
+                  Unlock (${price.toFixed(2)}/month)
                 </Button>
                 <Button onClick={this.props.onDismissed}>Not now</Button>
               </ButtonGroup>

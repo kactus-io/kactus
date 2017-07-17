@@ -171,6 +171,10 @@ export interface IAPICoupon {
   readonly error?: string
   readonly discount?: string
   readonly requestId: number
+  readonly percent_off?: number
+  readonly amount_off?: number
+  readonly currency?: string
+  readonly duration_in_months?: number
 }
 
 /**
