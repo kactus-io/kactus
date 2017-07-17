@@ -28,7 +28,7 @@ the commit by running `git rev-parse HEAD` from your local repository.
 
 -->
 
-**GitHub Desktop version:** [version here]
+**Kactus version:** [version here]
 
 <!--
 
