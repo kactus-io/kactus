@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.6": [
+      "[Fixed] Update price shown when using a coupon"
+    ],
     "0.1.5": [
       "[Fixed] Recreate the sketch files before get the git status when merging a branch"
     ],
