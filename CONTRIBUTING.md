@@ -34,16 +34,9 @@ Please report unacceptable behavior to [opensource+desktop@kactus.io](mailto:ope
 
 ### The Alpha Roadmap
 
-<<<<<<< HEAD
 Currently Kactus is in a public alpha, and the team is focused on
 triaging reported issues and working towards a 1.0 milestone.
 You can follow this progress progress under the [Milestones](https://github.com/kactus-io/kactus/milestones)
-=======
-Currently GitHub Desktop is in a public beta, and the team is focused on
-triaging reported issues and working towards a 1.0 milestone - where the
-application can be used in place of the classic Mac and Windows applications.
-You can follow this progress under the [Milestones](https://github.com/desktop/desktop/milestones)
->>>>>>> upstream/master
 tab.
 
 We're still thinking about where we want to take Kactus after we reach
@@ -119,22 +112,16 @@ and provide the following information:
 * **Provide a step-by-step description of the suggested enhancement** in as
   much detail as possible. This additional context helps the maintainers to
   understand the enhancement from your perspective
-<<<<<<< HEAD
 * **Explain why this enhancement would be useful** to Kactus users.
 * **Include screenshots and animated GIFs** if relevent to help you demonstrate
   the steps or point out the part of Kactus which the suggestion is
-=======
-* **Explain why this enhancement would be useful** to GitHub Desktop users.
-* **Include screenshots and animated GIFs** if relevant to help you demonstrate
-  the steps or point out the part of GitHub Desktop which the suggestion is
->>>>>>> upstream/master
   related to. You can use [this tool](http://www.cockos.com/licecap/) to record
   GIFs on macOS and Windows.
 * **List some other applications where this enhancement exists, if applicable.**
 
 ### Accepting PRs
 
-As part of building GitHub Desktop, we'll identify tasks that are good for
+As part of building Kactus, we'll identify tasks that are good for
 external contributors to pick up. These tasks:
 
  - have low impact, or have a known workaround
