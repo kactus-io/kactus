@@ -1,6 +1,11 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.7": [
+      "[Improved] Move forgot password link to actions section",
+      "[Fixed] Fix size of image diffs #15",
+      "[Improved] Add a notification popup whenever a user toggles on full screen mode informing how to get out of full screen mode"
+    ],
     "0.1.6": [
       "[Fixed] Update price shown when using a coupon"
     ],
