@@ -1,6 +1,11 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.8": [
+      "[Fixed] Handle bitmap and Symbol master diffs",
+      "[Fixed] sort json keys so that it's always the same order #19",
+      "[Fixed] Wrong stripe key (that's embarrassing)"
+    ],
     "0.1.7": [
       "[Improved] Move forgot password link to actions section",
       "[Fixed] Fix size of image diffs #15",
