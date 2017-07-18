@@ -548,11 +548,15 @@ async function generatePreview(
       )
     } else {
       const name = Path.basename(file)
-      path = await generateLayerPreview(
-        sketchFilePath,
-        name.replace('.json', ''),
-        storagePath
-      )
+      if (name.indexOf('.png') !== -1) {
+        path = Path.join(Path.dirname(sketchFilePath), file)
+      } else {
+        path = await generateLayerPreview(
+          sketchFilePath,
+          name.replace('.json', ''),
+          storagePath
+        )
+      }
     }
   } catch (e) {
     console.error(e)
