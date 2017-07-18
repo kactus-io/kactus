@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.9": [
+      "[Fixed] fix building sketch file with outdated version #17",
+      "[Fixed] fix help menu items not responding"
+    ],
     "0.1.8": [
       "[Fixed] Handle bitmap and Symbol master diffs",
       "[Fixed] sort json keys so that it's always the same order #19",
