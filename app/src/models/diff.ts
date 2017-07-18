@@ -38,6 +38,7 @@ export enum IKactusFileType {
   ShapeGroup,
   Group,
   SymbolMaster,
+  Bitmap,
 }
 
 export interface ISketchDiff {
