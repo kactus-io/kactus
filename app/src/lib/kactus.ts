@@ -11,7 +11,7 @@ import {
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
 import { getDotComAPIEndpoint } from './api'
-import { SKETCHTOOL_PATH, runPluginCommand } from './sketch'
+import { SKETCHTOOL_PATH, runPluginCommand, getSketchVersion } from './sketch'
 
 /**
  *  Retrieve the status for a given repository
@@ -174,8 +174,12 @@ export function shouldShowPremiumUpsell(
   return false
 }
 
-export function parseSketchFile(path: string, config: IKactusConfig) {
-  return parseFile(path + '.sketch', config)
+export async function parseSketchFile(path: string, config: IKactusConfig) {
+  const sketchVersion = (await getSketchVersion()) || undefined
+  return parseFile(path + '.sketch', {
+    ...config || {},
+    sketchVersion,
+  })
 }
 
 export function importSketchFile(path: string, config: IKactusConfig) {
