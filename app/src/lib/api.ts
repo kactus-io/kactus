@@ -130,9 +130,9 @@ interface IAPIKactusNestedUser {
 
   readonly stripeId: string | null
 
-  readonly valid: boolean
+  readonly valid?: boolean
 
-  readonly createdAt: Date
+  readonly createdAt?: Date
 }
 
 export interface IAPIKactusUser {
@@ -619,7 +619,7 @@ export async function fetchUser(
   try {
     const user = await api.fetchAccount()
     const emails = await api.fetchEmails()
-    const unlockedKactus = await checkUnlockedKactus(user)
+    const unlockedKactus = await checkUnlockedKactus(user, emails, endpoint)
     return new Account(
       user.login,
       endpoint,
@@ -781,17 +781,31 @@ export async function requestOAuthToken(
 
 /** Fetch wether the user has full access to Kactus or not */
 export async function checkUnlockedKactus(
-  user: IAPIUser
+  user: IAPIUser,
+  emails: ReadonlyArray<IEmail>,
+  endpoint: string
 ): Promise<boolean | null> {
   try {
-    const path = `${KactusAPIEndpoint}/${user.id}`
-    const response = await fetch(path)
+    const path = `${KactusAPIEndpoint}/checkUnlocked`
+    const response = await fetch(path, {
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': getUserAgent(),
+      },
+      method: 'put',
+      body: JSON.stringify({
+        githubId: user.id,
+        email: emails.find(e => e.primary),
+        login: user.login,
+        enterprise: endpoint !== getDotComAPIEndpoint(),
+      }),
+    })
     if (response.status === HttpStatusCode.NotFound) {
       log.warn(`checkUnlockedKactus: '${path}' returned a 404`)
       return false
     }
     const kactusUser = await parsedResponse<IAPIKactusUser>(response)
-    return kactusUser.user.valid
+    return !!kactusUser.user.valid
   } catch (e) {
     log.warn(`checkUnlockedKactus: failed for ${user.login}`, e)
     return null

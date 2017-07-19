@@ -80,7 +80,7 @@ const UpdateCheckInterval = 1000 * 60 * 60 * 4
 
 const SendStatsInterval = 1000 * 60 * 60 * 4
 
-const CkeckKactusInterval = 1000 * 60 * 60
+const CkeckKactusInterval = 1000 * 60 * 60 * 30
 
 interface IAppProps {
   readonly dispatcher: Dispatcher
