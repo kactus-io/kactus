@@ -1,6 +1,5 @@
 {
   "_class": "document",
-  "do_objectID": "F82CAAF4-0E94-448B-ABC3-CD4874730724",
   "assets": {
     "_class": "assetCollection",
     "colors": [
@@ -33,18 +32,24 @@
         "red": 0.0784313725490196
       }
     ],
-    "gradients": [],
+    "gradients": [
+    ],
     "imageCollection": {
       "_class": "imageCollection",
-      "images": {}
+      "images": {
+      }
     },
-    "images": []
+    "images": [
+    ]
   },
+  "do_objectID": "F82CAAF4-0E94-448B-ABC3-CD4874730724",
   "enableLayerInteraction": true,
   "enableSliceInteraction": true,
-  "foreignSymbols": [],
+  "foreignSymbols": [
+  ],
   "layerSymbols": {
     "_class": "symbolContainer",
-    "objects": []
+    "objects": [
+    ]
   }
 }

@@ -3,8 +3,10 @@
   "do_objectID": "FB0A2A62-45FB-4BD9-B735-32BF426CAF60",
   "exportOptions": {
     "_class": "exportOptions",
-    "exportFormats": [],
-    "includedLayerIds": [],
+    "exportFormats": [
+    ],
+    "includedLayerIds": [
+    ],
     "layerOptions": 0,
     "shouldTrim": false
   },
@@ -16,49 +18,50 @@
     "x": 193,
     "y": 107.2707889125803
   },
+  "hasClickThrough": false,
   "isFlippedHorizontal": false,
   "isFlippedVertical": false,
   "isLocked": false,
   "isVisible": true,
   "layerListExpandedType": 2,
+  "layers": [
+    {
+      "class": "shapeGroup",
+      "id": "1BE4C6F5-DB8F-4406-A5C1-683E3BFDFDC1"
+    },
+    {
+      "class": "shapeGroup",
+      "id": "268F9087-D413-4D9A-B325-2349F74A77B0"
+    },
+    {
+      "class": "shapeGroup",
+      "id": "DE18ED37-6C0F-4B5C-A73C-9F4859EEA05E"
+    },
+    {
+      "class": "shapeGroup",
+      "id": "C7151183-D63D-40DD-8AD7-9C2F85816771"
+    },
+    {
+      "class": "shapeGroup",
+      "id": "CFD7B41C-B3ED-4CCE-B393-ADD1968A1E8C"
+    }
+  ],
   "name": "face",
   "nameIsFixed": true,
   "resizingConstraint": 63,
   "resizingType": 0,
   "rotation": 0,
   "shouldBreakMaskChain": false,
-  "userInfo": {
-    "com.animaapp.stc-sketch-plugin": {
-      "kModelPropertiesKey": {}
-    }
-  },
   "style": {
     "_class": "style",
     "endDecorationType": 0,
     "miterLimit": 10,
     "startDecorationType": 0
   },
-  "hasClickThrough": false,
-  "layers": [
-    {
-      "id": "1BE4C6F5-DB8F-4406-A5C1-683E3BFDFDC1",
-      "class": "shapeGroup"
-    },
-    {
-      "id": "268F9087-D413-4D9A-B325-2349F74A77B0",
-      "class": "shapeGroup"
-    },
-    {
-      "id": "DE18ED37-6C0F-4B5C-A73C-9F4859EEA05E",
-      "class": "shapeGroup"
-    },
-    {
-      "id": "C7151183-D63D-40DD-8AD7-9C2F85816771",
-      "class": "shapeGroup"
-    },
-    {
-      "id": "CFD7B41C-B3ED-4CCE-B393-ADD1968A1E8C",
-      "class": "shapeGroup"
+  "userInfo": {
+    "com.animaapp.stc-sketch-plugin": {
+      "kModelPropertiesKey": {
+      }
     }
-  ]
+  }
 }
