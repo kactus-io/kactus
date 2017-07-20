@@ -138,6 +138,7 @@ function getMenuState(state: IAppState): Map<MenuIDs, IMenuItemState> {
     'open-in-shell',
     'open-working-directory',
     'show-repository-settings',
+    'show-kactus-settings',
     'create-branch',
     'show-changes',
     'show-history',

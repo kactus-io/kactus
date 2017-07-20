@@ -46,6 +46,7 @@ import { TipState } from '../models/tip'
 import { shouldRenderApplicationMenu } from './lib/features'
 import { Merge } from './merge-branch'
 import { RepositorySettings } from './repository-settings'
+import { KactusSettings } from './kactus-settings'
 import { AppError } from './app-error'
 import { MissingRepository } from './missing-repository'
 import {
@@ -263,6 +264,8 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.mergeBranch()
       case 'show-repository-settings':
         return this.showRepositorySettings()
+      case 'show-kactus-settings':
+        return this.showKactusSettings()
       case 'view-repository-on-github':
         return this.viewRepositoryOnGitHub()
       case 'compare-branch':
@@ -673,6 +676,18 @@ export class App extends React.Component<IAppProps, IAppState> {
     })
   }
 
+  private showKactusSettings() {
+    const repository = this.getRepository()
+
+    if (!repository || repository instanceof CloningRepository) {
+      return
+    }
+    this.props.dispatcher.showPopup({
+      type: PopupType.KactusSettings,
+      repository,
+    })
+  }
+
   private viewRepositoryOnGitHub() {
     const url = this.getCurrentRepositoryGitHubURL()
 
@@ -891,6 +906,19 @@ export class App extends React.Component<IAppProps, IAppState> {
           <RepositorySettings
             key="repository-settings"
             remote={state.remote}
+            dispatcher={this.props.dispatcher}
+            repository={repository}
+            onDismissed={this.onPopupDismissed}
+          />
+        )
+      }
+      case PopupType.KactusSettings: {
+        const repository = popup.repository
+        const state = this.props.appStore.getRepositoryState(repository)
+
+        return (
+          <KactusSettings
+            key="repository-settings"
             dispatcher={this.props.dispatcher}
             repository={repository}
             onDismissed={this.onPopupDismissed}
