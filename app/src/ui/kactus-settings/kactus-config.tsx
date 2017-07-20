@@ -2,8 +2,11 @@ import * as React from 'react'
 import { IKactusConfig } from 'kactus-cli'
 import { DialogContent } from '../dialog'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
-import { Row } from '../../ui/lib/row'
+import { TextBox } from '../lib/text-box'
+import { Row } from '../lib/row'
+import { Button } from '../lib/button'
 import { LinkButton } from '../lib/link-button'
+import { Octicon, OcticonSymbol } from '../octicons'
 
 interface IKactusConfigProps {
   readonly config: IKactusConfig
@@ -11,11 +14,22 @@ interface IKactusConfigProps {
   readonly onShowKactusDoc: () => void
 }
 
+interface IKactusConfigState {
+  readonly page: string
+}
+
 /** A view for creating or modifying the repository's kactus config */
 export class KactusConfig extends React.Component<
   IKactusConfigProps,
-  Readonly<{}>
+  IKactusConfigState
 > {
+  public constructor(props: IKactusConfigProps) {
+    super(props)
+    this.state = {
+      page: '',
+    }
+  }
+
   public render() {
     const { config } = this.props
     return (
@@ -47,14 +61,78 @@ export class KactusConfig extends React.Component<
             onChange={this.onShareLayerStylesChange}
           />
         </Row>
-        {/* <TextArea
-          placeholder="Kactus config"
-          value={this.props.config || '{}'}
-          onChange={this.onChange}
-          rows={6}
-        /> */}
+        <Row>
+          Shared pages across sketch files ({(config.sharedPages || []).length})
+        </Row>
+        <div style={{ paddingLeft: 20 }}>
+          {(config.sharedPages || []).map(page =>
+            <Row key={page}>
+              <Octicon symbol={OcticonSymbol.primitiveDot} />
+              {page}
+              <Octicon
+                symbol={OcticonSymbol.trashcan}
+                className="remove-icon"
+                title={"Don't share " + page + ' anymore'}
+                onClick={this.onRemoveSharedPage(page)}
+              />
+            </Row>
+          )}
+          <Row>
+            <TextBox
+              label="New page to share"
+              value={this.state.page}
+              onValueChanged={this.onNewPageChanged}
+              onKeyDown={this.catchEnterKeyInAddSharedPage}
+            />
+            <Button onClick={this.catchClickInAddSharedPage}>Add</Button>
+          </Row>
+        </div>
       </DialogContent>
     )
+  }
+
+  private onNewPageChanged = (value: string) => {
+    this.setState({
+      page: value,
+    })
+  }
+
+  private catchEnterKeyInAddSharedPage = (
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.keyCode === 13) {
+      event.preventDefault()
+      this.onAddSharedPage()
+    }
+  }
+
+  private catchClickInAddSharedPage = (
+    event: React.FormEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault()
+    this.onAddSharedPage()
+  }
+
+  private onAddSharedPage = () => {
+    if (!this.state.page) {
+      return
+    }
+    this.props.onKactusChanged({
+      ...this.props.config,
+      sharedPages: (this.props.config.sharedPages || [])
+        .concat(this.state.page),
+    })
+    this.setState({
+      page: '',
+    })
+  }
+
+  private onRemoveSharedPage = (page: string) => () => {
+    this.props.onKactusChanged({
+      ...this.props.config,
+      sharedPages: (this.props.config.sharedPages || [])
+        .filter(p => p !== page),
+    })
   }
 
   private onShareTextStylesChange = (

@@ -60,6 +60,7 @@ export class KactusSettings extends React.Component<
         onDismissed={this.props.onDismissed}
         onSubmit={this.onSubmit}
         disabled={this.state.disabled}
+        loading={this.state.disabled}
       >
         {this.renderErrors()}
         {this.renderKactusConfig()}
