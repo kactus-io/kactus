@@ -118,6 +118,14 @@ export class KactusConfig extends React.Component<
     if (!this.state.page) {
       return
     }
+    if (
+      (this.props.config.sharedPages || []).find(p => p === this.state.page)
+    ) {
+      this.setState({
+        page: '',
+      })
+      return
+    }
     this.props.onKactusChanged({
       ...this.props.config,
       sharedPages: (this.props.config.sharedPages || [])
