@@ -370,12 +370,16 @@ export class Dispatcher {
 
   /** Parse a Sketch File. */
   public parseSketchFile(repository: Repository, path: string): Promise<void> {
-    return this.appStore._parseSketchFile(repository, path)
+    return this.withAuthenticatingUser(repository, repo =>
+      this.appStore._parseSketchFile(repo, path)
+    )
   }
 
   /** Import a Sketch File. */
   public importSketchFile(repository: Repository, path: string): Promise<void> {
-    return this.appStore._importSketchFile(repository, path)
+    return this.withAuthenticatingUser(repository, repo =>
+      this.appStore._importSketchFile(repo, path)
+    )
   }
 
   /** Ignore a Sketch File. */

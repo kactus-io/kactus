@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.11": [
+      "[Improved] UI to change the kactus config #7",
+      "[Fixed] Repository Settings not working properly if updating kactus.json outside #22"
+    ],
     "0.1.10": [
       "[Improved] increase the time between which we check for kactus status",
       "[Fixed] Wrong error message when trying to publish a private repo without GitHub premium account"
