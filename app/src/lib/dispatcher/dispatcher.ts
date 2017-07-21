@@ -357,7 +357,9 @@ export class Dispatcher {
 
   /** Load the working directory status. */
   public loadStatus(repository: Repository): Promise<void> {
-    return this.appStore._loadStatus(repository)
+    return this.withAuthenticatingUser(repository, repo =>
+      this.appStore._loadStatus(repository)
+    )
   }
 
   /** Change the selected section in the repository. */

@@ -23,7 +23,7 @@ export class Form extends React.Component<IFormProps, {}> {
   private onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!event.defaultPrevented && this.props.onSubmit) {
+    if (this.props.onSubmit) {
       this.props.onSubmit()
     }
   }
