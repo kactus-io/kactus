@@ -244,6 +244,11 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
         id: 'show-repository-settings',
         click: emit('show-repository-settings'),
       },
+      {
+        label: __DARWIN__ ? 'Kactus Settings…' : '&Kactus settings…',
+        id: 'show-kactus-settings',
+        click: emit('show-kactus-settings'),
+      },
     ],
   })
 

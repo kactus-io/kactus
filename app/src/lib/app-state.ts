@@ -159,6 +159,7 @@ export enum PopupType {
   Preferences,
   MergeBranch,
   RepositorySettings,
+  KactusSettings,
   AddRepository,
   CreateRepository,
   CloneRepository,
@@ -188,6 +189,7 @@ export type Popup =
   | { type: PopupType.Preferences }
   | { type: PopupType.MergeBranch; repository: Repository }
   | { type: PopupType.RepositorySettings; repository: Repository }
+  | { type: PopupType.KactusSettings; repository: Repository }
   | { type: PopupType.AddRepository; path?: string }
   | { type: PopupType.CreateRepository; path?: string }
   | { type: PopupType.CloneRepository; initialURL: string | null }

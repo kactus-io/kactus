@@ -27,3 +27,23 @@
     }
   }
 }
+
+.shared-page {
+  position: relative;
+
+  &:hover {
+    background: var(--secondary-button-background);
+  }
+
+  .remove-icon {
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+    color: var(--color-deleted);
+    padding: 0 5px;
+
+    .octicon, path {
+      cursor: pointer;
+    }
+  }
+}
