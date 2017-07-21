@@ -97,7 +97,6 @@ export class RepositorySettings extends React.Component<
           onTabClicked={this.onTabClicked}
           selectedIndex={this.state.selectedTab}
         >
-          <span>Kactus</span>
           <span>Remote</span>
           <span>
             {__DARWIN__ ? 'Ignored Files' : 'Ignored files'}
