@@ -1,6 +1,11 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.12": [
+      "[Fixed] Configuring git form not submitting #27",
+      "[Fixed] Extra repository settings tab #25",
+      "[Fixed] Crash when adding twice the same shared page"
+    ],
     "0.1.11": [
       "[Improved] UI to change the kactus config #7",
       "[Fixed] Repository Settings not working properly if updating kactus.json outside #22"
