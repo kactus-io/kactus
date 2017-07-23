@@ -13,9 +13,7 @@ import { Account } from '../models/account'
 import { getDotComAPIEndpoint } from './api'
 import { SKETCHTOOL_PATH, runPluginCommand, getSketchVersion } from './sketch'
 
-export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string } & {
-    root?: string
-  }
+export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string }
 
 interface IKactusStatusResult {
   readonly config: IFullKactusConfig
@@ -30,16 +28,16 @@ export async function getKactusStatus(
   repository: Repository
 ): Promise<IKactusStatusResult> {
   const kactus = find(repository.path)
-  // need to copy the config otheerwise there is a memory leak
-  const config: IFullKactusConfig = { ...kactus.config }
-  config.sketchVersion = (await getSketchVersion()) || undefined
-  if (!config.root) {
-    config.root = repository.path
-  } else {
-    config.root = Path.join(repository.path, config.root)
-  }
+  const sketchVersion = (await getSketchVersion()) || undefined
   return {
-    config,
+    config: {
+      // need to copy the config otheerwise there is a memory leak
+      ...kactus.config,
+      sketchVersion,
+      root: kactus.config.root
+        ? Path.join(repository.path, kactus.config.root)
+        : repository.path,
+    },
     files: kactus.files.map(f => {
       return {
         ...f,
