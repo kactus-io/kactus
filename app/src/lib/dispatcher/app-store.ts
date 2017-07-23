@@ -1,4 +1,3 @@
-import * as Path from 'path'
 import { Emitter, Disposable } from 'event-kit'
 import { ipcRenderer, remote } from 'electron'
 import {
@@ -2499,7 +2498,7 @@ export class AppStore {
     path: string
   ): Promise<void> {
     const kactusConfig = this.getRepositoryState(repository).kactus.config
-    await createNewFile(Path.join(repository.path, path), kactusConfig)
+    await createNewFile(path, kactusConfig)
     await this._loadStatus(repository, {
       skipParsingModifiedSketchFiles: true,
     })

@@ -2,8 +2,8 @@ import * as Fs from 'fs'
 import * as Path from 'path'
 import { exec } from 'child_process'
 import {
-  IKactusStatusResult,
   find,
+  IKactusFile,
   IKactusConfig,
   parseFile,
   importFolder,
@@ -13,25 +13,41 @@ import { Account } from '../models/account'
 import { getDotComAPIEndpoint } from './api'
 import { SKETCHTOOL_PATH, runPluginCommand, getSketchVersion } from './sketch'
 
+export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string } & {
+    root?: string
+  }
+
+interface IKactusStatusResult {
+  readonly config: IFullKactusConfig
+  readonly files: Array<IKactusFile>
+  readonly lastChecked: number
+}
+
 /**
  *  Retrieve the status for a given repository
  */
 export async function getKactusStatus(
   repository: Repository
 ): Promise<IKactusStatusResult> {
-  return Promise.resolve().then(() => {
-    const kactus = find(repository.path)
-    return {
-      config: kactus.config,
-      files: kactus.files.map(f => {
-        return {
-          ...f,
-          id: f.path.replace(repository.path, '').replace(/^\//, ''),
-        }
-      }),
-      lastChecked: Date.now(),
-    }
-  })
+  const kactus = find(repository.path)
+  // need to copy the config otheerwise there is a memory leak
+  const config: IFullKactusConfig = { ...kactus.config }
+  config.sketchVersion = (await getSketchVersion()) || undefined
+  if (!config.root) {
+    config.root = repository.path
+  } else {
+    config.root = Path.join(repository.path, config.root)
+  }
+  return {
+    config,
+    files: kactus.files.map(f => {
+      return {
+        ...f,
+        id: f.path.replace(repository.path, '').replace(/^\//, ''),
+      }
+    }),
+    lastChecked: Date.now(),
+  }
 }
 
 export async function generateDocumentPreview(
@@ -174,15 +190,11 @@ export function shouldShowPremiumUpsell(
   return false
 }
 
-export async function parseSketchFile(path: string, config: IKactusConfig) {
-  const sketchVersion = (await getSketchVersion()) || undefined
-  return parseFile(path + '.sketch', {
-    ...config || {},
-    sketchVersion,
-  })
+export async function parseSketchFile(path: string, config: IFullKactusConfig) {
+  return parseFile(path + '.sketch', config)
 }
 
-export function importSketchFile(path: string, config: IKactusConfig) {
+export function importSketchFile(path: string, config: IFullKactusConfig) {
   return importFolder(path, config).then(() => {
     return runPluginCommand(
       Path.resolve(__dirname, './plugin.sketchplugin'),

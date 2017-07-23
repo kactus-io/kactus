@@ -16,7 +16,8 @@ import { ICommitMessage } from './dispatcher/git-store'
 import { IMenu } from '../models/app-menu'
 import { IRemote } from '../models/remote'
 import { WindowState } from './window-state'
-import { IKactusConfig, IKactusFile } from 'kactus-cli'
+import { IKactusFile } from 'kactus-cli'
+import { IFullKactusConfig } from './kactus'
 
 export { ICommitMessage }
 export { IAheadBehind }
@@ -487,7 +488,7 @@ export interface IKactusState {
    */
   readonly selectedFileID: string | null
 
-  readonly config: IKactusConfig
+  readonly config: IFullKactusConfig
   readonly isParsing: boolean
   readonly isImporting: boolean
   readonly lastChecked: number | null
