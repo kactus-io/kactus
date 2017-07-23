@@ -8,6 +8,7 @@ interface IStripeCheckoutProps {
   readonly user?: Account
   readonly onToken: (token: IToken) => void
   readonly enterprise: boolean
+  readonly price: number
 }
 
 interface IStripeCheckoutState {
@@ -77,7 +78,7 @@ export class Checkout extends React.Component<
       opened: this.onOpened,
       closed: this.onClosed,
       panelLabel: 'Unlock ({{amount}}/month)',
-      amount: enterprise ? 1199 : 499,
+      amount: this.props.price * 100,
       email: !enterprise && primaryEmail ? primaryEmail.email : undefined,
       bitcoin: true,
     })

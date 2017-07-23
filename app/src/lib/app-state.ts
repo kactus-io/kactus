@@ -16,7 +16,8 @@ import { ICommitMessage } from './dispatcher/git-store'
 import { IMenu } from '../models/app-menu'
 import { IRemote } from '../models/remote'
 import { WindowState } from './window-state'
-import { IKactusConfig, IKactusFile } from 'kactus-cli'
+import { IKactusFile } from 'kactus-cli'
+import { IFullKactusConfig } from './kactus'
 
 export { ICommitMessage }
 export { IAheadBehind }
@@ -159,6 +160,7 @@ export enum PopupType {
   Preferences,
   MergeBranch,
   RepositorySettings,
+  KactusSettings,
   AddRepository,
   CreateRepository,
   CloneRepository,
@@ -173,6 +175,8 @@ export enum PopupType {
   TermsAndConditions,
   CreateSketchFile,
   PremiumUpsell,
+  PushBranchCommits,
+  CLIInstalled,
 }
 
 export type Popup =
@@ -186,6 +190,7 @@ export type Popup =
   | { type: PopupType.Preferences }
   | { type: PopupType.MergeBranch; repository: Repository }
   | { type: PopupType.RepositorySettings; repository: Repository }
+  | { type: PopupType.KactusSettings; repository: Repository }
   | { type: PopupType.AddRepository; path?: string }
   | { type: PopupType.CreateRepository; path?: string }
   | { type: PopupType.CloneRepository; initialURL: string | null }
@@ -204,6 +209,13 @@ export type Popup =
   | { type: PopupType.TermsAndConditions }
   | { type: PopupType.CreateSketchFile; repository: Repository }
   | { type: PopupType.PremiumUpsell; enterprise: boolean }
+  | {
+      type: PopupType.PushBranchCommits
+      repository: Repository
+      branch: Branch
+      unPushedCommits?: number
+    }
+  | { type: PopupType.CLIInstalled }
 
 export enum FoldoutType {
   Repository,
@@ -477,7 +489,7 @@ export interface IKactusState {
    */
   readonly selectedFileID: string | null
 
-  readonly config: IKactusConfig
+  readonly config: IFullKactusConfig
   readonly isParsing: boolean
   readonly isImporting: boolean
   readonly lastChecked: number | null

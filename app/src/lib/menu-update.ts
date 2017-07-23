@@ -138,6 +138,7 @@ function getMenuState(state: IAppState): Map<MenuIDs, IMenuItemState> {
     'open-in-shell',
     'open-working-directory',
     'show-repository-settings',
+    'show-kactus-settings',
     'create-branch',
     'show-changes',
     'show-history',
@@ -169,6 +170,7 @@ function getMenuState(state: IAppState): Map<MenuIDs, IMenuItemState> {
     )
 
     menuStateBuilder.setEnabled('view-repository-on-github', isHostedOnGitHub)
+    menuStateBuilder.setEnabled('create-pull-request', isHostedOnGitHub)
     menuStateBuilder.setEnabled('push', hasRemote && !networkActionInProgress)
     menuStateBuilder.setEnabled(
       'pull',
@@ -181,6 +183,7 @@ function getMenuState(state: IAppState): Map<MenuIDs, IMenuItemState> {
     }
 
     menuStateBuilder.disable('view-repository-on-github')
+    menuStateBuilder.disable('create-pull-request')
 
     if (
       selectedState &&

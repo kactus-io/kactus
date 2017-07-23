@@ -1,5 +1,4 @@
-import { Menu, ipcMain } from 'electron'
-import { shell } from '../../lib/dispatcher/app-shell'
+import { Menu, ipcMain, shell } from 'electron'
 import { SharedProcess } from '../../shared-process/shared-process'
 import { ensureItemIds } from './ensure-item-ids'
 import { MenuEvent } from './menu-event'
@@ -26,6 +25,12 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
           id: 'preferences',
           accelerator: 'CmdOrCtrl+,',
           click: emit('show-preferences'),
+        },
+        separator,
+        {
+          label: 'Install Command Line Tool…',
+          id: 'install-cli',
+          click: emit('install-cli'),
         },
         separator,
         {
@@ -239,6 +244,11 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
         id: 'show-repository-settings',
         click: emit('show-repository-settings'),
       },
+      {
+        label: __DARWIN__ ? 'Kactus Settings…' : '&Kactus settings…',
+        id: 'show-kactus-settings',
+        click: emit('show-kactus-settings'),
+      },
     ],
   })
 
@@ -283,6 +293,12 @@ export function buildDefaultMenu(sharedProcess: SharedProcess): Electron.Menu {
         id: 'compare-branch',
         accelerator: 'CmdOrCtrl+Shift+C',
         click: emit('compare-branch'),
+      },
+      {
+        label: __DARWIN__ ? 'Create Pull Request' : 'Create &pull request',
+        id: 'create-pull-request',
+        accelerator: 'CmdOrCtrl+Shift+P',
+        click: emit('create-pull-request'),
       },
     ],
   })

@@ -1,10 +1,13 @@
 {
   "_class": "shapeGroup",
+  "clippingMaskMode": 0,
   "do_objectID": "2145EE2E-C71D-4C0B-AB85-D35072F4C63E",
   "exportOptions": {
     "_class": "exportOptions",
-    "exportFormats": [],
-    "includedLayerIds": [],
+    "exportFormats": [
+    ],
+    "includedLayerIds": [
+    ],
     "layerOptions": 0,
     "shouldTrim": false
   },
@@ -16,29 +19,35 @@
     "x": 101.9168962267155,
     "y": 30.89127377181658
   },
+  "hasClickThrough": false,
+  "hasClippingMask": false,
   "isFlippedHorizontal": false,
   "isFlippedVertical": false,
   "isLocked": false,
   "isVisible": true,
   "layerListExpandedType": 0,
+  "layers": [
+    {
+      "class": "shapePath",
+      "id": "35E493FD-5C0C-4771-9413-C31F14F14BC3"
+    },
+    {
+      "class": "shapePath",
+      "id": "8E939408-B799-4C55-AD97-720CA32459C4"
+    }
+  ],
   "name": "Shape",
   "nameIsFixed": false,
   "resizingConstraint": 63,
   "resizingType": 0,
   "rotation": 0,
   "shouldBreakMaskChain": false,
-  "userInfo": {
-    "com.animaapp.stc-sketch-plugin": {
-      "kModelPropertiesKey": {}
-    }
-  },
   "style": {
     "_class": "style",
     "endDecorationType": 0,
     "fills": [
       {
         "_class": "fill",
-        "isEnabled": true,
         "color": {
           "_class": "color",
           "alpha": 1,
@@ -47,6 +56,7 @@
           "red": 0.96
         },
         "fillType": 0,
+        "isEnabled": true,
         "noiseIndex": 0,
         "noiseIntensity": 0,
         "patternFillType": 1,
@@ -56,18 +66,11 @@
     "miterLimit": 10,
     "startDecorationType": 0
   },
-  "hasClickThrough": false,
-  "layers": [
-    {
-      "id": "35E493FD-5C0C-4771-9413-C31F14F14BC3",
-      "class": "shapePath"
-    },
-    {
-      "id": "8E939408-B799-4C55-AD97-720CA32459C4",
-      "class": "shapePath"
+  "userInfo": {
+    "com.animaapp.stc-sketch-plugin": {
+      "kModelPropertiesKey": {
+      }
     }
-  ],
-  "clippingMaskMode": 0,
-  "hasClippingMask": false,
+  },
   "windingRule": 0
 }

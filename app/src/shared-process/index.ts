@@ -51,7 +51,11 @@ async function updateAccounts() {
     const api = API.fromAccount(account)
     const newAccount = await api.fetchAccount()
     const emails = await api.fetchEmails()
-    const unlockedKactus = await checkUnlockedKactus(newAccount)
+    const unlockedKactus = await checkUnlockedKactus(
+      newAccount,
+      emails,
+      account.endpoint
+    )
     return new Account(
       account.login,
       account.endpoint,

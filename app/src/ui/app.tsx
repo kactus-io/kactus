@@ -46,6 +46,7 @@ import { TipState } from '../models/tip'
 import { shouldRenderApplicationMenu } from './lib/features'
 import { Merge } from './merge-branch'
 import { RepositorySettings } from './repository-settings'
+import { KactusSettings } from './kactus-settings'
 import { AppError } from './app-error'
 import { MissingRepository } from './missing-repository'
 import {
@@ -70,13 +71,17 @@ import { sendReady } from './main-process-proxy'
 import { TermsAndConditions } from './terms-and-conditions'
 import { ZoomInfo } from './window/zoom-info'
 import { PremiumUpsell } from './premium-upsell'
+import { FullScreenInfo } from './window/full-screen-info'
+import { PushBranchCommits } from './branches/PushBranchCommits'
+import { Branch } from '../models/branch'
+import { CLIInstalled } from './cli-installed'
 
 /** The interval at which we should check for updates. */
 const UpdateCheckInterval = 1000 * 60 * 60 * 4
 
 const SendStatsInterval = 1000 * 60 * 60 * 4
 
-const CkeckKactusInterval = 1000 * 60 * 60
+const CkeckKactusInterval = 1000 * 60 * 60 * 30
 
 interface IAppProps {
   readonly dispatcher: Dispatcher
@@ -183,8 +188,8 @@ export class App extends React.Component<IAppProps, IAppState> {
       this.props.dispatcher.postError(error)
     })
 
-    setInterval(() => this.checkForUpdates(), UpdateCheckInterval)
-    this.checkForUpdates()
+    setInterval(() => this.checkForUpdates(true), UpdateCheckInterval)
+    this.checkForUpdates(true)
 
     ipcRenderer.on(
       'launch-timing-stats',
@@ -259,6 +264,8 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.mergeBranch()
       case 'show-repository-settings':
         return this.showRepositorySettings()
+      case 'show-kactus-settings':
+        return this.showKactusSettings()
       case 'view-repository-on-github':
         return this.viewRepositoryOnGitHub()
       case 'compare-branch':
@@ -275,6 +282,10 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.showCreateSketchFile()
       case 'open-sketch':
         return this.openSketch()
+      case 'create-pull-request':
+        return this.openPullRequest()
+      case 'install-cli':
+        return this.props.dispatcher.installCLI()
     }
 
     return assertNever(name, `Unknown menu event name: ${name}`)
@@ -286,17 +297,15 @@ export class App extends React.Component<IAppProps, IAppState> {
     })
   }
 
-  private checkForUpdates() {
+  private checkForUpdates(inBackground: boolean) {
     if (__RELEASE_ENV__ === 'development' || __RELEASE_ENV__ === 'test') {
       return
     }
 
-    updateStore.checkForUpdates(this.getUsernameForUpdateCheck(), true)
-  }
-
-  private getUsernameForUpdateCheck() {
-    const dotComAccount = this.getDotComAccount()
-    return dotComAccount ? dotComAccount.login : ''
+    updateStore.checkForUpdates(
+      __RELEASE_ENV__ === 'beta' ? 'beta' : 'production',
+      inBackground
+    )
   }
 
   private getDotComAccount(): Account | null {
@@ -667,6 +676,18 @@ export class App extends React.Component<IAppProps, IAppState> {
     })
   }
 
+  private showKactusSettings() {
+    const repository = this.getRepository()
+
+    if (!repository || repository instanceof CloningRepository) {
+      return
+    }
+    this.props.dispatcher.showPopup({
+      type: PopupType.KactusSettings,
+      repository,
+    })
+  }
+
   private viewRepositoryOnGitHub() {
     const url = this.getCurrentRepositoryGitHubURL()
 
@@ -888,6 +909,19 @@ export class App extends React.Component<IAppProps, IAppState> {
             dispatcher={this.props.dispatcher}
             repository={repository}
             onDismissed={this.onPopupDismissed}
+          />
+        )
+      }
+      case PopupType.KactusSettings: {
+        const repository = popup.repository
+        const state = this.props.appStore.getRepositoryState(repository)
+
+        return (
+          <KactusSettings
+            key="repository-settings"
+            dispatcher={this.props.dispatcher}
+            repository={repository}
+            onDismissed={this.onPopupDismissed}
             kactusConfig={state.kactus.config}
           />
         )
@@ -980,7 +1014,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             onDismissed={this.onPopupDismissed}
             applicationName={getName()}
             applicationVersion={getVersion()}
-            usernameForUpdateCheck={this.getUsernameForUpdateCheck()}
+            onCheckForUpdates={this.onCheckForUpdates}
             onShowAcknowledgements={this.showAcknowledgements}
             onShowTermsAndConditions={this.showTermsAndConditions}
           />
@@ -1035,9 +1069,26 @@ export class App extends React.Component<IAppProps, IAppState> {
         )
       case PopupType.TermsAndConditions:
         return <TermsAndConditions onDismissed={this.onPopupDismissed} />
+      case PopupType.PushBranchCommits:
+        return (
+          <PushBranchCommits
+            dispatcher={this.props.dispatcher}
+            repository={popup.repository}
+            branch={popup.branch}
+            unPushedCommits={popup.unPushedCommits}
+            onConfirm={this.openPullRequestOnGithub}
+            onDismissed={this.onPopupDismissed}
+          />
+        )
+      case PopupType.CLIInstalled:
+        return <CLIInstalled onDismissed={this.onPopupDismissed} />
       default:
         return assertNever(popup, `Unknown popup type: ${popup}`)
     }
+  }
+
+  private onCheckForUpdates = () => {
+    this.checkForUpdates(false)
   }
 
   private showAcknowledgements = () => {
@@ -1063,6 +1114,10 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   private renderZoomInfo() {
     return <ZoomInfo windowZoomFactor={this.state.windowZoomFactor} />
+  }
+
+  private renderFullScreenInfo() {
+    return <FullScreenInfo windowState={this.state.windowState} />
   }
 
   private clearError = (error: Error) => {
@@ -1253,6 +1308,57 @@ export class App extends React.Component<IAppProps, IAppState> {
     return this.props.dispatcher.openSketch()
   }
 
+  private openPullRequest() {
+    const selection = this.state.selectedState
+
+    if (!selection || selection.type !== SelectionType.Repository) {
+      return
+    }
+
+    const tip = selection.state.branchesState.tip
+
+    if (tip.kind !== TipState.Valid) {
+      return
+    }
+
+    const dispatcher = this.props.dispatcher
+    const repository = selection.repository
+    const branch = tip.branch
+    const aheadBehind = selection.state.aheadBehind
+
+    if (!aheadBehind) {
+      dispatcher.showPopup({
+        type: PopupType.PushBranchCommits,
+        repository,
+        branch,
+      })
+    } else if (aheadBehind.ahead > 0) {
+      dispatcher.showPopup({
+        type: PopupType.PushBranchCommits,
+        repository,
+        branch,
+        unPushedCommits: aheadBehind.ahead,
+      })
+    } else {
+      this.openPullRequestOnGithub(repository, branch)
+    }
+  }
+
+  private openPullRequestOnGithub = (
+    repository: Repository,
+    branch: Branch
+  ) => {
+    const gitHubRepository = repository.gitHubRepository
+
+    if (!gitHubRepository || !gitHubRepository.htmlURL) {
+      return
+    }
+
+    const baseURL = `${gitHubRepository.htmlURL}/pull/new/${branch.nameWithoutRemote}`
+
+    this.props.dispatcher.openInBrowser(baseURL)
+  }
+
   private onBranchDropdownStateChanged = (newState: DropdownState) => {
     newState === 'open'
       ? this.props.dispatcher.showFoldout({ type: FoldoutType.Branch })
@@ -1410,6 +1516,7 @@ export class App extends React.Component<IAppProps, IAppState> {
           : this.renderApp()}
         {this.renderZoomInfo()}
         {this.renderSketchVersionWarning()}
+        {this.renderFullScreenInfo()}
       </div>
     )
   }

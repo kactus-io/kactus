@@ -48,6 +48,7 @@ import { saveKactusConfig, shouldShowPremiumUpsell } from '../kactus'
 import { openSketch, getSketchVersion } from '../sketch'
 import { validatedRepositoryPath } from './validated-repository-path'
 import { getUserDataPath } from '../../ui/lib/app-proxy'
+import { installCLI } from '../../ui/lib/install-cli'
 
 /**
  * Extend Error so that we can create new Errors with a callstack different from
@@ -356,7 +357,9 @@ export class Dispatcher {
 
   /** Load the working directory status. */
   public loadStatus(repository: Repository): Promise<void> {
-    return this.appStore._loadStatus(repository)
+    return this.withAuthenticatingUser(repository, repo =>
+      this.appStore._loadStatus(repository)
+    )
   }
 
   /** Change the selected section in the repository. */
@@ -369,12 +372,16 @@ export class Dispatcher {
 
   /** Parse a Sketch File. */
   public parseSketchFile(repository: Repository, path: string): Promise<void> {
-    return this.appStore._parseSketchFile(repository, path)
+    return this.withAuthenticatingUser(repository, repo =>
+      this.appStore._parseSketchFile(repo, path)
+    )
   }
 
   /** Import a Sketch File. */
   public importSketchFile(repository: Repository, path: string): Promise<void> {
-    return this.appStore._importSketchFile(repository, path)
+    return this.withAuthenticatingUser(repository, repo =>
+      this.appStore._importSketchFile(repo, path)
+    )
   }
 
   /** Ignore a Sketch File. */
@@ -1375,5 +1382,22 @@ export class Dispatcher {
 
   public async openSketch(): Promise<void> {
     return openSketch()
+  }
+
+  /**
+   * Install the CLI tool.
+   *
+   * This is used only on macOS.
+   */
+  public async installCLI() {
+    try {
+      await installCLI()
+
+      this.showPopup({ type: PopupType.CLIInstalled })
+    } catch (e) {
+      log.error('Error installing CLI', e)
+
+      this.postError(e)
+    }
   }
 }

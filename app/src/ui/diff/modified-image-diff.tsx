@@ -12,12 +12,24 @@ interface IModifiedImageDiffProps {
   readonly onChangeDiffType: (type: number) => void
 }
 
+const SIZE_CONTROLS = 60
+
 const getDimensions = (
   naturalHeight: number | null,
-  naturalWidth: number | null
+  naturalWidth: number | null,
+  _containerWidth: number,
+  _containerHeight: number
 ) => {
-  const heightRatio = 1
-  const widthRatio = 1
+  const containerWidth = _containerWidth - 20
+  const containerHeight = _containerHeight - 20 - SIZE_CONTROLS
+  const heightRatio =
+    containerHeight < (naturalHeight || 0)
+      ? (naturalHeight || 0) / containerHeight
+      : 1
+  const widthRatio =
+    containerWidth < (naturalWidth || 0)
+      ? (naturalWidth || 0) / containerWidth
+      : 1
 
   // Use max to prevent scaling up the image
   let divisor = Math.max(1, widthRatio)
@@ -86,34 +98,37 @@ export class ModifiedImageDiff extends React.Component<
       naturalHeightAfter,
     } = this.state
 
+    const widthContainer =
+      (this._container && this._container.getBoundingClientRect().width) || 0
+    const heightContainer =
+      (this._container && this._container.getBoundingClientRect().height) || 0
+
     let height = 0
     let width = 0
-    let heightBefore = 0
-    let widthBefore = 0
-    let heightAfter = 0
-    let widthAfter = 0
 
     if (naturalHeightBefore && naturalHeightAfter) {
-      const before = getDimensions(naturalHeightBefore, naturalWidthBefore)
-      heightBefore = before.height
-      widthBefore = before.width
-      const after = getDimensions(naturalHeightAfter, naturalWidthAfter)
-      heightAfter = after.height
-      widthAfter = after.width
+      const before = getDimensions(
+        naturalHeightBefore,
+        naturalWidthBefore,
+        widthContainer,
+        heightContainer
+      )
+      const after = getDimensions(
+        naturalHeightAfter,
+        naturalWidthAfter,
+        widthContainer,
+        heightContainer
+      )
 
-      height = Math.max(heightBefore, heightAfter)
-      width = Math.max(widthBefore, widthAfter)
+      height = Math.max(before.height, after.height)
+      width = Math.max(before.width, after.height)
     }
 
     return {
       height,
       width,
-      heightBefore,
-      widthBefore,
-      heightAfter,
-      widthAfter,
-      widthContainer:
-        (this._container && this._container.getBoundingClientRect().width) || 0,
+      heightContainer,
+      widthContainer,
     }
   }
 
@@ -155,8 +170,8 @@ export class ModifiedImageDiff extends React.Component<
           {renderImage(this.props.previous, {
             onLoad: this.handleImgLoadBefore,
             style: {
-              maxHeight: height,
-              maxWidth: Math.min(width, (widthContainer - 15) / 2),
+              maxHeight: height + SIZE_CONTROLS,
+              maxWidth: width / 2,
             },
           })}
           <div className="image-diff__footer">
@@ -170,8 +185,8 @@ export class ModifiedImageDiff extends React.Component<
           {renderImage(this.props.current, {
             onLoad: this.handleImgLoadAfter,
             style: {
-              maxHeight: height,
-              maxWidth: Math.min(width, (widthContainer - 15) / 2),
+              maxHeight: height + SIZE_CONTROLS,
+              maxWidth: width / 2,
             },
           })}
           <div className="image-diff__footer">
@@ -194,7 +209,7 @@ export class ModifiedImageDiff extends React.Component<
         style={{
           height,
           width,
-          left: (widthContainer - width) / 2,
+          left: (widthContainer - 20 - width) / 2 + 10,
         }}
       >
         <div className="image-diff__before">
@@ -231,7 +246,7 @@ export class ModifiedImageDiff extends React.Component<
         style={{
           ...style,
           marginBottom: 30,
-          left: (widthContainer - width) / 2,
+          left: (widthContainer - 20 - width) / 2 + 10,
         }}
       >
         <div className="image-diff__before" style={style}>
@@ -282,7 +297,7 @@ export class ModifiedImageDiff extends React.Component<
         style={{
           ...style,
           marginBottom: 30,
-          left: (widthContainer - width) / 2,
+          left: (widthContainer - 20 - width) / 2 + 10,
         }}
       >
         <div className="image-diff__after" style={style}>

@@ -10,15 +10,23 @@ const productName = distInfo.getProductName()
 
 let binaryPath = ''
 if (process.platform === 'darwin') {
-  binaryPath = path.join(distPath, `${productName}.app`, 'Contents', 'MacOS', `${productName}`)
+  binaryPath = path.join(
+    distPath,
+    `${productName}.app`,
+    'Contents',
+    'MacOS',
+    `${productName}`
+  )
 } else if (process.platform === 'win32') {
   binaryPath = path.join(distPath, `${productName}.exe`)
+} else if (process.platform === 'linux') {
+  binaryPath = path.join(distPath, productName)
 } else {
-  console.error(`I dunno how to run on ${process.arch} :(`)
+  console.error(`I dunno how to run on ${process.platform} ${process.arch} :(`)
   process.exit(1)
 }
 
-module.exports = function (spawnOptions) {
+module.exports = function(spawnOptions) {
   try {
     const stats = fs.statSync(binaryPath)
     if (!stats.isFile()) {
@@ -28,10 +36,10 @@ module.exports = function (spawnOptions) {
     return null
   }
 
-  const opts = Object.assign({ }, spawnOptions)
+  const opts = Object.assign({}, spawnOptions)
 
-  opts.env = Object.assign(opts.env || { }, process.env, { 
-    NODE_ENV: 'development'
+  opts.env = Object.assign(opts.env || {}, process.env, {
+    NODE_ENV: 'development',
   })
 
   return cp.spawn(binaryPath, [], opts)

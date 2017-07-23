@@ -718,7 +718,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
         <div className="panel empty">
           <img src={BlankSlateImage} className="blankslate-image" />
           The diff returned by Git is {diffSizeMB}MB ({diff.length} bytes),
-          which is larger than what can be displayed in GitHub Desktop.
+          which is larger than what can be displayed in Kactus.
         </div>
       )
     }

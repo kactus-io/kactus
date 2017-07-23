@@ -265,8 +265,12 @@ async function getSketchDiff(
     type = IKactusFileType.Artboard
   } else if (name === 'shapeGroup.json') {
     type = IKactusFileType.ShapeGroup
+  } else if (name === 'symbolMaster.json') {
+    type = IKactusFileType.SymbolMaster
   } else if (name === 'group.json') {
     type = IKactusFileType.Group
+  } else if (name === 'bitmap.json') {
+    type = IKactusFileType.Bitmap
   } else {
     type = IKactusFileType.Layer
   }
@@ -538,13 +542,29 @@ async function generatePreview(
         Path.basename(Path.dirname(file)),
         storagePath
       )
-    } else {
-      const name = Path.basename(file)
+    } else if (type === IKactusFileType.SymbolMaster) {
       path = await generateLayerPreview(
         sketchFilePath,
-        name.replace('.json', ''),
+        Path.basename(Path.dirname(file)),
         storagePath
       )
+    } else if (type === IKactusFileType.Bitmap) {
+      path = await generateLayerPreview(
+        sketchFilePath,
+        Path.basename(Path.dirname(file)),
+        storagePath
+      )
+    } else {
+      const name = Path.basename(file)
+      if (name.indexOf('.png') !== -1) {
+        path = Path.join(Path.dirname(sketchFilePath), file)
+      } else {
+        path = await generateLayerPreview(
+          sketchFilePath,
+          name.replace('.json', ''),
+          storagePath
+        )
+      }
     }
   } catch (e) {
     console.error(e)
@@ -626,7 +646,9 @@ async function getOldSketchPreview(
     type === IKactusFileType.Page ||
     type === IKactusFileType.Artboard ||
     type === IKactusFileType.ShapeGroup ||
-    type === IKactusFileType.Group
+    type === IKactusFileType.Group ||
+    type === IKactusFileType.SymbolMaster ||
+    type === IKactusFileType.Bitmap
   ) {
     path = Path.join(
       sketchStoragePath,

@@ -15,7 +15,7 @@ interface ICreateSketchFileProps {
   readonly allFiles: ReadonlyArray<IKactusFile>
 }
 
-interface ICreateBranchState {
+interface ICreateSketchFileState {
   readonly currentError: Error | null
   readonly proposedName: string
 
@@ -29,7 +29,7 @@ interface ICreateBranchState {
 /** The Create Branch component. */
 export class CreateSketchFile extends React.Component<
   ICreateSketchFileProps,
-  ICreateBranchState
+  ICreateSketchFileState
 > {
   public constructor(props: ICreateSketchFileProps) {
     super(props)
@@ -94,7 +94,10 @@ export class CreateSketchFile extends React.Component<
       currentError = new Error(`A file named ${str} already exists`)
     }
 
-    this.setState({ proposedName: str })
+    this.setState({
+      currentError,
+      proposedName: str,
+    })
   }
 
   private createFile = async () => {
@@ -102,11 +105,18 @@ export class CreateSketchFile extends React.Component<
 
     if (name.length > 0) {
       this.setState({ isCreatingFile: true })
-      await this.props.dispatcher.createNewSketchFile(
-        this.props.repository,
-        name
-      )
-      this.props.onDismissed()
+      try {
+        await this.props.dispatcher.createNewSketchFile(
+          this.props.repository,
+          name
+        )
+        this.props.onDismissed()
+      } catch (err) {
+        this.setState({
+          currentError: err,
+          isCreatingFile: false,
+        })
+      }
     }
   }
 }

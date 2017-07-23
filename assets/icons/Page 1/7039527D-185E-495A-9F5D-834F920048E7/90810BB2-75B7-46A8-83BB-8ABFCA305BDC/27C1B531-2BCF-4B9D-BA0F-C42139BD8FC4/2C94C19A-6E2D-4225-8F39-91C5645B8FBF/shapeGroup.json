@@ -1,10 +1,13 @@
 {
   "_class": "shapeGroup",
+  "clippingMaskMode": 0,
   "do_objectID": "2C94C19A-6E2D-4225-8F39-91C5645B8FBF",
   "exportOptions": {
     "_class": "exportOptions",
-    "exportFormats": [],
-    "includedLayerIds": [],
+    "exportFormats": [
+    ],
+    "includedLayerIds": [
+    ],
     "layerOptions": 0,
     "shouldTrim": false
   },
@@ -16,35 +19,42 @@
     "x": 0.901158130035516,
     "y": 13.96093384409779
   },
+  "hasClickThrough": false,
+  "hasClippingMask": false,
   "isFlippedHorizontal": false,
   "isFlippedVertical": false,
   "isLocked": false,
   "isVisible": true,
   "layerListExpandedType": 0,
+  "layers": [
+    {
+      "class": "shapePath",
+      "id": "32BC06BE-9C79-4618-8564-E614EB915A73"
+    },
+    {
+      "class": "shapePath",
+      "id": "F876755A-250F-4B63-B54A-3AB41727501A"
+    }
+  ],
   "name": "Path 3",
   "nameIsFixed": false,
   "resizingConstraint": 63,
   "resizingType": 0,
   "rotation": 0,
   "shouldBreakMaskChain": false,
-  "userInfo": {
-    "com.animaapp.stc-sketch-plugin": {
-      "kModelPropertiesKey": {}
-    }
-  },
   "style": {
     "_class": "style",
     "borderOptions": {
       "_class": "borderOptions",
+      "dashPattern": [
+      ],
       "isEnabled": false,
-      "dashPattern": [],
       "lineCapStyle": 1,
       "lineJoinStyle": 0
     },
     "borders": [
       {
         "_class": "border",
-        "isEnabled": true,
         "color": {
           "_class": "color",
           "alpha": 1,
@@ -53,6 +63,7 @@
           "red": 0.0784313725490196
         },
         "fillType": 0,
+        "isEnabled": true,
         "position": 0,
         "thickness": 10
       }
@@ -61,7 +72,6 @@
     "fills": [
       {
         "_class": "fill",
-        "isEnabled": true,
         "color": {
           "_class": "color",
           "alpha": 1,
@@ -70,6 +80,7 @@
           "red": 0.2431372549019608
         },
         "fillType": 0,
+        "isEnabled": true,
         "noiseIndex": 0,
         "noiseIntensity": 0,
         "patternFillType": 0,
@@ -79,18 +90,11 @@
     "miterLimit": 10,
     "startDecorationType": 0
   },
-  "hasClickThrough": false,
-  "layers": [
-    {
-      "id": "32BC06BE-9C79-4618-8564-E614EB915A73",
-      "class": "shapePath"
-    },
-    {
-      "id": "F876755A-250F-4B63-B54A-3AB41727501A",
-      "class": "shapePath"
+  "userInfo": {
+    "com.animaapp.stc-sketch-plugin": {
+      "kModelPropertiesKey": {
+      }
     }
-  ],
-  "clippingMaskMode": 0,
-  "hasClippingMask": false,
+  },
   "windingRule": 1
 }

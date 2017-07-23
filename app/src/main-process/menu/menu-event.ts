@@ -16,6 +16,7 @@ export type MenuEvent =
   | 'update-branch'
   | 'merge-branch'
   | 'show-repository-settings'
+  | 'show-kactus-settings'
   | 'open-in-shell'
   | 'compare-branch'
   | 'view-repository-on-github'
@@ -24,3 +25,5 @@ export type MenuEvent =
   | 'boomtown'
   | 'create-sketch-file'
   | 'open-sketch'
+  | 'create-pull-request'
+  | 'install-cli'
