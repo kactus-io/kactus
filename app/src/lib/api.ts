@@ -177,6 +177,20 @@ export interface IAPICoupon {
   readonly duration_in_months?: number
 }
 
+export interface IAPIPullRequest {
+  readonly number: number
+  readonly title: string
+  readonly body: string
+  readonly state: 'open' | 'closed'
+  readonly updated_at: string
+  readonly head: {
+    ref: string
+  }
+  readonly base: {
+    ref: string
+  }
+}
+
 /**
  * Parses the Link header from GitHub and returns the 'next' path
  * if one is present.
@@ -392,18 +406,24 @@ export class API {
   /**
    * Fetch the PRs with the given state.
    */
-  public async fetchPRs(
+  public async fetchPullRequests(
     owner: string,
     name: string,
-    state: 'open' | 'closed' | 'all'
-  ): Promise<ReadonlyArray<IAPIIssue>> {
+    state: 'open' | 'closed' | 'all',
+    since: Date | null
+  ): Promise<ReadonlyArray<IAPIPullRequest>> {
     const params = {
       state,
     }
 
+    const headers: { [key: string]: string } = {}
+    if (since && !isNaN(since.getTime())) {
+      headers['If-Modified-Since'] = toGitHubIsoDateString(since)
+    }
+
     const url = urlWithQueryString(`repos/${owner}/${name}/pulls`, params)
     try {
-      const pulls = await this.fetchAll<IAPIIssue>(url)
+      const pulls = await this.fetchAll<IAPIPullRequest>(url, headers)
 
       return pulls
     } catch (e) {
@@ -419,12 +439,20 @@ export class API {
    * pages when available, buffers all items and returns them in
    * one array when done.
    */
-  private async fetchAll<T>(path: string): Promise<ReadonlyArray<T>> {
+  private async fetchAll<T>(
+    path: string,
+    customHeaders?: Object
+  ): Promise<ReadonlyArray<T>> {
     const buf = new Array<T>()
     let nextPath: string | null = path
 
     do {
-      const response = await this.request('GET', nextPath)
+      const response = await this.request(
+        'GET',
+        nextPath,
+        undefined,
+        customHeaders
+      )
       if (response.status === HttpStatusCode.NotFound) {
         log.warn(`fetchAll: '${path}' returned a 404`)
         return []
