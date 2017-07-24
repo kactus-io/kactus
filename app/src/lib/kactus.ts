@@ -148,12 +148,20 @@ export async function generateLayerPreview(
 
 export async function saveKactusConfig(
   repository: Repository,
-  content: string
+  config: IFullKactusConfig
 ): Promise<void> {
   const configPath = Path.join(repository.path, 'kactus.json')
 
+  const configToSave = { ...config }
+  delete configToSave.sketchVersion
+  if (configToSave.root === repository.path) {
+    delete configToSave.root
+  } else if (configToSave.root) {
+    configToSave.root = configToSave.root.replace(repository.path, '.')
+  }
+
   return new Promise<void>((resolve, reject) => {
-    Fs.writeFile(configPath, content, err => {
+    Fs.writeFile(configPath, JSON.stringify(configToSave, null, 2), err => {
       if (err) {
         reject(err)
       } else {

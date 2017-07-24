@@ -44,7 +44,11 @@ import {
   resolveOAuthRequest,
   rejectOAuthRequest,
 } from '../../lib/oauth'
-import { saveKactusConfig, shouldShowPremiumUpsell } from '../kactus'
+import {
+  saveKactusConfig,
+  shouldShowPremiumUpsell,
+  IFullKactusConfig,
+} from '../kactus'
 import { openSketch, getSketchVersion } from '../sketch'
 import { validatedRepositoryPath } from './validated-repository-path'
 import { getUserDataPath } from '../../ui/lib/app-proxy'
@@ -895,9 +899,9 @@ export class Dispatcher {
    */
   public async saveKactusConfig(
     repository: Repository,
-    text: string
+    config: IFullKactusConfig
   ): Promise<void> {
-    await saveKactusConfig(repository, text)
+    await saveKactusConfig(repository, config)
     await this.appStore._refreshRepository(repository)
   }
 
