@@ -973,7 +973,6 @@ export class AppStore {
       return {
         config: kactusStatus.config,
         files: kactusStatus.files,
-        selectedFileID: state.selectedFileID,
       }
     })
 
@@ -1017,19 +1016,13 @@ export class AppStore {
         includeAll
       )
 
-      let selectedFileID = state.selectedFileID
-      const matchedFile = mergedFiles.find(x => x.id === selectedFileID)
-
-      // Select the first file if we don't have anything selected.
-      if ((!selectedFileID || !matchedFile) && mergedFiles.length) {
-        selectedFileID = mergedFiles[0].id || null
-      }
+      const selectedFileID = state.selectedFileID
 
       // The file selection could have changed if the previously selected file
       // is no longer selectable (it was reverted or committed) but if it hasn't
       // changed we can reuse the diff.
-      const sameSelectedFileExists = state.selectedFileID
-        ? workingDirectory.findFileWithID(state.selectedFileID)
+      const sameSelectedFileExists = selectedFileID
+        ? workingDirectory.findFileWithID(selectedFileID)
         : null
       const diff = sameSelectedFileExists ? state.diff : null
       return { workingDirectory, selectedFileID, diff }
