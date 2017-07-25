@@ -34,6 +34,7 @@ import {
   generateArtboardPreview,
   generateLayerPreview,
   generatePagePreview,
+  getKactusStoragePaths,
 } from '../kactus'
 import { mkdirP } from '../mkdirP'
 import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
@@ -343,7 +344,7 @@ async function getSketchDiff(
           kactusFile,
           repository,
           file.oldPath || file.path,
-          `${commitish}^`,
+          `${commitish}`,
           type
         )
       } catch (e) {
@@ -619,13 +620,11 @@ async function getOldSketchPreview(
     commitish = await getHEADsha(repository)
   }
 
-  const storagePath = Path.join(
-    getUserDataPath(),
-    'previews',
-    String(repository.id),
-    commitish
+  const { storagePath, sketchStoragePath } = getKactusStoragePaths(
+    repository,
+    commitish,
+    sketchFile
   )
-  const sketchStoragePath = Path.join(storagePath, sketchFile.id)
 
   const alreadyExported = await fileExists(
     Path.join(sketchStoragePath, 'document.json')

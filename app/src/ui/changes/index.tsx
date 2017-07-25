@@ -42,8 +42,8 @@ export class Changes extends React.Component<IChangesProps, {}> {
     this.props.dispatcher.importSketchFile(this.props.repository, path)
   }
 
-  private onOpenSketchFile = (path: string) => {
-    this.props.dispatcher.openSketchFile(path)
+  private onOpenSketchFile = (file: IKactusFile) => {
+    this.props.dispatcher.openSketchFile(file)
   }
 
   public render() {

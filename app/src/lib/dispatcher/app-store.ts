@@ -69,6 +69,7 @@ import {
   parseSketchFile,
   importSketchFile,
   shouldShowPremiumUpsell,
+  getKactusStoragePaths,
 } from '../kactus'
 import { IKactusFile, createNewFile } from 'kactus-cli'
 
@@ -2405,8 +2406,16 @@ export class AppStore {
   }
 
   /** Takes a path and opens it using the system default application */
-  public _openSketchFile(path: string) {
-    return shell.openItem(path)
+  public _openSketchFile(
+    file: IKactusFile,
+    repository?: Repository,
+    sha?: string
+  ) {
+    if (repository && sha) {
+      const { sketchStoragePath } = getKactusStoragePaths(repository, sha, file)
+      return shell.openItem(sketchStoragePath + '.sketch')
+    }
+    return shell.openItem(file.path + '.sketch')
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */

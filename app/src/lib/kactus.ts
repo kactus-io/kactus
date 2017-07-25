@@ -8,6 +8,7 @@ import {
   parseFile,
   importFolder,
 } from 'kactus-cli'
+import { getUserDataPath } from '../ui/lib/app-proxy'
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
 import { getDotComAPIEndpoint } from './api'
@@ -207,4 +208,23 @@ export function importSketchFile(path: string, config: IFullKactusConfig) {
       'refresh-files'
     )
   })
+}
+
+export function getKactusStoragePaths(
+  repository: Repository,
+  commitish: string,
+  sketchFile: IKactusFile
+) {
+  const storagePath = Path.join(
+    getUserDataPath(),
+    'previews',
+    String(repository.id),
+    commitish
+  )
+  const sketchStoragePath = Path.join(storagePath, sketchFile.id)
+
+  return {
+    storagePath,
+    sketchStoragePath,
+  }
 }

@@ -42,6 +42,7 @@ import { Octicon, OcticonSymbol } from '../octicons'
 
 import { fatalError } from '../../lib/fatal-error'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
+import { Button } from '../lib/button'
 
 import { RangeSelectionSizePixels } from './edge-detection'
 
@@ -78,6 +79,8 @@ interface IDiffProps {
 
   readonly showAdvancedDiffs: boolean
   readonly imageDiffType: number
+
+  readonly openSketchFile?: () => void
 }
 
 /** A component which renders a diff for a file. */
@@ -694,6 +697,11 @@ export class Diff extends React.Component<IDiffProps, {}> {
       return (
         <div className="sketch-diff-wrapper">
           <div className="sketch-diff-checkbox">
+            {this.props.readOnly &&
+              this.props.openSketchFile &&
+              <Button type="submit" onClick={this.props.openSketchFile}>
+                Open Sketch file
+              </Button>}
             <Checkbox
               label={
                 __DARWIN__

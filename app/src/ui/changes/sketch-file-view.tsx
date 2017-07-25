@@ -8,7 +8,7 @@ import { Loading } from '../lib/loading'
 interface ISketchFileViewProps {
   readonly onExport: (path: string) => void
   readonly onImport: (path: string) => void
-  readonly onOpenSketchFile: (path: string) => void
+  readonly onOpenSketchFile: (file: IKactusFile) => void
 
   readonly sketchFile: IKactusFile
 
@@ -21,7 +21,7 @@ export class SketchFileView extends React.Component<
   Readonly<{}>
 > {
   private handleOpen = () => {
-    this.props.onOpenSketchFile(this.props.sketchFile.path)
+    this.props.onOpenSketchFile(this.props.sketchFile)
   }
 
   private handleImport = () => {

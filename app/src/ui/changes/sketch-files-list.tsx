@@ -13,7 +13,7 @@ interface ISketchFilesListProps {
   readonly onFileSelectionChanged: (row: number) => void
   readonly onParse: (path: string) => void
   readonly onImport: (path: string) => void
-  readonly onOpen: (path: string) => void
+  readonly onOpen: (file: IKactusFile) => void
   readonly onCreateSketchFile: () => void
 
   readonly availableWidth: number
@@ -34,10 +34,7 @@ export class SketchFilesList extends React.Component<
 
     return (
       <SketchFile
-        path={file.path}
-        id={file.id}
-        parsed={file.parsed}
-        imported={file.imported}
+        file={file}
         key={file.id}
         onImport={this.props.onImport}
         onParse={this.props.onParse}

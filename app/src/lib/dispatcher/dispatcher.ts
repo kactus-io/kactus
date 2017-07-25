@@ -574,8 +574,8 @@ export class Dispatcher {
   }
 
   /** Open the path in Sketch */
-  public openSketchFile(path: string) {
-    return this.appStore._openSketchFile(path + '.sketch')
+  public openSketchFile(file: IKactusFile) {
+    return this.appStore._openSketchFile(file)
   }
 
   /** Add the pattern to the repository's gitignore. */
@@ -1110,5 +1110,13 @@ export class Dispatcher {
 
       this.postError(e)
     }
+  }
+
+  public async openOldSketchFile(
+    sha: string,
+    repository: Repository,
+    file: IKactusFile
+  ) {
+    return this.appStore._openSketchFile(file, repository, sha)
   }
 }

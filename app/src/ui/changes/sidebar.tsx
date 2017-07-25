@@ -26,6 +26,7 @@ import { WorkingDirectoryFileChange } from '../../models/status'
 import { CSSTransitionGroup } from 'react-transition-group'
 import { SketchFilesList } from './sketch-files-list'
 import { openFile } from '../../lib/open-file'
+import { IKactusFile } from 'kactus-cli'
 
 /**
  * The timeout for the animation of the enter/leave animation for Undo.
@@ -231,8 +232,8 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     this.props.dispatcher.importSketchFile(this.props.repository, path)
   }
 
-  private onSketchOpen = (path: string) => {
-    this.props.dispatcher.openSketchFile(path)
+  private onSketchOpen = (file: IKactusFile) => {
+    this.props.dispatcher.openSketchFile(file)
   }
 
   private onCreateSketchFile = () => {

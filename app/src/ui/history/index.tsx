@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { CommitSummary } from './commit-summary'
 import { Diff } from '../diff'
+import { DiffType } from '../../models/diff'
 import { FileList } from './file-list'
 import { Repository } from '../../models/repository'
 import { FileChange } from '../../models/status'
@@ -89,6 +90,7 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
         diff={diff}
         readOnly={true}
         dispatcher={this.props.dispatcher}
+        openSketchFile={this.onOpenSketchFile}
       />
     )
   }
@@ -112,6 +114,23 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
         onExpandChanged={this.onExpandChanged}
         isExpanded={this.state.isExpanded}
       />
+    )
+  }
+
+  private onOpenSketchFile = () => {
+    const sha = this.props.history.selection.sha
+    if (
+      !sha ||
+      !this.props.history.diff ||
+      this.props.history.diff.kind !== DiffType.Sketch
+    ) {
+      return
+    }
+    const sketchFile = this.props.history.diff.sketchFile
+    this.props.dispatcher.openOldSketchFile(
+      sha,
+      this.props.repository,
+      sketchFile
     )
   }
 
