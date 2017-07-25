@@ -1,24 +1,12 @@
 import { IEmail } from './email'
 import { getDotComAPIEndpoint } from '../lib/api'
 
-/** The data-only interface for Account for transport across IPC. */
-export interface IAccount {
-  readonly token: string
-  readonly login: string
-  readonly endpoint: string
-  readonly emails: ReadonlyArray<IEmail>
-  readonly avatarURL: string
-  readonly id: number
-  readonly name: string
-  readonly unlockedKactus: boolean
-}
-
 /**
  * A GitHub account, representing the user found on GitHub The Website or GitHub Enterprise.
  *
  * This contains a token that will be used for operations that require authentication.
  */
-export class Account implements IAccount {
+export class Account {
   /** The access token used to perform operations on behalf of this account */
   public readonly token: string
   /** The login name for this account  */
@@ -35,20 +23,6 @@ export class Account implements IAccount {
   public readonly name: string
   /** Wether the user has full access to Kactus */
   public readonly unlockedKactus: boolean
-
-  /** Create a new Account from some JSON. */
-  public static fromJSON(obj: IAccount): Account {
-    return new Account(
-      obj.login,
-      obj.endpoint,
-      obj.token,
-      obj.emails,
-      obj.avatarURL,
-      obj.id,
-      obj.name,
-      obj.unlockedKactus
-    )
-  }
 
   /** Create an account which can be used to perform unauthenticated API actions */
   public static anonymous(): Account {

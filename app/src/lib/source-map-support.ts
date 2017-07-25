@@ -1,8 +1,8 @@
-// import * as Path from 'path'
-// import * as Fs from 'fs'
+import * as Path from 'path'
+import * as Fs from 'fs'
 
-// const fileUriToPath: (uri: string) => string = require('file-uri-to-path')
-// const sourceMapSupport = require('source-map-support')
+const fileUriToPath: (uri: string) => string = require('file-uri-to-path')
+const sourceMapSupport = require('source-map-support')
 
 /**
  * This array tells the source map logic which files that we can expect to
@@ -13,54 +13,54 @@
  * since it's possible that the error which caused us to spawn the crash
  * process was related to source maps.
  */
-// const knownFilesWithSourceMap = [ 'renderer.js', 'main.js', 'shared.js' ]
+const knownFilesWithSourceMap = ['renderer.js', 'main.js']
 
-// function retrieveSourceMap(source: string) {
-//   // This is a happy path in case we know for certain that we won't be
-//   // able to resolve a source map for the given location.
-//   if (!knownFilesWithSourceMap.some(file => source.endsWith(file))) {
-//     return null
-//   }
+function retrieveSourceMap(source: string) {
+  // This is a happy path in case we know for certain that we won't be
+  // able to resolve a source map for the given location.
+  if (!knownFilesWithSourceMap.some(file => source.endsWith(file))) {
+    return null
+  }
 
-//   // We get a file uri when we're inside a renderer, convert to a path
-//   if (source.startsWith('file://')) {
-//     source = fileUriToPath(source)
-//   }
+  // We get a file uri when we're inside a renderer, convert to a path
+  if (source.startsWith('file://')) {
+    source = fileUriToPath(source)
+  }
 
-//   // We store our source maps right next to the bundle
-//   const path = `${source}.map`
+  // We store our source maps right next to the bundle
+  const path = `${source}.map`
 
-//   if (__DEV__ && path.startsWith('http://')) {
-//     try {
-//       const xhr = new XMLHttpRequest()
-//       xhr.open('GET', path, false)
-//       xhr.send(null)
-//       if (xhr.readyState === 4 && xhr.status === 200) {
-//         return { url: Path.basename(path), map: xhr.responseText }
-//       }
-//     } catch (error) {
-//       return
-//     }
-//     return
-//   }
+  if (__DEV__ && path.startsWith('http://')) {
+    try {
+      const xhr = new XMLHttpRequest()
+      xhr.open('GET', path, false)
+      xhr.send(null)
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        return { url: Path.basename(path), map: xhr.responseText }
+      }
+    } catch (error) {
+      return
+    }
+    return
+  }
 
-//   // We don't have an option here, see
-//   //  https://github.com/v8/v8/wiki/Stack-Trace-API#customizing-stack-traces
-//   // This happens on-demand when someone accesses the stack
-//   // property on an error object and has to be synchronous :/
-//   // tslint:disable-next-line:no-sync-functions
-//   if (!Fs.existsSync(path)) {
-//     return
-//   }
+  // We don't have an option here, see
+  //  https://github.com/v8/v8/wiki/Stack-Trace-API#customizing-stack-traces
+  // This happens on-demand when someone accesses the stack
+  // property on an error object and has to be synchronous :/
+  // tslint:disable-next-line:no-sync-functions
+  if (!Fs.existsSync(path)) {
+    return
+  }
 
-//   try {
-//     // tslint:disable-next-line:no-sync-functions
-//     const map = Fs.readFileSync(path, 'utf8')
-//     return { url: Path.basename(path), map }
-//   } catch (error) {
-//     return
-//   }
-// }
+  try {
+    // tslint:disable-next-line:no-sync-functions
+    const map = Fs.readFileSync(path, 'utf8')
+    return { url: Path.basename(path), map }
+  } catch (error) {
+    return
+  }
+}
 
 /** A map from errors to their stack frames. */
 const stackFrameMap = new WeakMap<Error, ReadonlyArray<any>>()
@@ -89,11 +89,11 @@ function prepareStackTrace(error: Error, frames: ReadonlyArray<any>) {
 
 /** Enable source map support in the current process. */
 export function enableSourceMaps() {
-  // sourceMapSupport.install({
-  //   environment: 'node',
-  //   handleUncaughtExceptions: false,
-  //   retrieveSourceMap,
-  // })
+  sourceMapSupport.install({
+    environment: 'node',
+    handleUncaughtExceptions: false,
+    retrieveSourceMap,
+  })
 
   const AnyError = Error as any
   // We want to keep `source-map-support`s `prepareStackTrace` around to use
@@ -135,6 +135,6 @@ function sourceMappedStackTrace(error: Error): string | undefined {
   }
 
   // TODO(mathieudutour): fix this
-  // return prepareStackTraceWithSourceMap(error, frames)
-  return prepareStackTrace(error, frames)
+  return prepareStackTraceWithSourceMap(error, frames)
+  // return prepareStackTrace(error, frames)
 }
