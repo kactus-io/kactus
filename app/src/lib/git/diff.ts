@@ -37,6 +37,7 @@ import {
 } from '../kactus'
 import { mkdirP } from '../mkdirP'
 import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
+import { assertNever } from '../fatal-error'
 
 /**
  * Utility function to check whether parsing this buffer is going to cause
@@ -257,7 +258,9 @@ async function getSketchDiff(
   const name = Path.basename(file.path)
 
   let type: IKactusFileType
-  if (name === 'document.json') {
+  if (/layerTextStyles/.test(file.path) || /layerStyles/.test(file.path)) {
+    type = IKactusFileType.Style
+  } else if (name === 'document.json') {
     type = IKactusFileType.Document
   } else if (name === 'page.json') {
     type = IKactusFileType.Page
@@ -554,7 +557,7 @@ async function generatePreview(
         Path.basename(Path.dirname(file)),
         storagePath
       )
-    } else {
+    } else if (type === IKactusFileType.Layer) {
       const name = Path.basename(file)
       if (name.indexOf('.png') !== -1) {
         path = Path.join(Path.dirname(sketchFilePath), file)
@@ -565,6 +568,10 @@ async function generatePreview(
           storagePath
         )
       }
+    } else if (type === IKactusFileType.Style) {
+      return Promise.resolve(undefined)
+    } else {
+      return assertNever(type, `Unknown KactusFileType: ${type}`)
     }
   } catch (e) {
     console.error(e)
@@ -604,6 +611,10 @@ async function getOldSketchPreview(
   commitish: string,
   type: IKactusFileType
 ) {
+  if (type === IKactusFileType.Style) {
+    return
+  }
+
   if (commitish === 'HEAD') {
     commitish = await getHEADsha(repository)
   }
@@ -654,9 +665,11 @@ async function getOldSketchPreview(
       sketchStoragePath,
       Path.basename(Path.dirname(file)) + '.png'
     )
-  } else {
+  } else if (type === IKactusFileType.Layer) {
     const name = Path.basename(file)
     path = Path.join(sketchStoragePath, name.replace('.json', '') + '.png')
+  } else {
+    return assertNever(type, `Unknown KactusFileType: ${type}`)
   }
 
   if (await fileExists(path)) {
