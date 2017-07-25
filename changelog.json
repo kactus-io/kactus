@@ -1,6 +1,12 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.13": [
+      "[Fixed] handle shared style diff",
+      "[Fixed] fix a bug where it was impossible to select another file",
+      "[Fixed] respect the root config",
+      "[Fixed] Revert parsing _archive string as some info were getting lost when parsing to JS (which doesn't support 64 int). So it's a bit uglier but at least it's working"
+    ],
     "0.1.12": [
       "[Fixed] Configuring git form not submitting #27",
       "[Fixed] Extra repository settings tab #25",
