@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.14": [
+      "[Fixed] not creating a folder to export images"
+    ],
     "0.1.13": [
       "[Fixed] handle shared style diff",
       "[Fixed] fix a bug where it was impossible to select another file",
