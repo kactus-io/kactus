@@ -43,7 +43,7 @@ github
     token,
     repo,
     tag,
-    branchName,
+    distInfo.getReleaseBranchName(),
     require('../changelog.json').releases[distInfo.getVersion()] || []
   )
   .then(function(res) {
