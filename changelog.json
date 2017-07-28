@@ -1,9 +1,14 @@
 {
   "unreleased": [],
   "releases": {
-    "0.1.14": [
-      "[Fixed] not creating a folder to export images"
+    "0.1.15": [
+      "[New] Added the Branch > Create Pull Request menu item",
+      "[New] Added a button to locate sketch when not found #34",
+      "[New] Added a button to open an sketch file from a previous commit. This file is temporary, do not try to save it and work from there. #23",
+      "[Fixed] Use the right version when creating a sketch file",
+      "[Improved] Do not store the style when it’s the same as the shared one #36"
     ],
+    "0.1.14": ["[Fixed] not creating a folder to export images"],
     "0.1.13": [
       "[Fixed] handle shared style diff",
       "[Fixed] fix a bug where it was impossible to select another file",
@@ -37,9 +42,7 @@
       "[Fixed] Fix size of image diffs #15",
       "[Improved] Add a notification popup whenever a user toggles on full screen mode informing how to get out of full screen mode"
     ],
-    "0.1.6": [
-      "[Fixed] Update price shown when using a coupon"
-    ],
+    "0.1.6": ["[Fixed] Update price shown when using a coupon"],
     "0.1.5": [
       "[Fixed] Recreate the sketch files before get the git status when merging a branch"
     ],
@@ -76,17 +79,9 @@
     "0.1.0-alpha5": [
       "[New] Create a new sketch file with all the kactus options"
     ],
-    "0.1.0-alpha4": [
-      "[New] Brand new image diffs"
-    ],
-    "0.1.0-alpha3": [
-      "[Fixed] Handle sketch files with images"
-    ],
-    "0.1.0-alpha2": [
-      "[New] Bunch of stuff"
-    ],
-    "0.1.0-alpha1": [
-      "[New] First alpha release of Kactus"
-    ]
+    "0.1.0-alpha4": ["[New] Brand new image diffs"],
+    "0.1.0-alpha3": ["[Fixed] Handle sketch files with images"],
+    "0.1.0-alpha2": ["[New] Bunch of stuff"],
+    "0.1.0-alpha1": ["[New] First alpha release of Kactus"]
   }
 }
