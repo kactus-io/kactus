@@ -13,7 +13,6 @@ import {
   getChangedFiles,
   getWorkingDirectoryDiff,
 } from '../../../src/lib/git'
-import { getKactusStatus } from '../../../src/lib/kactus'
 
 import {
   setupFixtureRepository,
@@ -36,12 +35,19 @@ import {
 import * as fs from 'fs-extra'
 const temp = require('temp').track()
 
+const dummySketchPath = ''
+
 async function getTextDiff(
   repo: Repository,
   kactusFiles: Array<IKactusFile>,
   file: WorkingDirectoryFileChange
 ): Promise<ITextDiff> {
-  const diff = await getWorkingDirectoryDiff(repo, kactusFiles, file)
+  const diff = await getWorkingDirectoryDiff(
+    dummySketchPath,
+    repo,
+    kactusFiles,
+    file
+  )
   expect(diff.kind === DiffType.Text)
   return diff as ITextDiff
 }
@@ -63,16 +69,10 @@ describe('git/commit', () => {
       fs.writeFileSync(path.join(repository!.path, 'README.md'), 'Hi world\n')
 
       let status = await getStatus(repository!)
-      const kactusState = await getKactusStatus(repository!)
       let files = status.workingDirectory.files
       expect(files.length).to.equal(1)
 
-      await createCommit(
-        repository!,
-        kactusState.files,
-        'Special commit',
-        files
-      )
+      await createCommit(repository!, [], 'Special commit', files)
 
       status = await getStatus(repository!)
       files = status.workingDirectory.files
@@ -87,7 +87,6 @@ describe('git/commit', () => {
       fs.writeFileSync(path.join(repository!.path, 'README.md'), 'Hi world\n')
 
       const status = await getStatus(repository!)
-      const kactusState = await getKactusStatus(repository!)
       const files = status.workingDirectory.files
       expect(files.length).to.equal(1)
 
@@ -95,7 +94,7 @@ describe('git/commit', () => {
 
 # this is a comment`
 
-      await createCommit(repository!, kactusState.files, message, files)
+      await createCommit(repository!, [], message, files)
 
       const commit = await getCommit(repository!, 'HEAD')
       expect(commit).to.not.be.null
@@ -110,7 +109,6 @@ describe('git/commit', () => {
       fs.writeFileSync(path.join(repo.path, 'bar'), 'bar\n')
 
       const status = await getStatus(repo)
-      const kactusState = await getKactusStatus(repository!)
       const files = status.workingDirectory.files
 
       expect(files.length).to.equal(2)
@@ -122,7 +120,7 @@ describe('git/commit', () => {
 
       await createCommit(
         repo,
-        kactusState.files,
+        [],
         'added two files\n\nthis is a description',
         allChanges
       )
@@ -148,12 +146,11 @@ describe('git/commit', () => {
       await GitProcess.exec(['mv', 'foo', 'bar'], repo.path)
 
       const status = await getStatus(repo)
-      const kactusState = await getKactusStatus(repository!)
       const files = status.workingDirectory.files
 
       expect(files.length).to.equal(1)
 
-      await createCommit(repo, kactusState.files, 'renamed a file', [
+      await createCommit(repo, [], 'renamed a file', [
         files[0].withIncludeAll(true),
       ])
 

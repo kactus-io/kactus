@@ -12,7 +12,7 @@ import { getUserDataPath } from '../ui/lib/app-proxy'
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
 import { getDotComAPIEndpoint } from './api'
-import { SKETCHTOOL_PATH, runPluginCommand, getSketchVersion } from './sketch'
+import { sketchtoolPath, runPluginCommand, getSketchVersion } from './sketch'
 
 export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string }
 
@@ -26,10 +26,11 @@ interface IKactusStatusResult {
  *  Retrieve the status for a given repository
  */
 export async function getKactusStatus(
+  sketchPath: string,
   repository: Repository
 ): Promise<IKactusStatusResult> {
   const kactus = find(repository.path)
-  const sketchVersion = (await getSketchVersion()) || undefined
+  const sketchVersion = (await getSketchVersion(sketchPath)) || undefined
   return {
     config: {
       // need to copy the config otheerwise there is a memory leak
@@ -50,12 +51,13 @@ export async function getKactusStatus(
 }
 
 export async function generateDocumentPreview(
+  sketchPath: string,
   file: string,
   output: string
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(
-      SKETCHTOOL_PATH +
+      sketchtoolPath(sketchPath) +
         ' export preview "' +
         file +
         '" --output="' +
@@ -72,13 +74,14 @@ export async function generateDocumentPreview(
 }
 
 export async function generatePagePreview(
+  sketchPath: string,
   file: string,
   name: string,
   output: string
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(
-      SKETCHTOOL_PATH +
+      sketchtoolPath(sketchPath) +
         ' export pages "' +
         file +
         '" --item="' +
@@ -98,13 +101,14 @@ export async function generatePagePreview(
 }
 
 export async function generateArtboardPreview(
+  sketchPath: string,
   file: string,
   id: string,
   output: string
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(
-      SKETCHTOOL_PATH +
+      sketchtoolPath(sketchPath) +
         ' export artboards "' +
         file +
         '" --item="' +
@@ -123,13 +127,14 @@ export async function generateArtboardPreview(
 }
 
 export async function generateLayerPreview(
+  sketchPath: string,
   file: string,
   id: string,
   output: string
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(
-      SKETCHTOOL_PATH +
+      sketchtoolPath(sketchPath) +
         ' export layers "' +
         file +
         '" --item="' +
@@ -201,9 +206,14 @@ export async function parseSketchFile(path: string, config: IFullKactusConfig) {
   return parseFile(path + '.sketch', config)
 }
 
-export function importSketchFile(path: string, config: IFullKactusConfig) {
+export function importSketchFile(
+  sketchPath: string,
+  path: string,
+  config: IFullKactusConfig
+) {
   return importFolder(path, config).then(() => {
     return runPluginCommand(
+      sketchPath,
       Path.resolve(__dirname, './plugin.sketchplugin'),
       'refresh-files'
     )

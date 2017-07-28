@@ -23,12 +23,21 @@ import { formatPatch } from '../../src/lib/patch-formatter'
 import { getWorkingDirectoryDiff, convertDiff } from '../../src/lib/git'
 import { setupFixtureRepository } from '../fixture-helper'
 
+const dummySketchPath = ''
+
 async function parseDiff(diff: string): Promise<ITextDiff> {
   const parser = new DiffParser()
   const rawDiff = parser.parse(diff)
   const repository = new Repository('', -1, null, false)
   const fileChange = new FileChange('file.txt', AppFileStatus.Modified)
-  const output = await convertDiff(repository, [], fileChange, rawDiff, 'HEAD')
+  const output = await convertDiff(
+    dummySketchPath,
+    repository,
+    [],
+    fileChange,
+    rawDiff,
+    'HEAD'
+  )
   expect(output.kind === DiffType.Text)
   return output as ITextDiff
 }
@@ -54,7 +63,12 @@ describe('patch formatting', () => {
         unselectedFile
       )
 
-      const diff = await getWorkingDirectoryDiff(repository!, [], file)
+      const diff = await getWorkingDirectoryDiff(
+        dummySketchPath,
+        repository!,
+        [],
+        file
+      )
 
       expect(diff.kind === DiffType.Text)
 
@@ -93,7 +107,12 @@ describe('patch formatting', () => {
         unselectedFile
       )
 
-      const diff = await getWorkingDirectoryDiff(repository!, [], file)
+      const diff = await getWorkingDirectoryDiff(
+        dummySketchPath,
+        repository!,
+        [],
+        file
+      )
 
       expect(diff.kind === DiffType.Text)
 
@@ -133,7 +152,12 @@ describe('patch formatting', () => {
         unselectedFile
       )
 
-      const diff = await getWorkingDirectoryDiff(repository!, [], file)
+      const diff = await getWorkingDirectoryDiff(
+        dummySketchPath,
+        repository!,
+        [],
+        file
+      )
 
       expect(diff.kind === DiffType.Text)
 
@@ -173,7 +197,12 @@ describe('patch formatting', () => {
         unselectedFile
       )
 
-      const diff = await getWorkingDirectoryDiff(repository!, [], file)
+      const diff = await getWorkingDirectoryDiff(
+        dummySketchPath,
+        repository!,
+        [],
+        file
+      )
 
       expect(diff.kind === DiffType.Text)
 

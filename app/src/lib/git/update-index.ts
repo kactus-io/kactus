@@ -155,7 +155,7 @@ export async function stageFiles(
   // has logic to support that scenario.
   if (partial.length) {
     for (const file of partial) {
-      await applyPatchToIndex(repository, kactusFiles, file)
+      await applyPatchToIndex(repository, file)
     }
   }
 }

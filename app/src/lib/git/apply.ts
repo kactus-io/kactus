@@ -8,7 +8,6 @@ import { IKactusFile } from 'kactus-cli'
 
 export async function applyPatchToIndex(
   repository: Repository,
-  kactusFiles: Array<IKactusFile>,
   file: WorkingDirectoryFileChange
 ): Promise<void> {
   // If the file was a rename we have to recreate that rename since we've
@@ -55,9 +54,17 @@ export async function applyPatchToIndex(
     '-',
   ]
 
-  const diff = await getWorkingDirectoryDiff(repository, kactusFiles, file)
+  const dummySketchPath = ''
+  const dummySketchFiles: IKactusFile[] = []
 
-  if (diff.kind !== DiffType.Text && diff.kind !== DiffType.Sketch) {
+  const diff = await getWorkingDirectoryDiff(
+    dummySketchPath,
+    repository,
+    dummySketchFiles,
+    file
+  )
+
+  if (diff.kind !== DiffType.Text) {
     throw new Error(`Unexpected diff result returned: '${diff.kind}'`)
   }
 

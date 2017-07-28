@@ -96,7 +96,7 @@ import { openShell } from '../open-shell'
 import { AccountsStore } from './accounts-store'
 import { RepositoriesStore } from './repositories-store'
 import { validatedRepositoryPath } from './validated-repository-path'
-import { getSketchVersion } from '../sketch'
+import { getSketchVersion, SKETCH_PATH } from '../sketch'
 
 const LastSelectedRepositoryIDKey = 'last-selected-repository-id'
 
@@ -114,6 +114,9 @@ const showAdvancedDiffsKey: string = 'showAdvancedDiffs'
 
 const imageDiffTypeDefault: number = 0
 const imageDiffTypeKey: string = 'imageDiffType'
+
+const sketchPathDefault: string = SKETCH_PATH
+const sketchPathKey: string = 'sketchPathType'
 
 export class AppStore {
   private emitter = new Emitter()
@@ -197,6 +200,8 @@ export class AppStore {
   private isUnlockingKactusFullAccess: boolean = false
 
   private sketchVersion: string | null | undefined
+
+  private sketchPath: string = sketchPathDefault
 
   public constructor(
     gitHubUserStore: GitHubUserStore,
@@ -710,6 +715,7 @@ export class AppStore {
     }
 
     const diff = await getCommitDiff(
+      this.sketchPath,
       repository,
       stateBeforeLoad.kactus.files,
       file,
@@ -866,7 +872,12 @@ export class AppStore {
     this.accounts = accounts
     this.repositories = repositories
 
-    const sketchVersion = await getSketchVersion()
+    const sketchPathValue = localStorage.getItem(sketchPathKey)
+
+    this.sketchPath =
+      sketchPathValue === null ? sketchPathDefault : sketchPathValue
+
+    const sketchVersion = await getSketchVersion(this.sketchPath)
     if (typeof sketchVersion !== 'undefined') {
       this.sketchVersion = sketchVersion
     }
@@ -978,7 +989,7 @@ export class AppStore {
     }
   ): Promise<void> {
     return this.withAuthenticatingUser(repo, async repository => {
-      const kactusStatus = await getKactusStatus(repository)
+      const kactusStatus = await getKactusStatus(this.sketchPath, repository)
 
       if (
         (!options || !options.skipParsingModifiedSketchFiles) &&
@@ -1123,7 +1134,7 @@ export class AppStore {
     return this.withAuthenticatingUser(repo, async repository => {
       await this.isImporting(repository, async () => {
         const kactusConfig = this.getRepositoryState(repository).kactus.config
-        await importSketchFile(path, kactusConfig)
+        await importSketchFile(this.sketchPath, path, kactusConfig)
         await this._loadStatus(repository, {
           skipParsingModifiedSketchFiles: true,
         })
@@ -1177,6 +1188,7 @@ export class AppStore {
     }
 
     const diff = await getWorkingDirectoryDiff(
+      this.sketchPath,
       repository,
       stateBeforeLoad.kactus.files,
       selectedFileBeforeLoad
@@ -1562,7 +1574,7 @@ export class AppStore {
         await Promise.all(
           kactus.files
             .filter(f => f.parsed)
-            .map(f => importSketchFile(f.path, kactus.config))
+            .map(f => importSketchFile(this.sketchPath, f.path, kactus.config))
         )
       }
     } finally {
@@ -2025,7 +2037,9 @@ export class AppStore {
           await Promise.all(
             kactus.files
               .filter(f => f.parsed)
-              .map(f => importSketchFile(f.path, kactus.config))
+              .map(f =>
+                importSketchFile(this.sketchPath, f.path, kactus.config)
+              )
           )
 
           this.updatePushPullFetchProgress(repository, {
@@ -2170,7 +2184,7 @@ export class AppStore {
     await Promise.all(
       kactus.files
         .filter(f => f.parsed)
-        .map(f => importSketchFile(f.path, kactus.config))
+        .map(f => importSketchFile(this.sketchPath, f.path, kactus.config))
     )
 
     await this._refreshRepository(repository)
@@ -2377,7 +2391,7 @@ export class AppStore {
     await Promise.all(
       kactus.files
         .filter(f => f.parsed)
-        .map(f => importSketchFile(f.path, kactus.config))
+        .map(f => importSketchFile(this.sketchPath, f.path, kactus.config))
     )
 
     await this._refreshRepository(repository)

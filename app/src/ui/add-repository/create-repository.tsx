@@ -4,7 +4,6 @@ import * as Path from 'path'
 import * as FSE from 'fs-extra'
 
 import { Dispatcher } from '../../lib/dispatcher'
-import { getKactusStatus } from '../../lib/kactus'
 import {
   initGitRepository,
   createCommit,
@@ -256,16 +255,10 @@ export class CreateRepository extends React.Component<
 
     try {
       const status = await getStatus(repository)
-      const kactusStatus = await getKactusStatus(repository)
       const wd = status.workingDirectory
       const files = wd.files
       if (files.length > 0) {
-        await createCommit(
-          repository,
-          kactusStatus.files,
-          'Initial commit',
-          files
-        )
+        await createCommit(repository, [], 'Initial commit', files)
       }
     } catch (e) {
       log.error(`createRepository: initial commit failed at ${fullPath}`, e)
