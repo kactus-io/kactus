@@ -25,9 +25,10 @@ export async function openSketch() {
 let sketchVersion: string | undefined
 
 export async function getSketchVersion(
-  sketchPath: string
+  sketchPath: string,
+  forceRefresh?: boolean
 ): Promise<string | null> {
-  if (sketchVersion) {
+  if (sketchVersion && !forceRefresh) {
     return sketchVersion
   }
   return new Promise<string | null>((resolve, reject) => {

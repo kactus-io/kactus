@@ -1119,4 +1119,8 @@ export class Dispatcher {
   ) {
     return this.appStore._openSketchFile(file, repository, sha)
   }
+
+  public async changeSketchLocation(sketchPath: string) {
+    return this.appStore._changeSketchLocation(sketchPath)
+  }
 }

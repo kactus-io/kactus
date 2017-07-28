@@ -2754,4 +2754,15 @@ export class AppStore {
   public async _refreshAccounts() {
     return this.accountsStore.refresh()
   }
+
+  public async _changeSketchLocation(sketchPath: string): Promise<void> {
+    this.sketchPath = sketchPath
+    localStorage.setItem(sketchPathKey, JSON.stringify(this.sketchPath))
+
+    this.sketchVersion = await getSketchVersion(this.sketchPath, true)
+
+    this.emitUpdate()
+
+    return Promise.resolve()
+  }
 }

@@ -1,5 +1,6 @@
+import { remote } from 'electron'
 import * as React from 'react'
-import { LinkButton } from '../lib/link-button'
+import { Button } from '../lib/button'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { Dispatcher } from '../../lib/dispatcher'
 
@@ -22,17 +23,35 @@ export class SketchVersionOutdated extends React.Component<
           .found}.`
       : "Kactus needs Sketch to function properly and we couldn't find it."
     return (
-      <div id="update-available" className="active">
+      <div id="update-available" className="active sketch-outdated">
         <Octicon className="icon" symbol={OcticonSymbol.ruby} />
 
         <span>
-          {copy}{' '}
-          <LinkButton onClick={this.downloadNow}>
-            Download Sketch now
-          </LinkButton>
+          {copy}
+          <Button onClick={this.downloadNow}>Download Sketch</Button>
+          <Button onClick={this.locateSketch}>Locate Sketch</Button>
         </span>
       </div>
     )
+  }
+
+  private locateSketch = () => {
+    const sketchPath: string[] | null = remote.dialog.showOpenDialog({
+      buttonLabel: 'Select',
+      defaultPath: '/Applications/',
+      filters: [
+        {
+          name: 'App',
+          extensions: ['app'],
+        },
+      ],
+    })
+
+    if (!sketchPath || !sketchPath.length) {
+      return
+    }
+
+    this.props.dispatcher.changeSketchLocation(sketchPath[0])
   }
 
   private downloadNow = () => {
