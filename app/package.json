@@ -29,7 +29,7 @@
     "front-matter": "^2.1.2",
     "fs-extra": "^2.1.2",
     "kactus-cli": "^0.3.0",
-    "keytar": "^4.0.2",
+    "keytar": "^4.0.4",
     "moment": "^2.17.1",
     "primer-support": "^4.0.0",
     "react": "^15.6.1",

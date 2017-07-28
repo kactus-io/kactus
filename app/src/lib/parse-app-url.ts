@@ -52,6 +52,7 @@ export interface IImportSketchFileAction {
 
 export interface IUnknownAction {
   readonly name: 'unknown'
+  readonly url: string
 }
 
 export type URLActionType =
@@ -66,7 +67,7 @@ export type URLActionType =
 export function parseAppURL(url: string): URLActionType {
   const parsedURL = URL.parse(url, true)
   const hostname = parsedURL.hostname
-  const unknown: IUnknownAction = { name: 'unknown' }
+  const unknown: IUnknownAction = { name: 'unknown', url }
   if (!hostname) {
     return unknown
   }
