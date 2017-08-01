@@ -987,37 +987,40 @@ export class AppStore {
       skipParsingModifiedSketchFiles?: boolean
     }
   ): Promise<void> {
+    const oldFiles = this.getRepositoryState(repository).kactus.files
+
     const kactusStatus = await getKactusStatus(this.sketchPath, repository)
-
-    if (
-      (!options || !options.skipParsingModifiedSketchFiles) &&
-      kactusStatus.files
-    ) {
-      // parse the updated files
-      const oldFiles = this.getRepositoryState(repository).kactus.files
-      if (oldFiles) {
-        const modifiedFiles = kactusStatus.files.filter(f => {
-          const oldFile = oldFiles.find(of => of.id === f.id)
-          return (
-            f.lastModified &&
-            (!oldFile || oldFile.lastModified !== f.lastModified)
-          )
-        })
-
-        if (modifiedFiles && modifiedFiles.length) {
-          await Promise.all(
-            modifiedFiles.map(f => parseSketchFile(f.path, kactusStatus.config))
-          )
-        }
-      }
-    }
-
     this.updateKactusState(repository, state => {
       return {
         config: kactusStatus.config,
         files: kactusStatus.files,
       }
     })
+
+    this.emitUpdate()
+    if (
+      (!options || !options.skipParsingModifiedSketchFiles) &&
+      kactusStatus.files && oldFiles
+    ) {
+      // parse the updated files
+      const modifiedFiles = kactusStatus.files.filter(f => {
+        const oldFile = oldFiles.find(of => of.id === f.id)
+        return (
+          f.lastModified &&
+          (!oldFile || oldFile.lastModified !== f.lastModified)
+        )
+      })
+
+      if (modifiedFiles && modifiedFiles.length) {
+        await Promise.all(
+          modifiedFiles.map(f => {
+            return this.isParsing(repository, f, () => {
+              return parseSketchFile(f.path, kactusStatus.config).then(() => {})
+            })
+          })
+        )
+      }
+    }
 
     const gitStore = this.getGitStore(repository)
     const status = await gitStore.loadStatus()
