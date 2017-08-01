@@ -163,6 +163,23 @@ export class AccountsStore {
     })
 
     this.accounts = await Promise.all(accountsWithTokens)
+
+    const dedupAccounts = this.accounts.reduce(
+      (prev: { [id: string]: Account }, a) => {
+        if (
+          !prev[a.id] ||
+          (!prev[a.id].token && a.token) ||
+          (!prev[a.id].unlockedKactus && a.unlockedKactus)
+        ) {
+          prev[a.id] = a
+        }
+        return prev
+      },
+      {}
+    )
+
+    this.accounts = Object.keys(dedupAccounts).map(k => dedupAccounts[k])
+
     this.emitUpdate()
   }
 
