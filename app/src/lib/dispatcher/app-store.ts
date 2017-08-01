@@ -1000,7 +1000,8 @@ export class AppStore {
     this.emitUpdate()
     if (
       (!options || !options.skipParsingModifiedSketchFiles) &&
-      kactusStatus.files && oldFiles
+      kactusStatus.files &&
+      oldFiles
     ) {
       // parse the updated files
       const modifiedFiles = kactusStatus.files.filter(f => {
