@@ -982,102 +982,98 @@ export class AppStore {
 
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _loadStatus(
-    repo: Repository,
+    repository: Repository,
     options?: {
       clearPartialState?: boolean
       skipParsingModifiedSketchFiles?: boolean
     }
   ): Promise<void> {
-    return this.withAuthenticatingUser(repo, async repository => {
-      const kactusStatus = await getKactusStatus(this.sketchPath, repository)
+    const kactusStatus = await getKactusStatus(this.sketchPath, repository)
 
-      if (
-        (!options || !options.skipParsingModifiedSketchFiles) &&
-        kactusStatus.files
-      ) {
-        // parse the updated files
-        const oldFiles = this.getRepositoryState(repository).kactus.files
-        if (oldFiles) {
-          const modifiedFiles = kactusStatus.files.filter(f => {
-            const oldFile = oldFiles.find(of => of.id === f.id)
-            return (
-              f.lastModified &&
-              (!oldFile || oldFile.lastModified !== f.lastModified)
-            )
-          })
+    if (
+      (!options || !options.skipParsingModifiedSketchFiles) &&
+      kactusStatus.files
+    ) {
+      // parse the updated files
+      const oldFiles = this.getRepositoryState(repository).kactus.files
+      if (oldFiles) {
+        const modifiedFiles = kactusStatus.files.filter(f => {
+          const oldFile = oldFiles.find(of => of.id === f.id)
+          return (
+            f.lastModified &&
+            (!oldFile || oldFile.lastModified !== f.lastModified)
+          )
+        })
 
-          if (modifiedFiles && modifiedFiles.length) {
-            await Promise.all(
-              modifiedFiles.map(f =>
-                parseSketchFile(f.path, kactusStatus.config)
-              )
-            )
-          }
+        if (modifiedFiles && modifiedFiles.length) {
+          await Promise.all(
+            modifiedFiles.map(f => parseSketchFile(f.path, kactusStatus.config))
+          )
         }
       }
+    }
 
-      this.updateKactusState(repository, state => {
-        return {
-          config: kactusStatus.config,
-          files: kactusStatus.files,
-        }
-      })
-
-      const gitStore = this.getGitStore(repository)
-      const status = await gitStore.loadStatus()
-
-      if (!status) {
-        return
+    this.updateKactusState(repository, state => {
+      return {
+        config: kactusStatus.config,
+        files: kactusStatus.files,
       }
-
-      this.updateChangesState(repository, state => {
-        // Populate a map for all files in the current working directory state
-        const filesByID = new Map<string, WorkingDirectoryFileChange>()
-        state.workingDirectory.files.forEach(f => filesByID.set(f.id, f))
-
-        // Attempt to preserve the selection state for each file in the new
-        // working directory state by looking at the current files
-        const mergedFiles = status.workingDirectory.files
-          .map(file => {
-            const existingFile = filesByID.get(file.id)
-            if (existingFile) {
-              if (options && options.clearPartialState) {
-                if (
-                  existingFile.selection.getSelectionType() ===
-                  DiffSelectionType.Partial
-                ) {
-                  return file.withIncludeAll(false)
-                }
-              }
-
-              return file.withSelection(existingFile.selection)
-            } else {
-              return file
-            }
-          })
-          .sort((x, y) => caseInsensitiveCompare(x.path, y.path))
-
-        const includeAll = this.getIncludeAllState(mergedFiles)
-        const workingDirectory = new WorkingDirectoryStatus(
-          mergedFiles,
-          includeAll
-        )
-
-        const selectedFileID = state.selectedFileID
-
-        // The file selection could have changed if the previously selected file
-        // is no longer selectable (it was reverted or committed) but if it hasn't
-        // changed we can reuse the diff.
-        const sameSelectedFileExists = selectedFileID
-          ? workingDirectory.findFileWithID(selectedFileID)
-          : null
-        const diff = sameSelectedFileExists ? state.diff : null
-        return { workingDirectory, selectedFileID, diff }
-      })
-      this.emitUpdate()
-
-      this.updateChangesDiffForCurrentSelection(repository)
     })
+
+    const gitStore = this.getGitStore(repository)
+    const status = await gitStore.loadStatus()
+
+    if (!status) {
+      return
+    }
+
+    this.updateChangesState(repository, state => {
+      // Populate a map for all files in the current working directory state
+      const filesByID = new Map<string, WorkingDirectoryFileChange>()
+      state.workingDirectory.files.forEach(f => filesByID.set(f.id, f))
+
+      // Attempt to preserve the selection state for each file in the new
+      // working directory state by looking at the current files
+      const mergedFiles = status.workingDirectory.files
+        .map(file => {
+          const existingFile = filesByID.get(file.id)
+          if (existingFile) {
+            if (options && options.clearPartialState) {
+              if (
+                existingFile.selection.getSelectionType() ===
+                DiffSelectionType.Partial
+              ) {
+                return file.withIncludeAll(false)
+              }
+            }
+
+            return file.withSelection(existingFile.selection)
+          } else {
+            return file
+          }
+        })
+        .sort((x, y) => caseInsensitiveCompare(x.path, y.path))
+
+      const includeAll = this.getIncludeAllState(mergedFiles)
+      const workingDirectory = new WorkingDirectoryStatus(
+        mergedFiles,
+        includeAll
+      )
+
+      const selectedFileID = state.selectedFileID
+
+      // The file selection could have changed if the previously selected file
+      // is no longer selectable (it was reverted or committed) but if it hasn't
+      // changed we can reuse the diff.
+      const sameSelectedFileExists = selectedFileID
+        ? workingDirectory.findFileWithID(selectedFileID)
+        : null
+      const diff = sameSelectedFileExists ? state.diff : null
+      return { workingDirectory, selectedFileID, diff }
+    })
+    this.emitUpdate()
+
+    this.updateChangesDiffForCurrentSelection(repository)
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
@@ -1114,30 +1110,29 @@ export class AppStore {
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
-  public async _parseSketchFile(repo: Repository, path: string): Promise<void> {
-    return this.withAuthenticatingUser(repo, async repository => {
-      await this.isParsing(repository, async () => {
-        const kactusConfig = this.getRepositoryState(repository).kactus.config
-        await parseSketchFile(path, kactusConfig)
-        await this._loadStatus(repository, {
-          skipParsingModifiedSketchFiles: true,
-        })
+  public async _parseSketchFile(
+    repository: Repository,
+    path: string
+  ): Promise<void> {
+    await this.isParsing(repository, async () => {
+      const kactusConfig = this.getRepositoryState(repository).kactus.config
+      await parseSketchFile(path, kactusConfig)
+      await this._loadStatus(repository, {
+        skipParsingModifiedSketchFiles: true,
       })
     })
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _importSketchFile(
-    repo: Repository,
+    repository: Repository,
     path: string
   ): Promise<void> {
-    return this.withAuthenticatingUser(repo, async repository => {
-      await this.isImporting(repository, async () => {
-        const kactusConfig = this.getRepositoryState(repository).kactus.config
-        await importSketchFile(this.sketchPath, path, kactusConfig)
-        await this._loadStatus(repository, {
-          skipParsingModifiedSketchFiles: true,
-        })
+    await this.isImporting(repository, async () => {
+      const kactusConfig = this.getRepositoryState(repository).kactus.config
+      await importSketchFile(this.sketchPath, path, kactusConfig)
+      await this._loadStatus(repository, {
+        skipParsingModifiedSketchFiles: true,
       })
     })
   }
