@@ -1,6 +1,12 @@
 {
   "unreleased": [],
   "releases": {
+    "0.1.16": [
+      "[Fixed] Fix a bug when a page contained a `/`",
+      "[Improved] Add a separate loading indicator on each sketch file",
+      "[Improved] Show directly the sketch files when loading the status. That way we can show a loading indicator while parsing the files",
+      "[Fixed] Fix storing the sketch path when locating the app"
+    ],
     "0.1.15": [
       "[New] Added the Branch > Create Pull Request menu item",
       "[New] Added a button to locate sketch when not found #34",
