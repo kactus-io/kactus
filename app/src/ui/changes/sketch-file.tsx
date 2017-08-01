@@ -2,12 +2,13 @@ import * as React from 'react'
 
 import { PathText } from '../lib/path-text'
 import { showContextualMenu, IMenuItem } from '../main-process-proxy'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../../lib/kactus'
+import { Loading } from '../lib/loading'
 
 interface ISketchFileProps {
   readonly file: IKactusFile
-  readonly onImport: (path: string) => void
-  readonly onParse: (path: string) => void
+  readonly onImport: (file: IKactusFile) => void
+  readonly onParse: (file: IKactusFile) => void
   readonly onOpen: (file: IKactusFile) => void
   readonly availableWidth: number
 }
@@ -38,6 +39,8 @@ export class SketchFile extends React.Component<
             availableWidth={availablePathWidth}
           />
         </label>
+        {(this.props.file.isImporting || this.props.file.isParsing) &&
+          <Loading />}
       </div>
     )
   }
@@ -48,14 +51,14 @@ export class SketchFile extends React.Component<
     const items: IMenuItem[] = [
       {
         label: __DARWIN__ ? 'Export Sketch To JSON…' : 'Export to JSON…',
-        action: () => this.props.onParse(this.props.file.path),
+        action: () => this.props.onParse(this.props.file),
         enabled: this.props.file.imported,
       },
       {
         label: __DARWIN__
           ? 'Regenerate Sketch File From JSON…'
           : 'Regenerate Sketch File From JSON…',
-        action: () => this.props.onImport(this.props.file.path),
+        action: () => this.props.onImport(this.props.file),
         enabled: this.props.file.parsed,
       },
       { type: 'separator' },

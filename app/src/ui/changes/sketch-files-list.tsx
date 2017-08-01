@@ -3,7 +3,7 @@ import { SketchFile } from './sketch-file'
 import { List, ClickSource } from '../list'
 import { Octicon, OcticonSymbol } from '../octicons'
 
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../../lib/kactus'
 
 const RowHeight = 29
 
@@ -11,8 +11,8 @@ interface ISketchFilesListProps {
   readonly files: Array<IKactusFile>
   readonly selectedFileID: string | null
   readonly onFileSelectionChanged: (row: number) => void
-  readonly onParse: (path: string) => void
-  readonly onImport: (path: string) => void
+  readonly onParse: (file: IKactusFile) => void
+  readonly onImport: (file: IKactusFile) => void
   readonly onOpen: (file: IKactusFile) => void
   readonly onCreateSketchFile: () => void
 

@@ -70,8 +70,9 @@ import {
   importSketchFile,
   shouldShowPremiumUpsell,
   getKactusStoragePaths,
+  IKactusFile,
 } from '../kactus'
-import { IKactusFile, createNewFile } from 'kactus-cli'
+import { createNewFile } from 'kactus-cli'
 
 import {
   getAuthorIdentity,
@@ -363,11 +364,9 @@ export class AppStore {
         commitMessage: null,
       },
       kactus: {
-        files: new Array<IKactusFile>(),
+        files: new Array<IKactusFile & {}>(),
         selectedFileID: null,
         config: {},
-        isImporting: false,
-        isParsing: false,
         lastChecked: null,
       },
       selectedSection: RepositorySection.Changes,
@@ -1112,11 +1111,11 @@ export class AppStore {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _parseSketchFile(
     repository: Repository,
-    path: string
+    file: IKactusFile
   ): Promise<void> {
-    await this.isParsing(repository, async () => {
+    await this.isParsing(repository, file, async () => {
       const kactusConfig = this.getRepositoryState(repository).kactus.config
-      await parseSketchFile(path, kactusConfig)
+      await parseSketchFile(file.path, kactusConfig)
       await this._loadStatus(repository, {
         skipParsingModifiedSketchFiles: true,
       })
@@ -1126,11 +1125,11 @@ export class AppStore {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _importSketchFile(
     repository: Repository,
-    path: string
+    file: IKactusFile
   ): Promise<void> {
-    await this.isImporting(repository, async () => {
+    await this.isImporting(repository, file, async () => {
       const kactusConfig = this.getRepositoryState(repository).kactus.config
-      await importSketchFile(this.sketchPath, path, kactusConfig)
+      await importSketchFile(this.sketchPath, file.path, kactusConfig)
       await this._loadStatus(repository, {
         skipParsingModifiedSketchFiles: true,
       })
@@ -1140,7 +1139,7 @@ export class AppStore {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _ignoreSketchFile(
     repository: Repository,
-    path: string
+    file: IKactusFile
   ): Promise<void> {
     // TODO(mathieudutour) change and store config
     this.emitUpdate()
@@ -1875,46 +1874,64 @@ export class AppStore {
     }
   }
 
-  private async isParsing(
+  private async isParsingOrImporting(
     repository: Repository,
+    file: IKactusFile,
+    key: 'isParsing' | 'isImporting',
     fn: () => Promise<void>
   ): Promise<boolean | void> {
     const state = this.getRepositoryState(repository)
+    const currentFile = state.kactus.files.find(f => f.id === file.id)
     // ensure the user doesn't try and parse again
-    if (state.kactus.isParsing || state.kactus.isImporting) {
+    if (!currentFile || currentFile.isParsing || currentFile.isImporting) {
       return
     }
 
-    this.updateKactusState(repository, state => ({ isParsing: true }))
+    this.updateKactusState(repository, state => ({
+      files: state.files.map(f => {
+        if (f.id === file.id) {
+          return {
+            ...f,
+            [key]: true,
+          }
+        }
+        return f
+      }),
+    }))
     this.emitUpdate()
 
     try {
       return await fn()
     } finally {
-      this.updateKactusState(repository, state => ({ isParsing: false }))
+      this.updateKactusState(repository, state => ({
+        files: state.files.map(f => {
+          if (f.id === file.id) {
+            return {
+              ...f,
+              [key]: false,
+            }
+          }
+          return f
+        }),
+      }))
       this.emitUpdate()
     }
   }
 
-  private async isImporting(
+  private async isParsing(
     repository: Repository,
+    file: IKactusFile,
     fn: () => Promise<void>
   ): Promise<boolean | void> {
-    const state = this.getRepositoryState(repository)
-    // ensure the user doesn't try and import again
-    if (state.kactus.isImporting || state.kactus.isImporting) {
-      return
-    }
+    return this.isParsingOrImporting(repository, file, 'isParsing', fn)
+  }
 
-    this.updateKactusState(repository, state => ({ isImporting: true }))
-    this.emitUpdate()
-
-    try {
-      return await fn()
-    } finally {
-      this.updateKactusState(repository, state => ({ isImporting: false }))
-      this.emitUpdate()
-    }
+  private async isImporting(
+    repository: Repository,
+    file: IKactusFile,
+    fn: () => Promise<void>
+  ): Promise<boolean | void> {
+    return this.isParsingOrImporting(repository, file, 'isImporting', fn)
   }
 
   private async withPushPull(

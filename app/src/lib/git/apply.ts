@@ -4,7 +4,7 @@ import { DiffType } from '../../models/diff'
 import { Repository } from '../../models/repository'
 import { getWorkingDirectoryDiff } from './diff'
 import { formatPatch } from '../patch-formatter'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../kactus'
 
 export async function applyPatchToIndex(
   repository: Repository,

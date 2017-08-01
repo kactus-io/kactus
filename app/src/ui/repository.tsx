@@ -177,8 +177,6 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
       } else {
         return (
           <Changes
-            isImporting={kactusState.isImporting}
-            isParsing={kactusState.isParsing}
             repository={this.props.repository}
             dispatcher={this.props.dispatcher}
             imageDiffType={this.props.imageDiffType}

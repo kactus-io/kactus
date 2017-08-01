@@ -1,7 +1,8 @@
 import * as Path from 'path'
 import * as Fs from 'fs'
 import { remote } from 'electron'
-import { IKactusFile, importFolder } from 'kactus-cli'
+import { importFolder } from 'kactus-cli'
+import { IKactusFile } from '../kactus'
 
 import { getHEADsha } from './get-HEAD-sha'
 import { getBlobContents } from './show'

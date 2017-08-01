@@ -2,7 +2,7 @@
 
 import * as path from 'path'
 import { expect } from 'chai'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../../../src/lib/kactus'
 
 import { Repository } from '../../../src/models/repository'
 import {

@@ -6,7 +6,7 @@ import { DiffSelection, IDiff } from '../../models/diff'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { Repository } from '../../models/repository'
 import { Dispatcher } from '../../lib/dispatcher'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../../lib/kactus'
 
 // At some point we'll make index.tsx only be exports
 // see https://github.com/desktop/desktop/issues/383
@@ -19,8 +19,6 @@ interface IChangesProps {
   readonly diff: IDiff | null
   readonly dispatcher: Dispatcher
   readonly showAdvancedDiffs: boolean
-  readonly isImporting: boolean
-  readonly isParsing: boolean
   readonly imageDiffType: number
 }
 
@@ -34,12 +32,12 @@ export class Changes extends React.Component<IChangesProps, {}> {
     )
   }
 
-  private onSketchParse = (path: string) => {
-    this.props.dispatcher.parseSketchFile(this.props.repository, path)
+  private onSketchParse = (file: IKactusFile) => {
+    this.props.dispatcher.parseSketchFile(this.props.repository, file)
   }
 
-  private onSketchImport = (path: string) => {
-    this.props.dispatcher.importSketchFile(this.props.repository, path)
+  private onSketchImport = (file: IKactusFile) => {
+    this.props.dispatcher.importSketchFile(this.props.repository, file)
   }
 
   private onOpenSketchFile = (file: IKactusFile) => {
@@ -54,8 +52,6 @@ export class Changes extends React.Component<IChangesProps, {}> {
     if (sketchFile) {
       return (
         <SketchFileView
-          isParsing={this.props.isParsing}
-          isImporting={this.props.isImporting}
           sketchFile={sketchFile}
           onExport={this.onSketchParse}
           onImport={this.onSketchImport}

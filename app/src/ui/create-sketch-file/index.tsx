@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../../lib/kactus'
 import { Repository } from '../../models/repository'
 import { Dispatcher } from '../../lib/dispatcher'
 import { TextBox } from '../lib/text-box'

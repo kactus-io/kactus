@@ -7,7 +7,11 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "skpm build"
   },
-  "keywords": ["kactus", "sketch", "plugin"],
+  "keywords": [
+    "kactus",
+    "sketch",
+    "plugin"
+  ],
   "author": {
     "name": "Mathieu Dutour",
     "email": "mathieu@dutour.me",
@@ -19,6 +23,6 @@
   },
   "manifest": "src/manifest.json",
   "devDependencies": {
-    "skpm": "^0.9.15"
+    "skpm": "^0.10.5"
   }
 }

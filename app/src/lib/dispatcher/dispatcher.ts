@@ -2,7 +2,6 @@ import * as Path from 'path'
 
 import { remote } from 'electron'
 import { Disposable } from 'event-kit'
-import { IKactusFile } from 'kactus-cli'
 
 import { Account } from '../../models/account'
 import { Repository } from '../../models/repository'
@@ -40,7 +39,7 @@ import {
   resolveOAuthRequest,
   rejectOAuthRequest,
 } from '../../lib/oauth'
-import { saveKactusConfig, IFullKactusConfig } from '../kactus'
+import { saveKactusConfig, IFullKactusConfig, IKactusFile } from '../kactus'
 import { openSketch } from '../sketch'
 import { installCLI } from '../../ui/lib/install-cli'
 
@@ -167,18 +166,27 @@ export class Dispatcher {
   }
 
   /** Parse a Sketch File. */
-  public parseSketchFile(repository: Repository, path: string): Promise<void> {
-    return this.appStore._parseSketchFile(repository, path)
+  public parseSketchFile(
+    repository: Repository,
+    file: IKactusFile
+  ): Promise<void> {
+    return this.appStore._parseSketchFile(repository, file)
   }
 
   /** Import a Sketch File. */
-  public importSketchFile(repository: Repository, path: string): Promise<void> {
-    return this.appStore._importSketchFile(repository, path)
+  public importSketchFile(
+    repository: Repository,
+    file: IKactusFile
+  ): Promise<void> {
+    return this.appStore._importSketchFile(repository, file)
   }
 
   /** Ignore a Sketch File. */
-  public ignoreSketchFile(repository: Repository, path: string): Promise<void> {
-    return this.appStore._ignoreSketchFile(repository, path)
+  public ignoreSketchFile(
+    repository: Repository,
+    file: IKactusFile
+  ): Promise<void> {
+    return this.appStore._ignoreSketchFile(repository, file)
   }
 
   /** Change the currently selected file in SketchFiles. */
@@ -922,9 +930,8 @@ export class Dispatcher {
                 existingRepository,
                 existingFile
               )
-              return this.parseSketchFile(existingRepository, existingFile.path)
+              return this.parseSketchFile(existingRepository, existingFile)
             }
-            return this.parseSketchFile(existingRepository, action.path)
           }
         } else {
           return this.showPopup({
@@ -959,12 +966,8 @@ export class Dispatcher {
                 existingRepository,
                 existingFile
               )
-              return this.importSketchFile(
-                existingRepository,
-                existingFile.path
-              )
+              return this.importSketchFile(existingRepository, existingFile)
             }
-            return this.importSketchFile(existingRepository, action.path)
           }
         } else {
           return this.showPopup({

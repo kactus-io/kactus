@@ -3,7 +3,7 @@ import * as Path from 'path'
 import { exec } from 'child_process'
 import {
   find,
-  IKactusFile,
+  IKactusFile as _IKactusFile,
   IKactusConfig,
   parseFile,
   importFolder,
@@ -15,6 +15,10 @@ import { getDotComAPIEndpoint } from './api'
 import { sketchtoolPath, runPluginCommand, getSketchVersion } from './sketch'
 
 export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string }
+export type IKactusFile = _IKactusFile & {
+  isParsing: boolean
+  isImporting: boolean
+}
 
 interface IKactusStatusResult {
   readonly config: IFullKactusConfig
@@ -44,6 +48,8 @@ export async function getKactusStatus(
       return {
         ...f,
         id: f.path.replace(repository.path, '').replace(/^\//, ''),
+        isParsing: false,
+        isImporting: false,
       }
     }),
     lastChecked: Date.now(),

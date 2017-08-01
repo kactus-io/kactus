@@ -1,4 +1,4 @@
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../lib/kactus'
 import { assertNever } from '../lib/fatal-error'
 
 /**

@@ -2,7 +2,7 @@ import { git } from './core'
 import { Repository } from '../../models/repository'
 import { DiffSelectionType } from '../../models/diff'
 import { applyPatchToIndex } from './apply'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../kactus'
 import { AppFileStatus, WorkingDirectoryFileChange } from '../../models/status'
 
 interface IUpdateIndexOptions {

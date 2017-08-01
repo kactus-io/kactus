@@ -3,7 +3,7 @@ import { stageFiles } from './update-index'
 import { Repository } from '../../models/repository'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { unstageAll } from './reset'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../kactus'
 
 export async function createCommit(
   repository: Repository,
