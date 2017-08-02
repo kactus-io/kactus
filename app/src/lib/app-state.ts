@@ -17,6 +17,7 @@ import { IMenu } from '../models/app-menu'
 import { IRemote } from '../models/remote'
 import { WindowState } from './window-state'
 import { IFullKactusConfig, IKactusFile } from './kactus'
+import { RetryAction } from './retry-actions'
 
 export { ICommitMessage }
 export { IAheadBehind }
@@ -176,6 +177,7 @@ export enum PopupType {
   PremiumUpsell,
   PushBranchCommits,
   CLIInstalled,
+  GenericGitAuthentication,
 }
 
 export type Popup =
@@ -207,7 +209,11 @@ export type Popup =
   | { type: PopupType.RemoveRepository; repository: Repository }
   | { type: PopupType.TermsAndConditions }
   | { type: PopupType.CreateSketchFile; repository: Repository }
-  | { type: PopupType.PremiumUpsell; enterprise: boolean }
+  | {
+      type: PopupType.PremiumUpsell
+      enterprise: boolean
+      retryAction?: RetryAction
+    }
   | {
       type: PopupType.PushBranchCommits
       repository: Repository
@@ -215,6 +221,11 @@ export type Popup =
       unPushedCommits?: number
     }
   | { type: PopupType.CLIInstalled }
+  | {
+      type: PopupType.GenericGitAuthentication
+      hostname: string
+      retryAction: RetryAction
+    }
 
 export enum FoldoutType {
   Repository,

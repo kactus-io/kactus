@@ -27,6 +27,7 @@ interface IRepositoryProps {
   readonly gitHubUserStore: GitHubUserStore
   readonly showAdvancedDiffs: boolean
   readonly imageDiffType: number
+  readonly onViewCommitOnGitHub: (SHA: string) => void
 }
 
 const enum Tab {
@@ -200,6 +201,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
           localCommitSHAs={this.props.state.localCommitSHAs}
           commitSummaryWidth={this.props.commitSummaryWidth}
           gitHubUsers={this.props.state.gitHubUsers}
+          onViewCommitOnGitHub={this.props.onViewCommitOnGitHub}
         />
       )
     } else {

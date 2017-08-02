@@ -98,6 +98,9 @@ import { AccountsStore } from './accounts-store'
 import { RepositoriesStore } from './repositories-store'
 import { validatedRepositoryPath } from './validated-repository-path'
 import { getSketchVersion, SKETCH_PATH } from '../sketch'
+import { IGitAccount } from '../git/authentication'
+import { getGenericHostname, getGenericUsername } from '../generic-git-auth'
+import { RetryActionType, RetryAction } from '../retry-actions'
 
 const LastSelectedRepositoryIDKey = 'last-selected-repository-id'
 
@@ -1745,15 +1748,23 @@ export class AppStore {
     }
   }
 
-  public async _push(repository: Repository): Promise<void> {
-    return this.withAuthenticatingUser(repository, (repository, account) => {
-      return this.performPush(repository, account)
-    })
+  public async _push(repo: Repository): Promise<void> {
+    const retryAction: RetryAction = {
+      type: RetryActionType.Push,
+      repository: repo,
+    }
+    return this.withAuthenticatingUser(
+      repo,
+      (repository, account) => {
+        return this.performPush(repository, account)
+      },
+      retryAction
+    )
   }
 
   private async performPush(
     repository: Repository,
-    account: Account | null
+    account: IGitAccount | null
   ): Promise<void> {
     const gitStore = this.getGitStore(repository)
     const remote = gitStore.remote
@@ -1801,56 +1812,63 @@ export class AppStore {
         pushWeight *= scale
         fetchWeight *= scale
 
-        await gitStore.performFailableOperation(async () => {
-          await pushRepo(
-            repository,
-            account,
-            remote.name,
-            branch.name,
-            branch.upstreamWithoutRemote,
-            progress => {
-              this.updatePushPullFetchProgress(repository, {
-                ...progress,
-                title: pushTitle,
-                value: pushWeight * progress.value,
-              })
-            }
-          )
+        const retryAction: RetryAction = {
+          type: RetryActionType.Push,
+          repository,
+        }
+        await gitStore.performFailableOperation(
+          async () => {
+            await pushRepo(
+              repository,
+              account,
+              remote.name,
+              branch.name,
+              branch.upstreamWithoutRemote,
+              progress => {
+                this.updatePushPullFetchProgress(repository, {
+                  ...progress,
+                  title: pushTitle,
+                  value: pushWeight * progress.value,
+                })
+              }
+            )
 
-          await gitStore.fetchRemotes(
-            account,
-            [remote],
-            false,
-            fetchProgress => {
-              this.updatePushPullFetchProgress(repository, {
-                ...fetchProgress,
-                value: pushWeight + fetchProgress.value * fetchWeight,
-              })
-            }
-          )
+            await gitStore.fetchRemotes(
+              account,
+              [remote],
+              false,
+              fetchProgress => {
+                this.updatePushPullFetchProgress(repository, {
+                  ...fetchProgress,
+                  value: pushWeight + fetchProgress.value * fetchWeight,
+                })
+              }
+            )
 
-          const refreshTitle = __DARWIN__
-            ? 'Refreshing Repository'
-            : 'Refreshing repository'
-          const refreshStartProgress = pushWeight + fetchWeight
+            const refreshTitle = __DARWIN__
+              ? 'Refreshing Repository'
+              : 'Refreshing repository'
+            const refreshStartProgress = pushWeight + fetchWeight
 
-          this.updatePushPullFetchProgress(repository, {
-            kind: 'generic',
-            title: refreshTitle,
-            value: refreshStartProgress,
-          })
+            this.updatePushPullFetchProgress(repository, {
+              kind: 'generic',
+              title: refreshTitle,
+              value: refreshStartProgress,
+            })
 
-          await this._refreshRepository(repository)
+            await this._refreshRepository(repository)
 
-          this.updatePushPullFetchProgress(repository, {
-            kind: 'generic',
-            title: refreshTitle,
-            description: 'Fast-forwarding branches',
-            value: refreshStartProgress + refreshWeight * 0.5,
-          })
+            this.updatePushPullFetchProgress(repository, {
+              kind: 'generic',
+              title: refreshTitle,
+              description: 'Fast-forwarding branches',
+              value: refreshStartProgress + refreshWeight * 0.5,
+            })
 
-          await this.fastForwardBranches(repository)
-        })
+            await this.fastForwardBranches(repository)
+          },
+          { retryAction }
+        )
 
         this.updatePushPullFetchProgress(repository, null)
       }
@@ -1963,16 +1981,24 @@ export class AppStore {
     }
   }
 
-  public async _pull(repository: Repository): Promise<void> {
-    return this.withAuthenticatingUser(repository, (repository, account) => {
-      return this.performPull(repository, account)
-    })
+  public async _pull(repo: Repository): Promise<void> {
+    const retryAction: RetryAction = {
+      type: RetryActionType.Pull,
+      repository: repo,
+    }
+    return this.withAuthenticatingUser(
+      repo,
+      (repository, account) => {
+        return this.performPull(repository, account)
+      },
+      retryAction
+    )
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
   private async performPull(
     repository: Repository,
-    account: Account | null
+    account: IGitAccount | null
   ): Promise<void> {
     return this.withPushPull(repository, async () => {
       const gitStore = this.getGitStore(repository)
@@ -2017,13 +2043,19 @@ export class AppStore {
           pullWeight *= scale
           fetchWeight *= scale
 
-          await gitStore.performFailableOperation(() =>
-            pullRepo(repository, account, remote.name, progress => {
-              this.updatePushPullFetchProgress(repository, {
-                ...progress,
-                value: progress.value * pullWeight,
-              })
-            })
+          const retryAction: RetryAction = {
+            type: RetryActionType.Pull,
+            repository,
+          }
+          await gitStore.performFailableOperation(
+            () =>
+              pullRepo(repository, account, remote.name, progress => {
+                this.updatePushPullFetchProgress(repository, {
+                  ...progress,
+                  value: progress.value * pullWeight,
+                })
+              }),
+            { retryAction }
           )
 
           const refreshStartProgress = pullWeight + fetchWeight
@@ -2137,7 +2169,11 @@ export class AppStore {
     account: Account,
     org: IAPIUser | null
   ): Promise<Repository> {
-    const premiumType = shouldShowPremiumUpsell(repository, account)
+    const premiumType = shouldShowPremiumUpsell(
+      repository,
+      account,
+      this.accounts
+    )
 
     if (premiumType) {
       await this._showPopup({
@@ -2170,13 +2206,38 @@ export class AppStore {
     return this.refreshGitHubRepositoryInfo(repository)
   }
 
+  private getAccountForRemoteURL(remote: string): IGitAccount | null {
+    const gitHubRepository = matchGitHubRepository(this.accounts, remote)
+    if (gitHubRepository) {
+      const account = getAccountForEndpoint(
+        this.accounts,
+        gitHubRepository.endpoint
+      )
+      if (account) {
+        return account
+      }
+    }
+
+    const hostname = getGenericHostname(remote)
+    const username = getGenericUsername(hostname)
+    if (username != null) {
+      return { login: username, endpoint: hostname }
+    }
+
+    return null
+  }
+
   /** This shouldn't be called directly. See `Dispatcher`. */
   public _clone(
     url: string,
     path: string,
-    options: { account: Account | null; branch?: string }
+    options?: { branch?: string }
   ): { promise: Promise<boolean>; repository: CloningRepository } {
-    const promise = this.cloningRepositoriesStore.clone(url, path, options)
+    const account = this.getAccountForRemoteURL(url)
+    const promise = this.cloningRepositoriesStore.clone(url, path, {
+      ...options,
+      account,
+    })
     const repository = this.cloningRepositoriesStore.repositories.find(
       r => r.url === url && r.path === path
     )!
@@ -2261,7 +2322,7 @@ export class AppStore {
 
   private async performFetch(
     repository: Repository,
-    account: Account | null,
+    account: IGitAccount | null,
     backgroundTask: boolean
   ): Promise<void> {
     await this.withPushPull(repository, async () => {
@@ -2715,12 +2776,8 @@ export class AppStore {
     return this.repositoriesStore.updateGitHubRepository(refreshedRepository)
   }
 
-  public async _cloneAgain(
-    url: string,
-    path: string,
-    account: Account | null
-  ): Promise<void> {
-    const { promise, repository } = this._clone(url, path, { account })
+  public async _cloneAgain(url: string, path: string): Promise<void> {
+    const { promise, repository } = this._clone(url, path)
     await this._selectRepository(repository)
     const success = await promise
     if (!success) {
@@ -2741,10 +2798,14 @@ export class AppStore {
 
   private async withAuthenticatingUser<T>(
     repository: Repository,
-    fn: (repository: Repository, account: Account | null) => Promise<T>
-  ): Promise<T> {
+    fn: (repository: Repository, account: IGitAccount | null) => Promise<T>,
+    retryAction?: RetryAction
+  ): Promise<T | undefined> {
     let updatedRepository = repository
-    let account = this.getAccountForRepository(updatedRepository)
+    let account: IGitAccount | null = this.getAccountForRepository(
+      updatedRepository
+    )
+
     // If we don't have a user association, it might be because we haven't yet
     // tried to associate the repository with a GitHub repository, or that
     // association is out of date. So try again before we bail on providing an
@@ -2754,21 +2815,34 @@ export class AppStore {
       account = this.getAccountForRepository(updatedRepository)
     }
 
-    const premiumType = shouldShowPremiumUpsell(updatedRepository, account)
+    if (!account) {
+      const gitStore = this.getGitStore(repository)
+      const remote = gitStore.remote
+      if (remote) {
+        const hostname = getGenericHostname(remote.url)
+        const username = getGenericUsername(hostname)
+        if (username != null) {
+          account = { login: username, endpoint: hostname }
+        }
+      }
+    }
+
+    const premiumType = shouldShowPremiumUpsell(
+      updatedRepository,
+      account,
+      this.accounts
+    )
 
     if (premiumType) {
       await this._showPopup({
         type: PopupType.PremiumUpsell,
         enterprise: premiumType.enterprise,
+        retryAction,
       })
-      throw new Error('Not authorized')
+      return
     }
 
     return fn(updatedRepository, account)
-  }
-
-  public async _refreshAccounts() {
-    return this.accountsStore.refresh()
   }
 
   public async _changeSketchLocation(sketchPath: string): Promise<void> {
@@ -2780,5 +2854,44 @@ export class AppStore {
     this.emitUpdate()
 
     return Promise.resolve()
+  }
+
+  public async _refreshAccounts() {
+    return this.accountsStore.refresh()
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _revertCommit(
+    repository: Repository,
+    commit: Commit
+  ): Promise<void> {
+    const gitStore = this.getGitStore(repository)
+
+    gitStore.revertCommit(repository, commit)
+  }
+
+  public async promptForGenericGitAuthentication(
+    repository: Repository | CloningRepository,
+    retryAction: RetryAction
+  ): Promise<void> {
+    let url
+    if (repository instanceof Repository) {
+      const gitStore = this.getGitStore(repository)
+      const remote = gitStore.remote
+      if (!remote) {
+        return
+      }
+
+      url = remote.url
+    } else {
+      url = repository.url
+    }
+
+    const hostname = getGenericHostname(url)
+    return this._showPopup({
+      type: PopupType.GenericGitAuthentication,
+      hostname,
+      retryAction,
+    })
   }
 }

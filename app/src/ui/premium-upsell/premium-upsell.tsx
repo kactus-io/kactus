@@ -7,6 +7,7 @@ import { Checkout } from './stripe-checkout'
 import { Account } from '../../models/account'
 import { ThrottledScheduler } from '../lib/throttled-scheduler'
 import { fetchCoupon, IAPICoupon } from '../../lib/api'
+import { RetryAction } from '../../lib/retry-actions'
 import { shell } from '../../lib/dispatcher/app-shell'
 import { CouponInput } from './coupon-input'
 import { LinkButton } from '../lib/link-button'
@@ -18,6 +19,7 @@ interface IPremiumUpsellProps {
   readonly user: Account
   readonly isUnlockingKactusFullAccess: boolean
   readonly enterprise: boolean
+  readonly retryAction?: RetryAction
 }
 
 interface IPremiumUpsellState {
@@ -74,12 +76,16 @@ export class PremiumUpsell extends React.Component<
     })
   }
 
-  private onToken = (token: IToken) => {
-    this.props.dispatcher.unlockKactus(this.props.user, token.id, {
+  private onToken = async (token: IToken) => {
+    await this.props.dispatcher.unlockKactus(this.props.user, token.id, {
       email: token.email,
       enterprise: this.props.enterprise,
       coupon: this.state.coupon !== '' ? this.state.coupon : undefined,
     })
+
+    if (this.props.retryAction) {
+      this.props.dispatcher.performRetry(this.props.retryAction)
+    }
   }
 
   private onCouponChange = (coupon: string) => {
@@ -158,6 +164,11 @@ export class PremiumUpsell extends React.Component<
             </li>
             <li>
               <strong>Support single sign-on and on-premises deployment</strong>
+            </li>
+            <li>
+              <strong>
+                Support any git server platform (BitBucket, Gitlab, etc.)
+              </strong>
             </li>
           </ul>
           <p>

@@ -26,7 +26,7 @@ import { ICommitMessage } from './git-store'
 import { executeMenuItem } from '../../ui/main-process-proxy'
 import { AppMenu, ExecutableMenuItem } from '../../models/app-menu'
 import { ILaunchStats } from '../stats'
-import { fatalError } from '../fatal-error'
+import { fatalError, assertNever } from '../fatal-error'
 import { isGitOnPath } from '../open-shell'
 import { shell } from './app-shell'
 import {
@@ -42,6 +42,8 @@ import {
 import { saveKactusConfig, IFullKactusConfig, IKactusFile } from '../kactus'
 import { openSketch } from '../sketch'
 import { installCLI } from '../../ui/lib/install-cli'
+import * as GenericGitAuth from '../generic-git-auth'
+import { RetryAction, RetryActionType } from '../retry-actions'
 
 /**
  * An error handler function.
@@ -377,19 +379,15 @@ export class Dispatcher {
    * Clone a missing repository to the previous path, and update it's
    * state in the repository list if the clone completes without error.
    */
-  public cloneAgain(
-    url: string,
-    path: string,
-    account: Account | null
-  ): Promise<void> {
-    return this.appStore._cloneAgain(url, path, account)
+  public cloneAgain(url: string, path: string): Promise<void> {
+    return this.appStore._cloneAgain(url, path)
   }
 
   /** Clone the repository to the path. */
   public async clone(
     url: string,
     path: string,
-    options: { account: Account | null; branch?: string }
+    options?: { branch?: string }
   ): Promise<Repository | null> {
     return this.appStore._completeOpenInDesktop(async () => {
       const { promise, repository } = this.appStore._clone(url, path, options)
@@ -436,6 +434,11 @@ export class Dispatcher {
   /** Undo the given commit. */
   public undoCommit(repository: Repository, commit: Commit): Promise<void> {
     return this.appStore._undoCommit(repository, commit)
+  }
+
+  /** Revert the commit with the given SHA */
+  public revertCommit(repositoy: Repository, commit: Commit): Promise<void> {
+    return this.appStore._revertCommit(repositoy, commit)
   }
 
   /**
@@ -1125,5 +1128,44 @@ export class Dispatcher {
 
   public async changeSketchLocation(sketchPath: string) {
     return this.appStore._changeSketchLocation(sketchPath)
+  }
+
+  /** Prompt the user to authenticate for a generic git server. */
+  public promptForGenericGitAuthentication(
+    repository: Repository | CloningRepository,
+    retry: RetryAction
+  ): Promise<void> {
+    return this.appStore.promptForGenericGitAuthentication(repository, retry)
+  }
+
+  /** Save the generic git credentials. */
+  public async saveGenericGitCredentials(
+    hostname: string,
+    username: string,
+    password: string
+  ): Promise<void> {
+    GenericGitAuth.setGenericUsername(hostname, username)
+    await GenericGitAuth.setGenericPassword(hostname, username, password)
+  }
+
+  /** Perform the given retry action. */
+  public async performRetry(retryAction: RetryAction): Promise<void> {
+    switch (retryAction.type) {
+      case RetryActionType.Push:
+        return this.push(retryAction.repository)
+
+      case RetryActionType.Pull:
+        return this.pull(retryAction.repository)
+
+      case RetryActionType.Fetch:
+        return this.fetch(retryAction.repository)
+
+      case RetryActionType.Clone:
+        await this.clone(retryAction.url, retryAction.path, retryAction.options)
+        break
+
+      default:
+        return assertNever(retryAction, `Unknown retry action: ${retryAction}`)
+    }
   }
 }

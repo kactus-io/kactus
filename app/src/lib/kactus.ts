@@ -11,6 +11,7 @@ import {
 import { getUserDataPath } from '../ui/lib/app-proxy'
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
+import { IGitAccount } from './git/authentication'
 import { getDotComAPIEndpoint } from './api'
 import { sketchtoolPath, runPluginCommand, getSketchVersion } from './sketch'
 
@@ -185,24 +186,48 @@ export async function saveKactusConfig(
 
 export function shouldShowPremiumUpsell(
   repository: Repository,
-  account: Account | null
+  account: IGitAccount | null,
+  accounts: ReadonlyArray<Account>
 ) {
-  if (
-    repository.gitHubRepository &&
-    account &&
-    account.endpoint !== getDotComAPIEndpoint() &&
-    !account.unlockedKactus
-  ) {
-    return { enterprise: true }
+  if (!account) {
+    return false
   }
 
-  if (
-    repository.gitHubRepository &&
-    repository.gitHubRepository.private &&
-    account &&
-    !account.unlockedKactus
+  let potentialPremiumAccount: Account | undefined
+
+  if (account instanceof Account) {
+    potentialPremiumAccount = account
+  } else {
+    potentialPremiumAccount =
+      accounts.find(
+        a => a.unlockedKactus && account.endpoint !== getDotComAPIEndpoint()
+      ) || accounts.find(a => a.unlockedKactus)
+  }
+
+  if (repository.gitHubRepository) {
+    if (!potentialPremiumAccount) {
+      // that shouldn't happen, when a repo is from github,
+      // there is a account associated with it.
+      // so bail out
+      return false
+    }
+    if (
+      potentialPremiumAccount.endpoint !== getDotComAPIEndpoint() &&
+      !potentialPremiumAccount.unlockedKactus
+    ) {
+      return { enterprise: true }
+    }
+    if (
+      repository.gitHubRepository.private &&
+      !potentialPremiumAccount.unlockedKactus
+    ) {
+      return { enterprise: false }
+    }
+  } else if (
+    !potentialPremiumAccount ||
+    !potentialPremiumAccount.unlockedKactus
   ) {
-    return { enterprise: false }
+    return { enterprise: true }
   }
 
   return false
