@@ -329,6 +329,9 @@ export interface IRepositoryState {
    * null if no such operation is in flight.
    */
   readonly pushPullFetchProgress: Progress | null
+
+  /** Is loading the status */
+  readonly isLoadingStatus: boolean
 }
 
 export type Progress =

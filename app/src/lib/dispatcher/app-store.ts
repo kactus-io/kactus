@@ -405,6 +405,7 @@ export class AppStore {
       lastFetched: null,
       checkoutProgress: null,
       pushPullFetchProgress: null,
+      isLoadingStatus: false,
     }
   }
 
@@ -1005,6 +1006,14 @@ export class AppStore {
       skipParsingModifiedSketchFiles?: boolean
     }
   ): Promise<void> {
+    this.updateRepositoryState(repository, state => {
+      return {
+        isLoadingStatus: true,
+      }
+    })
+
+    this.emitUpdate()
+
     const oldFiles = this.getRepositoryState(repository).kactus.files
 
     const kactusStatus = await getKactusStatus(this.sketchPath, repository)
@@ -1045,6 +1054,12 @@ export class AppStore {
     const status = await gitStore.loadStatus()
 
     if (!status) {
+      this.updateRepositoryState(repository, state => {
+        return {
+          isLoadingStatus: false,
+        }
+      })
+      this.emitUpdate()
       return
     }
 
@@ -1091,6 +1106,12 @@ export class AppStore {
         : null
       const diff = sameSelectedFileExists ? state.diff : null
       return { workingDirectory, selectedFileID, diff }
+    })
+
+    this.updateRepositoryState(repository, state => {
+      return {
+        isLoadingStatus: false,
+      }
     })
     this.emitUpdate()
 

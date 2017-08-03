@@ -51,6 +51,7 @@ interface IChangesSidebarProps {
   readonly isCommitting: boolean
   readonly isPushPullFetchInProgress: boolean
   readonly gitHubUserStore: GitHubUserStore
+  readonly isLoadingStatus: boolean
 }
 
 export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
@@ -298,6 +299,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           onCreateSketchFile={this.onCreateSketchFile}
         />
         <ChangesList
+          isLoadingStatus={this.props.isLoadingStatus}
           dispatcher={this.props.dispatcher}
           repository={this.props.repository}
           workingDirectory={changesState.workingDirectory}

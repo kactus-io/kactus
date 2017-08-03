@@ -4,6 +4,7 @@ import * as classNames from 'classnames'
 import { Grid, AutoSizer } from 'react-virtualized'
 import { shallowEquals } from '../lib/equality'
 import { createUniqueId, releaseUniqueId } from './lib/id-pool'
+import { Loading } from './lib/loading'
 
 /**
  * Describe the first argument given to the cellRenderer,
@@ -167,6 +168,8 @@ interface IListProps {
   readonly focusOnHover?: boolean
 
   readonly ariaMode?: 'list' | 'menu'
+
+  readonly loading?: boolean
 }
 
 interface IListState {
@@ -529,6 +532,15 @@ export class List extends React.Component<IListProps, IListState> {
         aria-activedescendant={activeDescendant}
       >
         {content}
+        {this.props.loading && this.renderLoading()}
+      </div>
+    )
+  }
+
+  private renderLoading() {
+    return (
+      <div className="list-loading">
+        <Loading />
       </div>
     )
   }

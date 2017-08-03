@@ -78,6 +78,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
     return (
       <ChangesSidebar
         repository={this.props.repository}
+        isLoadingStatus={this.props.state.isLoadingStatus}
         kactus={this.props.state.kactus}
         dispatcher={this.props.dispatcher}
         changes={this.props.state.changesState}

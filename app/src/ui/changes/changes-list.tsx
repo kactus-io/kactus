@@ -64,6 +64,8 @@ interface IChangesListProps {
 
   /** Called when the given pattern should be ignored. */
   readonly onIgnore: (pattern: string) => void
+
+  readonly isLoadingStatus: boolean
 }
 
 export class ChangesList extends React.Component<IChangesListProps, {}> {
@@ -168,6 +170,7 @@ export class ChangesList extends React.Component<IChangesListProps, {}> {
           onSelectionChanged={this.props.onFileSelectionChanged}
           invalidationProps={this.props.workingDirectory}
           onRowClick={this.props.onRowClick}
+          loading={this.props.isLoadingStatus}
         />
 
         <CommitMessage

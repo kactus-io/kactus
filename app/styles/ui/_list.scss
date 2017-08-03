@@ -1,4 +1,5 @@
 .list {
+  position: relative;
   flex-grow: 1;
   height: 100%;
 
@@ -15,6 +16,21 @@
 
   .ReactVirtualized__Grid {
     background: var(--background-color);
+  }
+
+  .list-loading {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    background: rgba(255, 255, 255, 0.8);
+
+    .spin {
+      margin-left: calc(50% - 8px);
+      margin-top: 30px;
+    }
   }
 }
 
@@ -33,10 +49,14 @@
     // with the height of the content in the main container.
 
     // Hide the actual scroll bar
-    .ReactVirtualized__Grid::-webkit-scrollbar { display: none; }
+    .ReactVirtualized__Grid::-webkit-scrollbar {
+      display: none;
+    }
 
     // Hide the scroll bar by default
-    .fake-scroll { display: none; }
+    .fake-scroll {
+      display: none;
+    }
 
     &:hover {
       .fake-scroll {
@@ -59,7 +79,6 @@
 }
 
 .list-item {
-
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -83,5 +102,7 @@
     }
   }
 
-  &:focus { outline: none; }
+  &:focus {
+    outline: none;
+  }
 }
