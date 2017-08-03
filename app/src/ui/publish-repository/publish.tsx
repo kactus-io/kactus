@@ -13,6 +13,7 @@ import { TabBar } from '../tab-bar'
 import { getDotComAPIEndpoint } from '../../lib/api'
 import { assertNever, fatalError } from '../../lib/fatal-error'
 import { CallToAction } from '../lib/call-to-action'
+import { RetryActionType } from '../../lib/retry-actions'
 
 enum PublishTab {
   DotCom = 0,
@@ -188,11 +189,17 @@ export class Publish extends React.Component<IPublishProps, IPublishState> {
   }
 
   private signInDotCom = () => {
-    this.props.dispatcher.showDotComSignInDialog()
+    this.props.dispatcher.showDotComSignInDialog({
+      type: RetryActionType.Publish,
+      repository: this.props.repository,
+    })
   }
 
   private signInEnterprise = () => {
-    this.props.dispatcher.showEnterpriseSignInDialog()
+    this.props.dispatcher.showEnterpriseSignInDialog({
+      type: RetryActionType.Publish,
+      repository: this.props.repository,
+    })
   }
 
   private publishRepository = async () => {

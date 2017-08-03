@@ -265,7 +265,13 @@ export class AppStore {
 
     this.cloningRepositoriesStore.onDidError(e => this.emitError(e))
 
-    this.signInStore.onDidAuthenticate(account => this._addAccount(account))
+    this.signInStore.onDidAuthenticate(async ({ account, retryAction }) => {
+      await this._addAccount(account)
+
+      if (retryAction) {
+        setTimeout(() => this.emitRetryAction(retryAction), 100)
+      }
+    })
     this.signInStore.onDidUpdate(() => this.emitUpdate())
     this.signInStore.onDidError(error => this.emitError(error))
 
@@ -328,6 +334,15 @@ export class AppStore {
   /** Register a listener for when an error occurs. */
   public onDidError(fn: (error: Error) => void): Disposable {
     return this.emitter.on('did-error', fn)
+  }
+
+  private emitRetryAction(retryAction: RetryAction) {
+    this.emitter.emit('did-want-retry', retryAction)
+  }
+
+  /** Register a listener for when an error occurs. */
+  public onWantRetryAction(fn: (retryAction: RetryAction) => void): Disposable {
+    return this.emitter.on('did-want-retry', fn)
   }
 
   /**
@@ -2315,9 +2330,17 @@ export class AppStore {
 
   /** Fetch the repository. */
   public _fetch(repository: Repository): Promise<void> {
-    return this.withAuthenticatingUser(repository, (repository, account) => {
-      return this.performFetch(repository, account, false)
-    })
+    const retryAction: RetryAction = {
+      type: RetryActionType.Fetch,
+      repository,
+    }
+    return this.withAuthenticatingUser(
+      repository,
+      (repository, account) => {
+        return this.performFetch(repository, account, false)
+      },
+      retryAction
+    )
   }
 
   private async performFetch(
@@ -2570,13 +2593,13 @@ export class AppStore {
     return Promise.resolve()
   }
 
-  public _beginDotComSignIn(): Promise<void> {
-    this.signInStore.beginDotComSignIn()
+  public _beginDotComSignIn(retryAction?: RetryAction): Promise<void> {
+    this.signInStore.beginDotComSignIn(retryAction)
     return Promise.resolve()
   }
 
-  public _beginEnterpriseSignIn(): Promise<void> {
-    this.signInStore.beginEnterpriseSignIn()
+  public _beginEnterpriseSignIn(retryAction?: RetryAction): Promise<void> {
+    this.signInStore.beginEnterpriseSignIn(retryAction)
     return Promise.resolve()
   }
 
@@ -2837,6 +2860,7 @@ export class AppStore {
       await this._showPopup({
         type: PopupType.PremiumUpsell,
         enterprise: premiumType.enterprise,
+        user: premiumType.user,
         retryAction,
       })
       return

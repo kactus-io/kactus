@@ -11,12 +11,13 @@ import { RetryAction } from '../../lib/retry-actions'
 import { shell } from '../../lib/dispatcher/app-shell'
 import { CouponInput } from './coupon-input'
 import { LinkButton } from '../lib/link-button'
+import { CallToAction } from '../lib/call-to-action'
 
 interface IPremiumUpsellProps {
   /** A function called when the dialog is dismissed. */
   readonly onDismissed: () => void
   readonly dispatcher: Dispatcher
-  readonly user: Account
+  readonly user?: Account
   readonly isUnlockingKactusFullAccess: boolean
   readonly enterprise: boolean
   readonly retryAction?: RetryAction
@@ -77,6 +78,9 @@ export class PremiumUpsell extends React.Component<
   }
 
   private onToken = async (token: IToken) => {
+    if (!this.props.user) {
+      return
+    }
     await this.props.dispatcher.unlockKactus(this.props.user, token.id, {
       email: token.email,
       enterprise: this.props.enterprise,
@@ -84,7 +88,9 @@ export class PremiumUpsell extends React.Component<
     })
 
     if (this.props.retryAction) {
-      this.props.dispatcher.performRetry(this.props.retryAction)
+      const retryAction = this.props.retryAction
+      const dispatcher = this.props.dispatcher
+      setTimeout(() => dispatcher.performRetry(retryAction), 100)
     }
   }
 
@@ -135,6 +141,36 @@ export class PremiumUpsell extends React.Component<
       )
     }
 
+    if (!this.props.user) {
+      return (
+        <Dialog
+          id="premium-upsell"
+          title="Full potential of Kactus unlocked!"
+          onDismissed={this.props.onDismissed}
+        >
+          <DialogContent>
+            <div>
+              <p>
+                Hey! This feature is only available in the{' '}
+                {this.props.enterprise ? 'enterprise' : 'full access'} version
+                of Kactus.
+              </p>
+              <p>
+                You need to login to Kactus using GitHub before unlocking it.
+              </p>
+              {this.renderSignIn()}
+            </div>
+          </DialogContent>
+
+          <DialogFooter>
+            <ButtonGroup>
+              <Button onClick={this.props.onDismissed}>Not now</Button>
+            </ButtonGroup>
+          </DialogFooter>
+        </Dialog>
+      )
+    }
+
     if (this.props.user.unlockedKactus) {
       return (
         <Dialog
@@ -167,7 +203,7 @@ export class PremiumUpsell extends React.Component<
             </li>
             <li>
               <strong>
-                Support any git server platform (BitBucket, Gitlab, etc.)
+                Support any git server (BitBucket, Gitlab, self-hosted, etc.)
               </strong>
             </li>
           </ul>
@@ -256,5 +292,40 @@ export class PremiumUpsell extends React.Component<
           </Dialog>}
       </div>
     )
+  }
+
+  private renderSignIn() {
+    const signInTitle = __DARWIN__ ? 'Sign In' : 'Sign in'
+    return (
+      <div>
+        <br />
+        <CallToAction
+          actionTitle={signInTitle + ' with Personal Account'}
+          onAction={this.signInDotCom}
+        >
+          <div>
+            Sign in to your GitHub.com account to access your repositories.
+          </div>
+        </CallToAction>
+        <br />
+        <CallToAction
+          actionTitle={signInTitle + ' with Enterprise Account'}
+          onAction={this.signInEnterprise}
+        >
+          <div>
+            If you have a GitHub Enterprise account at work, sign in to it to
+            get access to your enterprise's repositories.
+          </div>
+        </CallToAction>
+      </div>
+    )
+  }
+
+  private signInDotCom = () => {
+    this.props.dispatcher.showDotComSignInDialog(this.props.retryAction)
+  }
+
+  private signInEnterprise = () => {
+    this.props.dispatcher.showEnterpriseSignInDialog(this.props.retryAction)
   }
 }

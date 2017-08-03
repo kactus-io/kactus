@@ -67,6 +67,10 @@ export class Dispatcher {
 
   public constructor(appStore: AppStore) {
     this.appStore = appStore
+
+    this.appStore.onWantRetryAction((retryAction: RetryAction) =>
+      this.performRetry(retryAction)
+    )
   }
 
   /** Load the initial state for the app. */
@@ -660,8 +664,8 @@ export class Dispatcher {
    * Initiate a sign in flow for github.com. This will put the store
    * in the Authentication step ready to receive user credentials.
    */
-  public beginDotComSignIn(): Promise<void> {
-    return this.appStore._beginDotComSignIn()
+  public beginDotComSignIn(retryAction?: RetryAction): Promise<void> {
+    return this.appStore._beginDotComSignIn(retryAction)
   }
 
   /**
@@ -669,8 +673,8 @@ export class Dispatcher {
    * put the store in the EndpointEntry step ready to receive the url
    * to the enterprise instance.
    */
-  public beginEnterpriseSignIn(): Promise<void> {
-    return this.appStore._beginEnterpriseSignIn()
+  public beginEnterpriseSignIn(retryAction?: RetryAction): Promise<void> {
+    return this.appStore._beginEnterpriseSignIn(retryAction)
   }
 
   /**
@@ -744,8 +748,10 @@ export class Dispatcher {
    * Launch a sign in dialog for authenticating a user with
    * GitHub.com.
    */
-  public async showDotComSignInDialog(): Promise<void> {
-    await this.appStore._beginDotComSignIn()
+  public async showDotComSignInDialog(
+    retryAction?: RetryAction
+  ): Promise<void> {
+    await this.appStore._beginDotComSignIn(retryAction)
     await this.appStore._showPopup({ type: PopupType.SignIn })
   }
 
@@ -753,8 +759,10 @@ export class Dispatcher {
    * Launch a sign in dialog for authenticating a user with
    * a GitHub Enterprise instance.
    */
-  public async showEnterpriseSignInDialog(): Promise<void> {
-    await this.appStore._beginEnterpriseSignIn()
+  public async showEnterpriseSignInDialog(
+    retryAction?: RetryAction
+  ): Promise<void> {
+    await this.appStore._beginEnterpriseSignIn(retryAction)
     await this.appStore._showPopup({ type: PopupType.SignIn })
   }
 
@@ -1162,6 +1170,13 @@ export class Dispatcher {
 
       case RetryActionType.Clone:
         await this.clone(retryAction.url, retryAction.path, retryAction.options)
+        break
+
+      case RetryActionType.Publish:
+        await this.showPopup({
+          type: PopupType.PublishRepository,
+          repository: retryAction.repository,
+        })
         break
 
       default:

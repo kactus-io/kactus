@@ -212,6 +212,7 @@ export type Popup =
   | {
       type: PopupType.PremiumUpsell
       enterprise: boolean
+      user?: Account
       retryAction?: RetryAction
     }
   | {

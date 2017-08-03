@@ -7,6 +7,7 @@ export enum RetryActionType {
   Pull,
   Fetch,
   Clone,
+  Publish,
 }
 
 /** The retriable actions and their associated data. */
@@ -14,6 +15,7 @@ export type RetryAction =
   | { type: RetryActionType.Push; repository: Repository }
   | { type: RetryActionType.Pull; repository: Repository }
   | { type: RetryActionType.Fetch; repository: Repository }
+  | { type: RetryActionType.Publish; repository: Repository }
   | {
       type: RetryActionType.Clone
       url: string

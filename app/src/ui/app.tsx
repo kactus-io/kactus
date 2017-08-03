@@ -1067,7 +1067,7 @@ export class App extends React.Component<IAppProps, IAppState> {
           <PremiumUpsell
             enterprise={popup.enterprise}
             retryAction={popup.retryAction}
-            user={this.state.accounts[0]}
+            user={popup.user}
             dispatcher={this.props.dispatcher}
             onDismissed={this.onPopupDismissed}
             isUnlockingKactusFullAccess={this.state.isUnlockingKactusFullAccess}
