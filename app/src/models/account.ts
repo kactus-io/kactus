@@ -23,10 +23,22 @@ export class Account {
   public readonly name: string
   /** Wether the user has full access to Kactus */
   public readonly unlockedKactus: boolean
+  /** Wether the user has enterprise access to Kactus */
+  public readonly unlockedEnterpriseKactus: boolean
 
   /** Create an account which can be used to perform unauthenticated API actions */
   public static anonymous(): Account {
-    return new Account('', getDotComAPIEndpoint(), '', [], '', -1, '', false)
+    return new Account(
+      '',
+      getDotComAPIEndpoint(),
+      '',
+      [],
+      '',
+      -1,
+      '',
+      false,
+      false
+    )
   }
 
   public constructor(
@@ -37,7 +49,8 @@ export class Account {
     avatarURL: string,
     id: number,
     name: string,
-    unlockedKactus: boolean
+    unlockedKactus: boolean,
+    unlockedEnterpriseKactus: boolean
   ) {
     this.login = login
     this.endpoint = endpoint
@@ -47,6 +60,7 @@ export class Account {
     this.id = id
     this.name = name
     this.unlockedKactus = unlockedKactus
+    this.unlockedEnterpriseKactus = unlockedEnterpriseKactus
   }
 
   public withToken(token: string): Account {
@@ -58,11 +72,12 @@ export class Account {
       this.avatarURL,
       this.id,
       this.name,
-      this.unlockedKactus
+      this.unlockedKactus,
+      this.unlockedEnterpriseKactus
     )
   }
 
-  public unlockKactus(): Account {
+  public unlockKactus(enterprise: boolean): Account {
     return new Account(
       this.login,
       this.endpoint,
@@ -71,7 +86,8 @@ export class Account {
       this.avatarURL,
       this.id,
       this.name,
-      true
+      enterprise ? false : true,
+      enterprise ? true : false
     )
   }
 }

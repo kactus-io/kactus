@@ -15,6 +15,7 @@ describe('Repository matching', () => {
         '',
         1,
         '',
+        false,
         false
       ),
     ]
@@ -36,6 +37,7 @@ describe('Repository matching', () => {
         '',
         1,
         '',
+        false,
         false
       ),
     ]
@@ -57,6 +59,7 @@ describe('Repository matching', () => {
         '',
         1,
         '',
+        false,
         false
       ),
     ]
@@ -78,6 +81,7 @@ describe('Repository matching', () => {
         '',
         1,
         '',
+        false,
         false
       ),
     ]
@@ -99,6 +103,7 @@ describe('Repository matching', () => {
         '',
         1,
         '',
+        false,
         false
       ),
     ]

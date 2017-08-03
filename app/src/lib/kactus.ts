@@ -199,9 +199,7 @@ export function shouldShowPremiumUpsell(
     potentialPremiumAccount = account
   } else {
     potentialPremiumAccount =
-      accounts.find(
-        a => a.unlockedKactus && account.endpoint !== getDotComAPIEndpoint()
-      ) ||
+      accounts.find(a => a.unlockedEnterpriseKactus) ||
       accounts.find(a => a.unlockedKactus) ||
       accounts[0]
   }
@@ -215,19 +213,20 @@ export function shouldShowPremiumUpsell(
     }
     if (
       potentialPremiumAccount.endpoint !== getDotComAPIEndpoint() &&
-      !potentialPremiumAccount.unlockedKactus
+      !potentialPremiumAccount.unlockedEnterpriseKactus
     ) {
       return { enterprise: true, user: potentialPremiumAccount }
     }
     if (
       repository.gitHubRepository.private &&
-      !potentialPremiumAccount.unlockedKactus
+      (!potentialPremiumAccount.unlockedKactus &&
+        !potentialPremiumAccount.unlockedEnterpriseKactus)
     ) {
       return { enterprise: false, user: potentialPremiumAccount }
     }
   } else if (
     !potentialPremiumAccount ||
-    !potentialPremiumAccount.unlockedKactus
+    !potentialPremiumAccount.unlockedEnterpriseKactus
   ) {
     return { enterprise: true, user: potentialPremiumAccount }
   }

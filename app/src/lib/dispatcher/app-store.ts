@@ -2709,7 +2709,17 @@ export class AppStore {
     this.emitUpdate()
     const result = await unlockKactusFullAccess(user, token, options)
     if (result) {
-      await this.accountsStore.unlockKactusForAccount(user)
+      await this.accountsStore.unlockKactusForAccount(user, options.enterprise)
+    }
+    // update the accounts directly otherwise it will show the stripe checkout again
+    this.accounts = await this.accountsStore.getAll()
+    if (
+      this.currentPopup &&
+      this.currentPopup.type === PopupType.PremiumUpsell &&
+      this.currentPopup.user
+    ) {
+      const userId = this.currentPopup.user.id
+      this.currentPopup.user = this.accounts.find(a => a.id === userId)
     }
     this.isUnlockingKactusFullAccess = false
     this.emitUpdate()

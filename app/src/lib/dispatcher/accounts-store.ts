@@ -31,6 +31,7 @@ interface IAccount {
   readonly id: number
   readonly name: string
   readonly unlockedKactus: boolean
+  readonly unlockedEnterpriseKactus: boolean
 }
 
 /** The store for logged in accounts. */
@@ -121,16 +122,18 @@ export class AccountsStore {
   /**
    * Remove the account from the store.
    */
-  public async unlockKactusForAccount(account: Account): Promise<void> {
+  public async unlockKactusForAccount(
+    account: Account,
+    enterprise: boolean
+  ): Promise<void> {
     await this.loadingPromise
 
     this.accounts = this.accounts.map(a => {
-      if (a.id !== account.id) {
-        a.unlockKactus()
+      if (a.id === account.id) {
+        return a.unlockKactus(enterprise)
       }
       return a
     })
-
     this.save()
   }
 
@@ -153,7 +156,8 @@ export class AccountsStore {
         account.avatarURL,
         account.id,
         account.name,
-        account.unlockedKactus
+        account.unlockedKactus,
+        account.unlockedEnterpriseKactus
       )
       const token = await this.secureStore.getItem(
         getKeyForAccount(accountWithoutToken),
@@ -169,7 +173,8 @@ export class AccountsStore {
         if (
           !prev[a.id] ||
           (!prev[a.id].token && a.token) ||
-          (!prev[a.id].unlockedKactus && a.unlockedKactus)
+          (!prev[a.id].unlockedKactus && a.unlockedKactus) ||
+          (!prev[a.id].unlockedEnterpriseKactus && a.unlockedEnterpriseKactus)
         ) {
           prev[a.id] = a
         }
@@ -204,7 +209,7 @@ async function updatedAccount(account: Account): Promise<Account> {
   const user = await api.fetchAccount()
   const emails = await api.fetchEmails()
 
-  const unlockedKactus = await checkUnlockedKactus(
+  const unlockedKactusStatus = await checkUnlockedKactus(
     user,
     emails,
     account.endpoint
@@ -218,6 +223,11 @@ async function updatedAccount(account: Account): Promise<Account> {
     user.avatar_url,
     user.id,
     user.name,
-    unlockedKactus === null ? account.unlockedKactus : unlockedKactus
+    unlockedKactusStatus === null
+      ? account.unlockedKactus
+      : unlockedKactusStatus.premium,
+    unlockedKactusStatus === null
+      ? account.unlockedEnterpriseKactus
+      : unlockedKactusStatus.enterprise
   )
 }

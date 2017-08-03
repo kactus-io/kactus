@@ -171,7 +171,10 @@ export class PremiumUpsell extends React.Component<
       )
     }
 
-    if (this.props.user.unlockedKactus) {
+    if (
+      (!this.props.enterprise && this.props.user.unlockedKactus) ||
+      (this.props.enterprise && this.props.user.unlockedEnterpriseKactus)
+    ) {
       return (
         <Dialog
           id="premium-upsell"

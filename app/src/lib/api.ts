@@ -132,6 +132,8 @@ interface IAPIKactusNestedUser {
 
   readonly valid?: boolean
 
+  readonly validEnterprise?: boolean
+
   readonly createdAt?: Date
 }
 
@@ -621,7 +623,11 @@ export async function fetchUser(
   try {
     const user = await api.fetchAccount()
     const emails = await api.fetchEmails()
-    const unlockedKactus = await checkUnlockedKactus(user, emails, endpoint)
+    const unlockedKactusStatus = await checkUnlockedKactus(
+      user,
+      emails,
+      endpoint
+    )
     return new Account(
       user.login,
       endpoint,
@@ -630,7 +636,8 @@ export async function fetchUser(
       user.avatar_url,
       user.id,
       user.name,
-      unlockedKactus === null ? false : unlockedKactus
+      unlockedKactusStatus === null ? false : unlockedKactusStatus.premium,
+      unlockedKactusStatus === null ? false : unlockedKactusStatus.enterprise
     )
   } catch (e) {
     log.warn(`fetchUser: failed with endpoint ${endpoint}`, e)
@@ -786,7 +793,7 @@ export async function checkUnlockedKactus(
   user: IAPIUser,
   emails: ReadonlyArray<IEmail>,
   endpoint: string
-): Promise<boolean | null> {
+): Promise<{ enterprise: boolean; premium: boolean } | null> {
   try {
     const path = `${KactusAPIEndpoint}/checkUnlocked`
     const response = await fetch(path, {
@@ -804,10 +811,13 @@ export async function checkUnlockedKactus(
     })
     if (response.status === HttpStatusCode.NotFound) {
       log.warn(`checkUnlockedKactus: '${path}' returned a 404`)
-      return false
+      return { enterprise: false, premium: false }
     }
     const kactusUser = await parsedResponse<IAPIKactusUser>(response)
-    return !!kactusUser.user.valid
+    return {
+      enterprise: !!kactusUser.user.validEnterprise,
+      premium: !!kactusUser.user.valid,
+    }
   } catch (e) {
     log.warn(`checkUnlockedKactus: failed for ${user.login}`, e)
     return null
