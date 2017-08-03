@@ -1,6 +1,15 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.0": [
+      "[New] You can now use any git server (BitBucket, Gitlab, self-hosted, etc.)!",
+      "[New] Adds short-cut to open terminal",
+      "[Improved] Add a loading git status indicator",
+      "[Improved] Add an options menu to the Commit Summary component",
+      "[Improved] Only enable Reload for dev builds",
+      "[Improved] Handle updating a premium subscription to an enterprise subscription",
+      "[Fixed] Fixed a bug where the unlock status wouldn't be set right after unlocking and necessitate a restart of Kactus"
+    ],
     "0.1.16": [
       "[Fixed] Fix a bug when a page contained a `/`",
       "[Improved] Add a separate loading indicator on each sketch file",
