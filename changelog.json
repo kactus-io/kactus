@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.1": [
+      "[Fixed] Fixed getting the previous preview (which resulted in showing the same image for both preview)"
+    ],
     "0.2.0": [
       "[New] You can now use any git server (BitBucket, Gitlab, self-hosted, etc.)!",
       "[New] Adds short-cut to open terminal",
