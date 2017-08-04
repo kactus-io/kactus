@@ -102,6 +102,23 @@ import { IGitAccount } from '../git/authentication'
 import { getGenericHostname, getGenericUsername } from '../generic-git-auth'
 import { RetryActionType, RetryAction } from '../retry-actions'
 
+function findNext(
+  array: ReadonlyArray<string>,
+  toFind: string
+): string | undefined {
+  let found = false
+  return array.find((s, i) => {
+    if (s === toFind) {
+      found = true
+      return false
+    }
+    if (found) {
+      return true
+    }
+    return false
+  })
+}
+
 const LastSelectedRepositoryIDKey = 'last-selected-repository-id'
 
 const defaultSidebarWidth: number = 250
@@ -732,12 +749,15 @@ export class AppStore {
       }
     }
 
+    const previousSha = findNext(stateBeforeLoad.historyState.history, sha)
+
     const diff = await getCommitDiff(
       this.sketchPath,
       repository,
       stateBeforeLoad.kactus.files,
       file,
-      sha
+      sha,
+      previousSha
     )
 
     const stateAfterLoad = this.getRepositoryState(repository)
@@ -1228,7 +1248,8 @@ export class AppStore {
       this.sketchPath,
       repository,
       stateBeforeLoad.kactus.files,
-      selectedFileBeforeLoad
+      selectedFileBeforeLoad,
+      stateBeforeLoad.historyState.history[0]
     )
 
     const stateAfterLoad = this.getRepositoryState(repository)

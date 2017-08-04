@@ -67,7 +67,8 @@ export async function getCommitDiff(
   repository: Repository,
   kactusFiles: Array<IKactusFile>,
   file: FileChange,
-  commitish: string
+  commitish: string,
+  previousCommitish?: string
 ): Promise<IDiff> {
   const args = [
     'log',
@@ -98,7 +99,8 @@ export async function getCommitDiff(
     kactusFiles,
     file,
     diffText,
-    commitish
+    commitish,
+    previousCommitish
   )
 }
 
@@ -111,7 +113,8 @@ export async function getWorkingDirectoryDiff(
   sketchPath: string,
   repository: Repository,
   kactusFiles: Array<IKactusFile>,
-  file: WorkingDirectoryFileChange
+  file: WorkingDirectoryFileChange,
+  previousCommitish?: string
 ): Promise<IDiff> {
   let successExitCodes: Set<number> | undefined
   let args: Array<string>
@@ -195,6 +198,7 @@ export async function getWorkingDirectoryDiff(
     file,
     diffText,
     'HEAD',
+    previousCommitish,
     lineEndingsChange
   )
 }
@@ -263,7 +267,8 @@ async function getSketchDiff(
   file: FileChange,
   diff: IRawDiff,
   kactusFile: IKactusFile,
-  commitish: string
+  commitish: string,
+  previousCommitish?: string
 ): Promise<ISketchDiff> {
   let current: Image | undefined = undefined
   let previous: Image | undefined = undefined
@@ -360,7 +365,7 @@ async function getSketchDiff(
           kactusFile,
           repository,
           file.oldPath || file.path,
-          `${commitish}`,
+          previousCommitish || `${commitish}`,
           type
         )
       } catch (e) {
@@ -387,6 +392,7 @@ export async function convertDiff(
   file: FileChange,
   diff: IRawDiff,
   commitish: string,
+  previousCommitish?: string,
   lineEndingsChange?: LineEndingsChange
 ): Promise<IDiff> {
   if (diff.isBinary) {
@@ -411,7 +417,8 @@ export async function convertDiff(
       file,
       diff,
       kactusFile,
-      commitish
+      commitish,
+      previousCommitish
     )
   }
 
