@@ -112,6 +112,7 @@ export class CreateSketchFile extends React.Component<
         )
         this.props.onDismissed()
       } catch (err) {
+        console.error(err)
         this.setState({
           currentError: err,
           isCreatingFile: false,
