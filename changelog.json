@@ -1,6 +1,7 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.2": ["[Fixed] Create a new sketch file with shared styles would fail"],
     "0.2.1": [
       "[Fixed] Fixed getting the previous preview (which resulted in showing the same image for both preview)"
     ],

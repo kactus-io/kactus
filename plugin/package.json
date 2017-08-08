@@ -1,17 +1,13 @@
 {
   "name": "kactus",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Kactus plugin",
   "main": "../out/plugin.sketchplugin",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "skpm build"
   },
-  "keywords": [
-    "kactus",
-    "sketch",
-    "plugin"
-  ],
+  "keywords": ["kactus", "sketch", "plugin"],
   "author": {
     "name": "Mathieu Dutour",
     "email": "mathieu@dutour.me",
