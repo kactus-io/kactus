@@ -2218,20 +2218,6 @@ export class AppStore {
     account: Account,
     org: IAPIUser | null
   ): Promise<Repository> {
-    const premiumType = shouldShowPremiumUpsell(
-      repository,
-      account,
-      this.accounts
-    )
-
-    if (premiumType) {
-      await this._showPopup({
-        type: PopupType.PremiumUpsell,
-        enterprise: premiumType.enterprise,
-      })
-      throw new Error('Not authorized')
-    }
-
     const api = API.fromAccount(account)
     const apiRepository = await api.createRepository(
       org,
