@@ -7,6 +7,8 @@ import { List, ClickSource } from '../list'
 import {
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
+  FileType,
+  SketchFileType,
 } from '../../models/status'
 import { DiffSelectionType } from '../../models/diff'
 import { CommitIdentity } from '../../models/commit-identity'
@@ -73,7 +75,7 @@ type TFileInList =
   | WorkingDirectoryFileChange
   | {
       opened: boolean
-      type: 'sketchFile'
+      type: SketchFileType
       id: string
       parts: Array<string>
       name: string
@@ -81,34 +83,38 @@ type TFileInList =
 
 function getFileList(
   files: ReadonlyArray<WorkingDirectoryFileChange>,
-  previousList?: Array<TFileInList>
+  oldList?: Array<TFileInList>
 ) {
   const acc: Array<TFileInList> = []
   return files.reduce((prev, f, i) => {
     if (!f.parts || !f.sketchFile) {
       prev.push(f)
     } else {
-      const previousFile = files[i - 1]
+      const previousFile = files[i - 1] || {}
 
       f.parts.forEach((part, i, arr) => {
         if (part === (previousFile.parts || [])[i]) {
           return
         }
         const parts = arr.slice(0, i)
+
         let id = parts.join('/')
         if (id) {
           id += '/' + part
         } else {
           id = part
         }
-        const previousSketchPart =
-          previousList && previousList.find(f => f.id === id)
+
+        const oldSketchPart = oldList && oldList.find(f => f.id === id)
         prev.push({
           opened:
-            previousSketchPart && previousSketchPart.type === 'sketchFile'
-              ? previousSketchPart.opened
+            oldSketchPart && oldSketchPart.type !== FileType.NormalFile
+              ? oldSketchPart.opened
               : i === 0,
-          type: 'sketchFile',
+          type:
+            i === 0
+              ? FileType.SketchFile
+              : i === 1 ? FileType.PageFile : FileType.LayerFile,
           id,
           name: part,
           parts,
@@ -129,7 +135,7 @@ function getOpenedFilesList(files: Array<TFileInList>) {
     } else {
       const id = f.parts.join('/')
       const parent = arr.find(a => a.id === id)
-      if (parent && (parent.type === 'normal-file' || parent.opened)) {
+      if (parent && (parent.type === FileType.NormalFile || parent.opened)) {
         prev.push(f)
       }
     }
@@ -177,7 +183,7 @@ export class ChangesList extends React.Component<
   private renderRow = (row: number): JSX.Element => {
     const file = this.state.visibleFileList[row]
 
-    if (file.type === 'normal-file') {
+    if (file.type === FileType.NormalFile) {
       const selection = file.selection.getSelectionType()
 
       const includeAll =
@@ -232,7 +238,7 @@ export class ChangesList extends React.Component<
 
   private onOpenChanged = (id: string, opened: boolean) => {
     const fileList = this.state.files.map(f => {
-      if (f.id === id && f.type === 'sketchFile') {
+      if (f.id === id && f.type !== FileType.NormalFile) {
         return {
           ...f,
           opened,
@@ -272,7 +278,7 @@ export class ChangesList extends React.Component<
 
   private onFileSelectionChanged = (row: number) => {
     const file = this.state.visibleFileList[row]
-    if (file && file.type === 'normal-file') {
+    if (file && file.type === FileType.NormalFile) {
       this.props.onFileSelectionChanged(file)
     }
   }

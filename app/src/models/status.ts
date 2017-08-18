@@ -142,6 +142,18 @@ function getSketchFileParts(path: string, sketchFile?: IKactusFile) {
   return [sketchFile.id].concat(parts.slice(0, parts.length - 1))
 }
 
+export type SketchFileType =
+  | FileType.SketchFile
+  | FileType.PageFile
+  | FileType.LayerFile
+
+export enum FileType {
+  NormalFile,
+  SketchFile,
+  PageFile,
+  LayerFile,
+}
+
 /** encapsulate changes to a file associated with a commit */
 export class FileChange {
   /** the relative path to the file in the repository */
@@ -158,7 +170,7 @@ export class FileChange {
 
   public readonly parts?: Array<string>
 
-  public readonly type: 'normal-file'
+  public readonly type: FileType.NormalFile
 
   public constructor(
     path: string,
@@ -170,7 +182,7 @@ export class FileChange {
     this.status = status
     this.oldPath = oldPath
     this.sketchFile = sketchFile
-    this.type = 'normal-file'
+    this.type = FileType.NormalFile
     if (sketchFile) {
       this.parts = getSketchFileParts(path, sketchFile)
     }
