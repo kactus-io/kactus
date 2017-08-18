@@ -17,7 +17,7 @@ function log(level: LogLevel, message: string, error?: Error) {
   )
 }
 
-g.log = <IDesktopLogger>{
+g.log = <IKactusLogger>{
   error(message: string, error?: Error) {
     log('error', message, error)
     console.error(formatLogMessage(message, error))

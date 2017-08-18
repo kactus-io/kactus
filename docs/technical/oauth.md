@@ -5,10 +5,10 @@ to interact with the GitHub API and perform actions on behalf of a user, it
 needs to be bundled with a Client ID and Secret.
 
 For external contributors, we have bundled a developer OAuth application
-with the Desktop application so that you can complete the sign in flow locally
+with the Kactus application so that you can complete the sign in flow locally
 without needing to configure your own application.
 
-These are listed in [app/webpack.common.js](https://github.com/desktop/desktop/blob/c286d0d513d82b97e1a9c60d44c23020f2ba34d7/app/webpack.common.js#L9-L10).
+These are listed in [app/webpack.common.js](https://github.com/kactus-io/kactus/blob/c286d0d513d82b97e1a9c60d44c23020f2ba34d7/app/webpack.common.js#L9-L10).
 
 **DO NOT TRUST THIS CLIENT ID AND SECRET! THIS IS ONLY FOR TESTING PURPOSES!!**
 

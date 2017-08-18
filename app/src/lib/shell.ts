@@ -14,7 +14,7 @@ const BlacklistedNames = new Set(['LOCAL_GIT_DIRECTORY'])
 
 /**
  * Inspect whether the current process needs to be patched to get important
- * environment variables for Desktop to work and integrate with other tools
+ * environment variables for Kactus to work and integrate with other tools
  * the user may invoke as part of their workflow.
  *
  * This is only applied to macOS installations due to how the application

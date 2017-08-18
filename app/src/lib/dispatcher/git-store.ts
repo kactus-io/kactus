@@ -834,7 +834,7 @@ export class GitStore {
     // so we're doing our discards in three conceptual steps.
     //
     // 1. Figure out what the index thinks has changed as compared to the previous
-    //    commit. For users who exclusive interact with Git using Desktop this will
+    //    commit. For users who exclusive interact with Git using Kactus this will
     //    almost always empty which, as it turns out, is great for us.
     //
     // 2. Figure out if any of the files that we've been asked to discard are changed

@@ -3,9 +3,15 @@ import { ensureItemIds } from './ensure-item-ids'
 import { MenuEvent } from './menu-event'
 import { getLogPath } from '../../lib/logging/get-log-path'
 import { mkdirIfNeeded } from '../../lib/file-system'
+import { ExternalEditor } from '../../models/editors'
+
 import { log } from '../log'
 
-export function buildDefaultMenu(): Electron.Menu {
+export function buildDefaultMenu(
+  selectedEditor?: ExternalEditor
+): Electron.Menu {
+  const defaultEditorLabel = __DARWIN__ ? 'External Editor' : 'external editor'
+  const editorLabel = selectedEditor || defaultEditorLabel
   const template = new Array<Electron.MenuItemConstructorOptions>()
   const separator: Electron.MenuItemConstructorOptions = { type: 'separator' }
 
@@ -166,7 +172,7 @@ export function buildDefaultMenu(): Electron.Menu {
       {
         label: '&Reload',
         id: 'reload-window',
-        accelerator: 'CmdOrCtrl+R',
+        accelerator: 'CmdOrCtrl+Alt+R',
         click(item: any, focusedWindow: Electron.BrowserWindow) {
           if (focusedWindow) {
             focusedWindow.reload()
@@ -230,6 +236,12 @@ export function buildDefaultMenu(): Electron.Menu {
         id: 'open-working-directory',
         accelerator: 'CmdOrCtrl+Shift+F',
         click: emit('open-working-directory'),
+      },
+      {
+        label: `Open in ${editorLabel}`,
+        id: 'open-external-editor',
+        accelerator: 'CmdOrCtrl+Shift+A',
+        click: emit('open-external-editor'),
       },
       separator,
       {

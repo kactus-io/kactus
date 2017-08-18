@@ -20,6 +20,7 @@ import { AppStore } from './app-store'
 import { CloningRepository } from './cloning-repositories-store'
 import { Branch } from '../../models/branch'
 import { Commit } from '../../models/commit'
+import { ExternalEditor } from '../../models/editors'
 import { IAPIUser } from '../../lib/api'
 import { GitHubRepository } from '../../models/github-repository'
 import { ICommitMessage } from './git-store'
@@ -393,7 +394,7 @@ export class Dispatcher {
     path: string,
     options?: { branch?: string }
   ): Promise<Repository | null> {
-    return this.appStore._completeOpenInDesktop(async () => {
+    return this.appStore._completeOpenInKactus(async () => {
       const { promise, repository } = this.appStore._clone(url, path, options)
       await this.selectRepository(repository)
       const success = await promise
@@ -445,8 +446,8 @@ export class Dispatcher {
   }
 
   /** Revert the commit with the given SHA */
-  public revertCommit(repositoy: Repository, commit: Commit): Promise<void> {
-    return this.appStore._revertCommit(repositoy, commit)
+  public revertCommit(repository: Repository, commit: Commit): Promise<void> {
+    return this.appStore._revertCommit(repository, commit)
   }
 
   /**
@@ -610,6 +611,11 @@ export class Dispatcher {
     } else {
       this.appStore._showPopup({ type: PopupType.InstallGit, path })
     }
+  }
+
+  /** Opens a Git repository in the user provided program */
+  public async openInExternalEditor(path: string): Promise<void> {
+    return this.appStore._openInExternalEditor(path)
   }
 
   /**
@@ -855,7 +861,7 @@ export class Dispatcher {
         const branchToClone = pr && branch ? null : branch || null
         const repository = await this.openRepository(url, branchToClone)
         if (repository) {
-          this.handleCloneInDesktopOptions(repository, action)
+          this.handleCloneInKactusOptions(repository, action)
         }
         break
 
@@ -1011,6 +1017,13 @@ export class Dispatcher {
   }
 
   /**
+   * Sets the user's preference for an external program to open repositories in.
+   */
+  public setExternalEditor(editor: ExternalEditor): Promise<void> {
+    return this.appStore._setExternalEditor(editor)
+  }
+
+  /**
    * Reveals a file from a repository in the native file manager.
    * @param repository The currently active repository instance
    * @param path The path of the file relative to the root of the repository
@@ -1020,7 +1033,7 @@ export class Dispatcher {
     return shell.showItemInFolder(normalized)
   }
 
-  private async handleCloneInDesktopOptions(
+  private async handleCloneInKactusOptions(
     repository: Repository,
     action: IOpenRepositoryFromURLAction
   ): Promise<void> {
@@ -1066,7 +1079,7 @@ export class Dispatcher {
 
       return this.checkoutBranch(repo, branch)
     } else {
-      return this.appStore._startOpenInDesktop(() => {
+      return this.appStore._startOpenInKactus(() => {
         this.showPopup({ type: PopupType.CloneRepository, initialURL: url })
       })
     }
@@ -1074,10 +1087,6 @@ export class Dispatcher {
 
   public toggleAdvancedDiffs(): Promise<void> {
     return this.appStore._toggleAdvancedDiffs()
-  }
-
-  public changeImageDiffType(type: ImageDiffType): Promise<void> {
-    return this.appStore._changeImageDiffType(type)
   }
 
   /** create a new Sketch File. */
@@ -1186,5 +1195,10 @@ export class Dispatcher {
       default:
         return assertNever(retryAction, `Unknown retry action: ${retryAction}`)
     }
+  }
+
+  /** Change the selected image diff type. */
+  public changeImageDiffType(type: ImageDiffType): Promise<void> {
+    return this.appStore._changeImageDiffType(type)
   }
 }

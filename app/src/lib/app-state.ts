@@ -18,6 +18,8 @@ import { IRemote } from '../models/remote'
 import { WindowState } from './window-state'
 import { IFullKactusConfig, IKactusFile } from './kactus'
 import { RetryAction } from './retry-actions'
+import { ExternalEditor } from '../models/editors'
+import { PreferencesTab } from '../models/preferences'
 
 export { ICommitMessage }
 export { IAheadBehind }
@@ -28,10 +30,18 @@ export enum SelectionType {
   MissingRepository,
 }
 
+/** The image diff type. */
 export enum ImageDiffType {
+  /** Show the old and new images side by side. */
   TwoUp,
+
+  /** Swipe between the old and new image. */
   Swipe,
+
+  /** Onion skin. */
   OnionSkin,
+
+  /** Highlight differences. */
   Difference,
 }
 
@@ -142,11 +152,14 @@ export interface IAppState {
   /** Whether we should show a confirmation dialog */
   readonly confirmRepoRemoval: boolean
 
+  /** The external editor to use when opening repositories */
+  readonly selectedExternalEditor: ExternalEditor
+
+  /** What type of visual diff mode we should use to compare images */
+  readonly imageDiffType: ImageDiffType
+
   /** Whether we should show the text diffs for a sketch file */
   readonly showAdvancedDiffs: boolean
-
-  /** Type of the image diff */
-  readonly imageDiffType: ImageDiffType
 
   readonly isUnlockingKactusFullAccess: boolean
 
@@ -178,6 +191,7 @@ export enum PopupType {
   PushBranchCommits,
   CLIInstalled,
   GenericGitAuthentication,
+  ExternalEditorFailed,
 }
 
 export type Popup =
@@ -188,7 +202,7 @@ export type Popup =
       repository: Repository
       files: ReadonlyArray<WorkingDirectoryFileChange>
     }
-  | { type: PopupType.Preferences }
+  | { type: PopupType.Preferences; initialSelectedTab?: PreferencesTab }
   | { type: PopupType.MergeBranch; repository: Repository }
   | { type: PopupType.RepositorySettings; repository: Repository }
   | { type: PopupType.KactusSettings; repository: Repository }
@@ -226,6 +240,12 @@ export type Popup =
       type: PopupType.GenericGitAuthentication
       hostname: string
       retryAction: RetryAction
+    }
+  | {
+      type: PopupType.ExternalEditorFailed
+      message: string
+      suggestAtom?: boolean
+      openPreferences?: boolean
     }
 
 export enum FoldoutType {

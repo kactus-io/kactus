@@ -41,6 +41,10 @@ import { Branch, BranchType } from '../../models/branch'
 import { TipState } from '../../models/tip'
 import { Commit } from '../../models/commit'
 import {
+  ExternalEditor,
+  parse as parseExternalEditor,
+} from '../../models/editors'
+import {
   CloningRepository,
   CloningRepositoriesStore,
 } from './cloning-repositories-store'
@@ -54,14 +58,16 @@ import { IssuesStore } from './issues-store'
 import { BackgroundFetcher } from './background-fetcher'
 import { formatCommitMessage } from '../format-commit-message'
 import { AppMenu, IMenu } from '../../models/app-menu'
-import { getAppMenu } from '../../ui/main-process-proxy'
+import {
+  getAppMenu,
+  updateExternalEditorMenuItem,
+} from '../../ui/main-process-proxy'
 import { merge } from '../merge'
 import { getAppPath, getUserDataPath } from '../../ui/lib/app-proxy'
 import { StatsStore, ILaunchStats } from '../stats'
 import { SignInStore } from './sign-in-store'
 import { hasShownWelcomeFlow, markWelcomeFlowComplete } from '../welcome'
 import { WindowState, getWindowState } from '../window-state'
-import { structuralEquals } from '../equality'
 import { fatalError } from '../fatal-error'
 import { updateMenuState } from '../menu-update'
 import {
@@ -94,6 +100,7 @@ import {
 } from '../git'
 
 import { openShell } from '../open-shell'
+import { launchExternalEditor } from '../editors'
 import { AccountsStore } from './accounts-store'
 import { RepositoriesStore } from './repositories-store'
 import { validatedRepositoryPath } from './validated-repository-path'
@@ -101,6 +108,7 @@ import { getSketchVersion, SKETCH_PATH } from '../sketch'
 import { IGitAccount } from '../git/authentication'
 import { getGenericHostname, getGenericUsername } from '../generic-git-auth'
 import { RetryActionType, RetryAction } from '../retry-actions'
+import { findEditorOrDefault } from '../editors'
 
 function findNext(
   array: ReadonlyArray<string>,
@@ -133,11 +141,14 @@ const confirmRepoRemovalKey: string = 'confirmRepoRemoval'
 const showAdvancedDiffsDefault: boolean = false
 const showAdvancedDiffsKey: string = 'showAdvancedDiffs'
 
-const imageDiffTypeDefault: number = 0
-const imageDiffTypeKey: string = 'imageDiffType'
-
 const sketchPathDefault: string = SKETCH_PATH
 const sketchPathKey: string = 'sketchPathType'
+
+const externalEditorDefault = ExternalEditor.Atom
+const externalEditorKey: string = 'externalEditor'
+
+const imageDiffTypeDefault = ImageDiffType.TwoUp
+const imageDiffTypeKey = 'image-diff-type'
 
 export class AppStore {
   private emitter = new Emitter()
@@ -150,7 +161,7 @@ export class AppStore {
   /** The background fetcher for the currently selected repository. */
   private currentBackgroundFetcher: BackgroundFetcher | null = null
 
-  private repositoryState = new Map<number, IRepositoryState>()
+  private repositoryState = new Map<string, IRepositoryState>()
   private showWelcomeFlow = false
 
   private currentPopup: Popup | null = null
@@ -173,8 +184,8 @@ export class AppStore {
     return this._issuesStore
   }
 
-  /** GitStores keyed by their associated Repository ID. */
-  private readonly gitStores = new Map<number, GitStore>()
+  /** GitStores keyed by their hash. */
+  private readonly gitStores = new Map<string, GitStore>()
 
   private readonly signInStore: SignInStore
 
@@ -206,22 +217,20 @@ export class AppStore {
   private windowZoomFactor: number = 1
   private isUpdateAvailableBannerVisible: boolean = false
   private confirmRepoRemoval: boolean = confirmRepoRemovalDefault
+  private imageDiffType: ImageDiffType = imageDiffTypeDefault
+
+  private selectedExternalEditor: ExternalEditor = externalEditorDefault
 
   private readonly statsStore: StatsStore
 
-  /** The function to resolve the current Open in Desktop flow. */
-  private resolveOpenInDesktop:
+  /** The function to resolve the current Open in Kactus flow. */
+  private resolveOpenInKactus:
     | ((repository: Repository | null) => void)
     | null = null
 
   private showAdvancedDiffs: boolean = showAdvancedDiffsDefault
-
-  private imageDiffType: ImageDiffType = imageDiffTypeDefault
-
   private isUnlockingKactusFullAccess: boolean = false
-
   private sketchVersion: string | null | undefined
-
   private sketchPath: string = sketchPathDefault
 
   public constructor(
@@ -301,7 +310,7 @@ export class AppStore {
     repositoriesStore.onDidUpdate(async () => {
       const repositories = await this.repositoriesStore.getAll()
       this.repositories = repositories
-      this.updateRepositorySelection()
+      this.updateRepositorySelectionAfterRepositoriesChanged()
       this.emitUpdate()
     })
   }
@@ -389,9 +398,8 @@ export class AppStore {
         diff: null,
       },
       changesState: {
-        workingDirectory: new WorkingDirectoryStatus(
-          new Array<WorkingDirectoryFileChange>(),
-          true
+        workingDirectory: WorkingDirectoryStatus.fromFiles(
+          new Array<WorkingDirectoryFileChange>()
         ),
         selectedFileID: null,
         diff: null,
@@ -428,7 +436,7 @@ export class AppStore {
 
   /** Get the state for the repository. */
   public getRepositoryState(repository: Repository): IRepositoryState {
-    let state = this.repositoryState.get(repository.id)
+    let state = this.repositoryState.get(repository.hash)
     if (state) {
       const gitHubUsers =
         this.gitHubUserStore.getUsersForRepository(repository) ||
@@ -437,7 +445,7 @@ export class AppStore {
     }
 
     state = this.getInitialRepositoryState()
-    this.repositoryState.set(repository.id, state)
+    this.repositoryState.set(repository.hash, state)
     return state
   }
 
@@ -447,7 +455,7 @@ export class AppStore {
   ) {
     const currentState = this.getRepositoryState(repository)
     const newValues = fn(currentState)
-    this.repositoryState.set(repository.id, merge(currentState, newValues))
+    this.repositoryState.set(repository.hash, merge(currentState, newValues))
   }
 
   private updateHistoryState<K extends keyof IHistoryState>(
@@ -556,6 +564,7 @@ export class AppStore {
       imageDiffType: this.imageDiffType,
       isUnlockingKactusFullAccess: this.isUnlockingKactusFullAccess,
       sketchVersion: this.sketchVersion,
+      selectedExternalEditor: this.selectedExternalEditor,
     }
   }
 
@@ -602,13 +611,13 @@ export class AppStore {
   }
 
   private removeGitStore(repository: Repository) {
-    if (this.gitStores.has(repository.id)) {
-      this.gitStores.delete(repository.id)
+    if (this.gitStores.has(repository.hash)) {
+      this.gitStores.delete(repository.hash)
     }
   }
 
   private getGitStore(repository: Repository): GitStore {
-    let gitStore = this.gitStores.get(repository.id)
+    let gitStore = this.gitStores.get(repository.hash)
     if (!gitStore) {
       gitStore = new GitStore(repository, shell)
       gitStore.onDidUpdate(() => this.onGitStoreUpdated(repository, gitStore!))
@@ -617,7 +626,7 @@ export class AppStore {
       )
       gitStore.onDidError(error => this.emitError(error))
 
-      this.gitStores.set(repository.id, gitStore)
+      this.gitStores.set(repository.hash, gitStore)
     }
 
     return gitStore
@@ -789,6 +798,7 @@ export class AppStore {
     repository: Repository | CloningRepository | null
   ): Promise<Repository | null> {
     const previouslySelectedRepository = this.selectedRepository
+
     this.selectedRepository = repository
     this.emitUpdate()
 
@@ -823,7 +833,7 @@ export class AppStore {
       return null
     }
 
-    // "Clone in Desktop" from a cold start can trigger this twice, and
+    // "Clone in Kactus" from a cold start can trigger this twice, and
     // for edge cases where _selectRepository is re-entract, calling this here
     // ensures we clean up the existing background fetcher correctly (if set)
     this.stopBackgroundFetching()
@@ -941,7 +951,7 @@ export class AppStore {
       }
     }
 
-    this.updateRepositorySelection()
+    this.updateRepositorySelectionAfterRepositoriesChanged()
 
     this.sidebarWidth =
       parseInt(localStorage.getItem(sidebarWidthConfigKey) || '', 10) ||
@@ -956,6 +966,11 @@ export class AppStore {
       confirmRepoRemovalValue === null
         ? confirmRepoRemovalDefault
         : confirmRepoRemovalValue === '1'
+
+    const externalEditorValue = localStorage.getItem(externalEditorKey)
+    this.selectedExternalEditor = parseExternalEditor(externalEditorValue)
+
+    updateExternalEditorMenuItem(this.selectedExternalEditor)
 
     const showAdvancedDiffsValue = localStorage.getItem(showAdvancedDiffsKey)
 
@@ -976,7 +991,7 @@ export class AppStore {
     this.accountsStore.refresh()
   }
 
-  private updateRepositorySelection() {
+  private updateRepositorySelectionAfterRepositoriesChanged() {
     const selectedRepository = this.selectedRepository
     let newSelectedRepository: Repository | CloningRepository | null = this
       .selectedRepository
@@ -1009,7 +1024,7 @@ export class AppStore {
     const repositoryChanged =
       (selectedRepository &&
         newSelectedRepository &&
-        !structuralEquals(selectedRepository, newSelectedRepository)) ||
+        selectedRepository.hash !== newSelectedRepository.hash) ||
       (selectedRepository && !newSelectedRepository) ||
       (!selectedRepository && newSelectedRepository)
     if (repositoryChanged) {
@@ -1110,11 +1125,7 @@ export class AppStore {
         })
         .sort((x, y) => caseInsensitiveCompare(x.path, y.path))
 
-      const includeAll = this.getIncludeAllState(mergedFiles)
-      const workingDirectory = new WorkingDirectoryStatus(
-        mergedFiles,
-        includeAll
-      )
+      const workingDirectory = WorkingDirectoryStatus.fromFiles(mergedFiles)
 
       const selectedFileID = state.selectedFileID
 
@@ -1293,9 +1304,10 @@ export class AppStore {
       selectableLines
     )
     const selectedFile = currentlySelectedFile.withSelection(newSelection)
-    const workingDirectory = changesState.workingDirectory.byReplacingFile(
-      selectedFile
+    const updatedFiles = changesState.workingDirectory.files.map(
+      f => (f.id === selectedFile.id ? selectedFile : f)
     )
+    const workingDirectory = WorkingDirectoryStatus.fromFiles(updatedFiles)
 
     this.updateChangesState(repository, state => ({ diff, workingDirectory }))
     this.emitUpdate()
@@ -1346,26 +1358,6 @@ export class AppStore {
     return result || false
   }
 
-  private getIncludeAllState(
-    files: ReadonlyArray<WorkingDirectoryFileChange>
-  ): boolean | null {
-    const allSelected = files.every(
-      f => f.selection.getSelectionType() === DiffSelectionType.All
-    )
-    const noneSelected = files.every(
-      f => f.selection.getSelectionType() === DiffSelectionType.None
-    )
-
-    let includeAll: boolean | null = null
-    if (allSelected) {
-      includeAll = true
-    } else if (noneSelected) {
-      includeAll = false
-    }
-
-    return includeAll
-  }
-
   /** This shouldn't be called directly. See `Dispatcher`. */
   public _changeFileIncluded(
     repository: Repository,
@@ -1403,8 +1395,7 @@ export class AppStore {
         f => (f.id === file.id ? f.withSelection(selection) : f)
       )
 
-      const includeAll = this.getIncludeAllState(newFiles)
-      const workingDirectory = new WorkingDirectoryStatus(newFiles, includeAll)
+      const workingDirectory = WorkingDirectoryStatus.fromFiles(newFiles)
       const diff = state.selectedFileID ? state.diff : null
       return { workingDirectory, diff }
     })
@@ -1531,7 +1522,7 @@ export class AppStore {
     }
 
     if (currentPopup.type === PopupType.CloneRepository) {
-      this._completeOpenInDesktop(() => Promise.resolve(null))
+      this._completeOpenInKactus(() => Promise.resolve(null))
     }
 
     this.currentPopup = null
@@ -1702,7 +1693,7 @@ export class AppStore {
     const withUpdatedGitHubRepository = updatedRepository.withGitHubRepository(
       updatedGitHubRepository.withAPI(apiRepo)
     )
-    if (structuralEquals(withUpdatedGitHubRepository, repository)) {
+    if (withUpdatedGitHubRepository.hash === repository.hash) {
       return withUpdatedGitHubRepository
     }
 
@@ -1722,7 +1713,7 @@ export class AppStore {
     if (
       repository.gitHubRepository &&
       gitHubRepository &&
-      structuralEquals(repository.gitHubRepository, gitHubRepository)
+      repository.gitHubRepository.hash === gitHubRepository.hash
     ) {
       return repository
     }
@@ -2562,7 +2553,7 @@ export class AppStore {
     return shell.openExternal(url)
   }
 
-  /** Takes a path and opens it using the system default application */
+  /** Takes a file and opens it using Sketch */
   public _openSketchFile(
     file: IKactusFile,
     repository?: Repository,
@@ -2573,6 +2564,18 @@ export class AppStore {
       return shell.openItem(sketchStoragePath + '.sketch')
     }
     return shell.openItem(file.path + '.sketch')
+  }
+
+  /** Takes a repository path and opens it using the user's configured editor */
+  public async _openInExternalEditor(path: string): Promise<void> {
+    const state = this.getState()
+    const selectedEditor = state.selectedExternalEditor
+    try {
+      const match = await findEditorOrDefault(selectedEditor)
+      await launchExternalEditor(path, match)
+    } catch (error) {
+      this.emitError(error)
+    }
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
@@ -2605,6 +2608,24 @@ export class AppStore {
   public _setConfirmRepoRemoval(confirmRepoRemoval: boolean): Promise<void> {
     this.confirmRepoRemoval = confirmRepoRemoval
     localStorage.setItem(confirmRepoRemovalKey, confirmRepoRemoval ? '1' : '0')
+    this.emitUpdate()
+
+    return Promise.resolve()
+  }
+
+  public _setExternalEditor(selectedEditor: ExternalEditor): Promise<void> {
+    this.selectedExternalEditor = selectedEditor
+    localStorage.setItem(externalEditorKey, selectedEditor)
+    this.emitUpdate()
+
+    updateExternalEditorMenuItem(this.selectedExternalEditor)
+
+    return Promise.resolve()
+  }
+
+  public _changeImageDiffType(type: ImageDiffType): Promise<void> {
+    this.imageDiffType = type
+    localStorage.setItem(imageDiffTypeKey, JSON.stringify(this.imageDiffType))
     this.emitUpdate()
 
     return Promise.resolve()
@@ -2677,27 +2698,27 @@ export class AppStore {
   }
 
   /**
-   * Start an Open in Desktop flow. This will return a new promise which will
-   * resolve when `_completeOpenInDesktop` is called.
+   * Start an Open in Kactus flow. This will return a new promise which will
+   * resolve when `_completeOpenInKactus` is called.
    */
-  public _startOpenInDesktop(fn: () => void): Promise<Repository | null> {
+  public _startOpenInKactus(fn: () => void): Promise<Repository | null> {
     // tslint:disable-next-line:promise-must-complete
     const p = new Promise<Repository | null>(
-      resolve => (this.resolveOpenInDesktop = resolve)
+      resolve => (this.resolveOpenInKactus = resolve)
     )
     fn()
     return p
   }
 
   /**
-   * Complete any active Open in Desktop flow with the repository returned by
+   * Complete any active Open in Kactus flow with the repository returned by
    * the given function.
    */
-  public async _completeOpenInDesktop(
+  public async _completeOpenInKactus(
     fn: () => Promise<Repository | null>
   ): Promise<Repository | null> {
-    const resolve = this.resolveOpenInDesktop
-    this.resolveOpenInDesktop = null
+    const resolve = this.resolveOpenInKactus
+    this.resolveOpenInKactus = null
 
     const result = await fn()
     if (resolve) {
@@ -2713,14 +2734,6 @@ export class AppStore {
       showAdvancedDiffsKey,
       this.showAdvancedDiffs ? '1' : '0'
     )
-    this.emitUpdate()
-
-    return Promise.resolve()
-  }
-
-  public _changeImageDiffType(type: ImageDiffType): Promise<void> {
-    this.imageDiffType = type
-    localStorage.setItem(imageDiffTypeKey, JSON.stringify(this.imageDiffType))
     this.emitUpdate()
 
     return Promise.resolve()
@@ -2845,7 +2858,7 @@ export class AppStore {
       repository
     )
 
-    if (structuralEquals(refreshedRepository, repository)) {
+    if (refreshedRepository.hash === repository.hash) {
       return refreshedRepository
     }
 
@@ -2944,7 +2957,9 @@ export class AppStore {
   ): Promise<void> {
     const gitStore = this.getGitStore(repository)
 
-    gitStore.revertCommit(repository, commit)
+    await gitStore.revertCommit(repository, commit)
+
+    return gitStore.loadHistory()
   }
 
   public async promptForGenericGitAuthentication(

@@ -106,7 +106,7 @@ declare function requestIdleCallback(
   options?: IdleCallbackOptions
 ): number
 
-interface IDesktopLogger {
+interface IKactusLogger {
   /**
    * Writes a log message at the 'error' level.
    *
@@ -176,7 +176,7 @@ interface IDesktopLogger {
   debug(message: string, error?: Error): void
 }
 
-declare const log: IDesktopLogger
+declare const log: IKactusLogger
 // these changes should be pushed into the Electron declarations
 
 declare namespace NodeJS {
@@ -270,3 +270,15 @@ interface IStripeCheckoutToConfigure {
 }
 
 declare const StripeCheckout: IStripeCheckoutToConfigure
+// https://wicg.github.io/ResizeObserver/#resizeobserverentry
+interface IResizeObserverEntry {
+  readonly target: HTMLElement
+  readonly contentRect: ClientRect
+}
+
+declare class ResizeObserver {
+  public constructor(cb: (entries: ReadonlyArray<IResizeObserverEntry>) => void)
+
+  public disconnect(): void
+  public observe(e: HTMLElement): void
+}

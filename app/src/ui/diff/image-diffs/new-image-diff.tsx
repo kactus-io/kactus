@@ -1,7 +1,7 @@
 import * as React from 'react'
 
-import { Image } from '../../models/diff'
-import { renderImage } from './render-image'
+import { Image } from '../../../models/diff'
+import { DiffImage } from './diff-image'
 
 interface INewImageDiffProps {
   readonly current: Image
@@ -12,9 +12,9 @@ export class NewImageDiff extends React.Component<INewImageDiffProps, {}> {
   public render() {
     return (
       <div className="panel image" id="diff">
-        <div className="image-diff__after">
-          <div className="image-diff__header">Added</div>
-          {renderImage(this.props.current)}
+        <div className="image-diff-current">
+          <div className="image-diff-header">Added</div>
+          <DiffImage image={this.props.current} />
         </div>
       </div>
     )

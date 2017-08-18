@@ -9,7 +9,7 @@ export interface IOAuthAction {
 export interface IOpenRepositoryFromURLAction {
   readonly name: 'open-repository-from-url'
 
-  /** the remote repository location associated with the "Open in Desktop" action */
+  /** the remote repository location associated with the "Open in Kactus" action */
   readonly url: string
 
   /** the optional branch name which should be checked out. use the default branch otherwise. */
