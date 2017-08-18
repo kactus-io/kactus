@@ -670,7 +670,7 @@ export class AppStore {
 
     const gitStore = this.getGitStore(repository)
     const changedFiles = await gitStore.performFailableOperation(() =>
-      getChangedFiles(repository, currentSHA)
+      getChangedFiles(repository, state.kactus.files, currentSHA)
     )
     if (!changedFiles) {
       return
@@ -1071,7 +1071,7 @@ export class AppStore {
     }
 
     const gitStore = this.getGitStore(repository)
-    const status = await gitStore.loadStatus()
+    const status = await gitStore.loadStatus(kactusStatus.files)
 
     if (!status) {
       this.updateRepositoryState(repository, state => {

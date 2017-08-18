@@ -33,7 +33,7 @@ describe('git/checkout', () => {
     await checkoutBranch(repository, 'commit-with-long-description')
 
     const store = new GitStore(repository, shell)
-    await store.loadStatus()
+    await store.loadStatus([])
     const tip = store.tip
 
     expect(tip.kind).to.equal(TipState.Valid)

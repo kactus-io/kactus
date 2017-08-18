@@ -107,8 +107,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     )
   }
 
-  private onFileSelectionChanged = (row: number) => {
-    const file = this.props.changes.workingDirectory.files[row]
+  private onFileSelectionChanged = (file: WorkingDirectoryFileChange) => {
     this.props.dispatcher.changeChangesSelection(this.props.repository, file)
   }
 

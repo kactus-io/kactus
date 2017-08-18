@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { CommitMessage } from './commit-message'
 import { ChangedFile } from './changed-file'
+import { ChangedSketchPart } from './changed-sketch-part'
 import { List, ClickSource } from '../list'
 
 import {
@@ -23,7 +24,7 @@ interface IChangesListProps {
   readonly repository: Repository
   readonly workingDirectory: WorkingDirectoryStatus
   readonly selectedFileID: string | null
-  readonly onFileSelectionChanged: (row: number) => void
+  readonly onFileSelectionChanged: (file: WorkingDirectoryFileChange) => void
   readonly onIncludeChanged: (path: string, include: boolean) => void
   readonly onSelectAll: (selectAll: boolean) => void
   readonly onCreateCommit: (message: ICommitMessage) => Promise<boolean>
@@ -68,36 +69,150 @@ interface IChangesListProps {
   readonly isLoadingStatus: boolean
 }
 
-export class ChangesList extends React.Component<IChangesListProps, {}> {
+type TFileInList =
+  | WorkingDirectoryFileChange
+  | {
+      opened: boolean
+      type: 'sketchFile'
+      id: string
+      parts: Array<string>
+      name: string
+    }
+
+function getFileList(
+  files: ReadonlyArray<WorkingDirectoryFileChange>,
+  previousList?: Array<TFileInList>
+) {
+  const acc: Array<TFileInList> = []
+  return files.reduce((prev, f, i) => {
+    if (!f.parts || !f.sketchFile) {
+      prev.push(f)
+    } else {
+      const previousFile = files[i - 1]
+
+      f.parts.forEach((part, i, arr) => {
+        if (part === (previousFile.parts || [])[i]) {
+          return
+        }
+        const parts = arr.slice(0, i)
+        let id = parts.join('/')
+        if (id) {
+          id += '/' + part
+        } else {
+          id = part
+        }
+        const previousSketchPart =
+          previousList && previousList.find(f => f.id === id)
+        prev.push({
+          opened:
+            previousSketchPart && previousSketchPart.type === 'sketchFile'
+              ? previousSketchPart.opened
+              : i === 0,
+          type: 'sketchFile',
+          id,
+          name: part,
+          parts,
+        })
+      })
+
+      prev.push(f)
+    }
+    return prev
+  }, acc)
+}
+
+function getOpenedFilesList(files: Array<TFileInList>) {
+  const res: Array<TFileInList> = []
+  return files.reduce((prev, f, i, arr) => {
+    if (!f.parts || !f.parts.length) {
+      prev.push(f)
+    } else {
+      const id = f.parts.join('/')
+      const parent = arr.find(a => a.id === id)
+      if (parent && (parent.type === 'normal-file' || parent.opened)) {
+        prev.push(f)
+      }
+    }
+    return prev
+  }, res)
+}
+
+export class ChangesList extends React.Component<
+  IChangesListProps,
+  { files: Array<TFileInList>; visibleFileList: Array<TFileInList> }
+> {
+  public constructor(props: IChangesListProps) {
+    super(props)
+
+    const fileList = getFileList(props.workingDirectory.files)
+
+    this.state = {
+      files: fileList,
+      visibleFileList: getOpenedFilesList(fileList),
+    }
+  }
+
+  public componentWillReceiveProps(nextProps: IChangesListProps) {
+    if (
+      nextProps.workingDirectory.files.length !==
+      this.props.workingDirectory.files.length
+    ) {
+      const fileList = getFileList(
+        nextProps.workingDirectory.files,
+        this.state.files
+      )
+
+      this.setState({
+        files: fileList,
+        visibleFileList: getOpenedFilesList(fileList),
+      })
+    }
+  }
+
   private onIncludeAllChanged = (event: React.FormEvent<HTMLInputElement>) => {
     const include = event.currentTarget.checked
     this.props.onSelectAll(include)
   }
 
   private renderRow = (row: number): JSX.Element => {
-    const file = this.props.workingDirectory.files[row]
-    const selection = file.selection.getSelectionType()
+    const file = this.state.visibleFileList[row]
 
-    const includeAll =
-      selection === DiffSelectionType.All
-        ? true
-        : selection === DiffSelectionType.None ? false : null
+    if (file.type === 'normal-file') {
+      const selection = file.selection.getSelectionType()
 
-    return (
-      <ChangedFile
-        path={file.path}
-        status={file.status}
-        oldPath={file.oldPath}
-        include={includeAll}
-        key={file.id}
-        onIncludeChanged={this.props.onIncludeChanged}
-        onDiscardChanges={this.onDiscardChanges}
-        onRevealInFileManager={this.props.onRevealInFileManager}
-        onOpenItem={this.props.onOpenItem}
-        availableWidth={this.props.availableWidth}
-        onIgnore={this.props.onIgnore}
-      />
-    )
+      const includeAll =
+        selection === DiffSelectionType.All
+          ? true
+          : selection === DiffSelectionType.None ? false : null
+
+      return (
+        <ChangedFile
+          path={file.path}
+          status={file.status}
+          oldPath={file.oldPath}
+          include={includeAll}
+          key={file.id}
+          onIncludeChanged={this.props.onIncludeChanged}
+          onDiscardChanges={this.onDiscardChanges}
+          onRevealInFileManager={this.props.onRevealInFileManager}
+          onOpenItem={this.props.onOpenItem}
+          availableWidth={this.props.availableWidth}
+          onIgnore={this.props.onIgnore}
+        />
+      )
+    } else {
+      return (
+        <ChangedSketchPart
+          name={file.name}
+          parts={file.parts}
+          id={file.id}
+          key={file.id}
+          opened={file.opened}
+          availableWidth={this.props.availableWidth}
+          onOpenChanged={this.onOpenChanged}
+        />
+      )
+    }
   }
 
   private get includeAllValue(): CheckboxValue {
@@ -113,6 +228,22 @@ export class ChangesList extends React.Component<IChangesListProps, {}> {
 
   private onDiscardAllChanges = () => {
     this.props.onDiscardAllChanges(this.props.workingDirectory.files)
+  }
+
+  private onOpenChanged = (id: string, opened: boolean) => {
+    const fileList = this.state.files.map(f => {
+      if (f.id === id && f.type === 'sketchFile') {
+        return {
+          ...f,
+          opened,
+        }
+      }
+      return f
+    })
+    this.setState({
+      files: fileList,
+      visibleFileList: getOpenedFilesList(fileList),
+    })
   }
 
   private onDiscardChanges = (path: string) => {
@@ -139,9 +270,17 @@ export class ChangesList extends React.Component<IChangesListProps, {}> {
     showContextualMenu(items)
   }
 
+  private onFileSelectionChanged = (row: number) => {
+    const file = this.state.visibleFileList[row]
+    if (file && file.type === 'normal-file') {
+      this.props.onFileSelectionChanged(file)
+    }
+  }
+
   public render() {
     const fileList = this.props.workingDirectory.files
-    const selectedRow = fileList.findIndex(
+    const { visibleFileList } = this.state
+    const selectedRow = visibleFileList.findIndex(
       file => file.id === this.props.selectedFileID
     )
     const fileCount = fileList.length
@@ -163,11 +302,11 @@ export class ChangesList extends React.Component<IChangesListProps, {}> {
 
         <List
           id="changes-list"
-          rowCount={this.props.workingDirectory.files.length}
+          rowCount={visibleFileList.length}
           rowHeight={RowHeight}
           rowRenderer={this.renderRow}
           selectedRow={selectedRow}
-          onSelectionChanged={this.props.onFileSelectionChanged}
+          onSelectionChanged={this.onFileSelectionChanged}
           invalidationProps={this.props.workingDirectory}
           onRowClick={this.props.onRowClick}
           loading={this.props.isLoadingStatus}
