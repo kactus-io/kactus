@@ -144,6 +144,7 @@ function getMenuState(state: IAppState): Map<MenuIDs, IMenuItemState> {
     'show-history',
     'show-repository-list',
     'show-branches-list',
+    'open-external-editor',
   ]
 
   const menuStateBuilder = new MenuStateBuilder()
@@ -177,6 +178,13 @@ function getMenuState(state: IAppState): Map<MenuIDs, IMenuItemState> {
       hasPublishedBranch && !networkActionInProgress
     )
     menuStateBuilder.setEnabled('create-branch', !tipStateIsUnknown)
+
+    if (
+      selectedState &&
+      selectedState.type === SelectionType.MissingRepository
+    ) {
+      menuStateBuilder.disable('open-external-editor')
+    }
   } else {
     for (const id of repositoryScopedIDs) {
       menuStateBuilder.disable(id)

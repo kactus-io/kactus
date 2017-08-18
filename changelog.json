@@ -1,6 +1,25 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.3": [
+      "[New] Can choose whether a branch should be deleted on the remote as well as locally",
+      "[New] Added the ability to revert a commit",
+      "[Improved] Fetch if a push fails because they need to pull first",
+      "[Improved] Discard changes performance",
+      "[Fixed] Show 'Add Repository' dialog when repository is dragged onto the app",
+      "[Fixed] Dialog component did not remove event handler",
+      "[Fixed] Update to Git 2.14.1 to fix security vulnerability",
+      "[Fixed] Changing the default branch on GitHub.com is now reflected in the app",
+      "[Fixed] Swap around some callouts for no repositories",
+      "[Fixed] Darker unfocused selection color",
+      "[Fixed] Increase the max sidebar width",
+      "[Fixed] Don't say \"Publish this branch to GitHub\" for non-GitHub repositories",
+      "[Fixed] Patches which contain the \"no newline\" marker would fail to apply",
+      "[Fixed] Close the autocompletion popover when it loses focus",
+      "[Fixed] Clear the selected org when switching Publish Repository tabs",
+      "[Fixed] 'Create Without Pushing' button throwing an exception while opening a pull request",
+      "[Fixed] Publishing a repository would try to check for full access status first"
+    ],
     "0.2.2": ["[Fixed] Create a new sketch file with shared styles would fail"],
     "0.2.1": [
       "[Fixed] Fixed getting the previous preview (which resulted in showing the same image for both preview)"

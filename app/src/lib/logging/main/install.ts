@@ -3,7 +3,7 @@ import { formatLogMessage } from '../format-log-message'
 
 const g = global as any
 
-g.log = <IDesktopLogger>{
+g.log = <IKactusLogger>{
   error(message: string, error?: Error) {
     log('error', '[main] ' + formatLogMessage(message, error))
   },

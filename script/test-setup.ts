@@ -13,7 +13,7 @@ const isFork = process.env.TRAVIS_SECURE_ENV_VARS !== 'true'
 if (process.platform === 'darwin' && process.env.TRAVIS && !isFork) {
   const archive = `${getDistPath()}/${getProductName()}.app`
   try {
-    console.log('validating signature of Desktop app')
+    console.log('validating signature of Kactus app')
     cp.execSync(`codesign -dv --verbose=4 '${archive}'`)
   } catch (err) {
     process.exit(1)

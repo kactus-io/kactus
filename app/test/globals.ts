@@ -16,7 +16,7 @@ g['__RELEASE_CHANNEL__'] = 'development'
 g['__UPDATES_URL__'] = ''
 g['__SHA__'] = 'test'
 
-g['log'] = <IDesktopLogger>{
+g['log'] = <IKactusLogger>{
   error: () => {},
   warn: () => {},
   info: () => {},

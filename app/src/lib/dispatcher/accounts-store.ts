@@ -11,7 +11,7 @@ interface IEmail {
   /**
    * Represents whether GitHub has confirmed the user has access to this
    * email address. New users require a verified email address before
-   * they can sign into GitHub Desktop.
+   * they can sign into Kactus.
    */
   readonly verified: boolean
   /**

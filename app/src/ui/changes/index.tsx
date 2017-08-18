@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Diff } from '../diff'
 import { ChangedFileDetails } from './changed-file-details'
 import { SketchFileView } from './sketch-file-view'
+import { ImageDiffType } from '../../lib/app-state'
 import { DiffSelection, IDiff } from '../../models/diff'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { Repository } from '../../models/repository'
@@ -19,7 +20,7 @@ interface IChangesProps {
   readonly diff: IDiff | null
   readonly dispatcher: Dispatcher
   readonly showAdvancedDiffs: boolean
-  readonly imageDiffType: number
+  readonly imageDiffType: ImageDiffType
 }
 
 export class Changes extends React.Component<IChangesProps, {}> {

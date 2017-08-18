@@ -1,16 +1,20 @@
+import { clipboard } from 'electron'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Disposable } from 'event-kit'
 
-import { NewImageDiff } from './new-image-diff'
-import { ModifiedImageDiff } from './modified-image-diff'
-import { DeletedImageDiff } from './deleted-image-diff'
+import {
+  NewImageDiff,
+  ModifiedImageDiff,
+  DeletedImageDiff,
+} from './image-diffs'
 import { BinaryFile } from './binary-file'
 
 import { Editor } from 'codemirror'
 import { CodeMirrorHost } from './code-mirror-host'
 import { Repository } from '../../models/repository'
 
+import { ImageDiffType } from '../../lib/app-state'
 import {
   FileChange,
   WorkingDirectoryFileChange,
@@ -24,6 +28,7 @@ import {
   ITextDiff,
   ISketchDiff,
   IKactusFileType,
+  DiffLineType,
 } from '../../models/diff'
 import { Dispatcher } from '../../lib/dispatcher/dispatcher'
 
@@ -31,6 +36,7 @@ import {
   diffLineForIndex,
   diffHunkForIndex,
   findInteractiveDiffRange,
+  lineNumberForDiffLine,
 } from './diff-explorer'
 import { DiffLineGutter } from './diff-line-gutter'
 import { IEditorConfigurationExtra } from './editor-configuration-extra'
@@ -45,6 +51,10 @@ import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { Button } from '../lib/button'
 
 import { RangeSelectionSizePixels } from './edge-detection'
+import { relativeChanges } from './changed-range'
+
+/** The longest line for which we'd try to calculate a line diff. */
+const MaxIntraLineDiffStringLength = 4096
 
 // This is a custom version of the no-newline octicon that's exactly as
 // tall as it needs to be (8px) which helps with aligning it on the line.
@@ -78,9 +88,11 @@ interface IDiffProps {
   readonly dispatcher: Dispatcher
 
   readonly showAdvancedDiffs: boolean
-  readonly imageDiffType: number
 
   readonly openSketchFile?: () => void
+
+  /** The type of image diff to display. */
+  readonly imageDiffType: ImageDiffType
 }
 
 /** A component which renders a diff for a file. */
@@ -559,11 +571,77 @@ export class Diff extends React.Component<IDiffProps, {}> {
     }
   }
 
-  private onChanges = (cm: Editor) => {
-    this.restoreScrollPosition(cm)
+  private markIntraLineChanges(codeMirror: Editor, diff: ITextDiff) {
+    for (const hunk of diff.hunks) {
+      const additions = hunk.lines.filter(l => l.type === DiffLineType.Add)
+      const deletions = hunk.lines.filter(l => l.type === DiffLineType.Delete)
+      if (additions.length !== deletions.length) {
+        continue
+      }
+
+      for (let i = 0; i < additions.length; i++) {
+        const addLine = additions[i]
+        const deleteLine = deletions[i]
+        if (
+          addLine.text.length > MaxIntraLineDiffStringLength ||
+          deleteLine.text.length > MaxIntraLineDiffStringLength
+        ) {
+          continue
+        }
+
+        const changeRanges = relativeChanges(
+          addLine.content,
+          deleteLine.content
+        )
+        const addRange = changeRanges.stringARange
+        if (addRange.length > 0) {
+          const addLineNumber = lineNumberForDiffLine(addLine, diff)
+          if (addLineNumber > -1) {
+            const addFrom = {
+              line: addLineNumber,
+              ch: addRange.location + 1,
+            }
+            const addTo = {
+              line: addLineNumber,
+              ch: addRange.location + addRange.length + 1,
+            }
+            codeMirror
+              .getDoc()
+              .markText(addFrom, addTo, { className: 'cm-diff-add-inner' })
+          }
+        }
+
+        const deleteRange = changeRanges.stringBRange
+        if (deleteRange.length > 0) {
+          const deleteLineNumber = lineNumberForDiffLine(deleteLine, diff)
+          if (deleteLineNumber > -1) {
+            const deleteFrom = {
+              line: deleteLineNumber,
+              ch: deleteRange.location + 1,
+            }
+            const deleteTo = {
+              line: deleteLineNumber,
+              ch: deleteRange.location + deleteRange.length + 1,
+            }
+            codeMirror.getDoc().markText(deleteFrom, deleteTo, {
+              className: 'cm-diff-delete-inner',
+            })
+          }
+        }
+      }
+    }
   }
 
-  private onChangeImageDiffType = (type: number) => {
+  private onChanges = (cm: Editor) => {
+    this.restoreScrollPosition(cm)
+
+    const diff = this.props.diff
+    if (diff.kind === DiffType.Text) {
+      this.markIntraLineChanges(cm, diff)
+    }
+  }
+
+  private onChangeImageDiffType = (type: ImageDiffType) => {
     this.props.dispatcher.changeImageDiffType(type)
   }
 
@@ -620,7 +698,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
     }
 
     // If the text looks like it could have been formatted using Windows
-    // line endings (\r\n) we  need to massage it a bit before we hand it
+    // line endings (\r\n) we need to massage it a bit before we hand it
     // off to CodeMirror. That's because CodeMirror has two ways of splitting
     // lines, one is the built in which splits on \n, \r\n and \r. The last
     // one is important because that will match carriage return characters
@@ -647,8 +725,20 @@ export class Diff extends React.Component<IDiffProps, {}> {
         onChanges={this.onChanges}
         onRenderLine={this.renderLine}
         ref={this.getAndStoreCodeMirrorInstance}
+        onCopy={this.onCopy}
       />
     )
+  }
+
+  private onCopy = (selection: string, event: Event) => {
+    event.preventDefault()
+
+    // Remove all the diff markers.
+    const textWithoutMarkers = selection
+      .split('\n')
+      .map(l => l.substr(1))
+      .join('\n')
+    clipboard.writeText(textWithoutMarkers)
   }
 
   private getAndStoreCodeMirrorInstance = (cmh: CodeMirrorHost) => {
