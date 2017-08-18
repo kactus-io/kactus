@@ -135,7 +135,12 @@ function getOpenedFilesList(files: Array<TFileInList>) {
     } else {
       const id = f.parts.join('/')
       const parent = arr.find(a => a.id === id)
-      if (parent && (parent.type === FileType.NormalFile || parent.opened)) {
+      const parents = arr.filter(a => id.indexOf(a.id) === 0)
+      if (
+        parent &&
+        (parent.type === FileType.NormalFile ||
+          parents.every(p => p.type === FileType.NormalFile || p.opened))
+      ) {
         prev.push(f)
       }
     }

@@ -50,7 +50,7 @@ export class ChangedSketchPart extends React.Component<
 
     return (
       <div className="file" onClick={this.handleOpenChanged}>
-        {this.props.parts.map(p => <Space />)}
+        {this.props.parts.map((p, i) => <Space key={i} />)}
         <Arrow opened={this.props.opened} />
 
         <PathText path={this.props.name} availableWidth={availablePathWidth} />
