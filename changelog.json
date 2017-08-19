@@ -1,6 +1,11 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.4": [
+      "[New] Changed files in a sketch file are now grouped in a tree.",
+      "[Improved] Added a loading indicator when generating the diffs",
+      "[Fixed] Create folders to new sketch file if needed"
+    ],
     "0.2.3": [
       "[New] Can choose whether a branch should be deleted on the remote as well as locally",
       "[New] Added the ability to revert a commit",
