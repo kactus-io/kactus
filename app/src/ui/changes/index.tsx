@@ -21,6 +21,7 @@ interface IChangesProps {
   readonly dispatcher: Dispatcher
   readonly showAdvancedDiffs: boolean
   readonly imageDiffType: ImageDiffType
+  readonly loadingDiff: boolean
 }
 
 export class Changes extends React.Component<IChangesProps, {}> {
@@ -81,6 +82,7 @@ export class Changes extends React.Component<IChangesProps, {}> {
               onIncludeChanged={this.onDiffLineIncludeChanged}
               diff={diff}
               dispatcher={this.props.dispatcher}
+              loading={this.props.loadingDiff}
             />
           </div>
         </div>

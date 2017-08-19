@@ -52,6 +52,7 @@ import { Button } from '../lib/button'
 
 import { RangeSelectionSizePixels } from './edge-detection'
 import { relativeChanges } from './changed-range'
+import { LoadingOverlay } from '../lib/loading'
 
 /** The longest line for which we'd try to calculate a line diff. */
 const MaxIntraLineDiffStringLength = 4096
@@ -93,6 +94,8 @@ interface IDiffProps {
 
   /** The type of image diff to display. */
   readonly imageDiffType: ImageDiffType
+
+  readonly loading: boolean
 }
 
 /** A component which renders a diff for a file. */
@@ -749,7 +752,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
     this.props.dispatcher.toggleAdvancedDiffs()
   }
 
-  public render() {
+  private renderContent() {
     const diff = this.props.diff
 
     if (diff.kind === DiffType.Image) {
@@ -846,5 +849,21 @@ export class Diff extends React.Component<IDiffProps, {}> {
     }
 
     return null
+  }
+
+  public render() {
+    return (
+      <div
+        style={{
+          width: '100%',
+          display: 'flex',
+          flexGrow: 1,
+          position: 'relative',
+        }}
+      >
+        {this.renderContent()}
+        {this.props.loading && <LoadingOverlay />}
+      </div>
+    )
   }
 }

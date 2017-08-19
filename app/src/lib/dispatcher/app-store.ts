@@ -396,6 +396,7 @@ export class AppStore {
         changedFiles: new Array<FileChange>(),
         history: new Array<string>(),
         diff: null,
+        loadingDiff: false,
       },
       changesState: {
         workingDirectory: WorkingDirectoryStatus.fromFiles(
@@ -405,6 +406,7 @@ export class AppStore {
         diff: null,
         contextualCommitMessage: null,
         commitMessage: null,
+        loadingDiff: false,
       },
       kactus: {
         files: new Array<IKactusFile & {}>(),
@@ -740,8 +742,7 @@ export class AppStore {
   ): Promise<void> {
     this.updateHistoryState(repository, state => {
       const selection = { sha: state.selection.sha, file }
-      const diff = null
-      return { selection, diff }
+      return { selection, loadingDiff: true }
     })
     this.emitUpdate()
 
@@ -749,6 +750,10 @@ export class AppStore {
     const sha = stateBeforeLoad.historyState.selection.sha
 
     if (!sha) {
+      this.updateHistoryState(repository, state => {
+        return { loadingDiff: false }
+      })
+      this.emitUpdate()
       if (__DEV__) {
         throw new Error(
           "No currently selected sha yet we've been asked to switch file selection"
@@ -787,7 +792,7 @@ export class AppStore {
 
     this.updateHistoryState(repository, state => {
       const selection = { sha: state.selection.sha, file }
-      return { selection, diff }
+      return { selection, diff, loadingDiff: false }
     })
 
     this.emitUpdate()
@@ -1174,7 +1179,6 @@ export class AppStore {
   ): Promise<void> {
     this.updateChangesState(repository, state => ({
       selectedFileID: selectedFile ? selectedFile.id : null,
-      diff: null,
     }))
     this.updateKactusState(repository, state => ({ selectedFileID: null }))
     this.emitUpdate()
@@ -1241,10 +1245,15 @@ export class AppStore {
   private async updateChangesDiffForCurrentSelection(
     repository: Repository
   ): Promise<void> {
+    this.updateChangesState(repository, state => ({ loadingDiff: true }))
+    this.emitUpdate()
+
     const stateBeforeLoad = this.getRepositoryState(repository)
     const changesStateBeforeLoad = stateBeforeLoad.changesState
     const selectedFileIDBeforeLoad = changesStateBeforeLoad.selectedFileID
     if (!selectedFileIDBeforeLoad) {
+      this.updateChangesState(repository, state => ({ loadingDiff: false }))
+      this.emitUpdate()
       return
     }
 
@@ -1252,6 +1261,8 @@ export class AppStore {
       selectedFileIDBeforeLoad
     )
     if (!selectedFileBeforeLoad) {
+      this.updateChangesState(repository, state => ({ loadingDiff: false }))
+      this.emitUpdate()
       return
     }
 
@@ -1270,9 +1281,13 @@ export class AppStore {
     // A different file could have been selected while we were loading the diff
     // in which case we no longer care about the diff we just loaded.
     if (!selectedFileID) {
+      this.updateChangesState(repository, state => ({ loadingDiff: false }))
+      this.emitUpdate()
       return
     }
     if (selectedFileID !== selectedFileIDBeforeLoad) {
+      this.updateChangesState(repository, state => ({ loadingDiff: false }))
+      this.emitUpdate()
       return
     }
 
@@ -1280,6 +1295,8 @@ export class AppStore {
       selectedFileID
     )
     if (!currentlySelectedFile) {
+      this.updateChangesState(repository, state => ({ loadingDiff: false }))
+      this.emitUpdate()
       return
     }
 
@@ -1309,7 +1326,11 @@ export class AppStore {
     )
     const workingDirectory = WorkingDirectoryStatus.fromFiles(updatedFiles)
 
-    this.updateChangesState(repository, state => ({ diff, workingDirectory }))
+    this.updateChangesState(repository, state => ({
+      diff,
+      workingDirectory,
+      loadingDiff: false,
+    }))
     this.emitUpdate()
   }
 

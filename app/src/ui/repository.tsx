@@ -183,6 +183,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
           <NoChanges
             onOpenRepository={this.openRepository}
             onCreateSketchFile={this.handleCreateSketchFile}
+            loadingDiff={changesState.loadingDiff}
           />
         )
       } else {
@@ -195,6 +196,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
             file={selectedFile}
             diff={diff}
             sketchFile={selectedSketchFile}
+            loadingDiff={changesState.loadingDiff}
           />
         )
       }
@@ -210,6 +212,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
           commits={this.props.state.commits}
           commitSummaryWidth={this.props.commitSummaryWidth}
           gitHubUsers={this.props.state.gitHubUsers}
+          loadingDiff={this.props.state.historyState.loadingDiff}
         />
       )
     } else {

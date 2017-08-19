@@ -17,21 +17,6 @@
   .ReactVirtualized__Grid {
     background: var(--background-color);
   }
-
-  .list-loading {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-
-    background: rgba(255, 255, 255, 0.8);
-
-    .spin {
-      margin-left: calc(50% - 8px);
-      margin-top: 30px;
-    }
-  }
 }
 
 @include win32-context {

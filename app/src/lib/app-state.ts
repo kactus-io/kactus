@@ -511,6 +511,8 @@ export interface IHistoryState {
   readonly changedFiles: ReadonlyArray<FileChange>
 
   readonly diff: IDiff | null
+
+  readonly loadingDiff: boolean
 }
 
 export interface IKactusState {
@@ -545,4 +547,6 @@ export interface IChangesState {
 
   /** The commit message for a work-in-progress commit in the changes view. */
   readonly commitMessage: ICommitMessage | null
+
+  readonly loadingDiff: boolean
 }
