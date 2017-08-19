@@ -254,7 +254,7 @@ export class CreateRepository extends React.Component<
     }
 
     try {
-      const status = await getStatus(repository)
+      const status = await getStatus(repository, [])
       const wd = status.workingDirectory
       const files = wd.files
       if (files.length > 0) {

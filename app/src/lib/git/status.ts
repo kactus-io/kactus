@@ -11,6 +11,7 @@ import { DiffSelectionType, DiffSelection } from '../../models/diff'
 import { Repository } from '../../models/repository'
 import { IAheadBehind } from './rev-list'
 import { fatalError } from '../../lib/fatal-error'
+import { IKactusFile } from '../../lib/kactus'
 
 /** The encapsulation of the result from 'git status' */
 export interface IStatusResult {
@@ -54,7 +55,8 @@ function convertToAppStatus(status: FileEntry): AppFileStatus {
  *  and fail gracefully if the location is not a Git repository
  */
 export async function getStatus(
-  repository: Repository
+  repository: Repository,
+  sketchFiles: ReadonlyArray<IKactusFile>
 ): Promise<IStatusResult> {
   const result = await git(
     ['status', '--untracked-files=all', '--branch', '--porcelain=2', '-z'],
@@ -102,11 +104,14 @@ export async function getStatus(
         DiffSelectionType.All
       )
 
+      const sketchFile = sketchFiles.find(f => entry.path.indexOf(f.id) === 0)
+
       files.push(
         new WorkingDirectoryFileChange(
           entry.path,
           summary,
           selection,
+          sketchFile,
           entry.oldPath
         )
       )

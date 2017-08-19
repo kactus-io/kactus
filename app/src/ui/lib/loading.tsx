@@ -7,3 +7,24 @@ export class Loading extends React.Component<{}, {}> {
     return <Octicon className="spin" symbol={OcticonSymbol.sync} />
   }
 }
+
+export class LoadingOverlay extends React.Component<{}, { mounted: boolean }> {
+  public componentDidMount() {
+    this.setState({
+      mounted: true,
+    })
+  }
+
+  public render() {
+    return (
+      <div
+        className={
+          'loading-overlay' +
+          ((this.state || {}).mounted ? ' loading-overlay-mounted' : '')
+        }
+      >
+        <Loading />
+      </div>
+    )
+  }
+}

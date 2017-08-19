@@ -10,6 +10,7 @@ import {
   FileChange,
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
+  FileType,
 } from '../models/status'
 import { CloningRepository, IGitHubUser, SignInState } from './dispatcher'
 import { ICommitMessage } from './dispatcher/git-store'
@@ -511,6 +512,8 @@ export interface IHistoryState {
   readonly changedFiles: ReadonlyArray<FileChange>
 
   readonly diff: IDiff | null
+
+  readonly loadingDiff: boolean
 }
 
 export interface IKactusState {
@@ -545,4 +548,11 @@ export interface IChangesState {
 
   /** The commit message for a work-in-progress commit in the changes view. */
   readonly commitMessage: ICommitMessage | null
+
+  readonly loadingDiff: boolean
+
+  readonly selectedSketchPart: {
+    id: string
+    type: FileType.LayerFile | FileType.PageFile
+  } | null
 }

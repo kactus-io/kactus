@@ -29,6 +29,7 @@ interface IHistoryProps {
   readonly gitHubUsers: Map<string, IGitHubUser>
   readonly showAdvancedDiffs: boolean
   readonly imageDiffType: ImageDiffType
+  readonly loadingDiff: boolean
 }
 
 interface IHistoryState {
@@ -93,6 +94,7 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
         readOnly={true}
         dispatcher={this.props.dispatcher}
         openSketchFile={this.onOpenSketchFile}
+        loading={this.props.loadingDiff}
       />
     )
   }

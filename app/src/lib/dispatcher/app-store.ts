@@ -27,8 +27,14 @@ import {
   FileChange,
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
+  TSketchPartChange,
 } from '../../models/status'
-import { DiffSelection, DiffSelectionType, DiffType } from '../../models/diff'
+import {
+  DiffSelection,
+  DiffSelectionType,
+  DiffType,
+  IDiff,
+} from '../../models/diff'
 import { matchGitHubRepository } from '../../lib/repository-matching'
 import {
   API,
@@ -89,6 +95,7 @@ import {
   deleteBranch,
   getCommitDiff,
   getWorkingDirectoryDiff,
+  getWorkingDirectoryPartDiff,
   getChangedFiles,
   updateRef,
   addRemote,
@@ -396,6 +403,7 @@ export class AppStore {
         changedFiles: new Array<FileChange>(),
         history: new Array<string>(),
         diff: null,
+        loadingDiff: false,
       },
       changesState: {
         workingDirectory: WorkingDirectoryStatus.fromFiles(
@@ -405,6 +413,8 @@ export class AppStore {
         diff: null,
         contextualCommitMessage: null,
         commitMessage: null,
+        loadingDiff: false,
+        selectedSketchPart: null,
       },
       kactus: {
         files: new Array<IKactusFile & {}>(),
@@ -679,7 +689,7 @@ export class AppStore {
 
     const gitStore = this.getGitStore(repository)
     const changedFiles = await gitStore.performFailableOperation(() =>
-      getChangedFiles(repository, currentSHA)
+      getChangedFiles(repository, state.kactus.files, currentSHA)
     )
     if (!changedFiles) {
       return
@@ -740,8 +750,7 @@ export class AppStore {
   ): Promise<void> {
     this.updateHistoryState(repository, state => {
       const selection = { sha: state.selection.sha, file }
-      const diff = null
-      return { selection, diff }
+      return { selection, loadingDiff: true }
     })
     this.emitUpdate()
 
@@ -749,6 +758,10 @@ export class AppStore {
     const sha = stateBeforeLoad.historyState.selection.sha
 
     if (!sha) {
+      this.updateHistoryState(repository, state => {
+        return { loadingDiff: false }
+      })
+      this.emitUpdate()
       if (__DEV__) {
         throw new Error(
           "No currently selected sha yet we've been asked to switch file selection"
@@ -787,7 +800,7 @@ export class AppStore {
 
     this.updateHistoryState(repository, state => {
       const selection = { sha: state.selection.sha, file }
-      return { selection, diff }
+      return { selection, diff, loadingDiff: false }
     })
 
     this.emitUpdate()
@@ -1086,7 +1099,7 @@ export class AppStore {
     }
 
     const gitStore = this.getGitStore(repository)
-    const status = await gitStore.loadStatus()
+    const status = await gitStore.loadStatus(kactusStatus.files)
 
     if (!status) {
       this.updateRepositoryState(repository, state => {
@@ -1174,7 +1187,7 @@ export class AppStore {
   ): Promise<void> {
     this.updateChangesState(repository, state => ({
       selectedFileID: selectedFile ? selectedFile.id : null,
-      diff: null,
+      selectedSketchPart: null,
     }))
     this.updateKactusState(repository, state => ({ selectedFileID: null }))
     this.emitUpdate()
@@ -1227,7 +1240,31 @@ export class AppStore {
     this.updateKactusState(repository, state => ({
       selectedFileID: selectedFile ? selectedFile.id : null,
     }))
-    this.updateChangesState(repository, state => ({ selectedFileID: null }))
+    this.updateChangesState(repository, state => ({
+      selectedFileID: null,
+      selectedSketchPart: null,
+      diff: null,
+    }))
+    this.emitUpdate()
+
+    this.updateChangesDiffForCurrentSelection(repository)
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _changeSketchPartSelection(
+    repository: Repository,
+    selectedPart: TSketchPartChange | null
+  ): Promise<void> {
+    this.updateChangesState(repository, state => ({
+      selectedFileID: null,
+      selectedSketchPart: selectedPart
+        ? {
+            id: selectedPart.id,
+            type: selectedPart.type,
+          }
+        : null,
+    }))
+    this.updateKactusState(repository, state => ({ selectedFileID: null }))
     this.emitUpdate()
 
     this.updateChangesDiffForCurrentSelection(repository)
@@ -1241,75 +1278,113 @@ export class AppStore {
   private async updateChangesDiffForCurrentSelection(
     repository: Repository
   ): Promise<void> {
+    this.updateChangesState(repository, state => ({ loadingDiff: true }))
+    this.emitUpdate()
+
     const stateBeforeLoad = this.getRepositoryState(repository)
     const changesStateBeforeLoad = stateBeforeLoad.changesState
     const selectedFileIDBeforeLoad = changesStateBeforeLoad.selectedFileID
-    if (!selectedFileIDBeforeLoad) {
+    const selectedSketchPartBeforeLoad =
+      changesStateBeforeLoad.selectedSketchPart
+
+    let diff: IDiff
+
+    if (selectedFileIDBeforeLoad) {
+      const selectedFileBeforeLoad = changesStateBeforeLoad.workingDirectory.findFileWithID(
+        selectedFileIDBeforeLoad
+      )
+      if (!selectedFileBeforeLoad) {
+        this.updateChangesState(repository, state => ({ loadingDiff: false }))
+        this.emitUpdate()
+        return
+      }
+
+      diff = await getWorkingDirectoryDiff(
+        this.sketchPath,
+        repository,
+        stateBeforeLoad.kactus.files,
+        selectedFileBeforeLoad,
+        stateBeforeLoad.historyState.history[0]
+      )
+    } else if (selectedSketchPartBeforeLoad) {
+      diff = await getWorkingDirectoryPartDiff(
+        this.sketchPath,
+        repository,
+        stateBeforeLoad.kactus.files,
+        selectedSketchPartBeforeLoad,
+        stateBeforeLoad.historyState.history[0]
+      )
+    } else {
+      this.updateChangesState(repository, state => ({ loadingDiff: false }))
+      this.emitUpdate()
       return
     }
-
-    const selectedFileBeforeLoad = changesStateBeforeLoad.workingDirectory.findFileWithID(
-      selectedFileIDBeforeLoad
-    )
-    if (!selectedFileBeforeLoad) {
-      return
-    }
-
-    const diff = await getWorkingDirectoryDiff(
-      this.sketchPath,
-      repository,
-      stateBeforeLoad.kactus.files,
-      selectedFileBeforeLoad,
-      stateBeforeLoad.historyState.history[0]
-    )
 
     const stateAfterLoad = this.getRepositoryState(repository)
     const changesState = stateAfterLoad.changesState
     const selectedFileID = changesState.selectedFileID
+    const selectedSketchPart = changesState.selectedSketchPart
 
     // A different file could have been selected while we were loading the diff
     // in which case we no longer care about the diff we just loaded.
-    if (!selectedFileID) {
-      return
-    }
-    if (selectedFileID !== selectedFileIDBeforeLoad) {
-      return
-    }
-
-    const currentlySelectedFile = changesState.workingDirectory.findFileWithID(
-      selectedFileID
-    )
-    if (!currentlySelectedFile) {
+    if (
+      (!selectedFileID || selectedFileID !== selectedFileIDBeforeLoad) &&
+      (!selectedSketchPart ||
+        selectedSketchPart !== selectedSketchPartBeforeLoad)
+    ) {
+      this.updateChangesState(repository, state => ({ loadingDiff: false }))
+      this.emitUpdate()
       return
     }
 
-    const selectableLines = new Set<number>()
-    if (diff.kind === DiffType.Text) {
-      // The diff might have changed dramatically since last we loaded it.
-      // Ideally we would be more clever about validating that any partial
-      // selection state is still valid by ensuring that selected lines still
-      // exist but for now we'll settle on just updating the selectable lines
-      // such that any previously selected line which now no longer exists or
-      // has been turned into a context line isn't still selected.
-      diff.hunks.forEach(h => {
-        h.lines.forEach((line, index) => {
-          if (line.isIncludeableLine()) {
-            selectableLines.add(h.unifiedDiffStart + index)
-          }
+    if (selectedFileID) {
+      const currentlySelectedFile = changesState.workingDirectory.findFileWithID(
+        selectedFileID
+      )
+      if (!currentlySelectedFile) {
+        this.updateChangesState(repository, state => ({ loadingDiff: false }))
+        this.emitUpdate()
+        return
+      }
+
+      const selectableLines = new Set<number>()
+      if (diff.kind === DiffType.Text) {
+        // The diff might have changed dramatically since last we loaded it.
+        // Ideally we would be more clever about validating that any partial
+        // selection state is still valid by ensuring that selected lines still
+        // exist but for now we'll settle on just updating the selectable lines
+        // such that any previously selected line which now no longer exists or
+        // has been turned into a context line isn't still selected.
+        diff.hunks.forEach(h => {
+          h.lines.forEach((line, index) => {
+            if (line.isIncludeableLine()) {
+              selectableLines.add(h.unifiedDiffStart + index)
+            }
+          })
         })
-      })
+      }
+
+      const newSelection = currentlySelectedFile.selection.withSelectableLines(
+        selectableLines
+      )
+      const selectedFile = currentlySelectedFile.withSelection(newSelection)
+      const updatedFiles = changesState.workingDirectory.files.map(
+        f => (f.id === selectedFile.id ? selectedFile : f)
+      )
+      const workingDirectory = WorkingDirectoryStatus.fromFiles(updatedFiles)
+
+      this.updateChangesState(repository, state => ({
+        diff,
+        workingDirectory,
+        loadingDiff: false,
+      }))
+    } else {
+      this.updateChangesState(repository, state => ({
+        diff,
+        loadingDiff: false,
+      }))
     }
 
-    const newSelection = currentlySelectedFile.selection.withSelectableLines(
-      selectableLines
-    )
-    const selectedFile = currentlySelectedFile.withSelection(newSelection)
-    const updatedFiles = changesState.workingDirectory.files.map(
-      f => (f.id === selectedFile.id ? selectedFile : f)
-    )
-    const workingDirectory = WorkingDirectoryStatus.fromFiles(updatedFiles)
-
-    this.updateChangesState(repository, state => ({ diff, workingDirectory }))
     this.emitUpdate()
   }
 

@@ -14,6 +14,7 @@ import { ErrorWithMetadata, IErrorMetadata } from '../error-with-metadata'
 import { structuralEquals } from '../../lib/equality'
 import { compare } from '../../lib/compare'
 import { queueWorkHigh } from '../../lib/queue-work'
+import { IKactusFile } from '../../lib/kactus'
 
 import {
   reset,
@@ -587,9 +588,11 @@ export class GitStore {
     this.emitUpdate()
   }
 
-  public async loadStatus(): Promise<IStatusResult | null> {
+  public async loadStatus(
+    sketchFiles: ReadonlyArray<IKactusFile>
+  ): Promise<IStatusResult | null> {
     const status = await this.performFailableOperation(() =>
-      getStatus(this.repository)
+      getStatus(this.repository, sketchFiles)
     )
 
     if (!status) {
