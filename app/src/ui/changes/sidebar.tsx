@@ -219,8 +219,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     }
   }
 
-  private onSketchFileSelectionChanged = (row: number) => {
-    const file = this.props.kactus.files[row]
+  private onSketchFileSelectionChanged = (file: IKactusFile) => {
     this.props.dispatcher.changeSketchFileSelection(this.props.repository, file)
   }
 
@@ -301,9 +300,12 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           isLoadingStatus={this.props.isLoadingStatus}
           dispatcher={this.props.dispatcher}
           repository={this.props.repository}
+          sketchFiles={this.props.kactus.files}
           workingDirectory={changesState.workingDirectory}
           selectedFileID={selectedFileID}
+          selectedSketchFileID={selectedSketchFileID}
           onFileSelectionChanged={this.onFileSelectionChanged}
+          onSketchFileSelectionChanged={this.onSketchFileSelectionChanged}
           onCreateCommit={this.onCreateCommit}
           onIncludeChanged={this.onIncludeChanged}
           onSelectAll={this.onSelectAll}

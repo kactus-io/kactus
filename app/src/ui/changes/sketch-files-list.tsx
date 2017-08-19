@@ -10,7 +10,7 @@ const RowHeight = 29
 interface ISketchFilesListProps {
   readonly files: Array<IKactusFile>
   readonly selectedFileID: string | null
-  readonly onFileSelectionChanged: (row: number) => void
+  readonly onFileSelectionChanged: (file: IKactusFile) => void
   readonly onParse: (file: IKactusFile) => void
   readonly onImport: (file: IKactusFile) => void
   readonly onOpen: (file: IKactusFile) => void
@@ -44,6 +44,11 @@ export class SketchFilesList extends React.Component<
     )
   }
 
+  private onFileSelectionChanged = (row: number) => {
+    const file = this.props.files[row]
+    this.props.onFileSelectionChanged(file)
+  }
+
   public render() {
     const fileList = this.props.files
     const selectedRow = fileList.findIndex(
@@ -73,7 +78,7 @@ export class SketchFilesList extends React.Component<
           rowHeight={RowHeight}
           rowRenderer={this.renderRow}
           selectedRow={selectedRow}
-          onSelectionChanged={this.props.onFileSelectionChanged}
+          onSelectionChanged={this.onFileSelectionChanged}
           invalidationProps={this.props.files}
           onRowClick={this.props.onRowClick}
         />

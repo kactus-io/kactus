@@ -14,12 +14,19 @@ interface IChangedSketchPartProps {
 
 const Space = () => <span style={{ marginLeft: 20 }} />
 
-const Arrow = ({ opened }: { opened: boolean }) => {
+const Arrow = ({
+  opened,
+  onClick,
+}: {
+  opened: boolean
+  onClick: (event: React.MouseEvent<HTMLDivElement>) => void
+}) => {
   return (
     <span
       style={{
         paddingRight: 10,
       }}
+      onClick={onClick}
     >
       {opened ? '▼' : '▶︎'}
     </span>
@@ -49,9 +56,9 @@ export class ChangedSketchPart extends React.Component<
       this.props.parts.length * partPadding
 
     return (
-      <div className="file" onClick={this.handleOpenChanged}>
+      <div className="file">
         {this.props.parts.map((p, i) => <Space key={i} />)}
-        <Arrow opened={this.props.opened} />
+        <Arrow opened={this.props.opened} onClick={this.handleOpenChanged} />
 
         <PathText path={this.props.name} availableWidth={availablePathWidth} />
       </div>

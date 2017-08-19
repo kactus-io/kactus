@@ -19,6 +19,7 @@ import { IAutocompletionProvider } from '../autocompletion'
 import { Dispatcher } from '../../lib/dispatcher'
 import { Repository } from '../../models/repository'
 import { showContextualMenu, IMenuItem } from '../main-process-proxy'
+import { IKactusFile } from '../../lib/kactus'
 
 const RowHeight = 29
 
@@ -26,7 +27,10 @@ interface IChangesListProps {
   readonly repository: Repository
   readonly workingDirectory: WorkingDirectoryStatus
   readonly selectedFileID: string | null
+  readonly selectedSketchFileID: string | null
+  readonly sketchFiles: Array<IKactusFile>
   readonly onFileSelectionChanged: (file: WorkingDirectoryFileChange) => void
+  readonly onSketchFileSelectionChanged: (file: IKactusFile) => void
   readonly onIncludeChanged: (path: string, include: boolean) => void
   readonly onSelectAll: (selectAll: boolean) => void
   readonly onCreateCommit: (message: ICommitMessage) => Promise<boolean>
@@ -283,8 +287,32 @@ export class ChangesList extends React.Component<
 
   private onFileSelectionChanged = (row: number) => {
     const file = this.state.visibleFileList[row]
-    if (file && file.type === FileType.NormalFile) {
+    if (file.type === FileType.NormalFile) {
       this.props.onFileSelectionChanged(file)
+    } else if (file.type === FileType.SketchFile) {
+      const sketchFile = this.props.sketchFiles.find(f => f.id === file.id)
+      this.props.onSketchFileSelectionChanged(sketchFile!)
+    }
+  }
+
+  private onRowKeyDown = (row: number, e: React.KeyboardEvent<any>) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      const file = this.state.visibleFileList[row]
+      if (file.type !== FileType.NormalFile) {
+        const fileList = this.state.files.map(f => {
+          if (f.id === file.id && f.type !== FileType.NormalFile) {
+            return {
+              ...f,
+              opened: e.key === 'ArrowRight',
+            }
+          }
+          return f
+        })
+        this.setState({
+          files: fileList,
+          visibleFileList: getOpenedFilesList(fileList),
+        })
+      }
     }
   }
 
@@ -292,7 +320,9 @@ export class ChangesList extends React.Component<
     const fileList = this.props.workingDirectory.files
     const { visibleFileList } = this.state
     const selectedRow = visibleFileList.findIndex(
-      file => file.id === this.props.selectedFileID
+      file =>
+        file.id === this.props.selectedFileID ||
+        file.id === this.props.selectedSketchFileID
     )
     const fileCount = fileList.length
     const filesPlural = fileCount === 1 ? 'file' : 'files'
@@ -321,6 +351,7 @@ export class ChangesList extends React.Component<
           invalidationProps={this.props.workingDirectory}
           onRowClick={this.props.onRowClick}
           loading={this.props.isLoadingStatus}
+          onRowKeyDown={this.onRowKeyDown}
         />
 
         <CommitMessage
