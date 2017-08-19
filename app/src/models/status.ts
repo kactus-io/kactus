@@ -232,6 +232,24 @@ export class WorkingDirectoryFileChange extends FileChange {
   }
 }
 
+export type TFileOrSketchPartChange =
+  | WorkingDirectoryFileChange
+  | {
+      opened: boolean
+      type: SketchFileType
+      id: string
+      parts: Array<string>
+      name: string
+    }
+
+export type TSketchPartChange = {
+  opened: boolean
+  type: FileType.LayerFile | FileType.PageFile
+  id: string
+  parts: Array<string>
+  name: string
+}
+
 /** the state of the working directory for a repository */
 export class WorkingDirectoryStatus {
   /**

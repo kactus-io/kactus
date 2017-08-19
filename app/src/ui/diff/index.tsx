@@ -77,7 +77,7 @@ interface IDiffProps {
   readonly readOnly: boolean
 
   /** The file whose diff should be displayed. */
-  readonly file: FileChange
+  readonly file: FileChange | null
 
   /** Called when the includedness of lines or a range of lines has changed. */
   readonly onIncludeChanged?: (diffSelection: DiffSelection) => void
@@ -660,14 +660,11 @@ export class Diff extends React.Component<IDiffProps, {}> {
       )
     }
 
-    if (imageDiff.current && this.props.file.status === AppFileStatus.New) {
+    if (imageDiff.current) {
       return <NewImageDiff current={imageDiff.current} />
     }
 
-    if (
-      imageDiff.previous &&
-      this.props.file.status === AppFileStatus.Deleted
-    ) {
+    if (imageDiff.previous) {
       return <DeletedImageDiff previous={imageDiff.previous} />
     }
 
@@ -675,6 +672,9 @@ export class Diff extends React.Component<IDiffProps, {}> {
   }
 
   private renderBinaryFile() {
+    if (!this.props.file) {
+      return null
+    }
     return (
       <BinaryFile
         path={this.props.file.path}
@@ -765,11 +765,14 @@ export class Diff extends React.Component<IDiffProps, {}> {
 
     if (diff.kind === DiffType.Sketch) {
       if (diff.hunks.length === 0) {
-        if (this.props.file.status === AppFileStatus.New) {
+        if (this.props.file && this.props.file.status === AppFileStatus.New) {
           return <div className="panel empty">The file is empty</div>
         }
 
-        if (this.props.file.status === AppFileStatus.Renamed) {
+        if (
+          this.props.file &&
+          this.props.file.status === AppFileStatus.Renamed
+        ) {
           return (
             <div className="panel renamed">
               The file was renamed but not changed
@@ -789,27 +792,28 @@ export class Diff extends React.Component<IDiffProps, {}> {
 
       return (
         <div className="sketch-diff-wrapper">
-          <div className="sketch-diff-checkbox">
-            {this.props.readOnly &&
-              this.props.openSketchFile &&
-              <Button type="submit" onClick={this.props.openSketchFile}>
-                Open Sketch file
-              </Button>}
-            <Checkbox
-              label={
-                __DARWIN__
-                  ? 'Show Advanced Text Diffs'
-                  : 'Show advanced text diffs'
-              }
-              value={
-                this.props.showAdvancedDiffs
-                  ? CheckboxValue.On
-                  : CheckboxValue.Off
-              }
-              onChange={this.onToggleAdvancedDiffs}
-            />
-          </div>
-          {this.props.showAdvancedDiffs
+          {this.props.file &&
+            <div className="sketch-diff-checkbox">
+              {this.props.readOnly &&
+                this.props.openSketchFile &&
+                <Button type="submit" onClick={this.props.openSketchFile}>
+                  Open Sketch file
+                </Button>}
+              <Checkbox
+                label={
+                  __DARWIN__
+                    ? 'Show Advanced Text Diffs'
+                    : 'Show advanced text diffs'
+                }
+                value={
+                  this.props.showAdvancedDiffs
+                    ? CheckboxValue.On
+                    : CheckboxValue.Off
+                }
+                onChange={this.onToggleAdvancedDiffs}
+              />
+            </div>}
+          {this.props.file && this.props.showAdvancedDiffs
             ? this.renderTextDiff(diff)
             : this.renderImage(diff)}
         </div>
@@ -830,11 +834,14 @@ export class Diff extends React.Component<IDiffProps, {}> {
 
     if (diff.kind === DiffType.Text) {
       if (diff.hunks.length === 0) {
-        if (this.props.file.status === AppFileStatus.New) {
+        if (this.props.file && this.props.file.status === AppFileStatus.New) {
           return <div className="panel empty">The file is empty</div>
         }
 
-        if (this.props.file.status === AppFileStatus.Renamed) {
+        if (
+          this.props.file &&
+          this.props.file.status === AppFileStatus.Renamed
+        ) {
           return (
             <div className="panel renamed">
               The file was renamed but not changed

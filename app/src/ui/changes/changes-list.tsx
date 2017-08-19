@@ -8,7 +8,7 @@ import {
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
   FileType,
-  SketchFileType,
+  TFileOrSketchPartChange,
 } from '../../models/status'
 import { DiffSelectionType } from '../../models/diff'
 import { CommitIdentity } from '../../models/commit-identity'
@@ -28,8 +28,10 @@ interface IChangesListProps {
   readonly workingDirectory: WorkingDirectoryStatus
   readonly selectedFileID: string | null
   readonly selectedSketchFileID: string | null
+  readonly selectedSketchPartID: string | null
   readonly sketchFiles: Array<IKactusFile>
   readonly onFileSelectionChanged: (file: WorkingDirectoryFileChange) => void
+  readonly onSketchPartSelectionChanged: (file: TFileOrSketchPartChange) => void
   readonly onSketchFileSelectionChanged: (file: IKactusFile) => void
   readonly onIncludeChanged: (path: string, include: boolean) => void
   readonly onSelectAll: (selectAll: boolean) => void
@@ -75,21 +77,11 @@ interface IChangesListProps {
   readonly isLoadingStatus: boolean
 }
 
-type TFileInList =
-  | WorkingDirectoryFileChange
-  | {
-      opened: boolean
-      type: SketchFileType
-      id: string
-      parts: Array<string>
-      name: string
-    }
-
 function getFileList(
   files: ReadonlyArray<WorkingDirectoryFileChange>,
-  oldList?: Array<TFileInList>
+  oldList?: Array<TFileOrSketchPartChange>
 ) {
-  const acc: Array<TFileInList> = []
+  const acc: Array<TFileOrSketchPartChange> = []
   return files.reduce((prev, f, i) => {
     if (!f.parts || !f.sketchFile) {
       prev.push(f)
@@ -131,8 +123,8 @@ function getFileList(
   }, acc)
 }
 
-function getOpenedFilesList(files: Array<TFileInList>) {
-  const res: Array<TFileInList> = []
+function getOpenedFilesList(files: Array<TFileOrSketchPartChange>) {
+  const res: Array<TFileOrSketchPartChange> = []
   return files.reduce((prev, f, i, arr) => {
     if (!f.parts || !f.parts.length) {
       prev.push(f)
@@ -154,7 +146,10 @@ function getOpenedFilesList(files: Array<TFileInList>) {
 
 export class ChangesList extends React.Component<
   IChangesListProps,
-  { files: Array<TFileInList>; visibleFileList: Array<TFileInList> }
+  {
+    files: Array<TFileOrSketchPartChange>
+    visibleFileList: Array<TFileOrSketchPartChange>
+  }
 > {
   public constructor(props: IChangesListProps) {
     super(props)
@@ -287,11 +282,13 @@ export class ChangesList extends React.Component<
 
   private onFileSelectionChanged = (row: number) => {
     const file = this.state.visibleFileList[row]
-    if (file.type === FileType.NormalFile) {
-      this.props.onFileSelectionChanged(file)
-    } else if (file.type === FileType.SketchFile) {
+    if (file.type === FileType.SketchFile) {
       const sketchFile = this.props.sketchFiles.find(f => f.id === file.id)
       this.props.onSketchFileSelectionChanged(sketchFile!)
+    } else if (file.type === FileType.NormalFile) {
+      this.props.onFileSelectionChanged(file)
+    } else {
+      this.props.onSketchPartSelectionChanged(file)
     }
   }
 
@@ -322,7 +319,8 @@ export class ChangesList extends React.Component<
     const selectedRow = visibleFileList.findIndex(
       file =>
         file.id === this.props.selectedFileID ||
-        file.id === this.props.selectedSketchFileID
+        file.id === this.props.selectedSketchFileID ||
+        file.id === this.props.selectedSketchPartID
     )
     const fileCount = fileList.length
     const filesPlural = fileCount === 1 ? 'file' : 'files'

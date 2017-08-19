@@ -22,6 +22,7 @@ interface IChangesProps {
   readonly showAdvancedDiffs: boolean
   readonly imageDiffType: ImageDiffType
   readonly loadingDiff: boolean
+  readonly selectedSketchPartID: string | null
 }
 
 export class Changes extends React.Component<IChangesProps, {}> {
@@ -50,6 +51,7 @@ export class Changes extends React.Component<IChangesProps, {}> {
     const diff = this.props.diff
     const file = this.props.file
     const sketchFile = this.props.sketchFile
+    const sketchPart = this.props.selectedSketchPartID
 
     if (sketchFile) {
       return (
@@ -72,6 +74,26 @@ export class Changes extends React.Component<IChangesProps, {}> {
             diff={diff}
           />
 
+          <div className="diff-wrapper">
+            <Diff
+              repository={this.props.repository}
+              imageDiffType={this.props.imageDiffType}
+              showAdvancedDiffs={this.props.showAdvancedDiffs}
+              file={file}
+              readOnly={false}
+              onIncludeChanged={this.onDiffLineIncludeChanged}
+              diff={diff}
+              dispatcher={this.props.dispatcher}
+              loading={this.props.loadingDiff}
+            />
+          </div>
+        </div>
+      )
+    }
+
+    if (sketchPart && diff) {
+      return (
+        <div className="changed-file">
           <div className="diff-wrapper">
             <Diff
               repository={this.props.repository}

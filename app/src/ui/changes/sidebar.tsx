@@ -22,7 +22,10 @@ import {
 } from '../autocompletion'
 import { ICommitMessage, IKactusState } from '../../lib/app-state'
 import { ClickSource } from '../list'
-import { WorkingDirectoryFileChange } from '../../models/status'
+import {
+  WorkingDirectoryFileChange,
+  TSketchPartChange,
+} from '../../models/status'
 import { CSSTransitionGroup } from 'react-transition-group'
 import { SketchFilesList } from './sketch-files-list'
 import { openFile } from '../../lib/open-file'
@@ -223,6 +226,10 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     this.props.dispatcher.changeSketchFileSelection(this.props.repository, file)
   }
 
+  private onSketchPartSelectionChanged = (file: TSketchPartChange) => {
+    this.props.dispatcher.changeSketchPartSelection(this.props.repository, file)
+  }
+
   private onSketchParse = (file: IKactusFile) => {
     this.props.dispatcher.parseSketchFile(this.props.repository, file)
   }
@@ -272,6 +279,8 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
   public render() {
     const changesState = this.props.changes
     const selectedFileID = changesState.selectedFileID
+    const selectedSketchPartID =
+      changesState.selectedSketchPart && changesState.selectedSketchPart.id
     const selectedSketchFileID = this.props.kactus.selectedFileID
 
     // TODO: I think user will expect the avatar to match that which
@@ -304,8 +313,10 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           workingDirectory={changesState.workingDirectory}
           selectedFileID={selectedFileID}
           selectedSketchFileID={selectedSketchFileID}
+          selectedSketchPartID={selectedSketchPartID}
           onFileSelectionChanged={this.onFileSelectionChanged}
           onSketchFileSelectionChanged={this.onSketchFileSelectionChanged}
+          onSketchPartSelectionChanged={this.onSketchPartSelectionChanged}
           onCreateCommit={this.onCreateCommit}
           onIncludeChanged={this.onIncludeChanged}
           onSelectAll={this.onSelectAll}

@@ -13,6 +13,7 @@ import {
   WorkingDirectoryFileChange,
   FileChange,
   AppFileStatus,
+  FileType,
 } from '../../models/status'
 import {
   DiffType,
@@ -203,6 +204,37 @@ export async function getWorkingDirectoryDiff(
   )
 }
 
+export async function getWorkingDirectoryPartDiff(
+  sketchPath: string,
+  repository: Repository,
+  kactusFiles: Array<IKactusFile>,
+  sketchPart: {
+    id: string
+    type: FileType.PageFile | FileType.LayerFile
+  },
+  previousCommitish?: string
+): Promise<IDiff> {
+  const kactusFile = kactusFiles.find(
+    f => sketchPart.id.indexOf(f.id + '/') === 0
+  )
+
+  return getSketchDiff(
+    sketchPath,
+    repository,
+    {
+      path: sketchPart.id,
+      id: sketchPart.id,
+      status: AppFileStatus.Modified,
+      type: FileType.NormalFile,
+    },
+    kactusFile!,
+    'HEAD',
+    previousCommitish,
+    undefined,
+    sketchPart.type
+  )
+}
+
 async function getImageDiff(
   repository: Repository,
   file: FileChange,
@@ -265,10 +297,11 @@ async function getSketchDiff(
   sketchPath: string,
   repository: Repository,
   file: FileChange,
-  diff: IRawDiff,
   kactusFile: IKactusFile,
   commitish: string,
-  previousCommitish?: string
+  previousCommitish?: string,
+  diff?: IRawDiff,
+  _type?: FileType.PageFile | FileType.LayerFile
 ): Promise<ISketchDiff> {
   let current: Image | undefined = undefined
   let previous: Image | undefined = undefined
@@ -280,7 +313,7 @@ async function getSketchDiff(
     type = IKactusFileType.Style
   } else if (name === 'document.json') {
     type = IKactusFileType.Document
-  } else if (name === 'page.json') {
+  } else if (_type === FileType.PageFile || name === 'page.json') {
     type = IKactusFileType.Page
   } else if (name === 'artboard.json') {
     type = IKactusFileType.Artboard
@@ -297,15 +330,15 @@ async function getSketchDiff(
   }
 
   // Are we looking at a file in the working directory or a file in a commit?
-  if (file instanceof WorkingDirectoryFileChange) {
+  if (file instanceof WorkingDirectoryFileChange || _type) {
     // No idea what to do about this, a conflicted binary (presumably) file.
     // Ideally we'd show all three versions and let the user pick but that's
     // a bit out of scope for now.
     if (file.status === AppFileStatus.Conflicted) {
       return {
         kind: DiffType.Sketch,
-        text: diff.contents,
-        hunks: diff.hunks,
+        text: (diff || { contents: '' }).contents,
+        hunks: (diff || { hunks: [] }).hunks,
         sketchFile: kactusFile,
         type: type,
       }
@@ -318,7 +351,8 @@ async function getSketchDiff(
         kactusFile,
         repository,
         file,
-        type
+        type,
+        _type ? Path.basename(file.id) : undefined
       )
     }
 
@@ -332,7 +366,8 @@ async function getSketchDiff(
           repository,
           file.oldPath || file.path,
           'HEAD',
-          type
+          type,
+          _type ? Path.basename(file.id) : undefined
         )
       } catch (e) {}
     }
@@ -346,7 +381,8 @@ async function getSketchDiff(
           repository,
           file.path,
           commitish,
-          type
+          type,
+          _type ? Path.basename(file.id) : undefined
         )
       } catch (e) {
         console.log(e)
@@ -366,7 +402,8 @@ async function getSketchDiff(
           repository,
           file.oldPath || file.path,
           previousCommitish || `${commitish}`,
-          type
+          type,
+          _type ? Path.basename(file.id) : undefined
         )
       } catch (e) {
         console.log(e)
@@ -376,8 +413,8 @@ async function getSketchDiff(
 
   return {
     kind: DiffType.Sketch,
-    text: diff.contents,
-    hunks: diff.hunks,
+    text: (diff || { contents: '' }).contents,
+    hunks: (diff || { hunks: [] }).hunks,
     sketchFile: kactusFile,
     previous: previous,
     current: current,
@@ -415,10 +452,10 @@ export async function convertDiff(
       sketchPath,
       repository,
       file,
-      diff,
       kactusFile,
       commitish,
-      previousCommitish
+      previousCommitish,
+      diff
     )
   }
 
@@ -548,7 +585,8 @@ async function generatePreview(
   sketchFilePath: string,
   file: string,
   storagePath: string,
-  type: IKactusFileType
+  type: IKactusFileType,
+  name?: string
 ) {
   let path: string
   try {
@@ -562,53 +600,53 @@ async function generatePreview(
       path = await generatePagePreview(
         sketchPath,
         sketchFilePath,
-        Path.basename(Path.dirname(file)),
+        name || Path.basename(Path.dirname(file)),
         storagePath
       )
     } else if (type === IKactusFileType.Artboard) {
       path = await generateArtboardPreview(
         sketchPath,
         sketchFilePath,
-        Path.basename(Path.dirname(file)),
+        name || Path.basename(Path.dirname(file)),
         storagePath
       )
     } else if (type === IKactusFileType.ShapeGroup) {
       path = await generateLayerPreview(
         sketchPath,
         sketchFilePath,
-        Path.basename(Path.dirname(file)),
+        name || Path.basename(Path.dirname(file)),
         storagePath
       )
     } else if (type === IKactusFileType.Group) {
       path = await generateLayerPreview(
         sketchPath,
         sketchFilePath,
-        Path.basename(Path.dirname(file)),
+        name || Path.basename(Path.dirname(file)),
         storagePath
       )
     } else if (type === IKactusFileType.SymbolMaster) {
       path = await generateLayerPreview(
         sketchPath,
         sketchFilePath,
-        Path.basename(Path.dirname(file)),
+        name || Path.basename(Path.dirname(file)),
         storagePath
       )
     } else if (type === IKactusFileType.Bitmap) {
       path = await generateLayerPreview(
         sketchPath,
         sketchFilePath,
-        Path.basename(Path.dirname(file)),
+        name || Path.basename(Path.dirname(file)),
         storagePath
       )
     } else if (type === IKactusFileType.Layer) {
-      const name = Path.basename(file)
-      if (name.indexOf('.png') !== -1) {
+      const fileName = Path.basename(file)
+      if (fileName.indexOf('.png') !== -1) {
         path = Path.join(Path.dirname(sketchFilePath), file)
       } else {
         path = await generateLayerPreview(
           sketchPath,
           sketchFilePath,
-          name.replace('.json', ''),
+          name || fileName.replace('.json', ''),
           storagePath
         )
       }
@@ -629,7 +667,8 @@ function getWorkingDirectorySketchPreview(
   sketchFile: IKactusFile,
   repository: Repository,
   file: FileChange,
-  type: IKactusFileType
+  type: IKactusFileType,
+  name?: string
 ) {
   const storagePath = Path.join(
     getTempPath(),
@@ -643,7 +682,8 @@ function getWorkingDirectorySketchPreview(
     sketchFilePath,
     file.path,
     storagePath,
-    type
+    type,
+    name
   )
 }
 
@@ -661,7 +701,8 @@ async function getOldSketchPreview(
   repository: Repository,
   file: string,
   commitish: string,
-  type: IKactusFileType
+  type: IKactusFileType,
+  name?: string
 ) {
   if (type === IKactusFileType.Style) {
     return
@@ -731,6 +772,7 @@ async function getOldSketchPreview(
     sketchStoragePath + '.sketch',
     file,
     sketchStoragePath,
-    type
+    type,
+    name
   )
 }

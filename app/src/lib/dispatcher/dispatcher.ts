@@ -5,7 +5,11 @@ import { Disposable } from 'event-kit'
 
 import { Account } from '../../models/account'
 import { Repository } from '../../models/repository'
-import { WorkingDirectoryFileChange, FileChange } from '../../models/status'
+import {
+  WorkingDirectoryFileChange,
+  FileChange,
+  TSketchPartChange,
+} from '../../models/status'
 import { DiffSelection } from '../../models/diff'
 import {
   RepositorySection,
@@ -210,6 +214,14 @@ export class Dispatcher {
     selectedFile: WorkingDirectoryFileChange
   ): Promise<void> {
     return this.appStore._changeChangesSelection(repository, selectedFile)
+  }
+
+  /** Change the currently selected sketch part in CHanges. */
+  public changeSketchPartSelection(
+    repository: Repository,
+    selectedPart: TSketchPartChange
+  ): Promise<void> {
+    return this.appStore._changeSketchPartSelection(repository, selectedPart)
   }
 
   /**

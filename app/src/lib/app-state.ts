@@ -10,6 +10,7 @@ import {
   FileChange,
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
+  FileType,
 } from '../models/status'
 import { CloningRepository, IGitHubUser, SignInState } from './dispatcher'
 import { ICommitMessage } from './dispatcher/git-store'
@@ -549,4 +550,9 @@ export interface IChangesState {
   readonly commitMessage: ICommitMessage | null
 
   readonly loadingDiff: boolean
+
+  readonly selectedSketchPart: {
+    id: string
+    type: FileType.LayerFile | FileType.PageFile
+  } | null
 }

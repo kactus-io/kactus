@@ -165,6 +165,9 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
     if (selectedSection === RepositorySection.Changes) {
       const changesState = this.props.state.changesState
       const selectedFileID = changesState.selectedFileID
+      const selectedSketchPartID = changesState.selectedSketchPart
+        ? changesState.selectedSketchPart.id
+        : null
       const selectedFile = selectedFileID
         ? changesState.workingDirectory.findFileWithID(selectedFileID)
         : null
@@ -177,7 +180,10 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
 
       if (
         !selectedSketchFile &&
-        (!changesState.workingDirectory.files.length || !selectedFile || !diff)
+        (!changesState.workingDirectory.files.length ||
+          !selectedFile ||
+          !diff) &&
+        (!selectedSketchPartID || !diff)
       ) {
         return (
           <NoChanges
@@ -194,6 +200,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
             imageDiffType={this.props.imageDiffType}
             showAdvancedDiffs={this.props.showAdvancedDiffs}
             file={selectedFile}
+            selectedSketchPartID={selectedSketchPartID}
             diff={diff}
             sketchFile={selectedSketchFile}
             loadingDiff={changesState.loadingDiff}
