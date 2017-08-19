@@ -10,13 +10,9 @@ export class Loading extends React.Component<{}, {}> {
 
 export class LoadingOverlay extends React.Component<{}, { mounted: boolean }> {
   public componentDidMount() {
-    setTimeout(
-      () =>
-        this.setState({
-          mounted: true,
-        }),
-      0
-    )
+    this.setState({
+      mounted: true,
+    })
   }
 
   public render() {
