@@ -24,9 +24,9 @@ This new tool is on the next level:
 
 ## :cactus: Where can I get it?
 
-Download the installer for your OS:
+Download the installer for your operating system:
 
- - [macOS](https://github.com/kactus-io/kactus/releases)
+  - [macOS](https://github.com/kactus-io/kactus/releases)
 
 
 ## :cactus: I have a problem with Kactus

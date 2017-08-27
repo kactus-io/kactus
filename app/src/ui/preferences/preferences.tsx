@@ -1,10 +1,7 @@
 import * as React from 'react'
 import { Account } from '../../models/account'
 import { PreferencesTab } from '../../models/preferences'
-import {
-  ExternalEditor,
-  parse as parseExternalEditor,
-} from '../../models/editors'
+import { ExternalEditor } from '../../models/editors'
 import { Dispatcher } from '../../lib/dispatcher'
 import { TabBar } from '../tab-bar'
 import { Accounts } from './accounts'
@@ -20,6 +17,7 @@ import {
 } from '../../lib/git/config'
 import { lookupPreferredEmail } from '../../lib/email'
 import { PopupType } from '../../lib/app-state'
+import { Shell } from '../../lib/shells'
 
 interface IPreferencesProps {
   readonly dispatcher: Dispatcher
@@ -30,6 +28,7 @@ interface IPreferencesProps {
   readonly initialSelectedTab?: PreferencesTab
   readonly confirmRepoRemoval: boolean
   readonly selectedExternalEditor: ExternalEditor
+  readonly selectedShell: Shell
 }
 
 interface IPreferencesState {
@@ -39,6 +38,7 @@ interface IPreferencesState {
   readonly isOptedOut: boolean
   readonly confirmRepoRemoval: boolean
   readonly selectedExternalEditor: ExternalEditor
+  readonly selectedShell: Shell
 }
 
 /** The app-level preferences component. */
@@ -55,7 +55,8 @@ export class Preferences extends React.Component<
       committerEmail: '',
       isOptedOut: false,
       confirmRepoRemoval: false,
-      selectedExternalEditor: ExternalEditor.Atom,
+      selectedExternalEditor: this.props.selectedExternalEditor,
+      selectedShell: this.props.selectedShell,
     }
   }
 
@@ -174,6 +175,8 @@ export class Preferences extends React.Component<
             onOptOutSet={this.onOptOutSet}
             onConfirmRepoRemovalSet={this.onConfirmRepoRemovalSet}
             onSelectedEditorChanged={this.onSelectedEditorChanged}
+            selectedShell={this.state.selectedShell}
+            onSelectedShellChanged={this.onSelectedShellChanged}
           />
         )
       }
@@ -198,9 +201,12 @@ export class Preferences extends React.Component<
     this.setState({ committerEmail })
   }
 
-  private onSelectedEditorChanged = (value: string) => {
-    const selectedExternalEditor = parseExternalEditor(value)
-    this.setState({ selectedExternalEditor })
+  private onSelectedEditorChanged = (editor: ExternalEditor) => {
+    this.setState({ selectedExternalEditor: editor })
+  }
+
+  private onSelectedShellChanged = (shell: Shell) => {
+    this.setState({ selectedShell: shell })
   }
 
   private renderFooter() {
@@ -235,6 +241,8 @@ export class Preferences extends React.Component<
     await this.props.dispatcher.setExternalEditor(
       this.state.selectedExternalEditor
     )
+
+    await this.props.dispatcher.setShell(this.state.selectedShell)
 
     this.props.onDismissed()
   }

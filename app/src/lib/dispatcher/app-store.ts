@@ -66,7 +66,7 @@ import { formatCommitMessage } from '../format-commit-message'
 import { AppMenu, IMenu } from '../../models/app-menu'
 import {
   getAppMenu,
-  updateExternalEditorMenuItem,
+  updatePreferredAppMenuItemLabels,
 } from '../../ui/main-process-proxy'
 import { merge } from '../merge'
 import { getAppPath, getUserDataPath } from '../../ui/lib/app-proxy'
@@ -106,7 +106,6 @@ import {
   formatAsLocalRef,
 } from '../git'
 
-import { openShell } from '../open-shell'
 import { launchExternalEditor } from '../editors'
 import { AccountsStore } from './accounts-store'
 import { RepositoriesStore } from './repositories-store'
@@ -116,6 +115,13 @@ import { IGitAccount } from '../git/authentication'
 import { getGenericHostname, getGenericUsername } from '../generic-git-auth'
 import { RetryActionType, RetryAction } from '../retry-actions'
 import { findEditorOrDefault } from '../editors'
+import {
+  Shell,
+  parse as parseShell,
+  Default as DefaultShell,
+  findShellOrDefault,
+  launchShell,
+} from '../shells'
 
 function findNext(
   array: ReadonlyArray<string>,
@@ -156,6 +162,8 @@ const externalEditorKey: string = 'externalEditor'
 
 const imageDiffTypeDefault = ImageDiffType.TwoUp
 const imageDiffTypeKey = 'image-diff-type'
+
+const shellKey = 'shell'
 
 export class AppStore {
   private emitter = new Emitter()
@@ -227,6 +235,9 @@ export class AppStore {
   private imageDiffType: ImageDiffType = imageDiffTypeDefault
 
   private selectedExternalEditor: ExternalEditor = externalEditorDefault
+
+  /** The user's preferred shell. */
+  private selectedShell = DefaultShell
 
   private readonly statsStore: StatsStore
 
@@ -575,6 +586,7 @@ export class AppStore {
       isUnlockingKactusFullAccess: this.isUnlockingKactusFullAccess,
       sketchVersion: this.sketchVersion,
       selectedExternalEditor: this.selectedExternalEditor,
+      selectedShell: this.selectedShell,
     }
   }
 
@@ -983,7 +995,10 @@ export class AppStore {
     const externalEditorValue = localStorage.getItem(externalEditorKey)
     this.selectedExternalEditor = parseExternalEditor(externalEditorValue)
 
-    updateExternalEditorMenuItem(this.selectedExternalEditor)
+    const shellValue = localStorage.getItem(shellKey)
+    this.selectedShell = shellValue ? parseShell(shellValue) : DefaultShell
+
+    this.updatePreferredAppMenuItemLabels()
 
     const showAdvancedDiffsValue = localStorage.getItem(showAdvancedDiffsKey)
 
@@ -1002,6 +1017,14 @@ export class AppStore {
     this.emitUpdateNow()
 
     this.accountsStore.refresh()
+  }
+
+  /** Update the menu with the names of the user's preferred apps. */
+  private updatePreferredAppMenuItemLabels() {
+    updatePreferredAppMenuItemLabels({
+      editor: `Open in ${this.selectedExternalEditor}`,
+      shell: `Open in ${this.selectedShell}`,
+    })
   }
 
   private updateRepositorySelectionAfterRepositoriesChanged() {
@@ -2603,10 +2626,15 @@ export class AppStore {
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
-  public _openShell(path: string) {
+  public async _openShell(path: string) {
     this.statsStore.recordOpenShell()
 
-    return openShell(path)
+    try {
+      const match = await findShellOrDefault(this.selectedShell)
+      await launchShell(match, path)
+    } catch (error) {
+      this.emitError(error)
+    }
   }
 
   /** Takes a URL and opens it using the system default application */
@@ -2629,10 +2657,8 @@ export class AppStore {
 
   /** Takes a repository path and opens it using the user's configured editor */
   public async _openInExternalEditor(path: string): Promise<void> {
-    const state = this.getState()
-    const selectedEditor = state.selectedExternalEditor
     try {
-      const match = await findEditorOrDefault(selectedEditor)
+      const match = await findEditorOrDefault(this.selectedExternalEditor)
       await launchExternalEditor(path, match)
     } catch (error) {
       this.emitError(error)
@@ -2679,7 +2705,17 @@ export class AppStore {
     localStorage.setItem(externalEditorKey, selectedEditor)
     this.emitUpdate()
 
-    updateExternalEditorMenuItem(this.selectedExternalEditor)
+    this.updatePreferredAppMenuItemLabels()
+
+    return Promise.resolve()
+  }
+
+  public _setShell(shell: Shell): Promise<void> {
+    this.selectedShell = shell
+    localStorage.setItem(shellKey, shell)
+    this.emitUpdate()
+
+    this.updatePreferredAppMenuItemLabels()
 
     return Promise.resolve()
   }
