@@ -138,7 +138,11 @@ function getSketchFileParts(path: string, sketchFile?: IKactusFile) {
   if (!sketchFile) {
     return []
   }
-  const parts = path.split(sketchFile.id + '/')[1].split('/')
+  const secondPart = path.split(sketchFile.id + '/')[1]
+  if (!secondPart) {
+    return [sketchFile.id]
+  }
+  const parts = secondPart.split('/')
   return [sketchFile.id].concat(parts.slice(0, parts.length - 1))
 }
 
