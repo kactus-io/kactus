@@ -19,6 +19,7 @@ import {
   setGlobalConfigValue,
 } from '../../lib/git/config'
 import { lookupPreferredEmail } from '../../lib/email'
+import { PopupType } from '../../lib/app-state'
 
 interface IPreferencesProps {
   readonly dispatcher: Dispatcher
@@ -132,6 +133,14 @@ export class Preferences extends React.Component<
     this.props.dispatcher.removeAccount(account)
   }
 
+  private onShowUnlockKactusPopup = (account: Account) => {
+    this.props.dispatcher.showPopup({
+      type: PopupType.PremiumUpsell,
+      kind: 'choice',
+      user: account,
+    })
+  }
+
   private renderActiveTab() {
     const index = this.state.selectedIndex
     switch (index) {
@@ -143,6 +152,7 @@ export class Preferences extends React.Component<
             onDotComSignIn={this.onDotComSignIn}
             onEnterpriseSignIn={this.onEnterpriseSignIn}
             onLogout={this.onLogout}
+            onShowUnlockKactusPopup={this.onShowUnlockKactusPopup}
           />
         )
       case PreferencesTab.Git: {

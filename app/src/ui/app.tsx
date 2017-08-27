@@ -1090,7 +1090,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       case PopupType.PremiumUpsell:
         return (
           <PremiumUpsell
-            enterprise={popup.enterprise}
+            kind={popup.kind}
             retryAction={popup.retryAction}
             user={popup.user}
             dispatcher={this.props.dispatcher}

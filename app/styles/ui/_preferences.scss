@@ -1,6 +1,5 @@
 #preferences {
   .accounts-tab {
-
     .account-info {
       .avatar {
         // 32px for the image + 2 on each side for the base border.
@@ -22,6 +21,25 @@
           // username lines up with the avatar.
           margin-top: -2px;
           margin-bottom: -2px;
+        }
+      }
+
+      .actions-wrapper {
+        align-self: flex-end;
+
+        display: flex;
+        flex-direction: column;
+
+        .button-component {
+          align-self: auto;
+
+          & + .button-component {
+            margin-top: 5px;
+          }
+        }
+
+        .kactus-unlocked {
+          margin-bottom: 5px;
         }
       }
     }
@@ -56,7 +74,8 @@
     color: var(--color-deleted);
     padding: 0 5px;
 
-    .octicon, path {
+    .octicon,
+    path {
       cursor: pointer;
     }
   }

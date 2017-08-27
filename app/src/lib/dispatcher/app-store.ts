@@ -2986,7 +2986,7 @@ export class AppStore {
     if (premiumType) {
       await this._showPopup({
         type: PopupType.PremiumUpsell,
-        enterprise: premiumType.enterprise,
+        kind: premiumType.enterprise ? 'enterprise' : 'premium',
         user: premiumType.user,
         retryAction,
       })

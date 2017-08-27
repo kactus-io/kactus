@@ -195,6 +195,8 @@ export enum PopupType {
   ExternalEditorFailed,
 }
 
+export type PremiumType = 'premium' | 'enterprise'
+
 export type Popup =
   | { type: PopupType.RenameBranch; repository: Repository; branch: Branch }
   | { type: PopupType.DeleteBranch; repository: Repository; branch: Branch }
@@ -226,7 +228,7 @@ export type Popup =
   | { type: PopupType.CreateSketchFile; repository: Repository }
   | {
       type: PopupType.PremiumUpsell
-      enterprise: boolean
+      kind: PremiumType | 'choice'
       user?: Account
       retryAction?: RetryAction
     }

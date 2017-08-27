@@ -12,6 +12,7 @@ import { shell } from '../../lib/dispatcher/app-shell'
 import { CouponInput } from './coupon-input'
 import { LinkButton } from '../lib/link-button'
 import { CallToAction } from '../lib/call-to-action'
+import { PremiumType } from '../../lib/app-state'
 
 interface IPremiumUpsellProps {
   /** A function called when the dialog is dismissed. */
@@ -19,7 +20,7 @@ interface IPremiumUpsellProps {
   readonly dispatcher: Dispatcher
   readonly user?: Account
   readonly isUnlockingKactusFullAccess: boolean
-  readonly enterprise: boolean
+  readonly kind: PremiumType | 'choice'
   readonly retryAction?: RetryAction
 }
 
@@ -28,9 +29,41 @@ interface IPremiumUpsellState {
   readonly showingCheckout: boolean
   readonly loadingCheckout: boolean
   readonly coupon: string
-  readonly plan: string
   readonly couponState: IAPICoupon | 'loading' | null
+  readonly choice: PremiumType
 }
+
+const EnterpriseCopy = () =>
+  <ul>
+    <li>Unlimited public repositories</li>
+    <li>
+      No locked-in commitment: you can always generate the sketch files to
+      switch back
+    </li>
+    <li>
+      <strong>Unlimited private repositories</strong>
+    </li>
+    <li>
+      <strong>Support single sign-on and on-premises deployment</strong>
+    </li>
+    <li>
+      <strong>
+        Support any git server (BitBucket, Gitlab, self-hosted, etc.)
+      </strong>
+    </li>
+  </ul>
+
+const PremiumCopy = () =>
+  <ul>
+    <li>Unlimited public repositories</li>
+    <li>
+      No locked-in commitment: you can always generate the sketch files to
+      switch back
+    </li>
+    <li>
+      <strong>Unlimited private repositories</strong>
+    </li>
+  </ul>
 
 export class PremiumUpsell extends React.Component<
   IPremiumUpsellProps,
@@ -45,8 +78,8 @@ export class PremiumUpsell extends React.Component<
     this.state = {
       showingCheckout: false,
       loadingCheckout: false,
+      choice: this.props.kind !== 'choice' ? this.props.kind : 'premium',
       coupon: '',
-      plan: 'kactus-1-month',
       couponState: null,
     }
   }
@@ -83,7 +116,7 @@ export class PremiumUpsell extends React.Component<
     }
     await this.props.dispatcher.unlockKactus(this.props.user, token.id, {
       email: token.email,
-      enterprise: this.props.enterprise,
+      enterprise: this.state.choice === 'enterprise',
       coupon: this.state.coupon !== '' ? this.state.coupon : undefined,
     })
 
@@ -152,8 +185,10 @@ export class PremiumUpsell extends React.Component<
             <div>
               <p>
                 Hey! This feature is only available in the{' '}
-                {this.props.enterprise ? 'enterprise' : 'full access'} version
-                of Kactus.
+                {this.state.choice === 'enterprise'
+                  ? 'enterprise'
+                  : 'full access'}{' '}
+                version of Kactus.
               </p>
               <p>
                 You need to login to Kactus using GitHub before unlocking it.
@@ -172,8 +207,9 @@ export class PremiumUpsell extends React.Component<
     }
 
     if (
-      (!this.props.enterprise && this.props.user.unlockedKactus) ||
-      (this.props.enterprise && this.props.user.unlockedEnterpriseKactus)
+      (this.state.choice === 'premium' && this.props.user.unlockedKactus) ||
+      (this.state.choice === 'enterprise' &&
+        this.props.user.unlockedEnterpriseKactus)
     ) {
       return (
         <Dialog
@@ -186,67 +222,37 @@ export class PremiumUpsell extends React.Component<
       )
     }
 
-    const copy = this.props.enterprise
-      ? <div>
-          <p>
-            Hey! This feature is only available in the enterprise version of
-            Kactus.
-          </p>
-          <ul>
-            <li>Unlimited public repositories</li>
-            <li>
-              No locked-in commitment: you can always generate the sketch files
-              to switch back
-            </li>
-            <li>
-              <strong>Unlimited private repositories</strong>
-            </li>
-            <li>
-              <strong>Support single sign-on and on-premises deployment</strong>
-            </li>
-            <li>
-              <strong>
-                Support any git server (BitBucket, Gitlab, self-hosted, etc.)
-              </strong>
-            </li>
-          </ul>
-          <p>
-            More information available{' '}
-            <LinkButton onClick={this.onExternalLink}>here</LinkButton>.
-          </p>
-          <CouponInput
-            couponState={couponState}
-            coupon={coupon}
-            onValueChanged={this.onCouponChange}
-          />
-        </div>
-      : <div>
-          <p>
-            Hey! This feature is only available in the full access version of
-            Kactus.
-          </p>
-          <ul>
-            <li>Unlimited public repositories</li>
-            <li>
-              No locked-in commitment: you can always generate the sketch files
-              to switch back
-            </li>
-            <li>
-              <strong>Unlimited private repositories</strong>
-            </li>
-          </ul>
-          <p>
-            More information available{' '}
-            <LinkButton onClick={this.onExternalLink}>here</LinkButton>.
-          </p>
-          <CouponInput
-            couponState={couponState}
-            coupon={coupon}
-            onValueChanged={this.onCouponChange}
-          />
-        </div>
+    const copy =
+      this.props.kind === 'choice'
+        ? <div className="choices">
+            <div
+              className={
+                'plan' + (this.state.choice === 'premium' ? ' selected' : '')
+              }
+              onClick={this.selectPremiumPlan}
+            >
+              <h2>Premium</h2>
+              <h3>$4.99</h3>
+              <h4>per month</h4>
+              <PremiumCopy />
+            </div>
+            <div
+              className={
+                'plan' + (this.state.choice === 'enterprise' ? ' selected' : '')
+              }
+              onClick={this.selectEnterprisePlan}
+            >
+              <h2>Enterprise</h2>
+              <h3>$11.99</h3>
+              <h4>per month</h4>
+              <EnterpriseCopy />
+            </div>
+          </div>
+        : this.state.choice === 'enterprise'
+          ? <EnterpriseCopy />
+          : <PremiumCopy />
 
-    let price = this.props.enterprise ? 11.99 : 4.99
+    let price = this.state.choice === 'enterprise' ? 11.99 : 4.99
     if (couponState && couponState !== 'loading') {
       if (couponState.percent_off) {
         price = price * (100 - couponState.percent_off) / 100
@@ -263,7 +269,7 @@ export class PremiumUpsell extends React.Component<
             onLoaded={this.finishedLoadingCheckout}
             onToken={this.onToken}
             user={this.props.user}
-            enterprise={this.props.enterprise}
+            enterprise={this.state.choice === 'enterprise'}
             price={price}
           />}
         {!showingCheckout &&
@@ -276,6 +282,16 @@ export class PremiumUpsell extends React.Component<
           >
             <DialogContent>
               {copy}
+              <p>
+                More information available{' '}
+                <LinkButton onClick={this.onExternalLink}>here</LinkButton>.
+              </p>
+              {this.props.kind === 'choice' &&
+                <CouponInput
+                  couponState={couponState}
+                  coupon={coupon}
+                  onValueChanged={this.onCouponChange}
+                />}
             </DialogContent>
 
             <DialogFooter>
@@ -330,5 +346,17 @@ export class PremiumUpsell extends React.Component<
 
   private signInEnterprise = () => {
     this.props.dispatcher.showEnterpriseSignInDialog(this.props.retryAction)
+  }
+
+  private selectPremiumPlan = () => {
+    this.setState({
+      choice: 'premium',
+    })
+  }
+
+  private selectEnterprisePlan = () => {
+    this.setState({
+      choice: 'enterprise',
+    })
   }
 }

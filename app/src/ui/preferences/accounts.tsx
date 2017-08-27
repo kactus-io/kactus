@@ -16,6 +16,7 @@ interface IAccountsProps {
   readonly onDotComSignIn: () => void
   readonly onEnterpriseSignIn: () => void
   readonly onLogout: (account: Account) => void
+  readonly onShowUnlockKactusPopup: (account: Account) => void
 }
 
 enum SignInType {
@@ -61,9 +62,19 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
             @{account.login}
           </div>
         </div>
-        <Button onClick={this.logout(account)}>
-          {__DARWIN__ ? 'Sign Out' : 'Sign out'}
-        </Button>
+        <div className="actions-wrapper">
+          {account.unlockedEnterpriseKactus || account.unlockedEnterpriseKactus
+            ? <span className="kactus-unlocked">✅ Kactus unlocked</span>
+            : <Button
+                className="action-button"
+                onClick={this.unlockKactus(account)}
+              >
+                Unlock Kactus
+              </Button>}
+          <Button onClick={this.logout(account)}>
+            {__DARWIN__ ? 'Sign Out' : 'Sign out'}
+          </Button>
+        </div>
       </Row>
     )
   }
@@ -111,6 +122,12 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
   private logout = (account: Account) => {
     return () => {
       this.props.onLogout(account)
+    }
+  }
+
+  private unlockKactus = (account: Account) => {
+    return () => {
+      this.props.onShowUnlockKactusPopup(account)
     }
   }
 }
