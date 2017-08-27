@@ -1,6 +1,12 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.5": [
+      "[Improved] Indent files in a sketch file",
+      "[Improved] Added cta in accounts to unlock kactus",
+      "[Fixed] Safer parsing of sketch part (#49)",
+      "[Fixed] Changed link to help (#50)"
+    ],
     "0.2.4": [
       "[New] Changed files in a sketch file are now grouped in a tree.",
       "[Improved] Added a loading indicator when generating the diffs",
