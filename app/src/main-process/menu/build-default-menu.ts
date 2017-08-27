@@ -331,7 +331,7 @@ export function buildDefaultMenu(
   const showUserGuides: Electron.MenuItemConstructorOptions = {
     label: 'Show User Guides',
     click() {
-      shell.openExternal('https://help.github.com/desktop-beta/guides/')
+      shell.openExternal('https://kactus.io/help/')
     },
   }
 
