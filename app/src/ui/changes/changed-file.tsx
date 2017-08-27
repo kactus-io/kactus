@@ -14,6 +14,7 @@ const RestrictedFileExtensions = ['.cmd', '.exe', '.bat', '.sh']
 interface IChangedFileProps {
   readonly path: string
   readonly status: AppFileStatus
+  readonly parts?: Array<string>
   readonly oldPath?: string
   readonly include: boolean | null
   readonly onIncludeChanged: (path: string, include: boolean) => void
@@ -33,6 +34,8 @@ interface IChangedFileProps {
   readonly availableWidth: number
   readonly onIgnore: (pattern: string) => void
 }
+
+const Space = () => <span style={{ marginLeft: 20 }} />
 
 /** a changed file in the working directory for a given repository */
 export class ChangedFile extends React.Component<IChangedFileProps, {}> {
@@ -69,6 +72,7 @@ export class ChangedFile extends React.Component<IChangedFileProps, {}> {
 
     return (
       <div className="file" onContextMenu={this.onContextMenu}>
+        {(this.props.parts || []).map((p, i) => <Space key={i} />)}
         <Checkbox
           // The checkbox doesn't need to be tab reachable since we emulate
           // checkbox behavior on the list item itself, ie hitting space bar

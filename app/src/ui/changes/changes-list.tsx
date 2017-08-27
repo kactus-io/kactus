@@ -199,6 +199,7 @@ export class ChangesList extends React.Component<
         <ChangedFile
           path={file.path}
           status={file.status}
+          parts={file.parts}
           oldPath={file.oldPath}
           include={includeAll}
           key={file.id}
