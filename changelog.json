@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.6": [
+      "[New] 'Open in Shell' now supports multiple shells",
+      "[Fixed] Keep order of sketch pages (#51)"
+    ],
     "0.2.5": [
       "[Improved] Indent files in a sketch file",
       "[Improved] Added cta in accounts to unlock kactus",
