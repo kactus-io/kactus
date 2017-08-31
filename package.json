@@ -104,6 +104,7 @@
     "@types/react-virtualized": "9.7.2",
     "@types/rimraf": "0.0.28",
     "@types/semver": "^5.3.32",
+    "@types/temp": "^0.8.29",
     "@types/ua-parser-js": "^0.7.30",
     "@types/uuid": "^3.4.0",
     "@types/winston": "^2.2.0",
