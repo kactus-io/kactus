@@ -741,7 +741,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
     // the diff type marker. But for selections that span multiple lines, we'll
     // trim it.
     const doc = editor.getDoc()
-    const lines: ReadonlyArray<string> = (doc as any).getSelections()
+    const lines = doc.getSelections()
     const selectionRanges = doc.listSelections()
     const lineContent: Array<string> = []
 
@@ -810,13 +810,14 @@ export class Diff extends React.Component<IDiffProps, {}> {
 
       return (
         <div className="sketch-diff-wrapper">
-          {this.props.file &&
+          {this.props.file && (
             <div className="sketch-diff-checkbox">
               {this.props.readOnly &&
-                this.props.openSketchFile &&
-                <Button type="submit" onClick={this.props.openSketchFile}>
-                  Open Sketch file
-                </Button>}
+                this.props.openSketchFile && (
+                  <Button type="submit" onClick={this.props.openSketchFile}>
+                    Open Sketch file
+                  </Button>
+                )}
               <Checkbox
                 label={
                   __DARWIN__
@@ -830,7 +831,8 @@ export class Diff extends React.Component<IDiffProps, {}> {
                 }
                 onChange={this.onToggleAdvancedDiffs}
               />
-            </div>}
+            </div>
+          )}
           {this.props.file && this.props.showAdvancedDiffs
             ? this.renderTextDiff(diff)
             : this.renderImage(diff)}

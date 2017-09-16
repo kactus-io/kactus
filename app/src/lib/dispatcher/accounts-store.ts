@@ -2,7 +2,7 @@ import { Emitter, Disposable } from 'event-kit'
 import { IDataStore, ISecureStore } from './stores'
 import { getKeyForAccount } from '../auth'
 import { Account } from '../../models/account'
-import { API, checkUnlockedKactus } from '../api'
+import { API, EmailVisibility, checkUnlockedKactus } from '../api'
 import { fatalError } from '../fatal-error'
 
 /** The data-only interface for storage. */
@@ -19,6 +19,9 @@ interface IEmail {
    * are provided for associating commit authors with the one GitHub account.
    */
   readonly primary: boolean
+
+  /** The way in which the email is visible. */
+  readonly visibility: EmailVisibility
 }
 
 /** The data-only interface for storage. */
@@ -168,20 +171,19 @@ export class AccountsStore {
 
     this.accounts = await Promise.all(accountsWithTokens)
 
-    const dedupAccounts = this.accounts.reduce(
-      (prev: { [id: string]: Account }, a) => {
-        if (
-          !prev[a.id] ||
-          (!prev[a.id].token && a.token) ||
-          (!prev[a.id].unlockedKactus && a.unlockedKactus) ||
-          (!prev[a.id].unlockedEnterpriseKactus && a.unlockedEnterpriseKactus)
-        ) {
-          prev[a.id] = a
-        }
-        return prev
-      },
-      {}
-    )
+    const acc: { [id: string]: Account } = {}
+
+    const dedupAccounts = this.accounts.reduce((prev, a) => {
+      if (
+        !prev[a.id] ||
+        (!prev[a.id].token && a.token) ||
+        (!prev[a.id].unlockedKactus && a.unlockedKactus) ||
+        (!prev[a.id].unlockedEnterpriseKactus && a.unlockedEnterpriseKactus)
+      ) {
+        prev[a.id] = a
+      }
+      return prev
+    }, acc)
 
     this.accounts = Object.keys(dedupAccounts).map(k => dedupAccounts[k])
 
@@ -201,7 +203,11 @@ export class AccountsStore {
 async function updatedAccount(account: Account): Promise<Account> {
   if (!account.token) {
     return fatalError(
-      `Cannot update an account which doesn't have a token: ${account}`
+      `Cannot update an account which doesn't have a token: ${JSON.stringify(
+        account,
+        null,
+        2
+      )}`
     )
   }
 

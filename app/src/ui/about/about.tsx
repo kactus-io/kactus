@@ -254,9 +254,7 @@ export class About extends React.Component<IAboutProps, IAboutState> {
               alt="Kactus logo"
             />
           </Row>
-          <h2>
-            {name}
-          </h2>
+          <h2>{name}</h2>
           <p className="no-padding">
             <LinkButton
               title="Click to copy"

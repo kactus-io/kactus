@@ -32,9 +32,7 @@ export class SketchFileView extends React.Component<
   public render() {
     return (
       <UiView className="panel blankslate" id="blank-slate">
-        <div className="title">
-          {this.props.sketchFile.id}
-        </div>
+        <div className="title">{this.props.sketchFile.id}</div>
         <div className="content">
           <div className="callout">
             <Octicon symbol={OcticonSymbol.ruby} />

@@ -44,11 +44,7 @@ export class KactusSettings extends React.Component<
 
     return errors.map((err, ix) => {
       const key = `err-${ix}`
-      return (
-        <DialogError key={key}>
-          {err}
-        </DialogError>
-      )
+      return <DialogError key={key}>{err}</DialogError>
     })
   }
 

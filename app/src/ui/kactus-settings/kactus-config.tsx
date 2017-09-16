@@ -65,7 +65,7 @@ export class KactusConfig extends React.Component<
           Shared pages across sketch files ({(config.sharedPages || []).length})
         </Row>
         <div style={{ paddingLeft: 20 }}>
-          {(config.sharedPages || []).map(page =>
+          {(config.sharedPages || []).map(page => (
             <Row key={page} className="shared-page">
               <Octicon symbol={OcticonSymbol.primitiveDot} />
               {page}
@@ -77,7 +77,7 @@ export class KactusConfig extends React.Component<
                 <Octicon symbol={OcticonSymbol.trashcan} />
               </span>
             </Row>
-          )}
+          ))}
           <Row>
             <TextBox
               label="New page to share"
@@ -128,8 +128,9 @@ export class KactusConfig extends React.Component<
     }
     this.props.onKactusChanged({
       ...this.props.config,
-      sharedPages: (this.props.config.sharedPages || [])
-        .concat(this.state.page),
+      sharedPages: (this.props.config.sharedPages || []).concat(
+        this.state.page
+      ),
     })
     this.setState({
       page: '',
@@ -139,8 +140,9 @@ export class KactusConfig extends React.Component<
   private onRemoveSharedPage = (page: string) => () => {
     this.props.onKactusChanged({
       ...this.props.config,
-      sharedPages: (this.props.config.sharedPages || [])
-        .filter(p => p !== page),
+      sharedPages: (this.props.config.sharedPages || []).filter(
+        p => p !== page
+      ),
     })
   }
 

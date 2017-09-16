@@ -50,6 +50,7 @@ import {
   ExternalEditor,
   parse as parseExternalEditor,
 } from '../../models/editors'
+import { getAvailableEditors } from '../editors'
 import {
   CloningRepository,
   CloningRepositoriesStore,
@@ -122,6 +123,12 @@ import {
   findShellOrDefault,
   launchShell,
 } from '../shells'
+import {
+  installGlobalLFSFilters,
+  isUsingLFS,
+  installLFSHooks,
+} from '../git/lfs'
+import { CloneRepositoryTab } from '../../models/clone-repository-tab'
 
 function findNext(
   array: ReadonlyArray<string>,
@@ -149,7 +156,9 @@ const defaultCommitSummaryWidth: number = 250
 const commitSummaryWidthConfigKey: string = 'commit-summary-width'
 
 const confirmRepoRemovalDefault: boolean = true
+const confirmDiscardChangesDefault: boolean = true
 const confirmRepoRemovalKey: string = 'confirmRepoRemoval'
+const confirmDiscardChangesKey: string = 'confirmDiscardChanges'
 
 const showAdvancedDiffsDefault: boolean = false
 const showAdvancedDiffsKey: string = 'showAdvancedDiffs'
@@ -157,7 +166,6 @@ const showAdvancedDiffsKey: string = 'showAdvancedDiffs'
 const sketchPathDefault: string = SKETCH_PATH
 const sketchPathKey: string = 'sketchPathType'
 
-const externalEditorDefault = ExternalEditor.Atom
 const externalEditorKey: string = 'externalEditor'
 
 const imageDiffTypeDefault = ImageDiffType.TwoUp
@@ -232,12 +240,16 @@ export class AppStore {
   private windowZoomFactor: number = 1
   private isUpdateAvailableBannerVisible: boolean = false
   private confirmRepoRemoval: boolean = confirmRepoRemovalDefault
+  private confirmDiscardChanges: boolean = confirmDiscardChangesDefault
   private imageDiffType: ImageDiffType = imageDiffTypeDefault
 
-  private selectedExternalEditor: ExternalEditor = externalEditorDefault
+  private selectedExternalEditor?: ExternalEditor
 
   /** The user's preferred shell. */
   private selectedShell = DefaultShell
+
+  /** The current repository filter text */
+  private repositoryFilterText: string = ''
 
   private readonly statsStore: StatsStore
 
@@ -250,6 +262,7 @@ export class AppStore {
   private isUnlockingKactusFullAccess: boolean = false
   private sketchVersion: string | null | undefined
   private sketchPath: string = sketchPathDefault
+  private selectedCloneRepositoryTab: CloneRepositoryTab = CloneRepositoryTab.DotCom
 
   public constructor(
     gitHubUserStore: GitHubUserStore,
@@ -580,13 +593,16 @@ export class AppStore {
       titleBarStyle: this.showWelcomeFlow ? 'light' : 'dark',
       highlightAccessKeys: this.highlightAccessKeys,
       isUpdateAvailableBannerVisible: this.isUpdateAvailableBannerVisible,
-      confirmRepoRemoval: this.confirmRepoRemoval,
       showAdvancedDiffs: this.showAdvancedDiffs,
+      askForConfirmationOnRepositoryRemoval: this.confirmRepoRemoval,
+      askForConfirmationOnDiscardChanges: this.confirmDiscardChanges,
+      selectedExternalEditor: this.selectedExternalEditor,
       imageDiffType: this.imageDiffType,
       isUnlockingKactusFullAccess: this.isUnlockingKactusFullAccess,
       sketchVersion: this.sketchVersion,
-      selectedExternalEditor: this.selectedExternalEditor,
       selectedShell: this.selectedShell,
+      repositoryFilterText: this.repositoryFilterText,
+      selectedCloneRepositoryTab: this.selectedCloneRepositoryTab,
     }
   }
 
@@ -752,6 +768,12 @@ export class AppStore {
 
       return { selection, changedFiles, diff }
     })
+    this.emitUpdate()
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _setRepositoryFilterText(text: string): Promise<void> {
+    this.repositoryFilterText = text
     this.emitUpdate()
   }
 
@@ -985,15 +1007,28 @@ export class AppStore {
       parseInt(localStorage.getItem(commitSummaryWidthConfigKey) || '', 10) ||
       defaultCommitSummaryWidth
 
-    const confirmRepoRemovalValue = localStorage.getItem(confirmRepoRemovalKey)
+    const confirmRepositoryRemovalValue = localStorage.getItem(
+      confirmRepoRemovalKey
+    )
 
     this.confirmRepoRemoval =
-      confirmRepoRemovalValue === null
+      confirmRepositoryRemovalValue === null
         ? confirmRepoRemovalDefault
-        : confirmRepoRemovalValue === '1'
+        : confirmRepositoryRemovalValue === '1'
 
-    const externalEditorValue = localStorage.getItem(externalEditorKey)
-    this.selectedExternalEditor = parseExternalEditor(externalEditorValue)
+    const confirmDiscardChangesValue = localStorage.getItem(
+      confirmDiscardChangesKey
+    )
+
+    this.confirmDiscardChanges =
+      confirmDiscardChangesValue === null
+        ? confirmDiscardChangesDefault
+        : confirmDiscardChangesValue === '1'
+
+    const externalEditorValue = await this.getSelectedExternalEditor()
+    if (externalEditorValue) {
+      this.selectedExternalEditor = externalEditorValue
+    }
 
     const shellValue = localStorage.getItem(shellKey)
     this.selectedShell = shellValue ? parseShell(shellValue) : DefaultShell
@@ -1019,10 +1054,34 @@ export class AppStore {
     this.accountsStore.refresh()
   }
 
+  private async getSelectedExternalEditor(): Promise<ExternalEditor | null> {
+    const externalEditorValue = localStorage.getItem(externalEditorKey)
+    if (externalEditorValue) {
+      const value = parseExternalEditor(externalEditorValue)
+      if (value) {
+        return value
+      }
+    }
+
+    const editors = await getAvailableEditors()
+    if (editors.length) {
+      const value = editors[0].editor
+      // store this value to avoid the lookup next time
+      localStorage.setItem(externalEditorKey, value)
+      return value
+    }
+
+    return null
+  }
+
   /** Update the menu with the names of the user's preferred apps. */
   private updatePreferredAppMenuItemLabels() {
+    const editorLabel = this.selectedExternalEditor
+      ? `Open in ${this.selectedExternalEditor}`
+      : undefined
+
     updatePreferredAppMenuItemLabels({
-      editor: `Open in ${this.selectedExternalEditor}`,
+      editor: editorLabel,
       shell: `Open in ${this.selectedShell}`,
     })
   }
@@ -2657,8 +2716,11 @@ export class AppStore {
 
   /** Takes a repository path and opens it using the user's configured editor */
   public async _openInExternalEditor(path: string): Promise<void> {
+    const selectedExternalEditor =
+      this.getState().selectedExternalEditor || null
+
     try {
-      const match = await findEditorOrDefault(this.selectedExternalEditor)
+      const match = await findEditorOrDefault(selectedExternalEditor)
       await launchExternalEditor(path, match)
     } catch (error) {
       this.emitError(error)
@@ -2692,9 +2754,20 @@ export class AppStore {
     this.emitUpdate()
   }
 
-  public _setConfirmRepoRemoval(confirmRepoRemoval: boolean): Promise<void> {
+  public _setConfirmRepositoryRemovalSetting(
+    confirmRepoRemoval: boolean
+  ): Promise<void> {
     this.confirmRepoRemoval = confirmRepoRemoval
     localStorage.setItem(confirmRepoRemovalKey, confirmRepoRemoval ? '1' : '0')
+    this.emitUpdate()
+
+    return Promise.resolve()
+  }
+
+  public _setConfirmDiscardChangesSetting(value: boolean): Promise<void> {
+    this.confirmDiscardChanges = value
+
+    localStorage.setItem(confirmDiscardChangesKey, value ? '1' : '0')
     this.emitUpdate()
 
     return Promise.resolve()
@@ -2904,18 +2977,33 @@ export class AppStore {
     paths: ReadonlyArray<string>
   ): Promise<ReadonlyArray<Repository>> {
     const addedRepositories = new Array<Repository>()
+    const lfsRepositories = new Array<Repository>()
     for (const path of paths) {
       const validatedPath = await validatedRepositoryPath(path)
       if (validatedPath) {
         const addedRepo = await this.repositoriesStore.addRepository(
           validatedPath
         )
-        const refreshedRepo = await this.refreshGitHubRepositoryInfo(addedRepo)
+        const [refreshedRepo, usingLFS] = await Promise.all([
+          this.refreshGitHubRepositoryInfo(addedRepo),
+          this.isUsingLFS(addedRepo),
+        ])
         addedRepositories.push(refreshedRepo)
+
+        if (usingLFS) {
+          lfsRepositories.push(refreshedRepo)
+        }
       } else {
         const error = new Error(`${path} isn't a git repository.`)
         this.emitError(error)
       }
+    }
+
+    if (lfsRepositories.length > 0) {
+      this._showPopup({
+        type: PopupType.InitializeLFS,
+        repositories: lfsRepositories,
+      })
     }
 
     return addedRepositories
@@ -3082,5 +3170,43 @@ export class AppStore {
       hostname,
       retryAction,
     })
+  }
+
+  public async _installGlobalLFSFilters(force: boolean): Promise<void> {
+    try {
+      await installGlobalLFSFilters(force)
+    } catch (error) {
+      this.emitError(error)
+    }
+  }
+
+  private async isUsingLFS(repository: Repository): Promise<boolean> {
+    try {
+      return await isUsingLFS(repository)
+    } catch (error) {
+      return false
+    }
+  }
+
+  public async _installLFSHooks(
+    repositories: ReadonlyArray<Repository>
+  ): Promise<void> {
+    for (const repo of repositories) {
+      try {
+        // At this point we've asked the user if we should install them, so
+        // force installation.
+        await installLFSHooks(repo, true)
+      } catch (error) {
+        this.emitError(error)
+      }
+    }
+  }
+
+  public _changeCloneRepositoriesTab(tab: CloneRepositoryTab): Promise<void> {
+    this.selectedCloneRepositoryTab = tab
+
+    this.emitUpdate()
+
+    return Promise.resolve()
   }
 }

@@ -33,7 +33,7 @@ interface IPremiumUpsellState {
   readonly choice: PremiumType
 }
 
-const EnterpriseCopy = () =>
+const EnterpriseCopy = () => (
   <ul>
     <li>Unlimited public repositories</li>
     <li>
@@ -52,8 +52,9 @@ const EnterpriseCopy = () =>
       </strong>
     </li>
   </ul>
+)
 
-const PremiumCopy = () =>
+const PremiumCopy = () => (
   <ul>
     <li>Unlimited public repositories</li>
     <li>
@@ -64,6 +65,7 @@ const PremiumCopy = () =>
       <strong>Unlimited private repositories</strong>
     </li>
   </ul>
+)
 
 export class PremiumUpsell extends React.Component<
   IPremiumUpsellProps,
@@ -223,34 +225,36 @@ export class PremiumUpsell extends React.Component<
     }
 
     const copy =
-      this.props.kind === 'choice'
-        ? <div className="choices">
-            <div
-              className={
-                'plan' + (this.state.choice === 'premium' ? ' selected' : '')
-              }
-              onClick={this.selectPremiumPlan}
-            >
-              <h2>Premium</h2>
-              <h3>$4.99</h3>
-              <h4>per month</h4>
-              <PremiumCopy />
-            </div>
-            <div
-              className={
-                'plan' + (this.state.choice === 'enterprise' ? ' selected' : '')
-              }
-              onClick={this.selectEnterprisePlan}
-            >
-              <h2>Enterprise</h2>
-              <h3>$11.99</h3>
-              <h4>per month</h4>
-              <EnterpriseCopy />
-            </div>
+      this.props.kind === 'choice' ? (
+        <div className="choices">
+          <div
+            className={
+              'plan' + (this.state.choice === 'premium' ? ' selected' : '')
+            }
+            onClick={this.selectPremiumPlan}
+          >
+            <h2>Premium</h2>
+            <h3>$4.99</h3>
+            <h4>per month</h4>
+            <PremiumCopy />
           </div>
-        : this.state.choice === 'enterprise'
-          ? <EnterpriseCopy />
-          : <PremiumCopy />
+          <div
+            className={
+              'plan' + (this.state.choice === 'enterprise' ? ' selected' : '')
+            }
+            onClick={this.selectEnterprisePlan}
+          >
+            <h2>Enterprise</h2>
+            <h3>$11.99</h3>
+            <h4>per month</h4>
+            <EnterpriseCopy />
+          </div>
+        </div>
+      ) : this.state.choice === 'enterprise' ? (
+        <EnterpriseCopy />
+      ) : (
+        <PremiumCopy />
+      )
 
     let price = this.state.choice === 'enterprise' ? 11.99 : 4.99
     if (couponState && couponState !== 'loading') {
@@ -263,16 +267,17 @@ export class PremiumUpsell extends React.Component<
 
     return (
       <div>
-        {(loadingCheckout || showingCheckout) &&
-          <Checkout
-            onDismissed={this.props.onDismissed}
-            onLoaded={this.finishedLoadingCheckout}
-            onToken={this.onToken}
-            user={this.props.user}
-            enterprise={this.state.choice === 'enterprise'}
-            price={price}
-          />}
-        {!showingCheckout &&
+        {(loadingCheckout || showingCheckout) && (
+            <Checkout
+              onDismissed={this.props.onDismissed}
+              onLoaded={this.finishedLoadingCheckout}
+              onToken={this.onToken}
+              user={this.props.user}
+              enterprise={this.state.choice === 'enterprise'}
+              price={price}
+            />
+          )}
+        {!showingCheckout && (
           <Dialog
             id="premium-upsell"
             title="Unlock the full potential of Kactus"
@@ -286,12 +291,13 @@ export class PremiumUpsell extends React.Component<
                 More information available{' '}
                 <LinkButton onClick={this.onExternalLink}>here</LinkButton>.
               </p>
-              {this.props.kind === 'choice' &&
+              {this.props.kind === 'choice' && (
                 <CouponInput
                   couponState={couponState}
                   coupon={coupon}
                   onValueChanged={this.onCouponChange}
-                />}
+                />
+              )}
             </DialogContent>
 
             <DialogFooter>
@@ -308,7 +314,8 @@ export class PremiumUpsell extends React.Component<
                 <Button onClick={this.props.onDismissed}>Not now</Button>
               </ButtonGroup>
             </DialogFooter>
-          </Dialog>}
+          </Dialog>
+        )}
       </div>
     )
   }

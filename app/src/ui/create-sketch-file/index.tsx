@@ -58,11 +58,7 @@ export class CreateSketchFile extends React.Component<
         loading={this.state.isCreatingFile}
         disabled={this.state.isCreatingFile}
       >
-        {error
-          ? <DialogError>
-              {error.message}
-            </DialogError>
-          : null}
+        {error ? <DialogError>{error.message}</DialogError> : null}
 
         <DialogContent>
           <Row>

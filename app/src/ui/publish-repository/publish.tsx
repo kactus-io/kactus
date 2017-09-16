@@ -14,6 +14,7 @@ import { getDotComAPIEndpoint } from '../../lib/api'
 import { assertNever, fatalError } from '../../lib/fatal-error'
 import { CallToAction } from '../lib/call-to-action'
 import { RetryActionType } from '../../lib/retry-actions'
+import { getGitDescription } from '../../lib/git/description'
 
 enum PublishTab {
   DotCom = 0,
@@ -92,16 +93,28 @@ export class Publish extends React.Component<IPublishProps, IPublishState> {
           <span>Enterprise</span>
         </TabBar>
 
-        {this.state.error
-          ? <DialogError>
-              {this.state.error.message}
-            </DialogError>
-          : null}
+        {this.state.error ? (
+          <DialogError>{this.state.error.message}</DialogError>
+        ) : null}
 
         {this.renderContent()}
         {this.renderFooter()}
       </Dialog>
     )
+  }
+
+  public async componentDidMount() {
+    try {
+      const description = await getGitDescription(this.props.repository.path)
+      const settings = {
+        ...this.state.publishSettings,
+        description,
+      }
+
+      this.setState({ publishSettings: settings })
+    } catch (error) {
+      log.warn(`Couldn't get the repository's description`, error)
+    }
   }
 
   private renderContent() {
@@ -116,11 +129,7 @@ export class Publish extends React.Component<IPublishProps, IPublishState> {
         />
       )
     } else {
-      return (
-        <DialogContent>
-          {this.renderSignInTab(tab)}
-        </DialogContent>
-      )
+      return <DialogContent>{this.renderSignInTab(tab)}</DialogContent>
     }
   }
 

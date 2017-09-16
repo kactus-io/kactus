@@ -35,12 +35,8 @@ export class NoChanges extends React.Component<INoChangesProps, {}> {
 
           <div className="callout">
             <Octicon symbol={OcticonSymbol.fileDirectory} />
-            <div>
-              Open this repository in {opener}
-            </div>
-            <Button onClick={this.props.onOpenRepository}>
-              Open {opener}
-            </Button>
+            <div>Open this repository in {opener}</div>
+            <Button onClick={this.props.onOpenRepository}>Open {opener}</Button>
           </div>
         </div>
         {this.props.loadingDiff && <LoadingOverlay />}

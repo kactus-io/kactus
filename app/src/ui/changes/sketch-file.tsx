@@ -39,8 +39,9 @@ export class SketchFile extends React.Component<
             availableWidth={availablePathWidth}
           />
         </label>
-        {(this.props.file.isImporting || this.props.file.isParsing) &&
-          <Loading />}
+        {(this.props.file.isImporting || this.props.file.isParsing) && (
+            <Loading />
+          )}
       </div>
     )
   }

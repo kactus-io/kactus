@@ -61,9 +61,7 @@ export class SketchFilesList extends React.Component<
     return (
       <div className="changes-list-container file-list">
         <div className="header">
-          <label className="changed-files-count">
-            {filesDescription}
-          </label>
+          <label className="changed-files-count">{filesDescription}</label>
           <Octicon
             symbol={OcticonSymbol.plus}
             className="sketch-file-action active"

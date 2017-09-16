@@ -9,7 +9,7 @@
 </div>
 
 
-[![Travis Build Status](https://travis-ci.org/kactus-io/kactus.svg?branch=master)](https://travis-ci.org/kactus-io/kactus)
+[![CircleCI](https://circleci.com/gh/kactus-io/kactus.svg?style=svg)](https://circleci.com/gh/kactus-io/kactus)
 ![Sketch.app](https://img.shields.io/badge/Sketch.app-43-brightgreen.svg)
 
 Kactus is a tool to bring proper version control _(as in git)_ to designers _(only sketch users for now, but we need to start somewhere, right?)_.
@@ -45,7 +45,7 @@ The [CONTRIBUTING.md](./CONTRIBUTING.md) document will help you get setup and
 familiar with the source. The [documentation](docs/) folder also contains more
 resources relevant to the project.
 
-If you're looking for something to work on, check out the [accepting-prs](https://github.com/kactus-io/kactus/issues?q=is%3Aopen+is%3Aissue+label%3Aaccepting-prs) label.
+If you're looking for something to work on, check out the [help wanted](https://github.com/kactus-io/kactus/issues?q=is%3Aopen+is%3Aissue+label%3Ahelp%20wanted) label.
 
 ## :cactus: More Resources
 

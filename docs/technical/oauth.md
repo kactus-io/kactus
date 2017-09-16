@@ -22,5 +22,5 @@ The OAuth client ID and Client Secret are bundled into the application with
 webpack. If you want to provide your own Client ID and Client Secret, set these
 environment variables:
 
- - `DESKTOP_OAUTH_CLIENT_ID`
- - `DESKTOP_OAUTH_CLIENT_SECRET`
+ - `KACTUS_OAUTH_CLIENT_ID`
+ - `KACTUS_OAUTH_CLIENT_SECRET`
