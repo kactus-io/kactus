@@ -2,15 +2,14 @@ import * as React from 'react'
 
 import { PathText } from '../lib/path-text'
 import { showContextualMenu, IMenuItem } from '../main-process-proxy'
+import { IKactusFile } from '../../lib/kactus'
+import { Loading } from '../lib/loading'
 
 interface ISketchFileProps {
-  readonly path: string
-  readonly id: string
-  readonly parsed: boolean
-  readonly imported: boolean
-  readonly onImport: (path: string) => void
-  readonly onParse: (path: string) => void
-  readonly onOpen: (path: string) => void
+  readonly file: IKactusFile
+  readonly onImport: (file: IKactusFile) => void
+  readonly onParse: (file: IKactusFile) => void
+  readonly onOpen: (file: IKactusFile) => void
   readonly availableWidth: number
 }
 
@@ -35,8 +34,14 @@ export class SketchFile extends React.Component<
     return (
       <div className="file" onContextMenu={this.onContextMenu}>
         <label className="path">
-          <PathText path={this.props.id} availableWidth={availablePathWidth} />
+          <PathText
+            path={this.props.file.id}
+            availableWidth={availablePathWidth}
+          />
         </label>
+        {(this.props.file.isImporting || this.props.file.isParsing) && (
+            <Loading />
+          )}
       </div>
     )
   }
@@ -47,20 +52,20 @@ export class SketchFile extends React.Component<
     const items: IMenuItem[] = [
       {
         label: __DARWIN__ ? 'Export Sketch To JSON…' : 'Export to JSON…',
-        action: () => this.props.onParse(this.props.path),
-        enabled: this.props.imported,
+        action: () => this.props.onParse(this.props.file),
+        enabled: this.props.file.imported,
       },
       {
         label: __DARWIN__
           ? 'Regenerate Sketch File From JSON…'
           : 'Regenerate Sketch File From JSON…',
-        action: () => this.props.onImport(this.props.path),
-        enabled: this.props.parsed,
+        action: () => this.props.onImport(this.props.file),
+        enabled: this.props.file.parsed,
       },
       { type: 'separator' },
       {
         label: 'Open',
-        action: () => this.props.onOpen(this.props.path),
+        action: () => this.props.onOpen(this.props.file),
       },
     ]
 

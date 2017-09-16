@@ -12,9 +12,12 @@ const url = `x-kactus-client://openLocalRepo/${encodeURIComponent(
 )}`
 
 const env = { ...process.env }
-// NB: We're gonna launch Desktop and we definitely don't want to carry over
+// NB: We're gonna launch Kactus and we definitely don't want to carry over
 // `ELECTRON_RUN_AS_NODE`. This seems to only happen on Windows.
 delete env['ELECTRON_RUN_AS_NODE']
 
-const command = __DARWIN__ ? 'open' : 'start'
-ChildProcess.exec(`${command} ${url}`, { env })
+if (__DARWIN__) {
+  ChildProcess.spawn('open', [url], { env })
+} else if (__WIN32__) {
+  ChildProcess.spawn('cmd', ['/c', 'start', url], { env })
+}

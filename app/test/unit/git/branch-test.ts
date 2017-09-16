@@ -22,7 +22,7 @@ describe('git/branch', () => {
       const repository = await setupEmptyRepository()
 
       const store = new GitStore(repository, shell)
-      await store.loadStatus()
+      await store.loadStatus([])
       const tip = store.tip
 
       expect(tip.kind).to.equal(TipState.Unborn)
@@ -36,7 +36,7 @@ describe('git/branch', () => {
       await GitProcess.exec(['checkout', '-b', 'not-master'], repository.path)
 
       const store = new GitStore(repository, shell)
-      await store.loadStatus()
+      await store.loadStatus([])
       const tip = store.tip
 
       expect(tip.kind).to.equal(TipState.Unborn)
@@ -49,7 +49,7 @@ describe('git/branch', () => {
       const repository = new Repository(path, -1, null, false)
 
       const store = new GitStore(repository, shell)
-      await store.loadStatus()
+      await store.loadStatus([])
       const tip = store.tip
 
       expect(tip.kind).to.equal(TipState.Detached)
@@ -64,7 +64,7 @@ describe('git/branch', () => {
       const repository = new Repository(path, -1, null, false)
 
       const store = new GitStore(repository, shell)
-      await store.loadStatus()
+      await store.loadStatus([])
       const tip = store.tip
 
       expect(tip.kind).to.equal(TipState.Valid)
@@ -80,7 +80,7 @@ describe('git/branch', () => {
       const repository = new Repository(path, -1, null, false)
 
       const store = new GitStore(repository, shell)
-      await store.loadStatus()
+      await store.loadStatus([])
       const tip = store.tip
 
       expect(tip.kind).to.equal(TipState.Valid)
@@ -95,7 +95,7 @@ describe('git/branch', () => {
       const repository = new Repository(path, -1, null, false)
 
       const store = new GitStore(repository, shell)
-      await store.loadStatus()
+      await store.loadStatus([])
       const tip = store.tip
 
       expect(tip.kind).to.equal(TipState.Valid)

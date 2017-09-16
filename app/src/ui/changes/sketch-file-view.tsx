@@ -2,18 +2,15 @@ import * as React from 'react'
 import { UiView } from '../ui-view'
 import { Button } from '../lib/button'
 import { Octicon, OcticonSymbol } from '../octicons'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../../lib/kactus'
 import { Loading } from '../lib/loading'
 
 interface ISketchFileViewProps {
-  readonly onExport: (path: string) => void
-  readonly onImport: (path: string) => void
-  readonly onOpenSketchFile: (path: string) => void
+  readonly onExport: (file: IKactusFile) => void
+  readonly onImport: (file: IKactusFile) => void
+  readonly onOpenSketchFile: (file: IKactusFile) => void
 
   readonly sketchFile: IKactusFile
-
-  readonly isImporting: boolean
-  readonly isParsing: boolean
 }
 
 export class SketchFileView extends React.Component<
@@ -21,23 +18,21 @@ export class SketchFileView extends React.Component<
   Readonly<{}>
 > {
   private handleOpen = () => {
-    this.props.onOpenSketchFile(this.props.sketchFile.path)
+    this.props.onOpenSketchFile(this.props.sketchFile)
   }
 
   private handleImport = () => {
-    this.props.onImport(this.props.sketchFile.path)
+    this.props.onImport(this.props.sketchFile)
   }
 
   private handleExport = () => {
-    this.props.onExport(this.props.sketchFile.path)
+    this.props.onExport(this.props.sketchFile)
   }
 
   public render() {
     return (
       <UiView className="panel blankslate" id="blank-slate">
-        <div className="title">
-          {this.props.sketchFile.id}
-        </div>
+        <div className="title">{this.props.sketchFile.id}</div>
         <div className="content">
           <div className="callout">
             <Octicon symbol={OcticonSymbol.ruby} />
@@ -57,7 +52,7 @@ export class SketchFileView extends React.Component<
               onClick={this.handleImport}
               disabled={!this.props.sketchFile.parsed}
             >
-              {this.props.isImporting ? <Loading /> : null}{' '}
+              {this.props.sketchFile.isImporting ? <Loading /> : null}{' '}
               {__DARWIN__ ? 'Regenerate Sketch File' : 'Regenerate Sketch file'}
             </Button>
           </div>
@@ -69,7 +64,7 @@ export class SketchFileView extends React.Component<
               onClick={this.handleExport}
               disabled={!this.props.sketchFile.imported}
             >
-              {this.props.isParsing ? <Loading /> : null}{' '}
+              {this.props.sketchFile.isParsing ? <Loading /> : null}{' '}
               {__DARWIN__ ? 'Export Sketch File' : 'Export Sketch file'}
             </Button>
           </div>

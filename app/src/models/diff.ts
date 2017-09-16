@@ -1,4 +1,4 @@
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../lib/kactus'
 import { assertNever } from '../lib/fatal-error'
 
 /**
@@ -39,6 +39,7 @@ export enum IKactusFileType {
   Group,
   SymbolMaster,
   Bitmap,
+  Style,
 }
 
 export interface ISketchDiff {
@@ -157,6 +158,11 @@ export class DiffLine {
 
   public isIncludeableLine() {
     return this.type === DiffLineType.Add || this.type === DiffLineType.Delete
+  }
+
+  /** The content of the line, i.e., without the line type marker. */
+  public get content(): string {
+    return this.text.substr(1)
   }
 }
 

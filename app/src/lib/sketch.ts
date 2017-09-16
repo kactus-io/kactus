@@ -8,10 +8,8 @@ function extractVersion(s: string) {
 }
 
 export const SKETCH_PATH = '/Applications/Sketch.app'
-export const SKETCHTOOL_PATH = Path.join(
-  SKETCH_PATH,
-  '/Contents/Resources/sketchtool/bin/sketchtool'
-)
+export const sketchtoolPath = (sketchPath: string) =>
+  Path.join(sketchPath, '/Contents/Resources/sketchtool/bin/sketchtool')
 
 export async function openSketch() {
   return await new Promise<void>((resolve, reject) => {
@@ -26,12 +24,15 @@ export async function openSketch() {
 
 let sketchVersion: string | undefined
 
-export async function getSketchVersion(): Promise<string | null> {
-  if (sketchVersion) {
+export async function getSketchVersion(
+  sketchPath: string,
+  forceRefresh?: boolean
+): Promise<string | null> {
+  if (sketchVersion && !forceRefresh) {
     return sketchVersion
   }
   return new Promise<string | null>((resolve, reject) => {
-    execFile(Path.join(SKETCHTOOL_PATH), ['-v'], (err, stdout) => {
+    execFile(sketchtoolPath(sketchPath), ['-v'], (err, stdout) => {
       if (err) {
         return resolve(null)
       }
@@ -52,12 +53,13 @@ export async function getSketchVersion(): Promise<string | null> {
 }
 
 export async function runPluginCommand(
+  sketchPath: string,
   plugin: string,
   commandIdentifier: string
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     execFile(
-      Path.join(SKETCHTOOL_PATH),
+      Path.join(sketchtoolPath(sketchPath)),
       ['run', plugin, commandIdentifier, '--without-activating'],
       err => {
         if (err) {

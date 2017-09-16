@@ -3,17 +3,23 @@ import * as Path from 'path'
 import { exec } from 'child_process'
 import {
   find,
-  IKactusFile,
+  IKactusFile as _IKactusFile,
   IKactusConfig,
   parseFile,
   importFolder,
 } from 'kactus-cli'
+import { getUserDataPath } from '../ui/lib/app-proxy'
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
+import { IGitAccount } from './git/authentication'
 import { getDotComAPIEndpoint } from './api'
-import { SKETCHTOOL_PATH, runPluginCommand, getSketchVersion } from './sketch'
+import { sketchtoolPath, runPluginCommand, getSketchVersion } from './sketch'
 
 export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string }
+export type IKactusFile = _IKactusFile & {
+  isParsing: boolean
+  isImporting: boolean
+}
 
 interface IKactusStatusResult {
   readonly config: IFullKactusConfig
@@ -25,10 +31,11 @@ interface IKactusStatusResult {
  *  Retrieve the status for a given repository
  */
 export async function getKactusStatus(
+  sketchPath: string,
   repository: Repository
 ): Promise<IKactusStatusResult> {
   const kactus = find(repository.path)
-  const sketchVersion = (await getSketchVersion()) || undefined
+  const sketchVersion = (await getSketchVersion(sketchPath)) || undefined
   return {
     config: {
       // need to copy the config otheerwise there is a memory leak
@@ -42,6 +49,8 @@ export async function getKactusStatus(
       return {
         ...f,
         id: f.path.replace(repository.path, '').replace(/^\//, ''),
+        isParsing: false,
+        isImporting: false,
       }
     }),
     lastChecked: Date.now(),
@@ -49,12 +58,13 @@ export async function getKactusStatus(
 }
 
 export async function generateDocumentPreview(
+  sketchPath: string,
   file: string,
   output: string
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(
-      SKETCHTOOL_PATH +
+      sketchtoolPath(sketchPath) +
         ' export preview "' +
         file +
         '" --output="' +
@@ -71,13 +81,14 @@ export async function generateDocumentPreview(
 }
 
 export async function generatePagePreview(
+  sketchPath: string,
   file: string,
   name: string,
   output: string
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(
-      SKETCHTOOL_PATH +
+      sketchtoolPath(sketchPath) +
         ' export pages "' +
         file +
         '" --item="' +
@@ -97,13 +108,14 @@ export async function generatePagePreview(
 }
 
 export async function generateArtboardPreview(
+  sketchPath: string,
   file: string,
   id: string,
   output: string
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(
-      SKETCHTOOL_PATH +
+      sketchtoolPath(sketchPath) +
         ' export artboards "' +
         file +
         '" --item="' +
@@ -122,13 +134,14 @@ export async function generateArtboardPreview(
 }
 
 export async function generateLayerPreview(
+  sketchPath: string,
   file: string,
   id: string,
   output: string
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     exec(
-      SKETCHTOOL_PATH +
+      sketchtoolPath(sketchPath) +
         ' export layers "' +
         file +
         '" --item="' +
@@ -148,12 +161,20 @@ export async function generateLayerPreview(
 
 export async function saveKactusConfig(
   repository: Repository,
-  content: string
+  config: IFullKactusConfig
 ): Promise<void> {
   const configPath = Path.join(repository.path, 'kactus.json')
 
+  const configToSave = { ...config }
+  delete configToSave.sketchVersion
+  if (configToSave.root === repository.path) {
+    delete configToSave.root
+  } else if (configToSave.root) {
+    configToSave.root = configToSave.root.replace(repository.path, '.')
+  }
+
   return new Promise<void>((resolve, reject) => {
-    Fs.writeFile(configPath, content, err => {
+    Fs.writeFile(configPath, JSON.stringify(configToSave, null, 2), err => {
       if (err) {
         reject(err)
       } else {
@@ -165,24 +186,49 @@ export async function saveKactusConfig(
 
 export function shouldShowPremiumUpsell(
   repository: Repository,
-  account: Account | null
+  account: IGitAccount | null,
+  accounts: ReadonlyArray<Account>
 ) {
-  if (
-    repository.gitHubRepository &&
-    account &&
-    account.endpoint !== getDotComAPIEndpoint() &&
-    !account.unlockedKactus
-  ) {
-    return { enterprise: true }
+  if (!account) {
+    return false
   }
 
-  if (
-    repository.gitHubRepository &&
-    repository.gitHubRepository.private &&
-    account &&
-    !account.unlockedKactus
+  let potentialPremiumAccount: Account | undefined
+
+  if (account instanceof Account) {
+    potentialPremiumAccount = account
+  } else {
+    potentialPremiumAccount =
+      accounts.find(a => a.unlockedEnterpriseKactus) ||
+      accounts.find(a => a.unlockedKactus) ||
+      accounts[0]
+  }
+
+  if (repository.gitHubRepository) {
+    if (!potentialPremiumAccount) {
+      // that shouldn't happen, when a repo is from github,
+      // there is a account associated with it.
+      // so bail out
+      return false
+    }
+    if (
+      potentialPremiumAccount.endpoint !== getDotComAPIEndpoint() &&
+      !potentialPremiumAccount.unlockedEnterpriseKactus
+    ) {
+      return { enterprise: true, user: potentialPremiumAccount }
+    }
+    if (
+      repository.gitHubRepository.private &&
+      (!potentialPremiumAccount.unlockedKactus &&
+        !potentialPremiumAccount.unlockedEnterpriseKactus)
+    ) {
+      return { enterprise: false, user: potentialPremiumAccount }
+    }
+  } else if (
+    !potentialPremiumAccount ||
+    !potentialPremiumAccount.unlockedEnterpriseKactus
   ) {
-    return { enterprise: false }
+    return { enterprise: true, user: potentialPremiumAccount }
   }
 
   return false
@@ -192,11 +238,35 @@ export async function parseSketchFile(path: string, config: IFullKactusConfig) {
   return parseFile(path + '.sketch', config)
 }
 
-export function importSketchFile(path: string, config: IFullKactusConfig) {
+export function importSketchFile(
+  sketchPath: string,
+  path: string,
+  config: IFullKactusConfig
+) {
   return importFolder(path, config).then(() => {
     return runPluginCommand(
+      sketchPath,
       Path.resolve(__dirname, './plugin.sketchplugin'),
       'refresh-files'
     )
   })
+}
+
+export function getKactusStoragePaths(
+  repository: Repository,
+  commitish: string,
+  sketchFile: IKactusFile
+) {
+  const storagePath = Path.join(
+    getUserDataPath(),
+    'previews',
+    String(repository.id),
+    commitish
+  )
+  const sketchStoragePath = Path.join(storagePath, sketchFile.id)
+
+  return {
+    storagePath,
+    sketchStoragePath,
+  }
 }

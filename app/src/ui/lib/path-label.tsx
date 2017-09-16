@@ -43,10 +43,9 @@ export class PathLabel extends React.Component<IPathLabelProps, {}> {
         : undefined
       return (
         <label {...props}>
-          {this.props.type &&
-            <span className="path-type">
-              {this.props.type}
-            </span>}
+          {this.props.type && (
+            <span className="path-type">{this.props.type}</span>
+          )}
           <PathText path={this.props.oldPath} availableWidth={segmentWidth} />
           <Octicon className="rename-arrow" symbol={OcticonSymbol.arrowRight} />
           <PathText path={this.props.path} availableWidth={segmentWidth} />
@@ -55,10 +54,9 @@ export class PathLabel extends React.Component<IPathLabelProps, {}> {
     } else {
       return (
         <label {...props}>
-          {this.props.type &&
-            <span className="path-type">
-              {this.props.type}
-            </span>}
+          {this.props.type && (
+            <span className="path-type">{this.props.type}</span>
+          )}
           <PathText path={this.props.path} availableWidth={availableWidth} />
         </label>
       )

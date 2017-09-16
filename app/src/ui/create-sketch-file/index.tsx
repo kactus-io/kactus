@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../../lib/kactus'
 import { Repository } from '../../models/repository'
 import { Dispatcher } from '../../lib/dispatcher'
 import { TextBox } from '../lib/text-box'
@@ -58,11 +58,7 @@ export class CreateSketchFile extends React.Component<
         loading={this.state.isCreatingFile}
         disabled={this.state.isCreatingFile}
       >
-        {error
-          ? <DialogError>
-              {error.message}
-            </DialogError>
-          : null}
+        {error ? <DialogError>{error.message}</DialogError> : null}
 
         <DialogContent>
           <Row>
@@ -112,6 +108,7 @@ export class CreateSketchFile extends React.Component<
         )
         this.props.onDismissed()
       } catch (err) {
+        console.error(err)
         this.setState({
           currentError: err,
           isCreatingFile: false,

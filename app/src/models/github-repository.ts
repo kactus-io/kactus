@@ -1,21 +1,8 @@
-import { Owner, IOwner } from './owner'
+import { Owner } from './owner'
 import { IAPIRepository } from '../lib/api'
-import { structuralEquals } from '../lib/equality'
-
-/** The data-only interface for GitHubRepository for transport across IPC. */
-export interface IGitHubRepository {
-  readonly dbID: number | null
-  readonly name: string
-  readonly owner: IOwner
-  readonly private: boolean | null
-  readonly fork: boolean | null
-  readonly htmlURL: string | null
-  readonly defaultBranch: string | null
-  readonly cloneURL: string | null
-}
 
 /** A GitHub repository. */
-export class GitHubRepository implements IGitHubRepository {
+export class GitHubRepository {
   /**
    * The ID of the repository in the app's local database. This is no relation
    * to the API ID.
@@ -31,20 +18,6 @@ export class GitHubRepository implements IGitHubRepository {
   public readonly htmlURL: string | null
   public readonly defaultBranch: string | null
   public readonly cloneURL: string | null
-
-  /** Create a new GitHubRepository from its data-only representation. */
-  public static fromJSON(json: IGitHubRepository): GitHubRepository {
-    return new GitHubRepository(
-      json.name,
-      Owner.fromJSON(json.owner),
-      json.dbID,
-      json.private,
-      json.fork,
-      json.htmlURL,
-      json.defaultBranch,
-      json.cloneURL
-    )
-  }
 
   public constructor(
     name: string,
@@ -79,7 +52,7 @@ export class GitHubRepository implements IGitHubRepository {
       apiRepository.clone_url
     )
 
-    return structuralEquals(newRepository, this) ? this : newRepository
+    return newRepository.hash === this.hash ? this : newRepository
   }
 
   public get endpoint(): string {
@@ -89,5 +62,21 @@ export class GitHubRepository implements IGitHubRepository {
   /** Get the owner/name combo. */
   public get fullName(): string {
     return `${this.owner.login}/${this.name}`
+  }
+
+  /**
+   * A hash of the properties of the object.
+   *
+   * Objects with the same hash are guaranteed to be structurally equal.
+   */
+  public get hash(): string {
+    return `${this.dbID}+
+      ${this.defaultBranch}+
+      ${this.private}+
+      ${this.cloneURL}+
+      ${this.fork}+
+      ${this.name}+
+      ${this.htmlURL}+
+      ${this.owner.hash}`
   }
 }

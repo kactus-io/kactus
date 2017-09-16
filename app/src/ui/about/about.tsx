@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { clipboard } from 'electron'
 
 import { Row } from '../lib/row'
 import { Button } from '../lib/button'
@@ -67,6 +68,10 @@ export class About extends React.Component<IAboutProps, IAboutState> {
     this.setState({ updateState })
   }
 
+  private onClickVersion = () => {
+    clipboard.writeText(this.props.applicationVersion)
+  }
+
   public componentDidMount() {
     this.updateStoreEventHandle = updateStore.onDidChange(
       this.onUpdateStateChanged
@@ -95,7 +100,10 @@ export class About extends React.Component<IAboutProps, IAboutState> {
   }
 
   private renderUpdateButton() {
-    if (__RELEASE_ENV__ === 'development' || __RELEASE_ENV__ === 'test') {
+    if (
+      __RELEASE_CHANNEL__ === 'development' ||
+      __RELEASE_CHANNEL__ === 'test'
+    ) {
       return null
     }
 
@@ -171,7 +179,10 @@ export class About extends React.Component<IAboutProps, IAboutState> {
   }
 
   private renderUpdateDetails() {
-    if (__RELEASE_ENV__ === 'development' || __RELEASE_ENV__ === 'test') {
+    if (
+      __RELEASE_CHANNEL__ === 'development' ||
+      __RELEASE_CHANNEL__ === 'test'
+    ) {
       return (
         <p>
           The application is currently running in development or test mode and
@@ -200,7 +211,10 @@ export class About extends React.Component<IAboutProps, IAboutState> {
   }
 
   private renderUpdateErrors() {
-    if (__RELEASE_ENV__ === 'development' || __RELEASE_ENV__ === 'test') {
+    if (
+      __RELEASE_CHANNEL__ === 'development' ||
+      __RELEASE_CHANNEL__ === 'test'
+    ) {
       return null
     }
 
@@ -240,11 +254,16 @@ export class About extends React.Component<IAboutProps, IAboutState> {
               alt="Kactus logo"
             />
           </Row>
-          <h2>
-            {name}
-          </h2>
+          <h2>{name}</h2>
           <p className="no-padding">
-            Version {version} ({releaseNotesLink})
+            <LinkButton
+              title="Click to copy"
+              className="version-text"
+              onClick={this.onClickVersion}
+            >
+              Version {version}
+            </LinkButton>{' '}
+            ({releaseNotesLink})
           </p>
           <p className="no-padding">
             <LinkButton onClick={this.props.onShowTermsAndConditions}>

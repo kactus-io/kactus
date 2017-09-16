@@ -20,21 +20,23 @@ export class CouponInput extends React.Component<
     const couponLabel = (
       <span>
         Coupon
-        {couponState &&
+        {couponState && (
           <span>
             {' - '}
-            {couponState === 'loading'
-              ? <Loading />
-              : couponState.error
-                ? <span>
-                    <Octicon symbol={OcticonSymbol.circleSlash} />{' '}
-                    {couponState.error}
-                  </span>
-                : <span>
-                    <Octicon symbol={OcticonSymbol.check} />{' '}
-                    {couponState.discount}
-                  </span>}
-          </span>}
+            {couponState === 'loading' ? (
+              <Loading />
+            ) : couponState.error ? (
+              <span>
+                <Octicon symbol={OcticonSymbol.circleSlash} />{' '}
+                {couponState.error}
+              </span>
+            ) : (
+              <span>
+                <Octicon symbol={OcticonSymbol.check} /> {couponState.discount}
+              </span>
+            )}
+          </span>
+        )}
       </span>
     )
 

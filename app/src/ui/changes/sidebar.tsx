@@ -22,10 +22,14 @@ import {
 } from '../autocompletion'
 import { ICommitMessage, IKactusState } from '../../lib/app-state'
 import { ClickSource } from '../list'
-import { WorkingDirectoryFileChange } from '../../models/status'
+import {
+  WorkingDirectoryFileChange,
+  TSketchPartChange,
+} from '../../models/status'
 import { CSSTransitionGroup } from 'react-transition-group'
 import { SketchFilesList } from './sketch-files-list'
 import { openFile } from '../../lib/open-file'
+import { IKactusFile } from '../../lib/kactus'
 
 /**
  * The timeout for the animation of the enter/leave animation for Undo.
@@ -50,6 +54,8 @@ interface IChangesSidebarProps {
   readonly isCommitting: boolean
   readonly isPushPullFetchInProgress: boolean
   readonly gitHubUserStore: GitHubUserStore
+  readonly isLoadingStatus: boolean
+  readonly askForConfirmationOnDiscardChanges: boolean
 }
 
 export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
@@ -105,8 +111,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     )
   }
 
-  private onFileSelectionChanged = (row: number) => {
-    const file = this.props.changes.workingDirectory.files[row]
+  private onFileSelectionChanged = (file: WorkingDirectoryFileChange) => {
     this.props.dispatcher.changeChangesSelection(this.props.repository, file)
   }
 
@@ -136,21 +141,29 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
   }
 
   private onDiscardChanges = (file: WorkingDirectoryFileChange) => {
-    this.props.dispatcher.showPopup({
-      type: PopupType.ConfirmDiscardChanges,
-      repository: this.props.repository,
-      files: [file],
-    })
+    if (!this.props.askForConfirmationOnDiscardChanges) {
+      this.props.dispatcher.discardChanges(this.props.repository, [file])
+    } else {
+      this.props.dispatcher.showPopup({
+        type: PopupType.ConfirmDiscardChanges,
+        repository: this.props.repository,
+        files: [file],
+      })
+    }
   }
 
   private onDiscardAllChanges = (
     files: ReadonlyArray<WorkingDirectoryFileChange>
   ) => {
-    this.props.dispatcher.showPopup({
-      type: PopupType.ConfirmDiscardChanges,
-      repository: this.props.repository,
-      files,
-    })
+    if (!this.props.askForConfirmationOnDiscardChanges) {
+      this.props.dispatcher.discardChanges(this.props.repository, files)
+    } else {
+      this.props.dispatcher.showPopup({
+        type: PopupType.ConfirmDiscardChanges,
+        repository: this.props.repository,
+        files,
+      })
+    }
   }
 
   private onIgnore = (pattern: string) => {
@@ -218,21 +231,24 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     }
   }
 
-  private onSketchFileSelectionChanged = (row: number) => {
-    const file = this.props.kactus.files[row]
+  private onSketchFileSelectionChanged = (file: IKactusFile) => {
     this.props.dispatcher.changeSketchFileSelection(this.props.repository, file)
   }
 
-  private onSketchParse = (path: string) => {
-    this.props.dispatcher.parseSketchFile(this.props.repository, path)
+  private onSketchPartSelectionChanged = (file: TSketchPartChange) => {
+    this.props.dispatcher.changeSketchPartSelection(this.props.repository, file)
   }
 
-  private onSketchImport = (path: string) => {
-    this.props.dispatcher.importSketchFile(this.props.repository, path)
+  private onSketchParse = (file: IKactusFile) => {
+    this.props.dispatcher.parseSketchFile(this.props.repository, file)
   }
 
-  private onSketchOpen = (path: string) => {
-    this.props.dispatcher.openSketchFile(path)
+  private onSketchImport = (file: IKactusFile) => {
+    this.props.dispatcher.importSketchFile(this.props.repository, file)
+  }
+
+  private onSketchOpen = (file: IKactusFile) => {
+    this.props.dispatcher.openSketchFile(file)
   }
 
   private onCreateSketchFile = () => {
@@ -272,6 +288,8 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
   public render() {
     const changesState = this.props.changes
     const selectedFileID = changesState.selectedFileID
+    const selectedSketchPartID =
+      changesState.selectedSketchPart && changesState.selectedSketchPart.id
     const selectedSketchFileID = this.props.kactus.selectedFileID
 
     // TODO: I think user will expect the avatar to match that which
@@ -297,11 +315,17 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           onCreateSketchFile={this.onCreateSketchFile}
         />
         <ChangesList
+          isLoadingStatus={this.props.isLoadingStatus}
           dispatcher={this.props.dispatcher}
           repository={this.props.repository}
+          sketchFiles={this.props.kactus.files}
           workingDirectory={changesState.workingDirectory}
           selectedFileID={selectedFileID}
+          selectedSketchFileID={selectedSketchFileID}
+          selectedSketchPartID={selectedSketchPartID}
           onFileSelectionChanged={this.onFileSelectionChanged}
+          onSketchFileSelectionChanged={this.onSketchFileSelectionChanged}
+          onSketchPartSelectionChanged={this.onSketchPartSelectionChanged}
           onCreateCommit={this.onCreateCommit}
           onIncludeChanged={this.onIncludeChanged}
           onSelectAll={this.onSelectAll}

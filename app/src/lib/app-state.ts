@@ -10,14 +10,19 @@ import {
   FileChange,
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
+  FileType,
 } from '../models/status'
 import { CloningRepository, IGitHubUser, SignInState } from './dispatcher'
 import { ICommitMessage } from './dispatcher/git-store'
 import { IMenu } from '../models/app-menu'
 import { IRemote } from '../models/remote'
 import { WindowState } from './window-state'
-import { IKactusFile } from 'kactus-cli'
-import { IFullKactusConfig } from './kactus'
+import { IFullKactusConfig, IKactusFile } from './kactus'
+import { RetryAction } from './retry-actions'
+import { ExternalEditor } from '../models/editors'
+import { PreferencesTab } from '../models/preferences'
+import { Shell } from './shells'
+import { CloneRepositoryTab } from '../models/clone-repository-tab'
 
 export { ICommitMessage }
 export { IAheadBehind }
@@ -28,10 +33,18 @@ export enum SelectionType {
   MissingRepository,
 }
 
+/** The image diff type. */
 export enum ImageDiffType {
+  /** Show the old and new images side by side. */
   TwoUp,
+
+  /** Swipe between the old and new image. */
   Swipe,
+
+  /** Onion skin. */
   OnionSkin,
+
+  /** Highlight differences. */
   Difference,
 }
 
@@ -140,17 +153,32 @@ export interface IAppState {
   readonly isUpdateAvailableBannerVisible: boolean
 
   /** Whether we should show a confirmation dialog */
-  readonly confirmRepoRemoval: boolean
+  readonly askForConfirmationOnRepositoryRemoval: boolean
+
+  /** Whether we should show a confirmation dialog */
+  readonly askForConfirmationOnDiscardChanges: boolean
+
+  /** The external editor to use when opening repositories */
+  readonly selectedExternalEditor?: ExternalEditor
+
+  /** What type of visual diff mode we should use to compare images */
+  readonly imageDiffType: ImageDiffType
 
   /** Whether we should show the text diffs for a sketch file */
   readonly showAdvancedDiffs: boolean
 
-  /** Type of the image diff */
-  readonly imageDiffType: ImageDiffType
-
   readonly isUnlockingKactusFullAccess: boolean
 
   readonly sketchVersion: string | null | undefined
+
+  /** The user's preferred shell. */
+  readonly selectedShell: Shell
+
+  /** The current repository filter text. */
+  readonly repositoryFilterText: string
+
+  /** The currently selected tab for Clone Repository. */
+  readonly selectedCloneRepositoryTab: CloneRepositoryTab
 }
 
 export enum PopupType {
@@ -177,7 +205,14 @@ export enum PopupType {
   PremiumUpsell,
   PushBranchCommits,
   CLIInstalled,
+  GenericGitAuthentication,
+  ExternalEditorFailed,
+  OpenShellFailed,
+  InitializeLFS,
+  LFSAttributeMismatch,
 }
+
+export type PremiumType = 'premium' | 'enterprise'
 
 export type Popup =
   | { type: PopupType.RenameBranch; repository: Repository; branch: Branch }
@@ -187,13 +222,16 @@ export type Popup =
       repository: Repository
       files: ReadonlyArray<WorkingDirectoryFileChange>
     }
-  | { type: PopupType.Preferences }
+  | { type: PopupType.Preferences; initialSelectedTab?: PreferencesTab }
   | { type: PopupType.MergeBranch; repository: Repository }
   | { type: PopupType.RepositorySettings; repository: Repository }
   | { type: PopupType.KactusSettings; repository: Repository }
   | { type: PopupType.AddRepository; path?: string }
   | { type: PopupType.CreateRepository; path?: string }
-  | { type: PopupType.CloneRepository; initialURL: string | null }
+  | {
+      type: PopupType.CloneRepository
+      initialURL: string | null
+    }
   | { type: PopupType.CreateBranch; repository: Repository }
   | { type: PopupType.SignIn }
   | { type: PopupType.About }
@@ -208,7 +246,12 @@ export type Popup =
   | { type: PopupType.RemoveRepository; repository: Repository }
   | { type: PopupType.TermsAndConditions }
   | { type: PopupType.CreateSketchFile; repository: Repository }
-  | { type: PopupType.PremiumUpsell; enterprise: boolean }
+  | {
+      type: PopupType.PremiumUpsell
+      kind: PremiumType | 'choice'
+      user?: Account
+      retryAction?: RetryAction
+    }
   | {
       type: PopupType.PushBranchCommits
       repository: Repository
@@ -216,6 +259,20 @@ export type Popup =
       unPushedCommits?: number
     }
   | { type: PopupType.CLIInstalled }
+  | {
+      type: PopupType.GenericGitAuthentication
+      hostname: string
+      retryAction: RetryAction
+    }
+  | {
+      type: PopupType.ExternalEditorFailed
+      message: string
+      suggestAtom?: boolean
+      openPreferences?: boolean
+    }
+  | { type: PopupType.OpenShellFailed; message: string }
+  | { type: PopupType.InitializeLFS; repositories: ReadonlyArray<Repository> }
+  | { type: PopupType.LFSAttributeMismatch }
 
 export enum FoldoutType {
   Repository,
@@ -319,6 +376,9 @@ export interface IRepositoryState {
    * null if no such operation is in flight.
    */
   readonly pushPullFetchProgress: Progress | null
+
+  /** Is loading the status */
+  readonly isLoadingStatus: boolean
 }
 
 export type Progress =
@@ -478,6 +538,8 @@ export interface IHistoryState {
   readonly changedFiles: ReadonlyArray<FileChange>
 
   readonly diff: IDiff | null
+
+  readonly loadingDiff: boolean
 }
 
 export interface IKactusState {
@@ -490,8 +552,6 @@ export interface IKactusState {
   readonly selectedFileID: string | null
 
   readonly config: IFullKactusConfig
-  readonly isParsing: boolean
-  readonly isImporting: boolean
   readonly lastChecked: number | null
 }
 
@@ -514,4 +574,11 @@ export interface IChangesState {
 
   /** The commit message for a work-in-progress commit in the changes view. */
   readonly commitMessage: ICommitMessage | null
+
+  readonly loadingDiff: boolean
+
+  readonly selectedSketchPart: {
+    id: string
+    type: FileType.LayerFile | FileType.PageFile
+  } | null
 }

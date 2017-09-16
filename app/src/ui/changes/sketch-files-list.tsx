@@ -3,17 +3,17 @@ import { SketchFile } from './sketch-file'
 import { List, ClickSource } from '../list'
 import { Octicon, OcticonSymbol } from '../octicons'
 
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../../lib/kactus'
 
 const RowHeight = 29
 
 interface ISketchFilesListProps {
   readonly files: Array<IKactusFile>
   readonly selectedFileID: string | null
-  readonly onFileSelectionChanged: (row: number) => void
-  readonly onParse: (path: string) => void
-  readonly onImport: (path: string) => void
-  readonly onOpen: (path: string) => void
+  readonly onFileSelectionChanged: (file: IKactusFile) => void
+  readonly onParse: (file: IKactusFile) => void
+  readonly onImport: (file: IKactusFile) => void
+  readonly onOpen: (file: IKactusFile) => void
   readonly onCreateSketchFile: () => void
 
   readonly availableWidth: number
@@ -34,10 +34,7 @@ export class SketchFilesList extends React.Component<
 
     return (
       <SketchFile
-        path={file.path}
-        id={file.id}
-        parsed={file.parsed}
-        imported={file.imported}
+        file={file}
         key={file.id}
         onImport={this.props.onImport}
         onParse={this.props.onParse}
@@ -45,6 +42,11 @@ export class SketchFilesList extends React.Component<
         availableWidth={this.props.availableWidth}
       />
     )
+  }
+
+  private onFileSelectionChanged = (row: number) => {
+    const file = this.props.files[row]
+    this.props.onFileSelectionChanged(file)
   }
 
   public render() {
@@ -59,9 +61,7 @@ export class SketchFilesList extends React.Component<
     return (
       <div className="changes-list-container file-list">
         <div className="header">
-          <label className="changed-files-count">
-            {filesDescription}
-          </label>
+          <label className="changed-files-count">{filesDescription}</label>
           <Octicon
             symbol={OcticonSymbol.plus}
             className="sketch-file-action active"
@@ -76,7 +76,7 @@ export class SketchFilesList extends React.Component<
           rowHeight={RowHeight}
           rowRenderer={this.renderRow}
           selectedRow={selectedRow}
-          onSelectionChanged={this.props.onFileSelectionChanged}
+          onSelectionChanged={this.onFileSelectionChanged}
           invalidationProps={this.props.files}
           onRowClick={this.props.onRowClick}
         />

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { IKactusConfig } from 'kactus-cli'
+import { IFullKactusConfig } from '../../lib/kactus'
 import { KactusConfig } from './kactus-config'
 import { Dispatcher } from '../../lib/dispatcher'
 import { Repository } from '../../models/repository'
@@ -11,13 +11,13 @@ interface IKactusSettingsProps {
   readonly dispatcher: Dispatcher
   readonly repository: Repository
   readonly onDismissed: () => void
-  readonly kactusConfig: IKactusConfig
+  readonly kactusConfig: IFullKactusConfig
 }
 
 interface IKactusSettingsState {
   readonly disabled: boolean
   readonly errors?: ReadonlyArray<JSX.Element | string>
-  readonly kactusConfig: IKactusConfig
+  readonly kactusConfig: IFullKactusConfig
   readonly kactusHasChanged: boolean
 }
 
@@ -44,11 +44,7 @@ export class KactusSettings extends React.Component<
 
     return errors.map((err, ix) => {
       const key = `err-${ix}`
-      return (
-        <DialogError key={key}>
-          {err}
-        </DialogError>
-      )
+      return <DialogError key={key}>{err}</DialogError>
     })
   }
 
@@ -105,7 +101,7 @@ export class KactusSettings extends React.Component<
         try {
           await this.props.dispatcher.saveKactusConfig(
             this.props.repository,
-            JSON.stringify(this.state.kactusConfig, null, 2)
+            this.state.kactusConfig
           )
         } catch (e) {
           log.error(
@@ -128,7 +124,7 @@ export class KactusSettings extends React.Component<
     }
   }
 
-  private onKactusChanged = (config: IKactusConfig) => {
+  private onKactusChanged = (config: IFullKactusConfig) => {
     this.setState({ kactusConfig: config, kactusHasChanged: true })
   }
 }

@@ -1,12 +1,16 @@
 import * as React from 'react'
 import { CommitSummary } from './commit-summary'
 import { Diff } from '../diff'
+import { DiffType } from '../../models/diff'
 import { FileList } from './file-list'
 import { Repository } from '../../models/repository'
 import { FileChange } from '../../models/status'
 import { Commit } from '../../models/commit'
 import { Dispatcher } from '../../lib/dispatcher'
-import { IHistoryState as IAppHistoryState } from '../../lib/app-state'
+import {
+  IHistoryState as IAppHistoryState,
+  ImageDiffType,
+} from '../../lib/app-state'
 import { ThrottledScheduler } from '../lib/throttled-scheduler'
 import { IGitHubUser } from '../../lib/dispatcher'
 import { Resizable } from '../resizable'
@@ -21,11 +25,11 @@ interface IHistoryProps {
   readonly history: IAppHistoryState
   readonly emoji: Map<string, string>
   readonly commits: Map<string, Commit>
-  readonly localCommitSHAs: ReadonlyArray<string>
   readonly commitSummaryWidth: number
   readonly gitHubUsers: Map<string, IGitHubUser>
   readonly showAdvancedDiffs: boolean
-  readonly imageDiffType: number
+  readonly imageDiffType: ImageDiffType
+  readonly loadingDiff: boolean
 }
 
 interface IHistoryState {
@@ -89,29 +93,43 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
         diff={diff}
         readOnly={true}
         dispatcher={this.props.dispatcher}
+        openSketchFile={this.onOpenSketchFile}
+        loading={this.props.loadingDiff}
       />
     )
   }
 
   private renderCommitSummary(commit: Commit) {
-    const isLocal = this.props.localCommitSHAs.indexOf(commit.sha) > -1
     const gitHubUser =
       this.props.gitHubUsers.get(commit.author.email.toLowerCase()) || null
 
     return (
       <CommitSummary
-        summary={commit.summary}
-        body={commit.body}
-        sha={commit.sha}
-        author={commit.author}
+        commit={commit}
         files={this.props.history.changedFiles}
         emoji={this.props.emoji}
         repository={this.props.repository}
-        isLocal={isLocal}
         gitHubUser={gitHubUser}
         onExpandChanged={this.onExpandChanged}
         isExpanded={this.state.isExpanded}
       />
+    )
+  }
+
+  private onOpenSketchFile = () => {
+    const sha = this.props.history.selection.sha
+    if (
+      !sha ||
+      !this.props.history.diff ||
+      this.props.history.diff.kind !== DiffType.Sketch
+    ) {
+      return
+    }
+    const sketchFile = this.props.history.diff.sketchFile
+    this.props.dispatcher.openOldSketchFile(
+      sha,
+      this.props.repository,
+      sketchFile
     )
   }
 

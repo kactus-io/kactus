@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Button } from '../lib/button'
 import { Octicon, OcticonSymbol } from '../octicons'
+import { LoadingOverlay } from '../lib/loading'
 
 const BlankSlateImage = `file:///${__dirname}/static/empty-no-file-selected.svg`
 
@@ -10,6 +11,8 @@ interface INoChangesProps {
 
   /** Called when the user chooses to create a new sketch file */
   readonly onCreateSketchFile: () => void
+
+  readonly loadingDiff: boolean
 }
 
 /** The component to display when there are no local changes. */
@@ -32,14 +35,11 @@ export class NoChanges extends React.Component<INoChangesProps, {}> {
 
           <div className="callout">
             <Octicon symbol={OcticonSymbol.fileDirectory} />
-            <div>
-              Open this repository in {opener}
-            </div>
-            <Button onClick={this.props.onOpenRepository}>
-              Open {opener}
-            </Button>
+            <div>Open this repository in {opener}</div>
+            <Button onClick={this.props.onOpenRepository}>Open {opener}</Button>
           </div>
         </div>
+        {this.props.loadingDiff && <LoadingOverlay />}
       </div>
     )
   }

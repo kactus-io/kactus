@@ -9,7 +9,7 @@ export interface IOAuthAction {
 export interface IOpenRepositoryFromURLAction {
   readonly name: 'open-repository-from-url'
 
-  /** the remote repository location associated with the "Open in Desktop" action */
+  /** the remote repository location associated with the "Open in Kactus" action */
   readonly url: string
 
   /** the optional branch name which should be checked out. use the default branch otherwise. */
@@ -52,6 +52,7 @@ export interface IImportSketchFileAction {
 
 export interface IUnknownAction {
   readonly name: 'unknown'
+  readonly url: string
 }
 
 export type URLActionType =
@@ -66,7 +67,7 @@ export type URLActionType =
 export function parseAppURL(url: string): URLActionType {
   const parsedURL = URL.parse(url, true)
   const hostname = parsedURL.hostname
-  const unknown: IUnknownAction = { name: 'unknown' }
+  const unknown: IUnknownAction = { name: 'unknown', url }
   if (!hostname) {
     return unknown
   }

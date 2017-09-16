@@ -3,6 +3,7 @@ import { AppFileStatus, FileChange } from '../../models/status'
 import { Repository } from '../../models/repository'
 import { Commit } from '../../models/commit'
 import { CommitIdentity } from '../../models/commit-identity'
+import { IKactusFile } from '../kactus'
 
 /**
  * Map the raw status text from Git to an app-friendly value
@@ -112,6 +113,7 @@ export async function getCommits(
 /** Get the files that were changed in the given commit. */
 export async function getChangedFiles(
   repository: Repository,
+  sketchFiles: ReadonlyArray<IKactusFile>,
   sha: string
 ): Promise<ReadonlyArray<FileChange>> {
   // opt-in for rename detection (-M) and copies detection (-C)
@@ -150,7 +152,9 @@ export async function getChangedFiles(
 
     const path = lines[++i]
 
-    files.push(new FileChange(path, status, oldPath))
+    const sketchFile = sketchFiles.find(f => path.indexOf(f.id) === 0)
+
+    files.push(new FileChange(path, status, sketchFile, oldPath))
   }
 
   return files

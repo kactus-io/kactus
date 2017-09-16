@@ -2,7 +2,7 @@ import { git } from './core'
 import { Repository } from '../../models/repository'
 import { DiffSelectionType } from '../../models/diff'
 import { applyPatchToIndex } from './apply'
-import { IKactusFile } from 'kactus-cli'
+import { IKactusFile } from '../kactus'
 import { AppFileStatus, WorkingDirectoryFileChange } from '../../models/status'
 
 interface IUpdateIndexOptions {
@@ -155,7 +155,7 @@ export async function stageFiles(
   // has logic to support that scenario.
   if (partial.length) {
     for (const file of partial) {
-      await applyPatchToIndex(repository, kactusFiles, file)
+      await applyPatchToIndex(repository, file)
     }
   }
 }

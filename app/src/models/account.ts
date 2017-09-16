@@ -1,24 +1,11 @@
-import { IEmail } from './email'
-import { getDotComAPIEndpoint } from '../lib/api'
-
-/** The data-only interface for Account for transport across IPC. */
-export interface IAccount {
-  readonly token: string
-  readonly login: string
-  readonly endpoint: string
-  readonly emails: ReadonlyArray<IEmail>
-  readonly avatarURL: string
-  readonly id: number
-  readonly name: string
-  readonly unlockedKactus: boolean
-}
+import { getDotComAPIEndpoint, IAPIEmail } from '../lib/api'
 
 /**
  * A GitHub account, representing the user found on GitHub The Website or GitHub Enterprise.
  *
  * This contains a token that will be used for operations that require authentication.
  */
-export class Account implements IAccount {
+export class Account {
   /** The access token used to perform operations on behalf of this account */
   public readonly token: string
   /** The login name for this account  */
@@ -26,7 +13,7 @@ export class Account implements IAccount {
   /** The server for this account - GitHub or a GitHub Enterprise instance */
   public readonly endpoint: string
   /** The current list of email addresses associated with the account */
-  public readonly emails: ReadonlyArray<IEmail>
+  public readonly emails: ReadonlyArray<IAPIEmail>
   /** The profile URL to render for this account */
   public readonly avatarURL: string
   /** The database id for this account */
@@ -35,35 +22,34 @@ export class Account implements IAccount {
   public readonly name: string
   /** Wether the user has full access to Kactus */
   public readonly unlockedKactus: boolean
-
-  /** Create a new Account from some JSON. */
-  public static fromJSON(obj: IAccount): Account {
-    return new Account(
-      obj.login,
-      obj.endpoint,
-      obj.token,
-      obj.emails,
-      obj.avatarURL,
-      obj.id,
-      obj.name,
-      obj.unlockedKactus
-    )
-  }
+  /** Wether the user has enterprise access to Kactus */
+  public readonly unlockedEnterpriseKactus: boolean
 
   /** Create an account which can be used to perform unauthenticated API actions */
   public static anonymous(): Account {
-    return new Account('', getDotComAPIEndpoint(), '', [], '', -1, '', false)
+    return new Account(
+      '',
+      getDotComAPIEndpoint(),
+      '',
+      [],
+      '',
+      -1,
+      '',
+      false,
+      false
+    )
   }
 
   public constructor(
     login: string,
     endpoint: string,
     token: string,
-    emails: ReadonlyArray<IEmail>,
+    emails: ReadonlyArray<IAPIEmail>,
     avatarURL: string,
     id: number,
     name: string,
-    unlockedKactus: boolean
+    unlockedKactus: boolean,
+    unlockedEnterpriseKactus: boolean
   ) {
     this.login = login
     this.endpoint = endpoint
@@ -73,6 +59,7 @@ export class Account implements IAccount {
     this.id = id
     this.name = name
     this.unlockedKactus = unlockedKactus
+    this.unlockedEnterpriseKactus = unlockedEnterpriseKactus
   }
 
   public withToken(token: string): Account {
@@ -84,11 +71,12 @@ export class Account implements IAccount {
       this.avatarURL,
       this.id,
       this.name,
-      this.unlockedKactus
+      this.unlockedKactus,
+      this.unlockedEnterpriseKactus
     )
   }
 
-  public unlockKactus(): Account {
+  public unlockKactus(enterprise: boolean): Account {
     return new Account(
       this.login,
       this.endpoint,
@@ -97,7 +85,8 @@ export class Account implements IAccount {
       this.avatarURL,
       this.id,
       this.name,
-      true
+      enterprise ? false : true,
+      enterprise ? true : false
     )
   }
 }

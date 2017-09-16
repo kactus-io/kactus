@@ -1,7 +1,6 @@
 import * as OS from 'os'
 import * as URL from 'url'
 import { Account } from '../models/account'
-import { IEmail } from '../models/email'
 
 import {
   request,
@@ -21,7 +20,7 @@ const ClientSecret = process.env.TEST_ENV ? '' : __OAUTH_SECRET__
 
 if (!ClientID || !ClientID.length || !ClientSecret || !ClientSecret.length) {
   log.warn(
-    `DESKTOP_OAUTH_CLIENT_ID and/or DESKTOP_OAUTH_CLIENT_SECRET is undefined. You won't be able to authenticate new users.`
+    `KACTUS_OAUTH_CLIENT_ID and/or KACTUS_OAUTH_CLIENT_SECRET is undefined. You won't be able to authenticate new users.`
   )
 }
 
@@ -71,6 +70,7 @@ export interface IAPIUser {
   readonly login: string
   readonly avatar_url: string
   readonly name: string
+  readonly type: 'User' | 'Organization'
 }
 
 /** The users we get from the mentionables endpoint. */
@@ -89,18 +89,20 @@ export interface IAPIMentionableUser {
 }
 
 /**
+ * `null` can be returned by the API for legacy reasons. A non-null value is
+ * set for the primary email address currently, but in the future visibility
+ * may be defined for each email address.
+ */
+export type EmailVisibility = 'public' | 'private' | null
+
+/**
  * Information about a user's email as returned by the GitHub API.
  */
 export interface IAPIEmail {
   readonly email: string
   readonly verified: boolean
   readonly primary: boolean
-  /**
-   * `null` can be returned by the API for legacy reasons. A non-null value is
-   * set for the primary email address currently, but in the future visibility
-   * may be defined for each email address.
-   */
-  readonly visibility: 'public' | 'private' | null
+  readonly visibility: EmailVisibility
 }
 
 /** Information about an issue as returned by the GitHub API. */
@@ -131,6 +133,8 @@ interface IAPIKactusNestedUser {
   readonly stripeId: string | null
 
   readonly valid?: boolean
+
+  readonly validEnterprise?: boolean
 
   readonly createdAt?: Date
 }
@@ -263,6 +267,18 @@ export class API {
     }
   }
 
+  /** Fetch all repos a user has access to. */
+  public async fetchRepositories(): Promise<ReadonlyArray<
+    IAPIRepository
+  > | null> {
+    try {
+      return await this.fetchAll<IAPIRepository>('user/repos')
+    } catch (error) {
+      log.warn(`fetchRepositories: ${error}`)
+      return null
+    }
+  }
+
   /** Fetch the logged in account. */
   public async fetchAccount(): Promise<IAPIUser> {
     try {
@@ -276,16 +292,9 @@ export class API {
   }
 
   /** Fetch the current user's emails. */
-  public async fetchEmails(): Promise<ReadonlyArray<IEmail>> {
-    const isDotCom = this.endpoint === getDotComAPIEndpoint()
-
-    // workaround for /user/public_emails throwing a 500
-    // while we investigate the API issue
-    // see https://github.com/desktop/desktop/issues/1508 for context
+  public async fetchEmails(): Promise<ReadonlyArray<IAPIEmail>> {
     try {
-      // GitHub Enterprise does not have the concept of private emails
-      const apiPath = isDotCom ? 'user/public_emails' : 'user/emails'
-      const response = await this.request('GET', apiPath)
+      const response = await this.request('GET', 'user/emails')
       const result = await parsedResponse<ReadonlyArray<IAPIEmail>>(response)
 
       return Array.isArray(result) ? result : []
@@ -444,7 +453,11 @@ export class API {
     customHeaders?: Object
   ): Promise<ReadonlyArray<T>> {
     const buf = new Array<T>()
-    let nextPath: string | null = path
+
+    const params = {
+      per_page: '100',
+    }
+    let nextPath: string | null = urlWithQueryString(path, params)
 
     do {
       const response = await this.request(
@@ -672,7 +685,11 @@ export async function fetchUser(
   try {
     const user = await api.fetchAccount()
     const emails = await api.fetchEmails()
-    const unlockedKactus = await checkUnlockedKactus(user, emails, endpoint)
+    const unlockedKactusStatus = await checkUnlockedKactus(
+      user,
+      emails,
+      endpoint
+    )
     return new Account(
       user.login,
       endpoint,
@@ -681,7 +698,8 @@ export async function fetchUser(
       user.avatar_url,
       user.id,
       user.name,
-      unlockedKactus === null ? false : unlockedKactus
+      unlockedKactusStatus === null ? false : unlockedKactusStatus.premium,
+      unlockedKactusStatus === null ? false : unlockedKactusStatus.enterprise
     )
   } catch (e) {
     log.warn(`fetchUser: failed with endpoint ${endpoint}`, e)
@@ -835,9 +853,9 @@ export async function requestOAuthToken(
 /** Fetch wether the user has full access to Kactus or not */
 export async function checkUnlockedKactus(
   user: IAPIUser,
-  emails: ReadonlyArray<IEmail>,
+  emails: ReadonlyArray<IAPIEmail>,
   endpoint: string
-): Promise<boolean | null> {
+): Promise<{ enterprise: boolean; premium: boolean } | null> {
   try {
     const path = `${KactusAPIEndpoint}/checkUnlocked`
     const response = await fetch(path, {
@@ -855,10 +873,13 @@ export async function checkUnlockedKactus(
     })
     if (response.status === HttpStatusCode.NotFound) {
       log.warn(`checkUnlockedKactus: '${path}' returned a 404`)
-      return false
+      return { enterprise: false, premium: false }
     }
     const kactusUser = await parsedResponse<IAPIKactusUser>(response)
-    return !!kactusUser.user.valid
+    return {
+      enterprise: !!kactusUser.user.validEnterprise,
+      premium: !!kactusUser.user.valid,
+    }
   } catch (e) {
     log.warn(`checkUnlockedKactus: failed for ${user.login}`, e)
     return null

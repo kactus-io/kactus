@@ -13,6 +13,8 @@ import { TabBar } from '../tab-bar'
 import { getDotComAPIEndpoint } from '../../lib/api'
 import { assertNever, fatalError } from '../../lib/fatal-error'
 import { CallToAction } from '../lib/call-to-action'
+import { RetryActionType } from '../../lib/retry-actions'
+import { getGitDescription } from '../../lib/git/description'
 
 enum PublishTab {
   DotCom = 0,
@@ -91,16 +93,28 @@ export class Publish extends React.Component<IPublishProps, IPublishState> {
           <span>Enterprise</span>
         </TabBar>
 
-        {this.state.error
-          ? <DialogError>
-              {this.state.error.message}
-            </DialogError>
-          : null}
+        {this.state.error ? (
+          <DialogError>{this.state.error.message}</DialogError>
+        ) : null}
 
         {this.renderContent()}
         {this.renderFooter()}
       </Dialog>
     )
+  }
+
+  public async componentDidMount() {
+    try {
+      const description = await getGitDescription(this.props.repository.path)
+      const settings = {
+        ...this.state.publishSettings,
+        description,
+      }
+
+      this.setState({ publishSettings: settings })
+    } catch (error) {
+      log.warn(`Couldn't get the repository's description`, error)
+    }
   }
 
   private renderContent() {
@@ -115,11 +129,7 @@ export class Publish extends React.Component<IPublishProps, IPublishState> {
         />
       )
     } else {
-      return (
-        <DialogContent>
-          {this.renderSignInTab(tab)}
-        </DialogContent>
-      )
+      return <DialogContent>{this.renderSignInTab(tab)}</DialogContent>
     }
   }
 
@@ -188,11 +198,17 @@ export class Publish extends React.Component<IPublishProps, IPublishState> {
   }
 
   private signInDotCom = () => {
-    this.props.dispatcher.showDotComSignInDialog()
+    this.props.dispatcher.showDotComSignInDialog({
+      type: RetryActionType.Publish,
+      repository: this.props.repository,
+    })
   }
 
   private signInEnterprise = () => {
-    this.props.dispatcher.showEnterpriseSignInDialog()
+    this.props.dispatcher.showEnterpriseSignInDialog({
+      type: RetryActionType.Publish,
+      repository: this.props.repository,
+    })
   }
 
   private publishRepository = async () => {
@@ -224,6 +240,9 @@ export class Publish extends React.Component<IPublishProps, IPublishState> {
   }
 
   private onTabClicked = (index: PublishTab) => {
-    this.setState({ currentTab: index })
+    // Clear the selected org since dot com and Enterprise will have a different
+    // set of orgs.
+    const settings = { ...this.state.publishSettings, org: null }
+    this.setState({ currentTab: index, publishSettings: settings })
   }
 }

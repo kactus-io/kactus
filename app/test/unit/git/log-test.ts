@@ -8,18 +8,12 @@ import { setupFixtureRepository } from '../../fixture-helper'
 import { AppFileStatus } from '../../../src/models/status'
 import { GitProcess } from 'dugite'
 
-const temp = require('temp').track()
-
 describe('git/log', () => {
   let repository: Repository | null = null
 
   beforeEach(() => {
     const testRepoPath = setupFixtureRepository('test-repo')
     repository = new Repository(testRepoPath, -1, null, false)
-  })
-
-  after(() => {
-    temp.cleanupSync()
   })
 
   describe('getCommits', () => {
@@ -39,6 +33,7 @@ describe('git/log', () => {
     it('loads the files changed in the commit', async () => {
       const files = await getChangedFiles(
         repository!,
+        [],
         '7cd6640e5b6ca8dbfd0b33d0281ebe702127079c'
       )
       expect(files.length).to.equal(1)
@@ -50,13 +45,13 @@ describe('git/log', () => {
       const testRepoPath = setupFixtureRepository('rename-history-detection')
       repository = new Repository(testRepoPath, -1, null, false)
 
-      const first = await getChangedFiles(repository, '55bdecb')
+      const first = await getChangedFiles(repository, [], '55bdecb')
       expect(first.length).to.equal(1)
       expect(first[0].status).to.equal(AppFileStatus.Renamed)
       expect(first[0].oldPath).to.equal('NEW.md')
       expect(first[0].path).to.equal('NEWER.md')
 
-      const second = await getChangedFiles(repository, 'c898ca8')
+      const second = await getChangedFiles(repository, [], 'c898ca8')
       expect(second.length).to.equal(1)
       expect(second[0].status).to.equal(AppFileStatus.Renamed)
       expect(second[0].oldPath).to.equal('OLD.md')
@@ -73,7 +68,7 @@ describe('git/log', () => {
         repository.path
       )
 
-      const files = await getChangedFiles(repository, 'a500bf415')
+      const files = await getChangedFiles(repository, [], 'a500bf415')
       expect(files.length).to.equal(2)
 
       expect(files[0].status).to.equal(AppFileStatus.Copied)

@@ -1,6 +1,74 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.6": [
+      "[New] 'Open in Shell' now supports multiple shells",
+      "[Fixed] Keep order of sketch pages (#51)"
+    ],
+    "0.2.5": [
+      "[Improved] Indent files in a sketch file",
+      "[Improved] Added cta in accounts to unlock kactus",
+      "[Fixed] Safer parsing of sketch part (#49)",
+      "[Fixed] Changed link to help (#50)"
+    ],
+    "0.2.4": [
+      "[New] Changed files in a sketch file are now grouped in a tree.",
+      "[Improved] Added a loading indicator when generating the diffs",
+      "[Fixed] Create folders to new sketch file if needed"
+    ],
+    "0.2.3": [
+      "[New] Can choose whether a branch should be deleted on the remote as well as locally",
+      "[New] Added the ability to revert a commit",
+      "[Improved] Fetch if a push fails because they need to pull first",
+      "[Improved] Discard changes performance",
+      "[Fixed] Show 'Add Repository' dialog when repository is dragged onto the app",
+      "[Fixed] Dialog component did not remove event handler",
+      "[Fixed] Update to Git 2.14.1 to fix security vulnerability",
+      "[Fixed] Changing the default branch on GitHub.com is now reflected in the app",
+      "[Fixed] Swap around some callouts for no repositories",
+      "[Fixed] Darker unfocused selection color",
+      "[Fixed] Increase the max sidebar width",
+      "[Fixed] Don't say \"Publish this branch to GitHub\" for non-GitHub repositories",
+      "[Fixed] Patches which contain the \"no newline\" marker would fail to apply",
+      "[Fixed] Close the autocompletion popover when it loses focus",
+      "[Fixed] Clear the selected org when switching Publish Repository tabs",
+      "[Fixed] 'Create Without Pushing' button throwing an exception while opening a pull request",
+      "[Fixed] Publishing a repository would try to check for full access status first"
+    ],
+    "0.2.2": ["[Fixed] Create a new sketch file with shared styles would fail"],
+    "0.2.1": [
+      "[Fixed] Fixed getting the previous preview (which resulted in showing the same image for both preview)"
+    ],
+    "0.2.0": [
+      "[New] You can now use any git server (BitBucket, Gitlab, self-hosted, etc.)!",
+      "[New] Adds short-cut to open terminal",
+      "[Improved] Add a loading git status indicator",
+      "[Improved] Add an options menu to the Commit Summary component",
+      "[Improved] Only enable Reload for dev builds",
+      "[Improved] Handle updating a premium subscription to an enterprise subscription",
+      "[Fixed] Fixed a bug where the unlock status wouldn't be set right after unlocking and necessitate a restart of Kactus"
+    ],
+    "0.1.16": [
+      "[Fixed] Fix a bug when a page contained a `/`",
+      "[Improved] Add a separate loading indicator on each sketch file",
+      "[Improved] Show directly the sketch files when loading the status. That way we can show a loading indicator while parsing the files",
+      "[Fixed] Fix storing the sketch path when locating the app",
+      "[Fixed] Fixed a bug where an account could be deduplicated"
+    ],
+    "0.1.15": [
+      "[New] Added the Branch > Create Pull Request menu item",
+      "[New] Added a button to locate sketch when not found #34",
+      "[New] Added a button to open an sketch file from a previous commit. This file is temporary, do not try to save it and work from there. #23",
+      "[Fixed] Use the right version when creating a sketch file",
+      "[Improved] Do not store the style when it’s the same as the shared one #36"
+    ],
+    "0.1.14": ["[Fixed] not creating a folder to export images"],
+    "0.1.13": [
+      "[Fixed] handle shared style diff",
+      "[Fixed] fix a bug where it was impossible to select another file",
+      "[Fixed] respect the root config",
+      "[Fixed] Revert parsing _archive string as some info were getting lost when parsing to JS (which doesn't support 64 int). So it's a bit uglier but at least it's working"
+    ],
     "0.1.12": [
       "[Fixed] Configuring git form not submitting #27",
       "[Fixed] Extra repository settings tab #25",
@@ -28,9 +96,7 @@
       "[Fixed] Fix size of image diffs #15",
       "[Improved] Add a notification popup whenever a user toggles on full screen mode informing how to get out of full screen mode"
     ],
-    "0.1.6": [
-      "[Fixed] Update price shown when using a coupon"
-    ],
+    "0.1.6": ["[Fixed] Update price shown when using a coupon"],
     "0.1.5": [
       "[Fixed] Recreate the sketch files before get the git status when merging a branch"
     ],
@@ -67,17 +133,9 @@
     "0.1.0-alpha5": [
       "[New] Create a new sketch file with all the kactus options"
     ],
-    "0.1.0-alpha4": [
-      "[New] Brand new image diffs"
-    ],
-    "0.1.0-alpha3": [
-      "[Fixed] Handle sketch files with images"
-    ],
-    "0.1.0-alpha2": [
-      "[New] Bunch of stuff"
-    ],
-    "0.1.0-alpha1": [
-      "[New] First alpha release of Kactus"
-    ]
+    "0.1.0-alpha4": ["[New] Brand new image diffs"],
+    "0.1.0-alpha3": ["[Fixed] Handle sketch files with images"],
+    "0.1.0-alpha2": ["[New] Bunch of stuff"],
+    "0.1.0-alpha1": ["[New] First alpha release of Kactus"]
   }
 }

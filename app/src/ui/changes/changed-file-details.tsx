@@ -18,6 +18,9 @@ const TypeMap = [
   'Layer',
   'Shape Group',
   'Group',
+  'Symbol',
+  'Bitmap',
+  'Style',
 ]
 
 /** Displays information about a file */

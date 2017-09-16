@@ -1,16 +1,20 @@
+import { clipboard } from 'electron'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Disposable } from 'event-kit'
 
-import { NewImageDiff } from './new-image-diff'
-import { ModifiedImageDiff } from './modified-image-diff'
-import { DeletedImageDiff } from './deleted-image-diff'
+import {
+  NewImageDiff,
+  ModifiedImageDiff,
+  DeletedImageDiff,
+} from './image-diffs'
 import { BinaryFile } from './binary-file'
 
 import { Editor } from 'codemirror'
 import { CodeMirrorHost } from './code-mirror-host'
 import { Repository } from '../../models/repository'
 
+import { ImageDiffType } from '../../lib/app-state'
 import {
   FileChange,
   WorkingDirectoryFileChange,
@@ -24,6 +28,7 @@ import {
   ITextDiff,
   ISketchDiff,
   IKactusFileType,
+  DiffLineType,
 } from '../../models/diff'
 import { Dispatcher } from '../../lib/dispatcher/dispatcher'
 
@@ -31,6 +36,7 @@ import {
   diffLineForIndex,
   diffHunkForIndex,
   findInteractiveDiffRange,
+  lineNumberForDiffLine,
 } from './diff-explorer'
 import { DiffLineGutter } from './diff-line-gutter'
 import { IEditorConfigurationExtra } from './editor-configuration-extra'
@@ -42,8 +48,14 @@ import { Octicon, OcticonSymbol } from '../octicons'
 
 import { fatalError } from '../../lib/fatal-error'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
+import { Button } from '../lib/button'
 
 import { RangeSelectionSizePixels } from './edge-detection'
+import { relativeChanges } from './changed-range'
+import { LoadingOverlay } from '../lib/loading'
+
+/** The longest line for which we'd try to calculate a line diff. */
+const MaxIntraLineDiffStringLength = 4096
 
 // This is a custom version of the no-newline octicon that's exactly as
 // tall as it needs to be (8px) which helps with aligning it on the line.
@@ -65,7 +77,7 @@ interface IDiffProps {
   readonly readOnly: boolean
 
   /** The file whose diff should be displayed. */
-  readonly file: FileChange
+  readonly file: FileChange | null
 
   /** Called when the includedness of lines or a range of lines has changed. */
   readonly onIncludeChanged?: (diffSelection: DiffSelection) => void
@@ -77,7 +89,13 @@ interface IDiffProps {
   readonly dispatcher: Dispatcher
 
   readonly showAdvancedDiffs: boolean
-  readonly imageDiffType: number
+
+  readonly openSketchFile?: () => void
+
+  /** The type of image diff to display. */
+  readonly imageDiffType: ImageDiffType
+
+  readonly loading: boolean
 }
 
 /** A component which renders a diff for a file. */
@@ -556,11 +574,77 @@ export class Diff extends React.Component<IDiffProps, {}> {
     }
   }
 
-  private onChanges = (cm: Editor) => {
-    this.restoreScrollPosition(cm)
+  private markIntraLineChanges(codeMirror: Editor, diff: ITextDiff) {
+    for (const hunk of diff.hunks) {
+      const additions = hunk.lines.filter(l => l.type === DiffLineType.Add)
+      const deletions = hunk.lines.filter(l => l.type === DiffLineType.Delete)
+      if (additions.length !== deletions.length) {
+        continue
+      }
+
+      for (let i = 0; i < additions.length; i++) {
+        const addLine = additions[i]
+        const deleteLine = deletions[i]
+        if (
+          addLine.text.length > MaxIntraLineDiffStringLength ||
+          deleteLine.text.length > MaxIntraLineDiffStringLength
+        ) {
+          continue
+        }
+
+        const changeRanges = relativeChanges(
+          addLine.content,
+          deleteLine.content
+        )
+        const addRange = changeRanges.stringARange
+        if (addRange.length > 0) {
+          const addLineNumber = lineNumberForDiffLine(addLine, diff)
+          if (addLineNumber > -1) {
+            const addFrom = {
+              line: addLineNumber,
+              ch: addRange.location + 1,
+            }
+            const addTo = {
+              line: addLineNumber,
+              ch: addRange.location + addRange.length + 1,
+            }
+            codeMirror
+              .getDoc()
+              .markText(addFrom, addTo, { className: 'cm-diff-add-inner' })
+          }
+        }
+
+        const deleteRange = changeRanges.stringBRange
+        if (deleteRange.length > 0) {
+          const deleteLineNumber = lineNumberForDiffLine(deleteLine, diff)
+          if (deleteLineNumber > -1) {
+            const deleteFrom = {
+              line: deleteLineNumber,
+              ch: deleteRange.location + 1,
+            }
+            const deleteTo = {
+              line: deleteLineNumber,
+              ch: deleteRange.location + deleteRange.length + 1,
+            }
+            codeMirror.getDoc().markText(deleteFrom, deleteTo, {
+              className: 'cm-diff-delete-inner',
+            })
+          }
+        }
+      }
+    }
   }
 
-  private onChangeImageDiffType = (type: number) => {
+  private onChanges = (cm: Editor) => {
+    this.restoreScrollPosition(cm)
+
+    const diff = this.props.diff
+    if (diff.kind === DiffType.Text) {
+      this.markIntraLineChanges(cm, diff)
+    }
+  }
+
+  private onChangeImageDiffType = (type: ImageDiffType) => {
     this.props.dispatcher.changeImageDiffType(type)
   }
 
@@ -576,14 +660,11 @@ export class Diff extends React.Component<IDiffProps, {}> {
       )
     }
 
-    if (imageDiff.current && this.props.file.status === AppFileStatus.New) {
+    if (imageDiff.current) {
       return <NewImageDiff current={imageDiff.current} />
     }
 
-    if (
-      imageDiff.previous &&
-      this.props.file.status === AppFileStatus.Deleted
-    ) {
+    if (imageDiff.previous) {
       return <DeletedImageDiff previous={imageDiff.previous} />
     }
 
@@ -591,6 +672,9 @@ export class Diff extends React.Component<IDiffProps, {}> {
   }
 
   private renderBinaryFile() {
+    if (!this.props.file) {
+      return null
+    }
     return (
       <BinaryFile
         path={this.props.file.path}
@@ -617,7 +701,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
     }
 
     // If the text looks like it could have been formatted using Windows
-    // line endings (\r\n) we  need to massage it a bit before we hand it
+    // line endings (\r\n) we need to massage it a bit before we hand it
     // off to CodeMirror. That's because CodeMirror has two ways of splitting
     // lines, one is the built in which splits on \n, \r\n and \r. The last
     // one is important because that will match carriage return characters
@@ -644,8 +728,38 @@ export class Diff extends React.Component<IDiffProps, {}> {
         onChanges={this.onChanges}
         onRenderLine={this.renderLine}
         ref={this.getAndStoreCodeMirrorInstance}
+        onCopy={this.onCopy}
       />
     )
+  }
+
+  private onCopy = (editor: CodeMirror.Editor, event: Event) => {
+    event.preventDefault()
+
+    // Remove the diff line markers from the copied text. The beginning of the
+    // selection might start within a line, in which case we don't have to trim
+    // the diff type marker. But for selections that span multiple lines, we'll
+    // trim it.
+    const doc = editor.getDoc()
+    const lines = doc.getSelections()
+    const selectionRanges = doc.listSelections()
+    const lineContent: Array<string> = []
+
+    for (let i = 0; i < lines.length; i++) {
+      const range = selectionRanges[i]
+      const content = lines[i]
+      const contentLines = content.split('\n')
+      for (const [i, line] of contentLines.entries()) {
+        if (i === 0 && range.head.ch > 0) {
+          lineContent.push(line)
+        } else {
+          lineContent.push(line.substr(1))
+        }
+      }
+
+      const textWithoutMarkers = lineContent.join('\n')
+      clipboard.writeText(textWithoutMarkers)
+    }
   }
 
   private getAndStoreCodeMirrorInstance = (cmh: CodeMirrorHost) => {
@@ -656,7 +770,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
     this.props.dispatcher.toggleAdvancedDiffs()
   }
 
-  public render() {
+  private renderContent() {
     const diff = this.props.diff
 
     if (diff.kind === DiffType.Image) {
@@ -669,17 +783,24 @@ export class Diff extends React.Component<IDiffProps, {}> {
 
     if (diff.kind === DiffType.Sketch) {
       if (diff.hunks.length === 0) {
-        if (this.props.file.status === AppFileStatus.New) {
+        if (this.props.file && this.props.file.status === AppFileStatus.New) {
           return <div className="panel empty">The file is empty</div>
         }
 
-        if (this.props.file.status === AppFileStatus.Renamed) {
+        if (
+          this.props.file &&
+          this.props.file.status === AppFileStatus.Renamed
+        ) {
           return (
             <div className="panel renamed">
               The file was renamed but not changed
             </div>
           )
         }
+      }
+
+      if (diff.type === IKactusFileType.Style) {
+        return this.renderTextDiff(diff)
       }
 
       // TODO(mathieudutour): remove this once #3 is fixed
@@ -689,22 +810,30 @@ export class Diff extends React.Component<IDiffProps, {}> {
 
       return (
         <div className="sketch-diff-wrapper">
-          <div className="sketch-diff-checkbox">
-            <Checkbox
-              label={
-                __DARWIN__
-                  ? 'Show Advanced Text Diffs'
-                  : 'Show advanced text diffs'
-              }
-              value={
-                this.props.showAdvancedDiffs
-                  ? CheckboxValue.On
-                  : CheckboxValue.Off
-              }
-              onChange={this.onToggleAdvancedDiffs}
-            />
-          </div>
-          {this.props.showAdvancedDiffs
+          {this.props.file && (
+            <div className="sketch-diff-checkbox">
+              {this.props.readOnly &&
+                this.props.openSketchFile && (
+                  <Button type="submit" onClick={this.props.openSketchFile}>
+                    Open Sketch file
+                  </Button>
+                )}
+              <Checkbox
+                label={
+                  __DARWIN__
+                    ? 'Show Advanced Text Diffs'
+                    : 'Show advanced text diffs'
+                }
+                value={
+                  this.props.showAdvancedDiffs
+                    ? CheckboxValue.On
+                    : CheckboxValue.Off
+                }
+                onChange={this.onToggleAdvancedDiffs}
+              />
+            </div>
+          )}
+          {this.props.file && this.props.showAdvancedDiffs
             ? this.renderTextDiff(diff)
             : this.renderImage(diff)}
         </div>
@@ -725,11 +854,14 @@ export class Diff extends React.Component<IDiffProps, {}> {
 
     if (diff.kind === DiffType.Text) {
       if (diff.hunks.length === 0) {
-        if (this.props.file.status === AppFileStatus.New) {
+        if (this.props.file && this.props.file.status === AppFileStatus.New) {
           return <div className="panel empty">The file is empty</div>
         }
 
-        if (this.props.file.status === AppFileStatus.Renamed) {
+        if (
+          this.props.file &&
+          this.props.file.status === AppFileStatus.Renamed
+        ) {
           return (
             <div className="panel renamed">
               The file was renamed but not changed
@@ -744,5 +876,21 @@ export class Diff extends React.Component<IDiffProps, {}> {
     }
 
     return null
+  }
+
+  public render() {
+    return (
+      <div
+        style={{
+          width: '100%',
+          display: 'flex',
+          flexGrow: 1,
+          position: 'relative',
+        }}
+      >
+        {this.renderContent()}
+        {this.props.loading && <LoadingOverlay />}
+      </div>
+    )
   }
 }

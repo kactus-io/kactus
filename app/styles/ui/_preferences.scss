@@ -1,6 +1,5 @@
 #preferences {
   .accounts-tab {
-
     .account-info {
       .avatar {
         // 32px for the image + 2 on each side for the base border.
@@ -24,8 +23,41 @@
           margin-bottom: -2px;
         }
       }
+
+      .actions-wrapper {
+        align-self: flex-end;
+
+        display: flex;
+        flex-direction: column;
+
+        .button-component {
+          align-self: auto;
+
+          & + .button-component {
+            margin-top: 5px;
+          }
+        }
+
+        .kactus-unlocked {
+          margin-bottom: 5px;
+        }
+      }
     }
   }
+
+  .no-options-found {
+    label {
+      margin-bottom: 0;
+    }
+
+    span {
+      color: var(--text-secondary-color);
+    }
+  }
+}
+
+#external-editor-error {
+  width: 450px;
 }
 
 .shared-page {
@@ -42,7 +74,8 @@
     color: var(--color-deleted);
     padding: 0 5px;
 
-    .octicon, path {
+    .octicon,
+    path {
       cursor: pointer;
     }
   }

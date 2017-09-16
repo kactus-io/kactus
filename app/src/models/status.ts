@@ -1,6 +1,7 @@
-import { DiffSelection } from './diff'
+import { DiffSelection, DiffSelectionType } from './diff'
 import { OcticonSymbol } from '../ui/octicons'
 import { assertNever } from '../lib/fatal-error'
+import { IKactusFile } from '../lib/kactus'
 
 /**
  * The status entry code as reported by Git.
@@ -133,6 +134,30 @@ export function iconForStatus(status: AppFileStatus): OcticonSymbol {
   return assertNever(status, `Unknown file status ${status}`)
 }
 
+function getSketchFileParts(path: string, sketchFile?: IKactusFile) {
+  if (!sketchFile) {
+    return []
+  }
+  const secondPart = path.split(sketchFile.id + '/')[1]
+  if (!secondPart) {
+    return [sketchFile.id]
+  }
+  const parts = secondPart.split('/')
+  return [sketchFile.id].concat(parts.slice(0, parts.length - 1))
+}
+
+export type SketchFileType =
+  | FileType.SketchFile
+  | FileType.PageFile
+  | FileType.LayerFile
+
+export enum FileType {
+  NormalFile,
+  SketchFile,
+  PageFile,
+  LayerFile,
+}
+
 /** encapsulate changes to a file associated with a commit */
 export class FileChange {
   /** the relative path to the file in the repository */
@@ -144,10 +169,27 @@ export class FileChange {
   /** the status of the change to the file */
   public readonly status: AppFileStatus
 
-  public constructor(path: string, status: AppFileStatus, oldPath?: string) {
+  /** if the file is part of a sketch file, this is the sketch file */
+  public readonly sketchFile?: IKactusFile
+
+  public readonly parts?: Array<string>
+
+  public readonly type: FileType.NormalFile
+
+  public constructor(
+    path: string,
+    status: AppFileStatus,
+    sketchFile?: IKactusFile,
+    oldPath?: string
+  ) {
     this.path = path
     this.status = status
     this.oldPath = oldPath
+    this.sketchFile = sketchFile
+    this.type = FileType.NormalFile
+    if (sketchFile) {
+      this.parts = getSketchFileParts(path, sketchFile)
+    }
   }
 
   /** An ID for the file change. */
@@ -165,9 +207,10 @@ export class WorkingDirectoryFileChange extends FileChange {
     path: string,
     status: AppFileStatus,
     selection: DiffSelection,
+    sketchFile?: IKactusFile,
     oldPath?: string
   ) {
-    super(path, status, oldPath)
+    super(path, status, sketchFile, oldPath)
 
     this.selection = selection
   }
@@ -187,9 +230,28 @@ export class WorkingDirectoryFileChange extends FileChange {
       this.path,
       this.status,
       selection,
+      this.sketchFile,
       this.oldPath
     )
   }
+}
+
+export type TFileOrSketchPartChange =
+  | WorkingDirectoryFileChange
+  | {
+      opened: boolean
+      type: SketchFileType
+      id: string
+      parts: Array<string>
+      name: string
+    }
+
+export type TSketchPartChange = {
+  opened: boolean
+  type: FileType.LayerFile | FileType.PageFile
+  id: string
+  parts: Array<string>
+  name: string
 }
 
 /** the state of the working directory for a repository */
@@ -208,7 +270,14 @@ export class WorkingDirectoryStatus {
    */
   public readonly includeAll: boolean | null = true
 
-  public constructor(
+  /** Create a new status with the given files. */
+  public static fromFiles(
+    files: ReadonlyArray<WorkingDirectoryFileChange>
+  ): WorkingDirectoryStatus {
+    return new WorkingDirectoryStatus(files, getIncludeAllState(files))
+  }
+
+  private constructor(
     files: ReadonlyArray<WorkingDirectoryFileChange>,
     includeAll: boolean | null
   ) {
@@ -224,22 +293,32 @@ export class WorkingDirectoryStatus {
     return new WorkingDirectoryStatus(newFiles, includeAll)
   }
 
-  /** Update by replacing the file with the same ID with a new file. */
-  public byReplacingFile(
-    file: WorkingDirectoryFileChange
-  ): WorkingDirectoryStatus {
-    const newFiles = this.files.map(f => {
-      if (f.id === file.id) {
-        return file
-      } else {
-        return f
-      }
-    })
-    return new WorkingDirectoryStatus(newFiles, this.includeAll)
-  }
-
   /** Find the file with the given ID. */
   public findFileWithID(id: string): WorkingDirectoryFileChange | null {
     return this.files.find(f => f.id === id) || null
   }
+}
+
+function getIncludeAllState(
+  files: ReadonlyArray<WorkingDirectoryFileChange>
+): boolean | null {
+  if (!files.length) {
+    return true
+  }
+
+  const allSelected = files.every(
+    f => f.selection.getSelectionType() === DiffSelectionType.All
+  )
+  const noneSelected = files.every(
+    f => f.selection.getSelectionType() === DiffSelectionType.None
+  )
+
+  let includeAll: boolean | null = null
+  if (allSelected) {
+    includeAll = true
+  } else if (noneSelected) {
+    includeAll = false
+  }
+
+  return includeAll
 }

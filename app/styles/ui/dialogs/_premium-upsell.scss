@@ -3,4 +3,68 @@
     position: relative;
     top: 3px;
   }
+
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+
+    h2 {
+      font-size: 24px;
+      font-weight: 300;
+      margin: 8px 0;
+    }
+
+    h2,
+    h3,
+    h4 {
+      text-align: center;
+    }
+
+    p {
+      opacity: 0.75;
+      margin-top: 0;
+    }
+
+    .plan {
+      cursor: pointer;
+      flex: 1;
+      padding: 16px 24px;
+      min-width: 230px;
+      border: 1px solid #e1e4e8;
+      border-radius: 3px;
+      box-shadow: 0 1px 1px rgba(27, 31, 35, 0.1);
+      margin: 0 10px 30px;
+      min-width: 250px;
+
+      &.selected {
+        border-color: var(--button-background);
+        box-shadow: 0 1px 1px var(--button-background);
+      }
+
+      * {
+        cursor: pointer;
+      }
+
+      h3 {
+        margin-bottom: 2px;
+      }
+
+      h4 {
+        font-size: 14px;
+        opacity: 0.8;
+        font-weight: normal;
+        margin-top: 0;
+      }
+
+      ul {
+        padding: 0;
+        text-align: left;
+        padding-left: 10px;
+      }
+
+      li {
+        margin-bottom: 10px;
+      }
+    }
+  }
 }

@@ -2,6 +2,7 @@ import { Emitter, Disposable } from 'event-kit'
 import { Account } from '../../models/account'
 import { assertNever, fatalError } from '../fatal-error'
 import { askUserToOAuth } from '../../lib/oauth'
+import { RetryAction } from '../retry-actions'
 import {
   validateURL,
   InvalidURLErrorName,
@@ -74,6 +75,8 @@ export interface ISignInState {
    * sign in process is ongoing.
    */
   readonly loading: boolean
+
+  readonly retryAction?: RetryAction
 }
 
 /**
@@ -175,8 +178,8 @@ export class SignInStore {
     this.emitter.emit('did-update', this.getState())
   }
 
-  private emitAuthenticate(account: Account) {
-    this.emitter.emit('did-authenticate', account)
+  private emitAuthenticate(account: Account, retryAction?: RetryAction) {
+    this.emitter.emit('did-authenticate', { account, retryAction })
   }
 
   private emitError(error: Error) {
@@ -192,7 +195,9 @@ export class SignInStore {
    * Registers an event handler which will be invoked whenever
    * a user has successfully completed a sign-in process.
    */
-  public onDidAuthenticate(fn: (account: Account) => void): Disposable {
+  public onDidAuthenticate(
+    fn: (args: { account: Account; retryAction?: RetryAction }) => void
+  ): Disposable {
     return this.emitter.on('did-authenticate', fn)
   }
 
@@ -255,7 +260,7 @@ export class SignInStore {
    * Initiate a sign in flow for github.com. This will put the store
    * in the Authentication step ready to receive user credentials.
    */
-  public beginDotComSignIn() {
+  public beginDotComSignIn(retryAction?: RetryAction) {
     const endpoint = getDotComAPIEndpoint()
 
     this.setState({
@@ -265,6 +270,7 @@ export class SignInStore {
       error: null,
       loading: false,
       forgotPasswordUrl: this.getForgotPasswordURL(endpoint),
+      retryAction,
     })
   }
 
@@ -319,7 +325,7 @@ export class SignInStore {
         return
       }
 
-      this.emitAuthenticate(user)
+      this.emitAuthenticate(user, currentState.retryAction)
       this.setState({ kind: SignInStep.Success })
     } else if (
       response.kind ===
@@ -333,6 +339,7 @@ export class SignInStore {
         type: response.type,
         error: null,
         loading: false,
+        retryAction: currentState.retryAction,
       })
     } else {
       if (response.kind === AuthorizationResponseKind.Error) {
@@ -415,7 +422,7 @@ export class SignInStore {
       return
     }
 
-    this.emitAuthenticate(account)
+    this.emitAuthenticate(account, currentState.retryAction)
     this.setState({ kind: SignInStep.Success })
   }
 
@@ -424,11 +431,12 @@ export class SignInStore {
    * put the store in the EndpointEntry step ready to receive the url
    * to the enterprise instance.
    */
-  public beginEnterpriseSignIn() {
+  public beginEnterpriseSignIn(retryAction?: RetryAction) {
     this.setState({
       kind: SignInStep.EndpointEntry,
       error: null,
       loading: false,
+      retryAction,
     })
   }
 
@@ -492,6 +500,7 @@ export class SignInStore {
         error: null,
         loading: false,
         forgotPasswordUrl: this.getForgotPasswordURL(endpoint),
+        retryAction: currentState.retryAction,
       })
     } catch (e) {
       let error = e
@@ -564,7 +573,7 @@ export class SignInStore {
         return
       }
 
-      this.emitAuthenticate(user)
+      this.emitAuthenticate(user, currentState.retryAction)
       this.setState({ kind: SignInStep.Success })
     } else {
       switch (response.kind) {

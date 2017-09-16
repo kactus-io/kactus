@@ -18,11 +18,22 @@ import {
 import { URLActionType } from '../lib/parse-app-url'
 import { SelectionType } from '../lib/app-state'
 import { StatsDatabase, StatsStore } from '../lib/stats'
-import { IssuesDatabase, IssuesStore, SignInStore } from '../lib/dispatcher'
 import {
+  IssuesDatabase,
+  IssuesStore,
+  SignInStore,
   defaultErrorHandler,
-  createMissingRepositoryHandler,
+  missingRepositoryHandler,
   backgroundTaskHandler,
+  pushNeedsPullHandler,
+  AccountsStore,
+  RepositoriesDatabase,
+  RepositoriesStore,
+  TokenStore,
+  gitAuthenticationErrorHandler,
+  externalEditorErrorHandler,
+  openShellErrorHandler,
+  lfsAttributeMismatchHandler,
 } from '../lib/dispatcher'
 import { shellNeedsPatching, updateEnvironmentForProcess } from '../lib/shell'
 import { installDevGlobals } from './install-globals'
@@ -94,20 +105,32 @@ const issuesStore = new IssuesStore(new IssuesDatabase('IssuesDatabase'))
 const statsStore = new StatsStore(new StatsDatabase('StatsDatabase'))
 const signInStore = new SignInStore()
 
+const accountsStore = new AccountsStore(localStorage, TokenStore)
+const repositoriesStore = new RepositoriesStore(
+  new RepositoriesDatabase('Database')
+)
+
 const appStore = new AppStore(
   gitHubUserStore,
   cloningRepositoriesStore,
   emojiStore,
   issuesStore,
   statsStore,
-  signInStore
+  signInStore,
+  accountsStore,
+  repositoriesStore
 )
 
 const dispatcher = new Dispatcher(appStore)
 
 dispatcher.registerErrorHandler(defaultErrorHandler)
+dispatcher.registerErrorHandler(externalEditorErrorHandler)
+dispatcher.registerErrorHandler(openShellErrorHandler)
+dispatcher.registerErrorHandler(lfsAttributeMismatchHandler)
+dispatcher.registerErrorHandler(gitAuthenticationErrorHandler)
+dispatcher.registerErrorHandler(pushNeedsPullHandler)
 dispatcher.registerErrorHandler(backgroundTaskHandler)
-dispatcher.registerErrorHandler(createMissingRepositoryHandler(appStore))
+dispatcher.registerErrorHandler(missingRepositoryHandler)
 
 document.body.classList.add(`platform-${process.platform}`)
 

@@ -6,12 +6,13 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const webpack = require('webpack')
 const merge = require('webpack-merge')
+const distInfo = require('../script/dist-info')
 
 const devClientId = 'e2192ac9bf572ac04bfb'
 const devClientSecret = 'c9b11bb47ee91ef08545a5355658b37a100d46e1'
 const devStripeKey = 'pk_test_wqDaZ2Vc1Vlja0RflUevsa9K'
 
-const environment = process.env.NODE_ENV || 'development'
+const channel = distInfo.getReleaseChannel()
 
 /**
  * Attempt to dereference the given ref without requiring a Git environment
@@ -38,29 +39,46 @@ function revParse(gitDir, ref) {
   return refMatch[1] || revParse(gitDir, refMatch[2])
 }
 
+function getSHA() {
+  // CircleCI does some funny stuff where HEAD points to an packed ref, but
+  // luckily it gives us the SHA we want in the environment.
+  const circleSHA = process.env.CIRCLE_SHA1
+  if (circleSHA) {
+    return circleSHA
+  }
+
+  return revParse(path.resolve(__dirname, '../.git'), 'HEAD')
+}
+
 const replacements = {
   __OAUTH_CLIENT_ID__: JSON.stringify(
-    process.env.DESKTOP_OAUTH_CLIENT_ID || devClientId
+    process.env.KACTUS_OAUTH_CLIENT_ID || devClientId
   ),
   __OAUTH_SECRET__: JSON.stringify(
-    process.env.DESKTOP_OAUTH_CLIENT_SECRET || devClientSecret
+    process.env.KACTUS_OAUTH_CLIENT_SECRET || devClientSecret
   ),
   __STRIPE_KEY__: JSON.stringify(process.env.STRIPE_KEY || devStripeKey),
   __DARWIN__: process.platform === 'darwin',
   __WIN32__: process.platform === 'win32',
   __LINUX__: process.platform === 'linux',
-  __DEV__: environment === 'development',
-  __RELEASE_ENV__: JSON.stringify(environment),
-  __SHA__: JSON.stringify(revParse(path.resolve(__dirname, '../.git'), 'HEAD')),
+  __DEV__: channel === 'development',
+  __RELEASE_CHANNEL__: JSON.stringify(channel),
+  __UPDATES_URL__: JSON.stringify(distInfo.getUpdatesURL()),
+  __SHA__: JSON.stringify(getSHA()),
   'process.platform': JSON.stringify(process.platform),
-  'process.env.NODE_ENV': JSON.stringify(environment),
+  'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
   'process.env.TEST_ENV': JSON.stringify(process.env.TEST_ENV),
 }
 
 const outputDir = 'out'
 
+const externals = ['7zip', 'kactus-cli', 'klaw-sync', 'jszip']
+if (channel === 'development') {
+  externals.push('devtron')
+}
+
 const commonConfig = {
-  externals: ['7zip', 'kactus-cli', 'klaw-sync', 'jszip'],
+  externals: externals,
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, '..', outputDir),
@@ -143,29 +161,6 @@ const rendererConfig = merge({}, commonConfig, {
   ],
 })
 
-const sharedConfig = merge({}, commonConfig, {
-  entry: { shared: path.resolve(__dirname, 'src/shared-process/index') },
-  target: 'electron-renderer',
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, 'static', 'error.html'),
-      // without this we overwrite index.html
-      filename: 'error.html',
-      // we don't need any scripts to run on this page
-      excludeChunks: ['main', 'renderer', 'shared', 'ask-pass'],
-    }),
-    new HtmlWebpackPlugin({
-      filename: 'shared.html',
-      chunks: ['shared'],
-    }),
-    new webpack.DefinePlugin(
-      Object.assign({}, replacements, {
-        __PROCESS_KIND__: JSON.stringify('shared'),
-      })
-    ),
-  ],
-})
-
 const askPassConfig = merge({}, commonConfig, {
   entry: { 'ask-pass': path.resolve(__dirname, 'src/ask-pass/main') },
   target: 'node',
@@ -209,7 +204,6 @@ const cliConfig = merge({}, commonConfig, {
 
 module.exports = {
   main: mainConfig,
-  shared: sharedConfig,
   renderer: rendererConfig,
   askPass: askPassConfig,
   crash: crashConfig,

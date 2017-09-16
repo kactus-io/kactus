@@ -27,3 +27,4 @@ export type MenuEvent =
   | 'open-sketch'
   | 'create-pull-request'
   | 'install-cli'
+  | 'open-external-editor'

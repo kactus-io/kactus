@@ -19,6 +19,7 @@ export type MenuIDs =
   | 'open-working-directory'
   | 'show-repository-settings'
   | 'show-kactus-settings'
+  | 'open-external-editor'
   | 'remove-repository'
   | 'new-repository'
   | 'add-local-repository'

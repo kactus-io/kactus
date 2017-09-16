@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Repository as Repo } from '../models/repository'
+import { Commit } from '../models/commit'
 import { TipState } from '../models/tip'
 import { UiView } from './ui-view'
 import { Changes, ChangesSidebar } from './changes'
@@ -11,10 +12,14 @@ import {
   IRepositoryState as IRepositoryModelState,
   RepositorySection,
   PopupType,
+  ImageDiffType,
 } from '../lib/app-state'
 import { Dispatcher, IssuesStore, GitHubUserStore } from '../lib/dispatcher'
 import { assertNever } from '../lib/fatal-error'
 import { Octicon, OcticonSymbol } from './octicons'
+
+/** The widest the sidebar can be with the minimum window size. */
+const MaxSidebarWidth = 495
 
 interface IRepositoryProps {
   readonly repository: Repo
@@ -26,7 +31,9 @@ interface IRepositoryProps {
   readonly issuesStore: IssuesStore
   readonly gitHubUserStore: GitHubUserStore
   readonly showAdvancedDiffs: boolean
-  readonly imageDiffType: number
+  readonly onViewCommitOnGitHub: (SHA: string) => void
+  readonly imageDiffType: ImageDiffType
+  readonly askForConfirmationOnDiscardChanges: boolean
 }
 
 const enum Tab {
@@ -51,12 +58,12 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
       <TabBar selectedIndex={selectedTab} onTabClicked={this.onTabClicked}>
         <span className="with-indicator">
           <span>Changes</span>
-          {hasChanges
-            ? <Octicon
-                className="indicator"
-                symbol={OcticonSymbol.primitiveDot}
-              />
-            : null}
+          {hasChanges ? (
+            <Octicon
+              className="indicator"
+              symbol={OcticonSymbol.primitiveDot}
+            />
+          ) : null}
         </span>
         <span>History</span>
         <span className="with-indicator">
@@ -90,6 +97,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
     return (
       <ChangesSidebar
         repository={this.props.repository}
+        isLoadingStatus={this.props.state.isLoadingStatus}
         kactus={this.props.state.kactus}
         dispatcher={this.props.dispatcher}
         changes={this.props.state.changesState}
@@ -103,6 +111,9 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
         gitHubUserStore={this.props.gitHubUserStore}
         isCommitting={this.props.state.isCommitting}
         isPushPullFetchInProgress={this.props.state.isPushPullFetchInProgress}
+        askForConfirmationOnDiscardChanges={
+          this.props.askForConfirmationOnDiscardChanges
+        }
       />
     )
   }
@@ -116,6 +127,9 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
         gitHubUsers={this.props.state.gitHubUsers}
         emoji={this.props.emoji}
         commits={this.props.state.commits}
+        localCommitSHAs={this.props.state.localCommitSHAs}
+        onRevertCommit={this.onRevertCommit}
+        onViewCommitOnGitHub={this.props.onViewCommitOnGitHub}
       />
     )
   }
@@ -169,6 +183,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
         width={this.props.sidebarWidth}
         onReset={this.handleSidebarWidthReset}
         onResize={this.handleSidebarResize}
+        maximumWidth={MaxSidebarWidth}
       >
         {this.renderTabs()}
         {this.renderSidebarContents()}
@@ -182,6 +197,9 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
     if (selectedSection === RepositorySection.Changes) {
       const changesState = this.props.state.changesState
       const selectedFileID = changesState.selectedFileID
+      const selectedSketchPartID = changesState.selectedSketchPart
+        ? changesState.selectedSketchPart.id
+        : null
       const selectedFile = selectedFileID
         ? changesState.workingDirectory.findFileWithID(selectedFileID)
         : null
@@ -194,26 +212,30 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
 
       if (
         !selectedSketchFile &&
-        (!changesState.workingDirectory.files.length || !selectedFile || !diff)
+        (!changesState.workingDirectory.files.length ||
+          !selectedFile ||
+          !diff) &&
+        (!selectedSketchPartID || !diff)
       ) {
         return (
           <NoChanges
             onOpenRepository={this.openRepository}
             onCreateSketchFile={this.handleCreateSketchFile}
+            loadingDiff={changesState.loadingDiff}
           />
         )
       } else {
         return (
           <Changes
-            isImporting={kactusState.isImporting}
-            isParsing={kactusState.isParsing}
             repository={this.props.repository}
             dispatcher={this.props.dispatcher}
             imageDiffType={this.props.imageDiffType}
             showAdvancedDiffs={this.props.showAdvancedDiffs}
             file={selectedFile}
+            selectedSketchPartID={selectedSketchPartID}
             diff={diff}
             sketchFile={selectedSketchFile}
+            loadingDiff={changesState.loadingDiff}
           />
         )
       }
@@ -227,9 +249,9 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
           history={this.props.state.historyState}
           emoji={this.props.emoji}
           commits={this.props.state.commits}
-          localCommitSHAs={this.props.state.localCommitSHAs}
           commitSummaryWidth={this.props.commitSummaryWidth}
           gitHubUsers={this.props.state.gitHubUsers}
+          loadingDiff={this.props.state.historyState.loadingDiff}
         />
       )
     } else if (selectedSection === RepositorySection.Compare) {
@@ -263,6 +285,10 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
 
   private openRepository = () => {
     this.props.dispatcher.revealInFileManager(this.props.repository, '')
+  }
+
+  private onRevertCommit = (commit: Commit) => {
+    this.props.dispatcher.revertCommit(this.props.repository, commit)
   }
 
   private onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {

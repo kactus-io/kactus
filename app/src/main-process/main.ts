@@ -1,34 +1,17 @@
 import '../lib/logging/main/install'
 
-import {
-  app,
-  Menu,
-  MenuItem,
-  ipcMain,
-  BrowserWindow,
-  autoUpdater,
-  dialog,
-  shell,
-} from 'electron'
+import { app, Menu, MenuItem, ipcMain, BrowserWindow, shell } from 'electron'
 
 import { AppWindow } from './app-window'
-import { CrashWindow } from './crash-window'
-import {
-  buildDefaultMenu,
-  MenuEvent,
-  findMenuItemByID,
-  setCrashMenu,
-} from './menu'
+import { buildDefaultMenu, MenuEvent, findMenuItemByID } from './menu'
 import { shellNeedsPatching, updateEnvironmentForProcess } from '../lib/shell'
 import { parseAppURL } from '../lib/parse-app-url'
 import { handleSquirrelEvent } from './squirrel-updater'
-import { SharedProcess } from '../shared-process/shared-process'
 import { fatalError } from '../lib/fatal-error'
 
 import { IMenuItemState } from '../lib/menu-update'
 import { LogLevel } from '../lib/logging/log-level'
 import { log as writeLog } from './log'
-import { formatError } from '../lib/logging/format-error'
 import { reportError } from './exception-reporting'
 import {
   enableSourceMaps,
@@ -36,114 +19,58 @@ import {
 } from '../lib/source-map-support'
 import { symlinkSketchPlugin } from '../lib/symlink-sketch-plugin'
 import { now } from './now'
+import { showUncaughtException } from './show-uncaught-exception'
 
 enableSourceMaps()
 symlinkSketchPlugin()
 
 let mainWindow: AppWindow | null = null
-let sharedProcess: SharedProcess | null = null
 
 const launchTime = now()
 
 let preventQuit = false
 let readyTime: number | null = null
-let hasReportedUncaughtException = false
 
 type OnDidLoadFn = (window: AppWindow) => void
 /** See the `onDidLoad` function. */
 let onDidLoadFns: Array<OnDidLoadFn> | null = []
 
-function uncaughtException(error: Error) {
-  log.error(formatError(error))
-
-  if (hasReportedUncaughtException) {
-    return
-  }
-
-  hasReportedUncaughtException = true
+function handleUncaughtException(error: Error) {
   preventQuit = true
-
-  setCrashMenu()
-
-  const isLaunchError = !mainWindow
 
   if (mainWindow) {
     mainWindow.destroy()
     mainWindow = null
   }
 
-  if (sharedProcess) {
-    sharedProcess.destroy()
-    mainWindow = null
-  }
-
-  const crashWindow = new CrashWindow(
-    isLaunchError ? 'launch' : 'generic',
-    error
-  )
-
-  crashWindow.onDidLoad(() => {
-    crashWindow.show()
-  })
-
-  crashWindow.onFailedToLoad(() => {
-    dialog.showMessageBox(
-      {
-        type: 'error',
-        title: __DARWIN__ ? `Unrecoverable Error` : 'Unrecoverable error',
-        message:
-          `Kactus has encountered an unrecoverable error and will need to restart.\n\n` +
-          `This has been reported to the team, but if you encounter this repeatedly please report ` +
-          `this issue to the Kactus issue tracker.\n\n${error.stack ||
-            error.message}`,
-      },
-      response => {
-        if (!__DEV__) {
-          app.relaunch()
-        }
-        app.quit()
-      }
-    )
-  })
-
-  crashWindow.onClose(() => {
-    if (!__DEV__) {
-      app.relaunch()
-    }
-    app.quit()
-  })
-
-  crashWindow.load()
+  const isLaunchError = !mainWindow
+  showUncaughtException(isLaunchError, error)
 }
 
 process.on('uncaughtException', (error: Error) => {
   error = withSourceMappedStack(error)
 
   reportError(error)
-  uncaughtException(error)
+  handleUncaughtException(error)
 })
 
-let willQuit = false
-
+let handlingSquirrelEvent = false
 if (__WIN32__ && process.argv.length > 1) {
   const arg = process.argv[1]
+
   const promise = handleSquirrelEvent(arg)
   if (promise) {
-    willQuit = true
+    handlingSquirrelEvent = true
     promise
-      .then(() => {
-        app.quit()
-      })
       .catch(e => {
         log.error(`Failed handling Squirrel event: ${arg}`, e)
+      })
+      .then(() => {
+        app.quit()
       })
   } else {
     handleAppURL(arg)
   }
-}
-
-if (shellNeedsPatching(process)) {
-  updateEnvironmentForProcess()
 }
 
 function handleAppURL(url: string) {
@@ -156,29 +83,37 @@ function handleAppURL(url: string) {
   })
 }
 
-const isDuplicateInstance = app.makeSingleInstance((args, workingDirectory) => {
-  // Someone tried to run a second instance, we should focus our window.
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) {
-      mainWindow.restore()
+let isDuplicateInstance = false
+// If we're handling a Squirrel event we don't want to enforce single instance.
+// We want to let the updated instance launch and do its work. It will then quit
+// once it's done.
+if (!handlingSquirrelEvent) {
+  isDuplicateInstance = app.makeSingleInstance((args, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+
+      if (!mainWindow.isVisible()) {
+        mainWindow.show()
+      }
+
+      mainWindow.focus()
     }
 
-    if (!mainWindow.isVisible()) {
-      mainWindow.show()
+    if (args.length > 1) {
+      handleAppURL(args[1])
     }
+  })
 
-    mainWindow.focus()
+  if (isDuplicateInstance) {
+    app.quit()
   }
+}
 
-  if (args.length > 1) {
-    handleAppURL(args[1])
-  }
-})
-
-if (isDuplicateInstance) {
-  willQuit = true
-
-  app.quit()
+if (shellNeedsPatching(process)) {
+  updateEnvironmentForProcess()
 }
 
 app.on('will-finish-launching', () => {
@@ -190,7 +125,7 @@ app.on('will-finish-launching', () => {
 })
 
 app.on('ready', () => {
-  if (willQuit) {
+  if (isDuplicateInstance || handlingSquirrelEvent) {
     return
   }
 
@@ -212,13 +147,24 @@ app.on('ready', () => {
     app.setAsDefaultProtocolClient('github-windows')
   }
 
-  sharedProcess = new SharedProcess()
-  sharedProcess.register()
-
   createWindow()
 
-  const menu = buildDefaultMenu(sharedProcess)
+  let menu = buildDefaultMenu()
   Menu.setApplicationMenu(menu)
+
+  ipcMain.on(
+    'update-preferred-app-menu-item-labels',
+    (
+      event: Electron.IpcMessageEvent,
+      labels: { editor?: string; shell: string }
+    ) => {
+      menu = buildDefaultMenu(labels.editor, labels.shell)
+      Menu.setApplicationMenu(menu)
+      if (mainWindow) {
+        mainWindow.sendAppMenu()
+      }
+    }
+  )
 
   ipcMain.on('menu-event', (event: Electron.IpcMessageEvent, args: any[]) => {
     const { name }: { name: MenuEvent } = event as any
@@ -295,10 +241,7 @@ app.on('ready', () => {
       }
 
       const window = BrowserWindow.fromWebContents(event.sender)
-      // TODO: read https://github.com/desktop/desktop/issues/1003
-      // to clean up this sin against T Y P E S
-      const anyMenu: any = menu
-      anyMenu.popup(window, { async: true })
+      menu.popup(window, { async: true })
     }
   )
 
@@ -321,8 +264,8 @@ app.on('ready', () => {
         message,
       }: { certificate: Electron.Certificate; message: string }
     ) => {
-      // This API's only implemented on macOS right now.
-      if (__DARWIN__) {
+      // This API is only implemented for macOS and Windows right now.
+      if (__DARWIN__ || __WIN32__) {
         onDidLoad(window => {
           window.showCertificateTrustDialog(certificate, message)
         })
@@ -340,7 +283,7 @@ app.on('ready', () => {
   ipcMain.on(
     'uncaught-exception',
     (event: Electron.IpcMessageEvent, error: Error) => {
-      uncaughtException(error)
+      handleUncaughtException(error)
     }
   )
 
@@ -368,12 +311,6 @@ app.on('ready', () => {
       shell.showItemInFolder(path)
     }
   )
-
-  autoUpdater.on('error', err => {
-    onDidLoad(window => {
-      window.sendAutoUpdaterError(err)
-    })
-  })
 })
 
 app.on('activate', () => {
