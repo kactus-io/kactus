@@ -31,10 +31,10 @@ A few reasons:
 
 ## How to Feature Flag?
 
-At runtime your code should check [`enablePreviewFeatures()`](https://github.com/desktop/desktop/blob/2286edb0e1cf376ab81a1ffe02115abdde88527f/app/src/lib/feature-flag.ts#L6)
+At runtime your code should check [`enablePreviewFeatures()`](https://github.com/kactus-io/kactus/blob/2286edb0e1cf376ab81a1ffe02115abdde88527f/app/src/lib/feature-flag.ts#L6)
 and either display the new feature or the existing one.
 
-A simple example is the new clone experience in [#2436](https://github.com/desktop/desktop/pull/2436):
+A simple example is the new clone experience in [#2436](https://github.com/kactus-io/kactus/pull/2436):
 
 ```ts
 public render() {
@@ -52,5 +52,5 @@ feature once things are stabilized.
 ## How to test
 
 To opt-in for testing preview features, set the
-`GITHUB_DESKTOP_PREVIEW_FEATURES` environment variable to any value and launch
+`KACTUS_PREVIEW_FEATURES` environment variable to any value and launch
 the Desktop app.
