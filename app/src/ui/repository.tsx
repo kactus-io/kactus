@@ -68,12 +68,12 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
         <span>History</span>
         <span className="with-indicator">
           <span>Compare</span>
-          {hasPRsOpened
-            ? <Octicon
-                className="indicator"
-                symbol={OcticonSymbol.primitiveDot}
-              />
-            : null}
+          {hasPRsOpened ? (
+            <Octicon
+              className="indicator"
+              symbol={OcticonSymbol.primitiveDot}
+            />
+          ) : null}
         </span>
       </TabBar>
     )
@@ -143,6 +143,9 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
         gitHubUsers={this.props.state.gitHubUsers}
         emoji={this.props.emoji}
         commits={this.props.state.commits}
+        localCommitSHAs={this.props.state.localCommitSHAs}
+        onRevertCommit={this.onRevertCommit}
+        onViewCommitOnGitHub={this.props.onViewCommitOnGitHub}
       />
     )
   }
@@ -264,9 +267,9 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
           history={this.props.state.historyState}
           emoji={this.props.emoji}
           commits={this.props.state.commits}
-          localCommitSHAs={this.props.state.localCommitSHAs}
           commitSummaryWidth={this.props.commitSummaryWidth}
           gitHubUsers={this.props.state.gitHubUsers}
+          loadingDiff={this.props.state.historyState.loadingDiff}
         />
       )
     } else {
