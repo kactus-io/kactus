@@ -18,7 +18,7 @@ export function symlinkSketchPlugin() {
           pluginPath,
           undefined,
           err => {
-            console.error(err)
+            log.error('Failed to symlink the kactus sketch plugin ' + err)
           }
         )
       }

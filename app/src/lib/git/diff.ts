@@ -385,7 +385,7 @@ async function getSketchDiff(
           _type ? Path.basename(file.id) : undefined
         )
       } catch (e) {
-        console.log(e)
+        log.warn('Failed to generate the old preview for ' + file.path, e)
       }
     }
 
@@ -406,7 +406,7 @@ async function getSketchDiff(
           _type ? Path.basename(file.id) : undefined
         )
       } catch (e) {
-        console.log(e)
+        log.warn('Failed to generate the old preview for ' + file.path, e)
       }
     }
   }
@@ -656,7 +656,7 @@ async function generatePreview(
       return assertNever(type, `Unknown KactusFileType: ${type}`)
     }
   } catch (e) {
-    console.error(e)
+    log.error('Failed to generate the preview for ' + file, e)
     return Promise.resolve(undefined)
   }
   return getImage(path)

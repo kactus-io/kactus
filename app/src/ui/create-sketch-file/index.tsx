@@ -108,7 +108,7 @@ export class CreateSketchFile extends React.Component<
         )
         this.props.onDismissed()
       } catch (err) {
-        console.error(err)
+        log.error('Could not create sketch file ' + name, err)
         this.setState({
           currentError: err,
           isCreatingFile: false,

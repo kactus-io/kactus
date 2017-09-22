@@ -1,6 +1,18 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.7": [
+      "[New] Allow users to create repositories with descriptions",
+      "[New] Use `lfs clone` for faster cloning of LFS repositories",
+      "[Improved] Prompt to override existing LFS filters",
+      "[Improved] Add more logs for kactus operations",
+      "[Fixed] Don't install LFS hooks when checking if a repo uses LFS",
+      "[Fixed] \"Clone with Desktop\" wouldn't include the repository name in the path",
+      "[Fixed] Use the loading/disabled state while publishing",
+      "[Fixed] Lock down menu item states for unborn repositories",
+      "[Fixed] Fix a bug that could prevent the document.json to be created when parsing pages with images",
+      "[Fixed] Use the version map to generate a sketch file with the current sketch version"
+    ],
     "0.2.6": [
       "[New] 'Open in Shell' now supports multiple shells",
       "[Fixed] Keep order of sketch pages (#51)"
