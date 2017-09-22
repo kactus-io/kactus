@@ -15,4 +15,4 @@ Kactus will create directories to manage the files and data it needs to function
 
 ## Log Files
 
-Kactus will generate log files if an unhandled exception is raised, to assist with troubleshooting. They are located in the data directory that Kactus uses (see above) under a `logs` subdirectory, organized by date using the format `YYYY-MM-DD.desktop.production.log`, where `YYYY-MM-DD` is the day the log was created.
+Kactus will generate log files if an unhandled exception is raised, to assist with troubleshooting. They are located in the data directory that Kactus uses (see above) under a `logs` subdirectory, organized by date using the format `YYYY-MM-DD.kactus.production.log`, where `YYYY-MM-DD` is the day the log was created.

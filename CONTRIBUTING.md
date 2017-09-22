@@ -30,7 +30,7 @@ change over time as we learn and refine how we work with the community.
 
 This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code.
-Please report unacceptable behavior to [opensource+desktop@kactus.io](mailto:opensource+desktop@kactus.io).
+Please report unacceptable behavior to [opensource@kactus.io](mailto:opensource+desktop@kactus.io).
 
 ### The Alpha Roadmap
 

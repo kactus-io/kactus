@@ -130,7 +130,7 @@ function getBundleSizes() {
 function getReleaseBranchName() {
   let branchName
   if (process.platform === 'darwin') {
-    branchName = process.env.CIRCLE_BRANCH
+    branchName = process.env.CIRCLE_BRANCH || process.env.TRAVIS_BRANCH
   } else if (process.platform === 'win32') {
     branchName = process.env.APPVEYOR_REPO_BRANCH
   }
@@ -197,7 +197,7 @@ function revParse(gitDir, ref) {
 function getSHA() {
   // CircleCI does some funny stuff where HEAD points to an packed ref, but
   // luckily it gives us the SHA we want in the environment.
-  const circleSHA = process.env.CIRCLE_SHA1
+  const circleSHA = process.env.CIRCLE_SHA1 || process.env.TRAVIS_COMMIT
   if (circleSHA) {
     return circleSHA
   }

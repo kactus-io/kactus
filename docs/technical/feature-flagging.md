@@ -1,6 +1,6 @@
 # Feature Flagging
 
-To ensure Desktop along without being blocked on design feedback, we need a way
+To ensure Kactus along without being blocked on design feedback, we need a way
 to be able to ship features that are stable but not necessarily ready for
 general usage. This document outlines what we should flag and how to flag
 these features.
@@ -53,4 +53,4 @@ feature once things are stabilized.
 
 To opt-in for testing preview features, set the
 `KACTUS_PREVIEW_FEATURES` environment variable to any value and launch
-the Desktop app.
+the Kactus app.

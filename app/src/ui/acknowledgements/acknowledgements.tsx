@@ -110,11 +110,11 @@ export class Acknowledgements extends React.Component<
   public render() {
     const licenses = this.state.licenses
 
-    let desktopLicense: JSX.Element | null = null
+    let kactusLicense: JSX.Element | null = null
     if (licenses) {
       const key = `kactus@${this.props.applicationVersion}`
       const entry = licenses[key]
-      desktopLicense = <p className="license-text">{entry.sourceText}</p>
+      kactusLicense = <p className="license-text">{entry.sourceText}</p>
     }
 
     return (
@@ -132,7 +132,7 @@ export class Acknowledgements extends React.Component<
             <LinkButton uri={RepositoryURL}>GitHub</LinkButton>.
           </p>
 
-          {desktopLicense}
+          {kactusLicense}
 
           <p>Kactus also distributes these libraries:</p>
 

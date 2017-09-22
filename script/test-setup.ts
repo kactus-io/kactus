@@ -8,9 +8,15 @@ const distInfo = require('./dist-info')
 const getDistPath: () => string = distInfo.getDistPath
 const getProductName: () => string = distInfo.getProductName
 
-const isFork = process.env.CIRCLE_PR_USERNAME
+const isFork =
+  process.env.CIRCLE_PR_USERNAME ||
+  process.env.TRAVIS_SECURE_ENV_VARS !== 'true'
 
-if (process.platform === 'darwin' && process.env.CIRCLECI && !isFork) {
+if (
+  process.platform === 'darwin' &&
+  (process.env.CIRCLECI || process.env.TRAVIS) &&
+  !isFork
+) {
   const archive = `${getDistPath()}/${getProductName()}.app`
   try {
     console.log('validating signature of Kactus app')
