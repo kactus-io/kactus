@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { SketchFile } from './sketch-file'
-import { List, ClickSource } from '../list'
+import { List, ClickSource } from '../lib/list'
 import { Octicon, OcticonSymbol } from '../octicons'
 
 import { IKactusFile } from '../../lib/kactus'
