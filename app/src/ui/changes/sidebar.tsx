@@ -18,7 +18,7 @@ import {
   UserAutocompletionProvider,
 } from '../autocompletion'
 import { ICommitMessage, IKactusState } from '../../lib/app-state'
-import { ClickSource } from '../list'
+import { ClickSource } from '../lib/list'
 import {
   WorkingDirectoryFileChange,
   TSketchPartChange,

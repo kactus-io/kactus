@@ -2,7 +2,7 @@ import * as React from 'react'
 import { CommitMessage } from './commit-message'
 import { ChangedFile } from './changed-file'
 import { ChangedSketchPart } from './changed-sketch-part'
-import { List, ClickSource } from '../list'
+import { List, ClickSource } from '../lib/list'
 
 import {
   WorkingDirectoryStatus,
