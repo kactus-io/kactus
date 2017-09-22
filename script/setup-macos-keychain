@@ -15,6 +15,3 @@ security import developer-id-cert.p12 -k $KEY_CHAIN -P $KEY_PASSWORD -T /usr/bin
 
 echo "Add keychain to keychain-list"
 security list-keychains -s $KEY_CHAIN
-
-echo "Settting key partition list"
-security set-key-partition-list -S apple-tool:,apple: -s -k travis $KEY_CHAIN
