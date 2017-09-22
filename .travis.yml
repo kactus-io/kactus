@@ -52,5 +52,8 @@ script:
   - npm run test:setup
   - npm test
 
+after_success:
+  - npm run publish
+
 after_failure:
   - npm run test:review
