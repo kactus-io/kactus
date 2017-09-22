@@ -7,7 +7,6 @@ dist: trusty
 
 os:
   - osx
-osx_image: xcode8.1
 
 branches:
   only:
@@ -23,9 +22,6 @@ cache:
   directories:
     - node_modules
     - $HOME/.electron
-
-before_install:
-  - npm config delete prefix
 
 install:
   - npm install -g npm@4.6.1
