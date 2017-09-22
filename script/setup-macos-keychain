@@ -2,12 +2,19 @@
 
 curl -H "Authorization: token ${KACTUSBOT_TOKEN}" -H 'Accept: application/vnd.github.v3.raw' -O -L https://api.github.com/repos/mathieudutour/secrets/contents/developer-id-cert.p12
 
-KEY_CHAIN=mac-build.keychain
+KEY_CHAIN=macos-build.keychain
 security create-keychain -p travis $KEY_CHAIN
+# Make the keychain the default so identities are found
+security default-keychain -s $KEY_CHAIN
+# Unlock the keychain
+security unlock-keychain -p travis $KEY_CHAIN
+# Set keychain locking timeout to 3600 seconds
+security set-keychain-settings -t 3600 -u $KEY_CHAIN
+# Add certificates to keychain and allow codesign to access them
 security import developer-id-cert.p12 -k $KEY_CHAIN -P $KEY_PASSWORD -T /usr/bin/codesign
 
-security list-keychain -s $KEY_CHAIN
-security unlock-keychain -p travis $KEY_CHAIN
-security set-keychain-settings -t 3600 -u $KEY_CHAIN
+echo "Add keychain to keychain-list"
+security list-keychains -s $KEY_CHAIN
 
-security default-keychain -s $KEY_CHAIN
+echo "Settting key partition list"
+security set-key-partition-list -S apple-tool:,apple: -s -k travis $KEY_CHAIN
