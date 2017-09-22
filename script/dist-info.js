@@ -135,6 +135,8 @@ function getReleaseBranchName() {
     branchName = process.env.APPVEYOR_REPO_BRANCH
   }
 
+  console.log(branchName)
+
   return branchName || ''
 }
 
