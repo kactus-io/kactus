@@ -72,6 +72,7 @@ export class Changes extends React.Component<IChangesProps, {}> {
             oldPath={file.oldPath}
             status={file.status}
             diff={diff}
+            onOpenMergeTool={this.onOpenMergeTool}
           />
 
           <div className="diff-wrapper">
@@ -112,5 +113,9 @@ export class Changes extends React.Component<IChangesProps, {}> {
     }
 
     return null
+  }
+
+  private onOpenMergeTool = (path: string) => {
+    this.props.dispatcher.openMergeTool(this.props.repository, path)
   }
 }

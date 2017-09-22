@@ -9,7 +9,7 @@ import { Commit } from '../../models/commit'
 import { IRemote } from '../../models/remote'
 import { IFetchProgress } from '../app-state'
 
-import { IAppShell } from '../../lib/dispatcher/app-shell'
+import { IAppShell } from '../app-shell'
 import { ErrorWithMetadata, IErrorMetadata } from '../error-with-metadata'
 import { structuralEquals } from '../../lib/equality'
 import { compare } from '../../lib/compare'
@@ -41,6 +41,7 @@ import {
   getConfigValue,
   revertCommit,
   unstageAllFiles,
+  openMergeTool,
 } from '../git'
 import { IGitAccount } from '../git/authentication'
 import { RetryAction, RetryActionType } from '../retry-actions'
@@ -930,6 +931,12 @@ export class GitStore {
         }
       })
     })
+  }
+
+  public async openMergeTool(path: string): Promise<void> {
+    await this.performFailableOperation(() =>
+      openMergeTool(this.repository, path)
+    )
   }
 }
 
