@@ -1,5 +1,6 @@
 import * as Path from 'path'
 import { execFile, exec } from 'child_process'
+import * as semver from 'semver'
 
 const regex = /sketchtool Version ((\d|\.)+) \(\d+\)/
 function extractVersion(s: string) {
@@ -28,7 +29,7 @@ export async function getSketchVersion(
   sketchPath: string,
   forceRefresh?: boolean
 ): Promise<string | null> {
-  if (sketchVersion && !forceRefresh) {
+  if (sketchVersion && !forceRefresh && semver.valid(sketchVersion)) {
     return sketchVersion
   }
   return new Promise<string | null>((resolve, reject) => {
