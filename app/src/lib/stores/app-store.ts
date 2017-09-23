@@ -1173,7 +1173,11 @@ export class AppStore {
         await Promise.all(
           modifiedFiles.map(f => {
             return this.isParsing(repository, f, () => {
-              return parseSketchFile(repository, f, kactusStatus.config).then(() => {})
+              return parseSketchFile(
+                repository,
+                f,
+                kactusStatus.config
+              ).then(() => {})
             })
           })
         )
