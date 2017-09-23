@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.8": [
+      "[New] Store the Sketch version used so that Sketch always uses the latest features and do not tries to transform the file",
+      "[Improved] Big performance improvements when showing diffs: around 50% for completely new diffs and nearly instant for already seen diffs"
+    ],
     "0.2.7": [
       "[New] Allow users to create repositories with descriptions",
       "[New] Use `lfs clone` for faster cloning of LFS repositories",
