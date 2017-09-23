@@ -8,12 +8,13 @@ import {
   parseFile,
   importFolder,
 } from 'kactus-cli'
-import { getUserDataPath } from '../ui/lib/app-proxy'
+import { getUserDataPath, getTempPath } from '../ui/lib/app-proxy'
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
 import { IGitAccount } from './git/authentication'
 import { getDotComAPIEndpoint } from './api'
 import { sketchtoolPath, runPluginCommand, getSketchVersion } from './sketch'
+import { remove } from './file-system'
 
 export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string }
 export type IKactusFile = _IKactusFile & {
@@ -234,8 +235,19 @@ export function shouldShowPremiumUpsell(
   return false
 }
 
-export async function parseSketchFile(path: string, config: IFullKactusConfig) {
-  return parseFile(path + '.sketch', config)
+export async function parseSketchFile(
+  repository: Repository,
+  f: IKactusFile,
+  config: IFullKactusConfig
+) {
+  const storagePath = Path.join(
+    getTempPath(),
+    'kactus',
+    String(repository.id),
+    f.id
+  )
+  await remove(storagePath)
+  return parseFile(f.path + '.sketch', config)
 }
 
 export function importSketchFile(

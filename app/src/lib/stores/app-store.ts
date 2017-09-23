@@ -1173,7 +1173,7 @@ export class AppStore {
         await Promise.all(
           modifiedFiles.map(f => {
             return this.isParsing(repository, f, () => {
-              return parseSketchFile(f.path, kactusStatus.config).then(() => {})
+              return parseSketchFile(repository, f, kactusStatus.config).then(() => {})
             })
           })
         )
@@ -1284,7 +1284,7 @@ export class AppStore {
   ): Promise<void> {
     await this.isParsing(repository, file, async () => {
       const kactusConfig = this.getRepositoryState(repository).kactus.config
-      await parseSketchFile(file.path, kactusConfig)
+      await parseSketchFile(repository, file, kactusConfig)
       await this._loadStatus(repository, {
         skipParsingModifiedSketchFiles: true,
       })

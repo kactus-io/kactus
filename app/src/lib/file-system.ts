@@ -18,6 +18,30 @@ export function mkdirIfNeeded(directoryPath: string): Promise<void> {
   })
 }
 
+export function mkdirP(directoryPath: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    Fs.mkdirp(directoryPath, err => {
+      if (err) {
+        reject(err)
+        return
+      }
+      resolve()
+    })
+  })
+}
+
+export function remove(directoryPath: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    Fs.remove(directoryPath, err => {
+      if (err) {
+        reject(err)
+        return
+      }
+      resolve()
+    })
+  })
+}
+
 /**
  * Write a file using the standard fs.writeFile API, but wrapped in a promise.
  *
