@@ -170,6 +170,7 @@ export interface IAppState {
   readonly showAdvancedDiffs: boolean
 
   readonly isUnlockingKactusFullAccess: boolean
+  readonly isCancellingKactusFullAccess: boolean
 
   readonly sketchVersion: string | null | undefined
 
@@ -205,6 +206,7 @@ export enum PopupType {
   TermsAndConditions,
   CreateSketchFile,
   PremiumUpsell,
+  CancelPremium,
   PushBranchCommits,
   CLIInstalled,
   GenericGitAuthentication,
@@ -253,6 +255,10 @@ export type Popup =
       kind: PremiumType | 'choice'
       user?: Account
       retryAction?: RetryAction
+    }
+  | {
+      type: PopupType.CancelPremium
+      user: Account
     }
   | {
       type: PopupType.PushBranchCommits

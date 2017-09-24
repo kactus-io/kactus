@@ -1168,6 +1168,17 @@ export class Dispatcher {
     }
   }
 
+  public async cancelKactusSubscription(
+    user: Account,
+    options: { refound: boolean }
+  ): Promise<void> {
+    try {
+      await this.appStore._cancelKactusSubscription(user, options)
+    } catch (e) {
+      this.postError(e)
+    }
+  }
+
   public async openSketch(): Promise<void> {
     return openSketch()
   }

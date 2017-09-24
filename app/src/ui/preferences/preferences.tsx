@@ -156,6 +156,13 @@ export class Preferences extends React.Component<
     })
   }
 
+  private onShowCancelKactusPopup = (account: Account) => {
+    this.props.dispatcher.showPopup({
+      type: PopupType.CancelPremium,
+      user: account,
+    })
+  }
+
   private renderActiveTab() {
     const index = this.state.selectedIndex
     switch (index) {
@@ -168,6 +175,7 @@ export class Preferences extends React.Component<
             onEnterpriseSignIn={this.onEnterpriseSignIn}
             onLogout={this.onLogout}
             onShowUnlockKactusPopup={this.onShowUnlockKactusPopup}
+            onShowCancelKactusPopup={this.onShowCancelKactusPopup}
           />
         )
       case PreferencesTab.Git: {

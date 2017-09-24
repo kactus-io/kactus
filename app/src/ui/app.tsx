@@ -70,7 +70,7 @@ import { ConfirmRemoveRepository } from '../ui/remove-repository/confirm-remove-
 import { sendReady } from './main-process-proxy'
 import { TermsAndConditions } from './terms-and-conditions'
 import { ZoomInfo } from './window/zoom-info'
-import { PremiumUpsell } from './premium-upsell'
+import { PremiumUpsell, CancelPremium } from './premium-upsell'
 import { FullScreenInfo } from './window/full-screen-info'
 import { PushBranchCommits } from './branches/push-branch-commits'
 import { Branch } from '../models/branch'
@@ -1121,6 +1121,17 @@ export class App extends React.Component<IAppProps, IAppState> {
             dispatcher={this.props.dispatcher}
             onDismissed={this.onPopupDismissed}
             isUnlockingKactusFullAccess={this.state.isUnlockingKactusFullAccess}
+          />
+        )
+      case PopupType.CancelPremium:
+        return (
+          <CancelPremium
+            user={popup.user}
+            dispatcher={this.props.dispatcher}
+            onDismissed={this.onPopupDismissed}
+            isCancellingKactusFullAccess={
+              this.state.isCancellingKactusFullAccess
+            }
           />
         )
       case PopupType.TermsAndConditions:

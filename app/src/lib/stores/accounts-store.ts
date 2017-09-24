@@ -140,6 +140,20 @@ export class AccountsStore {
     this.save()
   }
 
+  public async cancelKactusSubscriptionForAccount(
+    account: Account
+  ): Promise<void> {
+    await this.loadingPromise
+
+    this.accounts = this.accounts.map(a => {
+      if (a.id === account.id) {
+        return a.cancelKactusSubscription()
+      }
+      return a
+    })
+    this.save()
+  }
+
   /**
    * Load the users into memory from storage.
    */

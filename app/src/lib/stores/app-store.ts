@@ -41,6 +41,7 @@ import {
   getAccountForEndpoint,
   IAPIUser,
   unlockKactusFullAccess,
+  cancelKactusSubscription,
 } from '../../lib/api'
 import { caseInsensitiveCompare } from '../compare'
 import { Branch, BranchType } from '../../models/branch'
@@ -260,6 +261,7 @@ export class AppStore {
 
   private showAdvancedDiffs: boolean = showAdvancedDiffsDefault
   private isUnlockingKactusFullAccess: boolean = false
+  private isCancellingKactusFullAccess: boolean = false
   private sketchVersion: string | null | undefined
   private sketchPath: string = sketchPathDefault
   private selectedCloneRepositoryTab: CloneRepositoryTab = CloneRepositoryTab.DotCom
@@ -599,6 +601,7 @@ export class AppStore {
       selectedExternalEditor: this.selectedExternalEditor,
       imageDiffType: this.imageDiffType,
       isUnlockingKactusFullAccess: this.isUnlockingKactusFullAccess,
+      isCancellingKactusFullAccess: this.isCancellingKactusFullAccess,
       sketchVersion: this.sketchVersion,
       selectedShell: this.selectedShell,
       repositoryFilterText: this.repositoryFilterText,
@@ -2952,6 +2955,30 @@ export class AppStore {
       this.currentPopup.user = this.accounts.find(a => a.id === userId)
     }
     this.isUnlockingKactusFullAccess = false
+    this.emitUpdate()
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _cancelKactusSubscription(
+    user: Account,
+    options: { refound: boolean }
+  ): Promise<void> {
+    this.isCancellingKactusFullAccess = true
+    this.emitUpdate()
+    const result = await cancelKactusSubscription(user, options)
+    if (result) {
+      await this.accountsStore.cancelKactusSubscriptionForAccount(user)
+    }
+    // update the accounts directly otherwise it will show the stripe checkout again
+    this.accounts = await this.accountsStore.getAll()
+    if (
+      this.currentPopup &&
+      this.currentPopup.type === PopupType.CancelPremium
+    ) {
+      const userId = this.currentPopup.user.id
+      this.currentPopup.user = this.accounts.find(a => a.id === userId)!
+    }
+    this.isCancellingKactusFullAccess = false
     this.emitUpdate()
   }
 

@@ -8,6 +8,7 @@ import { Row } from '../lib/row'
 import { DialogContent } from '../dialog'
 import { Avatar } from '../lib/avatar'
 import { CallToAction } from '../lib/call-to-action'
+import { LinkButton } from '../lib/link-button'
 
 interface IAccountsProps {
   readonly dotComAccount: Account | null
@@ -17,6 +18,7 @@ interface IAccountsProps {
   readonly onEnterpriseSignIn: () => void
   readonly onLogout: (account: Account) => void
   readonly onShowUnlockKactusPopup: (account: Account) => void
+  readonly onShowCancelKactusPopup: (account: Account) => void
 }
 
 enum SignInType {
@@ -59,9 +61,13 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
           <div className="login">@{account.login}</div>
         </div>
         <div className="actions-wrapper">
-          {account.unlockedEnterpriseKactus ||
-          account.unlockedEnterpriseKactus ? (
-            <span className="kactus-unlocked">✅ Kactus unlocked</span>
+          {account.unlockedKactus || account.unlockedEnterpriseKactus ? (
+            <span className="kactus-unlocked">
+              ✅ Kactus unlocked.{' '}
+              <LinkButton onClick={this.onCancelSubscription(account)}>
+                Unsubscribe
+              </LinkButton>
+            </span>
           ) : (
             <Button
               className="action-button"
@@ -127,6 +133,12 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
   private unlockKactus = (account: Account) => {
     return () => {
       this.props.onShowUnlockKactusPopup(account)
+    }
+  }
+
+  private onCancelSubscription = (account: Account) => {
+    return () => {
+      this.props.onShowCancelKactusPopup(account)
     }
   }
 }

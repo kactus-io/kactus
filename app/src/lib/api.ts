@@ -930,6 +930,31 @@ export async function unlockKactusFullAccess(
   }
 }
 
+export async function cancelKactusSubscription(
+  account: Account,
+  options: { refound: boolean }
+): Promise<boolean> {
+  try {
+    const path = `${KactusAPIEndpoint}/unsubscribe`
+    const response = await fetch(path, {
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': getUserAgent(),
+      },
+      method: 'delete',
+      body: JSON.stringify({
+        githubId: account.id,
+        refound: options.refound,
+      }),
+    })
+    const res = await parsedResponse<{ ok: boolean }>(response)
+    return res.ok
+  } catch (e) {
+    log.warn(`cancelKactusSubscription: failed for ${account.login}`, e)
+    return false
+  }
+}
+
 export async function fetchCoupon(
   coupon: string,
   requestId: number

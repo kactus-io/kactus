@@ -89,4 +89,18 @@ export class Account {
       enterprise ? true : false
     )
   }
+
+  public cancelKactusSubscription(): Account {
+    return new Account(
+      this.login,
+      this.endpoint,
+      this.token,
+      this.emails,
+      this.avatarURL,
+      this.id,
+      this.name,
+      false,
+      false
+    )
+  }
 }
