@@ -90,9 +90,13 @@ export class Dispatcher {
    * this will post an error to that affect.
    */
   public addRepositories(
-    paths: ReadonlyArray<string>
+    paths: ReadonlyArray<string>,
+    modifyGitignoreToIgnoreSketchFiles: boolean
   ): Promise<ReadonlyArray<Repository>> {
-    return this.appStore._addRepositories(paths)
+    return this.appStore._addRepositories(
+      paths,
+      modifyGitignoreToIgnoreSketchFiles
+    )
   }
 
   /** Remove the repositories represented by the given IDs from local storage. */
@@ -422,7 +426,7 @@ export class Dispatcher {
         return null
       }
 
-      const addedRepositories = await this.addRepositories([path])
+      const addedRepositories = await this.addRepositories([path], false)
       const addedRepository = addedRepositories[0]
       await this.selectRepository(addedRepository)
 

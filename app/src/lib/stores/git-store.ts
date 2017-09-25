@@ -15,6 +15,7 @@ import { structuralEquals } from '../../lib/equality'
 import { compare } from '../../lib/compare'
 import { queueWorkHigh } from '../../lib/queue-work'
 import { IKactusFile } from '../../lib/kactus'
+import { readGitIgnore } from '../git/rev-parse'
 
 import {
   reset,
@@ -743,21 +744,8 @@ export class GitStore {
    */
   public async readGitIgnore(): Promise<string | null> {
     const repository = this.repository
-    const ignorePath = Path.join(repository.path, '.gitignore')
 
-    return new Promise<string | null>((resolve, reject) => {
-      Fs.readFile(ignorePath, 'utf8', (err, data) => {
-        if (err) {
-          if (err.code === 'ENOENT') {
-            resolve(null)
-          } else {
-            reject(err)
-          }
-        } else {
-          resolve(data)
-        }
-      })
-    })
+    return readGitIgnore(repository.path)
   }
 
   /**

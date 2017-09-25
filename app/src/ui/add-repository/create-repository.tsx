@@ -115,13 +115,13 @@ export class CreateRepository extends React.Component<
     const licenses = await getLicenses()
     this.setState({ ...this.state, licenses })
 
-    const isRepository = await isGitRepository(this.state.path)
+    const { isRepository } = await isGitRepository(this.state.path)
     this.setState({ isRepository })
   }
 
   private onPathChanged = async (event: React.FormEvent<HTMLInputElement>) => {
     const path = event.currentTarget.value
-    const isRepository = await isGitRepository(path)
+    const { isRepository } = await isGitRepository(path)
 
     this.setState({ isRepository, path, isValidPath: null })
   }
@@ -145,7 +145,7 @@ export class CreateRepository extends React.Component<
     }
 
     const path = directory[0]
-    const isRepository = await isGitRepository(path)
+    const { isRepository } = await isGitRepository(path)
 
     this.setState({ isRepository, path })
   }
@@ -195,7 +195,10 @@ export class CreateRepository extends React.Component<
       return this.props.dispatcher.postError(e)
     }
 
-    const repositories = await this.props.dispatcher.addRepositories([fullPath])
+    const repositories = await this.props.dispatcher.addRepositories(
+      [fullPath],
+      false
+    )
     if (repositories.length < 1) {
       return
     }

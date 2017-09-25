@@ -1,4 +1,5 @@
 import { remote } from 'electron'
+import * as Path from 'path'
 import * as React from 'react'
 
 import { Dispatcher } from '../../lib/dispatcher'
@@ -11,7 +12,7 @@ import { Dialog, DialogContent, DialogFooter } from '../dialog'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { LinkButton } from '../lib/link-button'
 import { PopupType } from '../../lib/app-state'
-import * as Path from 'path'
+import { Checkbox, CheckboxValue } from '../lib/checkbox'
 
 const untildify: (str: string) => string = require('untildify')
 
@@ -48,6 +49,10 @@ interface IAddExistingRepositoryState {
    * flickering for our users as they type in a path.
    */
   readonly showNonGitRepositoryWarning: boolean
+
+  readonly ignoresSketchFiles: boolean
+  readonly showNonIgnoresSketchFilesyWarning: boolean
+  readonly modifyGitignoreToIgnoreSketchFiles: boolean
 }
 
 /** The component for adding an existing local repository. */
@@ -64,6 +69,9 @@ export class AddExistingRepository extends React.Component<
       path,
       isRepository: false,
       showNonGitRepositoryWarning: false,
+      ignoresSketchFiles: false,
+      showNonIgnoresSketchFilesyWarning: false,
+      modifyGitignoreToIgnoreSketchFiles: true,
     }
   }
 
@@ -75,33 +83,65 @@ export class AddExistingRepository extends React.Component<
       return
     }
 
-    const isRepository = await isGitRepository(pathToCheck)
+    const { isRepository, ignoresSketchFiles } = await isGitRepository(
+      pathToCheck
+    )
     // The path might have changed while we were checking, in which case we
     // don't care about the result anymore.
     if (this.state.path !== pathToCheck) {
       return
     }
 
-    this.setState({ isRepository, showNonGitRepositoryWarning: !isRepository })
+    this.setState({
+      isRepository,
+      ignoresSketchFiles,
+      showNonGitRepositoryWarning: !isRepository,
+      showNonIgnoresSketchFilesyWarning: !ignoresSketchFiles,
+    })
   }
 
   private renderWarning() {
-    if (!this.state.path.length || !this.state.showNonGitRepositoryWarning) {
+    if (
+      !this.state.path.length ||
+      (!this.state.showNonGitRepositoryWarning &&
+        !this.state.showNonIgnoresSketchFilesyWarning)
+    ) {
       return null
+    }
+
+    if (this.state.showNonGitRepositoryWarning) {
+      return (
+        <Row className="warning-helper-text">
+          <Octicon symbol={OcticonSymbol.alert} />
+          <p>
+            This directory does not appear to be a Git repository.
+            <br />
+            Would you like to{' '}
+            <LinkButton onClick={this.onCreateRepositoryClicked}>
+              create a repository
+            </LinkButton>{' '}
+            here instead?
+          </p>
+        </Row>
+      )
     }
 
     return (
       <Row className="warning-helper-text">
         <Octicon symbol={OcticonSymbol.alert} />
-        <p>
-          This directory does not appear to be a Git repository.
+        <div>
+          This directory does not appear to be ignore sketch files.
           <br />
-          Would you like to{' '}
-          <LinkButton onClick={this.onCreateRepositoryClicked}>
-            create a repository
-          </LinkButton>{' '}
-          here instead?
-        </p>
+          <Checkbox
+            label="Would you like to ignore them? (recommended)"
+            value={
+              this.state.modifyGitignoreToIgnoreSketchFiles
+                ? CheckboxValue.On
+                : CheckboxValue.Off
+            }
+            onChange={this.onModifyGitignoreChanged}
+          />
+        </div>
       </Row>
     )
   }
@@ -143,9 +183,9 @@ export class AddExistingRepository extends React.Component<
   }
 
   private onPathChanged = async (path: string) => {
-    const isRepository = await isGitRepository(path)
+    const { isRepository, ignoresSketchFiles } = await isGitRepository(path)
 
-    this.setState({ path, isRepository })
+    this.setState({ path, isRepository, ignoresSketchFiles })
   }
 
   private showFilePicker = async () => {
@@ -157,12 +197,14 @@ export class AddExistingRepository extends React.Component<
     }
 
     const path = directory[0]
-    const isRepository = await isGitRepository(path)
+    const { isRepository, ignoresSketchFiles } = await isGitRepository(path)
 
     this.setState({
       path,
       isRepository,
+      ignoresSketchFiles,
       showNonGitRepositoryWarning: !isRepository,
+      showNonIgnoresSketchFilesyWarning: !ignoresSketchFiles,
     })
   }
 
@@ -174,9 +216,11 @@ export class AddExistingRepository extends React.Component<
     this.props.onDismissed()
 
     const resolvedPath = this.resolvedPath(this.state.path)
-    const repositories = await this.props.dispatcher.addRepositories([
-      resolvedPath,
-    ])
+    const repositories = await this.props.dispatcher.addRepositories(
+      [resolvedPath],
+      !this.state.ignoresSketchFiles &&
+        this.state.modifyGitignoreToIgnoreSketchFiles
+    )
 
     if (repositories && repositories.length) {
       const repository = repositories[0]
@@ -191,5 +235,13 @@ export class AddExistingRepository extends React.Component<
       type: PopupType.CreateRepository,
       path: resolvedPath,
     })
+  }
+
+  private onModifyGitignoreChanged = (
+    event: React.FormEvent<HTMLInputElement>
+  ) => {
+    const value = event.currentTarget.checked
+
+    this.setState({ modifyGitignoreToIgnoreSketchFiles: value })
   }
 }

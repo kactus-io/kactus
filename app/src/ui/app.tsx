@@ -690,7 +690,10 @@ export class App extends React.Component<IAppProps, IAppState> {
   }
 
   private async addRepositories(paths: ReadonlyArray<string>) {
-    const repositories = await this.props.dispatcher.addRepositories(paths)
+    const repositories = await this.props.dispatcher.addRepositories(
+      paths,
+      false
+    )
     if (repositories.length) {
       this.props.dispatcher.selectRepository(repositories[0])
     }

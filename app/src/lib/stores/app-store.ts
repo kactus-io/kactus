@@ -3005,7 +3005,8 @@ export class AppStore {
   }
 
   public async _addRepositories(
-    paths: ReadonlyArray<string>
+    paths: ReadonlyArray<string>,
+    modifyGitignoreToIgnoreSketchFiles: boolean
   ): Promise<ReadonlyArray<Repository>> {
     const addedRepositories = new Array<Repository>()
     const lfsRepositories = new Array<Repository>()
@@ -3027,6 +3028,16 @@ export class AppStore {
       } else {
         const error = new Error(`${path} isn't a git repository.`)
         this.emitError(error)
+      }
+    }
+
+    if (modifyGitignoreToIgnoreSketchFiles) {
+      for (const repository of addedRepositories) {
+        const gitignore = (await this._readGitIgnore(repository)) || ''
+        await this._saveGitIgnore(
+          repository,
+          gitignore + '\n\n# Ignore sketch files\n*.sketch\n'
+        )
       }
     }
 

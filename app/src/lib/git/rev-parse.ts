@@ -1,5 +1,5 @@
 import * as Path from 'path'
-
+import * as Fs from 'fs'
 import { git } from './core'
 import { Repository } from '../../models/repository'
 import { RepositoryDoesNotExistErrorCode } from 'dugite'
@@ -73,7 +73,49 @@ export async function resolveHEAD(
   }
 }
 
+export async function readGitIgnore(
+  repositoryPath: string
+): Promise<string | null> {
+  const ignorePath = Path.join(repositoryPath, '.gitignore')
+
+  return new Promise<string | null>((resolve, reject) => {
+    Fs.readFile(ignorePath, 'utf8', (err, data) => {
+      if (err) {
+        if (err.code === 'ENOENT') {
+          resolve(null)
+        } else {
+          reject(err)
+        }
+      } else {
+        resolve(data)
+      }
+    })
+  })
+}
+
 /** Is the path a git repository? */
-export async function isGitRepository(path: string): Promise<boolean> {
-  return (await getTopLevelWorkingDirectory(path)) !== null
+export async function isGitRepository(
+  path: string
+): Promise<{ isRepository: boolean; ignoresSketchFiles: boolean }> {
+  const topLevelDirectory = await getTopLevelWorkingDirectory(path)
+  if (topLevelDirectory === null) {
+    return {
+      isRepository: false,
+      ignoresSketchFiles: false,
+    }
+  }
+
+  const gitignore = await readGitIgnore(topLevelDirectory)
+
+  if (!gitignore) {
+    return {
+      isRepository: true,
+      ignoresSketchFiles: false,
+    }
+  }
+
+  return {
+    isRepository: true,
+    ignoresSketchFiles: gitignore.indexOf('.sketch') !== -1,
+  }
 }
