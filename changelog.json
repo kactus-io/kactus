@@ -1,6 +1,11 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.9": [
+      "[New] Add ability to cancel a premium subscription from the app",
+      "[Improved] Check wether sketch files are ignored when add an existing repo",
+      "[Fixed] Fix washed out icon on High Sierra"
+    ],
     "0.2.8": [
       "[New] Store the Sketch version used so that Sketch always uses the latest features and do not tries to transform the file",
       "[Improved] Big performance improvements when showing diffs: around 50% for completely new diffs and nearly instant for already seen diffs"
