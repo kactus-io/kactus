@@ -180,14 +180,17 @@ export class FileChange {
     path: string,
     status: AppFileStatus,
     sketchFile?: IKactusFile,
-    oldPath?: string
+    oldPath?: string,
+    parts?: Array<string>
   ) {
     this.path = path
     this.status = status
     this.oldPath = oldPath
     this.sketchFile = sketchFile
     this.type = FileType.NormalFile
-    if (sketchFile) {
+    if (parts) {
+      this.parts = parts
+    } else if (sketchFile) {
       this.parts = getSketchFileParts(path, sketchFile)
     }
   }
@@ -208,9 +211,10 @@ export class WorkingDirectoryFileChange extends FileChange {
     status: AppFileStatus,
     selection: DiffSelection,
     sketchFile?: IKactusFile,
-    oldPath?: string
+    oldPath?: string,
+    parts?: Array<string>
   ) {
-    super(path, status, sketchFile, oldPath)
+    super(path, status, sketchFile, oldPath, parts)
 
     this.selection = selection
   }
@@ -231,7 +235,8 @@ export class WorkingDirectoryFileChange extends FileChange {
       this.status,
       selection,
       this.sketchFile,
-      this.oldPath
+      this.oldPath,
+      this.parts
     )
   }
 }
