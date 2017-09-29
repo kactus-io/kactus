@@ -723,8 +723,12 @@ export class Dispatcher {
    * If validation is successful the store will advance to the authentication
    * step.
    */
-  public setSignInEndpoint(url: string): Promise<void> {
-    return this.appStore._setSignInEndpoint(url)
+  public setSignInEndpoint(
+    url: string,
+    clientId: string,
+    clientSecret: string
+  ): Promise<void> {
+    return this.appStore._setSignInEndpoint(url, clientId, clientSecret)
   }
 
   /**

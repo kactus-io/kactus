@@ -2844,8 +2844,12 @@ export class AppStore {
     return Promise.resolve()
   }
 
-  public _setSignInEndpoint(url: string): Promise<void> {
-    return this.signInStore.setEndpoint(url)
+  public _setSignInEndpoint(
+    url: string,
+    clientId: string,
+    clientSecret: string
+  ): Promise<void> {
+    return this.signInStore.setEndpoint(url, clientId, clientSecret)
   }
 
   public _setSignInCredentials(

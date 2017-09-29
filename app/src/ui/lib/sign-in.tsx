@@ -23,8 +23,12 @@ interface ISignInProps {
  * Provide `children` elements to render additional buttons in the active form.
  */
 export class SignIn extends React.Component<ISignInProps, {}> {
-  private onEndpointEntered = (url: string) => {
-    this.props.dispatcher.setSignInEndpoint(url)
+  private onEndpointEntered = (
+    url: string,
+    clientId: string,
+    clientSecret: string
+  ) => {
+    this.props.dispatcher.setSignInEndpoint(url, clientId, clientSecret)
   }
 
   private onCredentialsEntered = (username: string, password: string) => {

@@ -7,6 +7,8 @@ import { uuid } from './uuid'
 interface IOAuthState {
   readonly state: string
   readonly endpoint: string
+  readonly clientId: string
+  readonly clientSecret: string
   readonly resolve: (account: Account) => void
   readonly reject: (error: Error) => void
 }
@@ -22,14 +24,29 @@ let oauthState: IOAuthState | null = null
  * Note that the promise may not complete if the user doesn't complete the OAuth
  * flow.
  */
-export function askUserToOAuth(endpoint: string) {
+export function askUserToOAuth(
+  endpoint: string,
+  clientId: string,
+  clientSecret: string
+) {
   // Disable the lint warning since we're storing the `resolve` and `reject`
   // functions.
   // tslint:disable-next-line:promise-must-complete
   return new Promise<Account>((resolve, reject) => {
-    oauthState = { state: uuid(), endpoint, resolve, reject }
+    oauthState = {
+      state: uuid(),
+      endpoint,
+      clientId,
+      clientSecret,
+      resolve,
+      reject,
+    }
 
-    const oauthURL = getOAuthAuthorizationURL(endpoint, oauthState.state)
+    const oauthURL = getOAuthAuthorizationURL(
+      endpoint,
+      clientId,
+      oauthState.state
+    )
     shell.openExternal(oauthURL)
   })
 }
@@ -49,6 +66,8 @@ export async function requestAuthenticatedUser(
 
   const token = await requestOAuthToken(
     oauthState.endpoint,
+    oauthState.clientId,
+    oauthState.clientSecret,
     oauthState.state,
     code
   )

@@ -15,15 +15,6 @@ import { uuid } from './uuid'
 
 const username: () => Promise<string> = require('username')
 
-const ClientID = process.env.TEST_ENV ? '' : __OAUTH_CLIENT_ID__
-const ClientSecret = process.env.TEST_ENV ? '' : __OAUTH_SECRET__
-
-if (!ClientID || !ClientID.length || !ClientSecret || !ClientSecret.length) {
-  log.warn(
-    `KACTUS_OAUTH_CLIENT_ID and/or KACTUS_OAUTH_CLIENT_SECRET is undefined. You won't be able to authenticate new users.`
-  )
-}
-
 /** The OAuth scopes we need. */
 const Scopes = ['repo', 'user']
 
@@ -588,6 +579,8 @@ export type AuthorizationResponse =
  */
 export async function createAuthorization(
   endpoint: string,
+  client_id: string,
+  client_secret: string,
   login: string,
   password: string,
   oneTimePassword: string | null
@@ -605,8 +598,8 @@ export async function createAuthorization(
     'authorizations',
     {
       scopes: Scopes,
-      client_id: ClientID,
-      client_secret: ClientSecret,
+      client_id,
+      client_secret,
       note: note,
       note_url: NoteURL,
       fingerprint: uuid(),
@@ -825,15 +818,18 @@ export function getAccountForEndpoint(
 
 export function getOAuthAuthorizationURL(
   endpoint: string,
+  clientId: string,
   state: string
 ): string {
   const urlBase = getHTMLURL(endpoint)
   const scope = encodeURIComponent(Scopes.join(' '))
-  return `${urlBase}/login/oauth/authorize?client_id=${ClientID}&scope=${scope}&state=${state}`
+  return `${urlBase}/login/oauth/authorize?client_id=${clientId}&scope=${scope}&state=${state}`
 }
 
 export async function requestOAuthToken(
   endpoint: string,
+  client_id: string,
+  client_secret: string,
   state: string,
   code: string
 ): Promise<string | null> {
@@ -845,8 +841,8 @@ export async function requestOAuthToken(
       'POST',
       'login/oauth/access_token',
       {
-        client_id: ClientID,
-        client_secret: ClientSecret,
+        client_id,
+        client_secret,
         code: code,
         state: state,
       }

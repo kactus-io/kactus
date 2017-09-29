@@ -29,6 +29,8 @@ interface ISignInState {
   readonly username: string
   readonly password: string
   readonly otpToken: string
+  readonly clientId: string
+  readonly clientSecret: string
 }
 
 export class SignIn extends React.Component<ISignInProps, ISignInState> {
@@ -40,6 +42,8 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
       username: '',
       password: '',
       otpToken: '',
+      clientId: '',
+      clientSecret: '',
     }
   }
 
@@ -65,7 +69,11 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
 
     switch (state.kind) {
       case SignInStep.EndpointEntry:
-        this.props.dispatcher.setSignInEndpoint(this.state.endpoint)
+        this.props.dispatcher.setSignInEndpoint(
+          this.state.endpoint,
+          this.state.clientId,
+          this.state.clientSecret
+        )
         break
       case SignInStep.Authentication:
         if (!state.supportsBasicAuth) {
@@ -90,6 +98,14 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
 
   private onEndpointChanged = (endpoint: string) => {
     this.setState({ endpoint })
+  }
+
+  private onClientIdChanged = (clientId: string) => {
+    this.setState({ clientId })
+  }
+
+  private onClientSecretChanged = (clientSecret: string) => {
+    this.setState({ clientSecret })
   }
 
   private onUsernameChanged = (username: string) => {
@@ -122,7 +138,10 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
 
     switch (state.kind) {
       case SignInStep.EndpointEntry:
-        disableSubmit = this.state.endpoint.length === 0
+        disableSubmit =
+          this.state.endpoint.length === 0 ||
+          this.state.clientId.length === 0 ||
+          this.state.clientSecret.length === 0
         primaryButtonText = 'Continue'
         break
       case SignInStep.TwoFactorAuthentication:
@@ -159,6 +178,39 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
     )
   }
 
+  private renderInstructionForGE(endpoint: string) {
+    return (
+      <ol>
+        <li>
+          Login to your{' '}
+          {endpoint ? (
+            <LinkButton uri={endpoint}>GitHub Enterprise appliance</LinkButton>
+          ) : (
+            'GitHub Enterprise appliance'
+          )}
+        </li>
+        <li>Click on Settings, OAuth Applications</li>
+        <li>
+          If there is already a Kactus application, click on it and note Client
+          ID, and Client Secret. Otherwise click on Register a new OAuth
+          application.
+        </li>
+        <li>
+          <p>Fill in the requested information:</p>
+          <ul>
+            <li>Application Name: Kactus</li>
+            <li>Homepage URL: {'https://kactus.io'}</li>
+            <li>Authorization callback URL: {'x-kactus-auth://oauth'}</li>
+          </ul>
+        </li>
+        <li>
+          Create the application and take note of the values Client ID, and
+          Client Secret.
+        </li>
+      </ol>
+    )
+  }
+
   private renderEndpointEntryStep(state: IEndpointEntryState) {
     return (
       <DialogContent>
@@ -168,6 +220,23 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
             value={this.state.endpoint}
             onValueChanged={this.onEndpointChanged}
             placeholder="https://github.example.com"
+          />
+        </Row>
+        <Row>{this.renderInstructionForGE(this.state.endpoint)}</Row>
+        <Row>
+          <TextBox
+            label="Application Client ID"
+            value={this.state.clientId}
+            onValueChanged={this.onClientIdChanged}
+            placeholder=""
+          />
+        </Row>
+        <Row>
+          <TextBox
+            label="Application client Secret"
+            value={this.state.clientSecret}
+            onValueChanged={this.onClientSecretChanged}
+            placeholder=""
           />
         </Row>
       </DialogContent>

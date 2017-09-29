@@ -26,7 +26,11 @@ interface IEnterpriseServerEntryProps {
    * endpoint url and submitted it either by clicking on the submit
    * button or by submitting the form through other means (ie hitting Enter).
    */
-  readonly onSubmit: (url: string) => void
+  readonly onSubmit: (
+    url: string,
+    clientId: string,
+    clientSecret: string
+  ) => void
 
   /** An array of additional buttons to render after the "Continue" button. */
   readonly additionalButtons?: ReadonlyArray<JSX.Element>
@@ -34,6 +38,8 @@ interface IEnterpriseServerEntryProps {
 
 interface IEnterpriseServerEntryState {
   readonly serverAddress: string
+  readonly clientId: string
+  readonly clientSecret: string
 }
 
 /** An entry form for an Enterprise server address. */
@@ -43,7 +49,7 @@ export class EnterpriseServerEntry extends React.Component<
 > {
   public constructor(props: IEnterpriseServerEntryProps) {
     super(props)
-    this.state = { serverAddress: '' }
+    this.state = { serverAddress: '', clientId: '', clientSecret: '' }
   }
 
   public render() {
@@ -59,6 +65,20 @@ export class EnterpriseServerEntry extends React.Component<
           disabled={disableEntry}
           onValueChanged={this.onServerAddressChanged}
           placeholder="https://github.example.com"
+        />
+
+        <TextBox
+          label="Application Client Id"
+          disabled={disableEntry}
+          onValueChanged={this.onclientIdChanged}
+          placeholder=""
+        />
+
+        <TextBox
+          label="Application Client Secret"
+          disabled={disableEntry}
+          onValueChanged={this.onClientSecretChanged}
+          placeholder=""
         />
 
         {this.props.error ? <Errors>{this.props.error.message}</Errors> : null}
@@ -77,7 +97,19 @@ export class EnterpriseServerEntry extends React.Component<
     this.setState({ serverAddress })
   }
 
+  private onclientIdChanged = (clientId: string) => {
+    this.setState({ clientId })
+  }
+
+  private onClientSecretChanged = (clientSecret: string) => {
+    this.setState({ clientSecret })
+  }
+
   private onSubmit = () => {
-    this.props.onSubmit(this.state.serverAddress)
+    this.props.onSubmit(
+      this.state.serverAddress,
+      this.state.clientId,
+      this.state.clientSecret
+    )
   }
 }

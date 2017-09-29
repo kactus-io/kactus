@@ -24,6 +24,15 @@ import { AuthenticationMode } from '../../lib/2fa'
 
 import { minimumSupportedEnterpriseVersion } from '../../lib/enterprise'
 
+const ClientID = process.env.TEST_ENV ? '' : __OAUTH_CLIENT_ID__!
+const ClientSecret = process.env.TEST_ENV ? '' : __OAUTH_SECRET__!
+
+if (!ClientID || !ClientID.length || !ClientSecret || !ClientSecret.length) {
+  log.warn(
+    `KACTUS_OAUTH_CLIENT_ID and/or KACTUS_OAUTH_CLIENT_SECRET is undefined. You won't be able to authenticate new users.`
+  )
+}
+
 function getUnverifiedUserErrorMessage(login: string): string {
   return `Unable to authenticate. The account ${login} is lacking a verified email address. Please sign in to GitHub.com, confirm your email address in the Emails section under Personal settings, and try again.`
 }
@@ -105,6 +114,8 @@ export interface IAuthenticationState extends ISignInState {
    * URL when signing in against a GitHub Enterprise instance.
    */
   readonly endpoint: string
+  readonly clientId: string
+  readonly clientSecret: string
 
   /**
    * A value indicating whether or not the endpoint supports
@@ -137,6 +148,8 @@ export interface ITwoFactorAuthenticationState extends ISignInState {
    * URL when signing in against a GitHub Enterprise instance.
    */
   readonly endpoint: string
+  readonly clientId: string
+  readonly clientSecret: string
 
   /**
    * The username specified by the user in the preceeding
@@ -266,6 +279,8 @@ export class SignInStore {
     this.setState({
       kind: SignInStep.Authentication,
       endpoint,
+      clientId: ClientID,
+      clientSecret: ClientSecret,
       supportsBasicAuth: true,
       error: null,
       loading: false,
@@ -299,13 +314,20 @@ export class SignInStore {
       )
     }
 
-    const endpoint = currentState.endpoint
+    const { endpoint, clientId, clientSecret } = currentState
 
     this.setState({ ...currentState, loading: true })
 
     let response: AuthorizationResponse
     try {
-      response = await createAuthorization(endpoint, username, password, null)
+      response = await createAuthorization(
+        endpoint,
+        clientId,
+        clientSecret,
+        username,
+        password,
+        null
+      )
     } catch (e) {
       this.emitError(e)
       return
@@ -334,6 +356,8 @@ export class SignInStore {
       this.setState({
         kind: SignInStep.TwoFactorAuthentication,
         endpoint,
+        clientId: ClientID,
+        clientSecret: ClientSecret,
         username,
         password,
         type: response.type,
@@ -411,7 +435,11 @@ export class SignInStore {
 
     let account: Account
     try {
-      account = await askUserToOAuth(currentState.endpoint)
+      account = await askUserToOAuth(
+        currentState.endpoint,
+        currentState.clientId,
+        currentState.clientSecret
+      )
     } catch (e) {
       this.setState({ ...currentState, error: e, loading: false })
       return
@@ -453,7 +481,11 @@ export class SignInStore {
    * If validation is successful the store will advance to the authentication
    * step.
    */
-  public async setEndpoint(url: string): Promise<void> {
+  public async setEndpoint(
+    url: string,
+    clientId: string,
+    clientSecret: string
+  ): Promise<void> {
     const currentState = this.state
 
     if (!currentState || currentState.kind !== SignInStep.EndpointEntry) {
@@ -496,6 +528,8 @@ export class SignInStore {
       this.setState({
         kind: SignInStep.Authentication,
         endpoint,
+        clientId,
+        clientSecret,
         supportsBasicAuth,
         error: null,
         loading: false,
@@ -547,6 +581,8 @@ export class SignInStore {
     try {
       response = await createAuthorization(
         currentState.endpoint,
+        currentState.clientId,
+        currentState.clientSecret,
         currentState.username,
         currentState.password,
         otp
