@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.10": [
+      "[Improved] Faster file selection",
+      "[Fixed] GitHub Enterprise login. For it to work, you will need to create a GitHub application. There are instructions about how to do so when you need it."
+    ],
     "0.2.9": [
       "[New] Add ability to cancel a premium subscription from the app",
       "[Improved] Check wether sketch files are ignored when add an existing repo",
