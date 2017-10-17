@@ -42,6 +42,7 @@
     "images": [
     ]
   },
+  "colorSpace": 0,
   "do_objectID": "F82CAAF4-0E94-448B-ABC3-CD4874730724",
   "enableLayerInteraction": true,
   "enableSliceInteraction": true,
@@ -53,10 +54,10 @@
     ]
   },
   "meta": {
-    "appVersion": "46.2",
-    "build": 44496,
-    "commit": "752502a5f62450dd6555e39d77a464fb4c5043e7",
-    "version": 93
+    "appVersion": "47",
+    "build": 45396,
+    "commit": "80ddf8a336f285dfa2b96d05e69dba5714b6f0c4",
+    "version": 95
   },
   "pages": [
     "Page 1"

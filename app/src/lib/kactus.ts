@@ -1,4 +1,4 @@
-import * as Fs from 'fs'
+import * as Fs from './file-system'
 import * as Path from 'path'
 import { exec } from 'child_process'
 import {
@@ -63,6 +63,7 @@ export async function generateDocumentPreview(
   file: string,
   output: string
 ): Promise<string> {
+  await Fs.mkdirP(output)
   return new Promise<string>((resolve, reject) => {
     exec(
       sketchtoolPath(sketchPath) +
@@ -70,7 +71,7 @@ export async function generateDocumentPreview(
         file +
         '" --output="' +
         output +
-        '" --filename=document.png --overwriting=YES',
+        '" --filename=document.png --overwriting=YES --max-size=1000 --compression=0.7 --save-for-web=YES',
       (err, stdout, stderr) => {
         if (err) {
           return reject(err)
@@ -96,7 +97,7 @@ export async function generatePagePreview(
         name +
         '" --output="' +
         output +
-        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png',
+        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png --compression=0.7',
       (err, stdout, stderr) => {
         if (err) {
           return reject(err)
@@ -123,7 +124,7 @@ export async function generateArtboardPreview(
         id +
         '" --output="' +
         output +
-        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --include-symbols=YES --formats=png',
+        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --include-symbols=YES --formats=png --compression=0.7',
       (err, stdout, stderr) => {
         if (err) {
           return reject(err)
@@ -149,7 +150,7 @@ export async function generateLayerPreview(
         id +
         '" --output="' +
         output +
-        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png',
+        '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png --compression=0.7',
       (err, stdout, stderr) => {
         if (err) {
           return reject(err)
@@ -174,15 +175,7 @@ export async function saveKactusConfig(
     configToSave.root = configToSave.root.replace(repository.path, '.')
   }
 
-  return new Promise<void>((resolve, reject) => {
-    Fs.writeFile(configPath, JSON.stringify(configToSave, null, 2), err => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve()
-      }
-    })
-  })
+  return await Fs.writeFile(configPath, JSON.stringify(configToSave, null, 2))
 }
 
 export function shouldShowPremiumUpsell(

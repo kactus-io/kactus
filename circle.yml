@@ -39,8 +39,8 @@ test:
     - npm run test:setup
     - npm test
 
-deployment:
-  production:
-    branch: /^__release-.*/
-    commands:
-      - npm run publish
+# deployment:
+#   production:
+#     branch: /^__release-.*/
+#     commands:
+#       - npm run publish

@@ -803,11 +803,6 @@ export class Diff extends React.Component<IDiffProps, {}> {
         return this.renderTextDiff(diff)
       }
 
-      // TODO(mathieudutour): remove this once #3 is fixed
-      if (diff.type === IKactusFileType.Document) {
-        return this.renderTextDiff(diff)
-      }
-
       return (
         <div className="sketch-diff-wrapper">
           {this.props.file && (
