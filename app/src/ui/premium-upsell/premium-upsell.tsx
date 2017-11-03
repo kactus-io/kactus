@@ -268,15 +268,15 @@ export class PremiumUpsell extends React.Component<
     return (
       <div>
         {(loadingCheckout || showingCheckout) && (
-            <Checkout
-              onDismissed={this.props.onDismissed}
-              onLoaded={this.finishedLoadingCheckout}
-              onToken={this.onToken}
-              user={this.props.user}
-              enterprise={this.state.choice === 'enterprise'}
-              price={price}
-            />
-          )}
+          <Checkout
+            onDismissed={this.props.onDismissed}
+            onLoaded={this.finishedLoadingCheckout}
+            onToken={this.onToken}
+            user={this.props.user}
+            enterprise={this.state.choice === 'enterprise'}
+            price={price}
+          />
+        )}
         {!showingCheckout && (
           <Dialog
             id="premium-upsell"

@@ -21,7 +21,7 @@ function request(opts) {
       if (err) {
         return reject(err)
       }
-      var is2xx = !err && /^2/.test('' + response.statusCode)
+      const is2xx = !err && /^2/.test('' + response.statusCode)
       if (!is2xx) {
         return reject(getErrorFromBody(body, opts))
       }
@@ -54,7 +54,7 @@ module.exports = {
         return res
       })
       .catch(function() {
-        var opts = options(
+        const opts = options(
           token,
           'https://api.github.com/repos/' + repo + '/releases',
           'POST'
@@ -71,7 +71,7 @@ module.exports = {
   },
   updateAsset: function(token, repo, releaseId, asset, fileName) {
     const name = path.basename(asset)
-    var opts = options(
+    const opts = options(
       token,
       'https://uploads.github.com/repos/' +
         repo +
@@ -81,11 +81,11 @@ module.exports = {
         encodeURIComponent(name),
       'POST'
     )
-    var stat = fs.statSync(asset)
-    var rd = fs.createReadStream(asset)
+    const stat = fs.statSync(asset)
+    const rd = fs.createReadStream(asset)
     opts.headers['Content-Type'] = 'application/zip'
     opts.headers['Content-Length'] = stat.size
-    var us = _request(opts)
+    const us = _request(opts)
 
     return new Promise(function(resolve, reject) {
       rd.on('error', function(err) {
@@ -102,7 +102,7 @@ module.exports = {
     })
   },
   publishRelease: function(token, repo, releaseId) {
-    var opts = options(
+    const opts = options(
       token,
       'https://api.github.com/repos/' + repo + '/releases/' + releaseId,
       'PATCH'

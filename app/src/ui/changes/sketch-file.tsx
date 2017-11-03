@@ -40,8 +40,8 @@ export class SketchFile extends React.Component<
           />
         </label>
         {(this.props.file.isImporting || this.props.file.isParsing) && (
-            <Loading />
-          )}
+          <Loading />
+        )}
       </div>
     )
   }
