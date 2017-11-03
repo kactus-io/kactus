@@ -1,6 +1,11 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.11": [
+      "[New] Add PR list",
+      "[Fixed] Fix preview of sketch document",
+      "[Fixed] Fix shortcut to open Kactus from Sketch (ctrl + k)"
+    ],
     "0.2.10": [
       "[Improved] Faster file selection",
       "[Fixed] GitHub Enterprise login. For it to work, you will need to create a GitHub application. There are instructions about how to do so when you need it."
