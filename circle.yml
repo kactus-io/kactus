@@ -32,8 +32,8 @@ test:
     - yarn test:setup
     - yarn test
 
-# deployment:
-#   production:
-#     branch: /^__release-.*/
-#     commands:
-#       - yarn run publish
+deployment:
+  production:
+    branch: /^__release-.*/
+    commands:
+      - yarn run publish
