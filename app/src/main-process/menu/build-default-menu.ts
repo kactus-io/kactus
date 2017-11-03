@@ -154,7 +154,7 @@ export function buildDefaultMenu(
       {
         label: __DARWIN__ ? 'Open Sketch' : 'Open S&ketch',
         id: 'open-sketch',
-        accelerator: 'CmdOrCtrl+K',
+        accelerator: 'Ctrl+K',
         click: emit('open-sketch'),
       },
       separator,

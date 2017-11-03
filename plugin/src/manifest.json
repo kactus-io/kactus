@@ -1,36 +1,32 @@
 {
-	"compatibleVersion": 3,
-	"bundleVersion": 1,
+  "compatibleVersion": 3,
+  "bundleVersion": 1,
   "appcast": false,
-	"commands": [
-		{
-			"name": "Export",
-			"identifier": "export",
-			"script": "./export.js"
-		},
+  "commands": [
     {
-			"name": "Import",
-			"identifier": "import",
-			"script": "./import.js"
-		},
+      "name": "Export",
+      "identifier": "export",
+      "script": "./export.js"
+    },
     {
-			"name": "Open Kactus",
-			"identifier": "open-kactus",
-			"script": "./open-kactus.js",
-      "shortcut": "cmd k"
-		},
+      "name": "Import",
+      "identifier": "import",
+      "script": "./import.js"
+    },
     {
-			"name": "Refresh files",
-			"identifier": "refresh-files",
-			"script": "./refresh-files.js"
-		}
-	],
-	"menu": {
-		"title": "🌵 Kactus",
-		"items": [
-			"export",
-      "import",
-      "open-kactus"
-		]
-	}
+      "name": "Open Kactus",
+      "identifier": "open-kactus",
+      "script": "./open-kactus.js",
+      "shortcut": "control k"
+    },
+    {
+      "name": "Refresh files",
+      "identifier": "refresh-files",
+      "script": "./refresh-files.js"
+    }
+  ],
+  "menu": {
+    "title": "🌵 Kactus",
+    "items": ["export", "import", "open-kactus"]
+  }
 }
