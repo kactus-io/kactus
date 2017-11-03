@@ -259,6 +259,33 @@ export type TSketchPartChange = {
   name: string
 }
 
+/**
+ * An object encapsulating the changes to a committed file.
+ */
+export class CommittedFileChange extends FileChange {
+  /**
+   * A commit SHA or some other identifier that ultimately
+   * dereferences to a commit. This is the pointer to the
+   * 'after' version of this change. I.e. the parent of this
+   * commit will contain the 'before' (or nothing, if the
+   * file change represents a new file).
+   */
+  public readonly commitish: string
+
+  public constructor(
+    path: string,
+    status: AppFileStatus,
+    commitish: string,
+    sketchFile?: IKactusFile,
+    oldPath?: string,
+    parts?: Array<string>
+  ) {
+    super(path, status, sketchFile, oldPath, parts)
+
+    this.commitish = commitish
+  }
+}
+
 /** the state of the working directory for a repository */
 export class WorkingDirectoryStatus {
   /**

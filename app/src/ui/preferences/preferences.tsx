@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Account } from '../../models/account'
 import { PreferencesTab } from '../../models/preferences'
-import { ExternalEditor } from '../../models/editors'
+import { ExternalEditor } from '../../lib/editors'
 import { Dispatcher } from '../../lib/dispatcher'
 import { TabBar } from '../tab-bar'
 import { Accounts } from './accounts'
@@ -14,6 +14,8 @@ import { Dialog, DialogFooter } from '../dialog'
 import {
   getGlobalConfigValue,
   setGlobalConfigValue,
+  getMergeTool,
+  IMergeTool,
 } from '../../lib/git/config'
 import { lookupPreferredEmail } from '../../lib/email'
 import { PopupType } from '../../lib/app-state'
@@ -44,6 +46,7 @@ interface IPreferencesState {
   readonly selectedExternalEditor?: ExternalEditor
   readonly availableShells: ReadonlyArray<Shell>
   readonly selectedShell: Shell
+  readonly mergeTool: IMergeTool | null
 }
 
 /** The app-level preferences component. */
@@ -65,6 +68,7 @@ export class Preferences extends React.Component<
       selectedExternalEditor: this.props.selectedExternalEditor,
       availableShells: [],
       selectedShell: this.props.selectedShell,
+      mergeTool: null,
     }
   }
 
@@ -92,9 +96,10 @@ export class Preferences extends React.Component<
     committerName = committerName || ''
     committerEmail = committerEmail || ''
 
-    const [editors, shells] = await Promise.all([
+    const [editors, shells, mergeTool] = await Promise.all([
       getAvailableEditors(),
       getAvailableShells(),
+      getMergeTool(),
     ])
 
     const availableEditors = editors.map(e => e.editor)
@@ -108,6 +113,7 @@ export class Preferences extends React.Component<
       confirmDiscardChanges: this.props.confirmDiscardChanges,
       availableShells,
       availableEditors,
+      mergeTool,
     })
   }
 
@@ -205,6 +211,9 @@ export class Preferences extends React.Component<
             availableShells={this.state.availableShells}
             selectedShell={this.state.selectedShell}
             onSelectedShellChanged={this.onSelectedShellChanged}
+            mergeTool={this.state.mergeTool}
+            onMergeToolCommandChanged={this.onMergeToolCommandChanged}
+            onMergeToolNameChanged={this.onMergeToolNameChanged}
           />
         )
       }
@@ -280,10 +289,38 @@ export class Preferences extends React.Component<
       this.state.confirmDiscardChanges
     )
 
+    const mergeTool = this.state.mergeTool
+    if (mergeTool && mergeTool.name) {
+      await setGlobalConfigValue('merge.tool', mergeTool.name)
+
+      if (mergeTool.command) {
+        await setGlobalConfigValue(
+          `mergetool.${mergeTool.name}.cmd`,
+          mergeTool.command
+        )
+      }
+    }
+
     this.props.onDismissed()
   }
 
   private onTabClicked = (index: number) => {
     this.setState({ selectedIndex: index })
+  }
+
+  private onMergeToolNameChanged = (name: string) => {
+    const mergeTool = {
+      name,
+      command: this.state.mergeTool && this.state.mergeTool.command,
+    }
+    this.setState({ mergeTool })
+  }
+
+  private onMergeToolCommandChanged = (command: string) => {
+    const mergeTool = {
+      name: this.state.mergeTool ? this.state.mergeTool.name : '',
+      command,
+    }
+    this.setState({ mergeTool })
   }
 }

@@ -5,12 +5,16 @@ const os = require('os')
 const fs = require('fs')
 
 const projectRoot = path.join(__dirname, '..')
+// eslint-disable-next-line import/no-dynamic-require
 const appPackage = require(path.join(projectRoot, 'app', 'package.json'))
+
+function getDistRoot() {
+  return path.join(projectRoot, 'dist')
+}
 
 function getDistPath() {
   return path.join(
-    projectRoot,
-    'dist',
+    getDistRoot(),
     `${getExecutableName()}-${process.platform}-x64`
   )
 }
@@ -108,10 +112,9 @@ function getUserDataPath() {
     const home = os.homedir()
     return path.join(home, '.config', getProductName())
   } else {
-    console.error(
+    throw new Error(
       `I dunno how to resolve the user data path for ${process.platform} ${process.arch} :(`
     )
-    process.exit(1)
   }
 }
 
@@ -169,6 +172,13 @@ function shouldMakeDelta() {
   return channelsWithDeltas.indexOf(getReleaseChannel()) > -1
 }
 
+function getCLICommands() {
+  return fs
+    .readdirSync(path.resolve(projectRoot, 'app', 'src', 'cli', 'commands'))
+    .filter(name => name.endsWith('.ts'))
+    .map(name => name.replace(/\.ts$/, ''))
+}
+
 /**
  * Attempt to dereference the given ref without requiring a Git environment
  * to be present. Note that this method will not be able to dereference packed
@@ -206,6 +216,7 @@ function getSHA() {
 }
 
 module.exports = {
+  getDistRoot,
   getDistPath,
   getProductName,
   getCompanyName,
@@ -230,5 +241,6 @@ module.exports = {
   shouldMakeDelta,
   getReleaseBranchName,
   getExecutableName,
+  getCLICommands,
   getSHA,
 }

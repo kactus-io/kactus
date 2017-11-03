@@ -70,6 +70,21 @@ interface IDiffGutterProps {
   readonly onMouseMove: (index: number) => void
 }
 
+interface IDiffGutterState {
+  /**
+   * Whether or not the diff line gutter should render as hovered,
+   * i.e. highlighted. This is used when moused over directly or
+   * when the hunk that this line is part of is hovered.
+   */
+  readonly hover: boolean
+
+  /**
+   * Whether or not the diff line gutter should render that it's
+   * selected, i.e. included for commit.
+   */
+  readonly selected: boolean
+}
+
 /**
  * Detect if mouse cursor is within the range
  */
@@ -88,8 +103,20 @@ function isMouseCursorNearEdge(ev: MouseEvent): boolean {
 }
 
 /** The gutter for a diff's line. */
-export class DiffLineGutter extends React.Component<IDiffGutterProps, {}> {
+export class DiffLineGutter extends React.Component<
+  IDiffGutterProps,
+  IDiffGutterState
+> {
   private elem_?: HTMLSpanElement
+
+  public constructor(props: IDiffGutterProps) {
+    super(props)
+
+    this.state = {
+      hover: false,
+      selected: this.props.isIncluded,
+    }
+  }
 
   /**
    * Compute the width for the current element
@@ -105,34 +132,26 @@ export class DiffLineGutter extends React.Component<IDiffGutterProps, {}> {
    * Indicate whether the current gutter element is selected
    */
   public isIncluded(): boolean {
-    return this.props.line.isIncludeableLine() && this.props.isIncluded
+    return this.props.line.isIncludeableLine() && this.state.selected
   }
 
   /**
    * Set (or unset) the hover styling of the diff gutter
    */
-  public setHover(visible: boolean) {
+  public setHover(hover: boolean) {
     // only show the hover effect if the line isn't context
     if (!this.props.line.isIncludeableLine()) {
       return
     }
 
-    if (visible) {
-      this.setClass(hoverCssClass)
-    } else {
-      this.unsetClass(hoverCssClass)
-    }
+    this.setState({ hover })
   }
 
   /**
    * Set (or unset) the selected styling of the diff gutter
    */
-  public setSelected(visible: boolean) {
-    if (visible) {
-      this.setClass(selectedLineClass)
-    } else {
-      this.unsetClass(selectedLineClass)
-    }
+  public setSelected(selected: boolean) {
+    this.setState({ selected })
   }
 
   private getLineClassName(): string {
@@ -154,8 +173,17 @@ export class DiffLineGutter extends React.Component<IDiffGutterProps, {}> {
   private getLineClass(): string {
     const lineClass = this.getLineClassName()
     const selectedClass = this.isIncluded() ? selectedLineClass : null
+    const hoverClass = this.state.hover ? hoverCssClass : null
 
-    return classNames('diff-line-gutter', lineClass, selectedClass)
+    return classNames(
+      'diff-line-gutter',
+      lineClass,
+      selectedClass,
+      hoverClass,
+      {
+        'read-only': this.props.readOnly,
+      }
+    )
   }
 
   private updateHoverState(isRangeSelection: boolean, isActive: boolean) {
@@ -168,18 +196,6 @@ export class DiffLineGutter extends React.Component<IDiffGutterProps, {}> {
       this.props.updateRangeHoverState(range.start, range.end, isActive)
     } else {
       this.setHover(isActive)
-    }
-  }
-
-  private setClass(cssClass: string) {
-    if (this.elem_) {
-      this.elem_.classList.add(cssClass)
-    }
-  }
-
-  private unsetClass(cssClass: string) {
-    if (this.elem_) {
-      this.elem_.classList.remove(cssClass)
     }
   }
 
@@ -233,7 +249,7 @@ export class DiffLineGutter extends React.Component<IDiffGutterProps, {}> {
     this.props.onMouseDown(this.props.index, this.props.diff, isRangeSelection)
   }
 
-  private applyEventHandlers = (elem: HTMLSpanElement) => {
+  private applyEventHandlers = (elem: HTMLSpanElement | null) => {
     // set this so we can compute the width of the diff gutter
     // whether it is an editable line or not
     if (elem) {
@@ -245,19 +261,17 @@ export class DiffLineGutter extends React.Component<IDiffGutterProps, {}> {
       return
     }
 
-    if (elem) {
+    // no point handling mouse events on context lines
+    if (elem && this.props.line.isIncludeableLine()) {
       elem.addEventListener('mouseenter', this.mouseEnterHandler)
       elem.addEventListener('mouseleave', this.mouseLeaveHandler)
       elem.addEventListener('mousemove', this.mouseMoveHandler)
-
-      // no point handling mousedown events on context lines
-      if (this.props.line.isIncludeableLine()) {
-        elem.addEventListener('mousedown', this.mouseDownHandler)
-      }
+      elem.addEventListener('mousedown', this.mouseDownHandler)
     } else {
       // this callback fires a second time when the DOM element
-      // is unmounted, so we can use this as a chance to cleanup
-
+      // is unmounted, so we can use this as a chance to cleanup.
+      // We unsubscribe without checking for isIncludeableLine since
+      // that might have changed underneath us
       if (this.elem_) {
         this.elem_.removeEventListener('mouseenter', this.mouseEnterHandler)
         this.elem_.removeEventListener('mouseleave', this.mouseLeaveHandler)

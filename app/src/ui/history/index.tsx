@@ -4,13 +4,14 @@ import { Diff } from '../diff'
 import { DiffType } from '../../models/diff'
 import { FileList } from './file-list'
 import { Repository } from '../../models/repository'
-import { FileChange } from '../../models/status'
+import { CommittedFileChange, FileChange } from '../../models/status'
 import { Commit } from '../../models/commit'
 import { Dispatcher } from '../../lib/dispatcher'
 import {
   IHistoryState as IAppHistoryState,
   ImageDiffType,
 } from '../../lib/app-state'
+import { encodePathAsUrl } from '../../lib/path'
 import { ThrottledScheduler } from '../lib/throttled-scheduler'
 import { IGitHubUser } from '../../lib/databases'
 import { Resizable } from '../resizable'
@@ -51,7 +52,7 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
   private onFileSelected = (file: FileChange) => {
     this.props.dispatcher.changeHistoryFileSelection(
       this.props.repository,
-      file
+      file as CommittedFileChange
     )
   }
 
@@ -193,7 +194,10 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
 }
 
 function NoCommitSelected() {
-  const BlankSlateImage = `file:///${__dirname}/static/empty-no-commit.svg`
+  const BlankSlateImage = encodePathAsUrl(
+    __dirname,
+    'static/empty-no-commit.svg'
+  )
 
   return (
     <div className="panel blankslate">

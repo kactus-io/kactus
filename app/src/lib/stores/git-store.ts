@@ -7,7 +7,7 @@ import { Branch, BranchType } from '../../models/branch'
 import { Tip, TipState } from '../../models/tip'
 import { Commit } from '../../models/commit'
 import { IRemote } from '../../models/remote'
-import { IFetchProgress } from '../app-state'
+import { IFetchProgress, IRevertProgress } from '../app-state'
 
 import { IAppShell } from '../app-shell'
 import { ErrorWithMetadata, IErrorMetadata } from '../error-with-metadata'
@@ -38,14 +38,20 @@ import {
   IndexStatus,
   getIndexChanges,
   checkoutIndex,
+  checkoutPaths,
   resetPaths,
   getConfigValue,
   revertCommit,
   unstageAllFiles,
   openMergeTool,
+  addRemote,
 } from '../git'
 import { IGitAccount } from '../git/authentication'
 import { RetryAction, RetryActionType } from '../retry-actions'
+import { parseRemote } from '../remote-parsing'
+import { UpstreamAlreadyExistsError } from './upstream-already-exists-error'
+import { forceUnwrap } from '../fatal-error'
+import { GitHubRepository } from '../../models/github-repository'
 
 /** The number of commits to load from history per batch. */
 const CommitBatchSize = 100
@@ -54,6 +60,9 @@ const LoadingHistoryRequestKey = 'history'
 
 /** The max number of recent branches to find. */
 const RecentBranchesLimit = 5
+
+/** The name for a fork's upstream remote. */
+export const UpstreamRemoteName = 'upstream'
 
 /** A commit message summary and description. */
 export interface ICommitMessage {
@@ -93,6 +102,8 @@ export class GitStore {
   private _aheadBehind: IAheadBehind | null = null
 
   private _remote: IRemote | null = null
+
+  private _upstream: IRemote | null = null
 
   private _lastFetched: Date | null = null
 
@@ -403,9 +414,30 @@ export class GitStore {
   }
 
   private async undoFirstCommit(
-    repository: Repository
+    repository: Repository,
+    sketchFiles: ReadonlyArray<IKactusFile>
   ): Promise<true | undefined> {
+    // What are we doing here?
+    // The state of the working directory here is rather important, because we
+    // want to ensure that any deleted files are restored to your working
+    // directory for the next stage. Doing doing a `git checkout -- .` here
+    // isn't suitable because we should preserve the other working directory
+    // changes.
+    const status = await getStatus(repository, sketchFiles)
+    const paths = status.workingDirectory.files
+
+    const deletedFiles = paths.filter(p => p.status === AppFileStatus.Deleted)
+    const deletedFilePaths = deletedFiles.map(d => d.path)
+
+    await checkoutPaths(repository, deletedFilePaths)
+
+    // Now that we have the working directory changes, as well the restored
+    // deleted files, we can remove the HEAD ref to make the current branch
+    // disappear
     await deleteRef(repository, 'HEAD', 'Reverting first commit')
+
+    // Finally, ensure any changes in the index are unstaged. This ensures all
+    // files in the repository will be untracked.
     await unstageAllFiles(repository)
     return true
   }
@@ -415,13 +447,16 @@ export class GitStore {
    *
    * @param commit - The commit to remove - should be the tip of the current branch.
    */
-  public async undoCommit(commit: Commit): Promise<void> {
+  public async undoCommit(
+    commit: Commit,
+    sketchFiles: ReadonlyArray<IKactusFile>
+  ): Promise<void> {
     // For an initial commit, just delete the reference but leave HEAD. This
     // will make the branch unborn again.
     let success: true | undefined = undefined
     if (commit.parentSHAs.length === 0) {
       success = await this.performFailableOperation(() =>
-        this.undoFirstCommit(this.repository)
+        this.undoFirstCommit(this.repository, sketchFiles)
       )
     } else {
       success = await this.performFailableOperation(() =>
@@ -478,7 +513,8 @@ export class GitStore {
   }
 
   /**
-   * Fetch the default remote, using the given account for authentication.
+   * Fetch the default and upstream remote, using the given account for
+   * authentication.
    *
    * @param account          - The account to use for authentication if needed.
    * @param backgroundTask   - Was the fetch done as part of a background task?
@@ -490,17 +526,22 @@ export class GitStore {
     backgroundTask: boolean,
     progressCallback?: (fetchProgress: IFetchProgress) => void
   ): Promise<void> {
+    const remotes = []
     const remote = this.remote
-    if (!remote) {
+    if (remote) {
+      remotes.push(remote)
+    }
+
+    const upstream = this.upstream
+    if (upstream) {
+      remotes.push(upstream)
+    }
+
+    if (!remotes.length) {
       return Promise.resolve()
     }
 
-    return this.fetchRemotes(
-      account,
-      [remote],
-      backgroundTask,
-      progressCallback
-    )
+    return this.fetchRemotes(account, remotes, backgroundTask, progressCallback)
   }
 
   /**
@@ -672,6 +713,87 @@ export class GitStore {
     this.emitUpdate()
   }
 
+  /** Load the upstream remote if it exists. */
+  public async loadUpstreamRemote(): Promise<void> {
+    const parent =
+      this.repository.gitHubRepository &&
+      this.repository.gitHubRepository.parent
+    if (!parent) {
+      return
+    }
+
+    const remotes = await getRemotes(this.repository)
+    const upstream = this.findUpstreamRemote(parent, remotes)
+    this._upstream = upstream
+    this.emitUpdate()
+  }
+
+  /**
+   * Add the upstream remote if the repository is a fork and an upstream remote
+   * doesn't already exist.
+   */
+  public async addUpstreamRemoteIfNeeded(): Promise<void> {
+    const parent =
+      this.repository.gitHubRepository &&
+      this.repository.gitHubRepository.parent
+    if (!parent) {
+      return
+    }
+
+    const remotes = await getRemotes(this.repository)
+    const upstream = this.findUpstreamRemote(parent, remotes)
+    if (upstream) {
+      return
+    }
+
+    const remoteWithUpstreamName = remotes.find(
+      r => r.name === UpstreamRemoteName
+    )
+    if (remoteWithUpstreamName) {
+      const error = new UpstreamAlreadyExistsError(
+        this.repository,
+        remoteWithUpstreamName
+      )
+      this.emitError(error)
+      return
+    }
+
+    const url = forceUnwrap(
+      'Parent repositories are fully loaded',
+      parent.cloneURL
+    )
+
+    await this.performFailableOperation(() =>
+      addRemote(this.repository, UpstreamRemoteName, url)
+    )
+    this._upstream = { name: UpstreamRemoteName, url }
+  }
+
+  private findUpstreamRemote(
+    parent: GitHubRepository,
+    remotes: ReadonlyArray<IRemote>
+  ): IRemote | null {
+    const upstream = remotes.find(r => r.name === UpstreamRemoteName)
+    if (upstream) {
+      const parsedUpstream = parseRemote(upstream.url)
+      const cloneURL = forceUnwrap(
+        'Parent repositories are fully loaded',
+        parent.cloneURL
+      )
+      const parentURL = new URL(cloneURL)
+      if (
+        parsedUpstream &&
+        parsedUpstream.owner === parent.owner.login &&
+        parsedUpstream.name === parent.name &&
+        parsedUpstream.hostname === parentURL.hostname
+      ) {
+        return upstream
+      }
+    }
+
+    return null
+  }
+
   /**
    * The number of commits the current branch is ahead and behind, relative to
    * its upstream.
@@ -686,6 +808,14 @@ export class GitStore {
   /** Get the remote we're working with. */
   public get remote(): IRemote | null {
     return this._remote
+  }
+
+  /**
+   * Get the remote for the upstream repository. This will be null if the
+   * repository isn't a fork, or if the fork doesn't have an upstream remote.
+   */
+  public get upstream(): IRemote | null {
+    return this._upstream
   }
 
   public setCommitMessage(message: ICommitMessage | null): Promise<void> {
@@ -877,9 +1007,13 @@ export class GitStore {
   /** Reverts the commit with the given SHA */
   public async revertCommit(
     repository: Repository,
-    commit: Commit
+    commit: Commit,
+    account: IGitAccount | null,
+    progressCallback?: (fetchProgress: IRevertProgress) => void
   ): Promise<void> {
-    await this.performFailableOperation(() => revertCommit(repository, commit))
+    await this.performFailableOperation(() =>
+      revertCommit(repository, commit, account, progressCallback)
+    )
 
     this.emitUpdate()
   }
@@ -924,6 +1058,29 @@ export class GitStore {
   public async openMergeTool(path: string): Promise<void> {
     await this.performFailableOperation(() =>
       openMergeTool(this.repository, path)
+    )
+  }
+
+  /**
+   * Update the repository's existing upstream remote to point to the parent
+   * repository.
+   */
+  public async updateExistingUpstreamRemote(): Promise<void> {
+    const gitHubRepository = forceUnwrap(
+      'To update an upstream remote, the repository must be a GitHub repository',
+      this.repository.gitHubRepository
+    )
+    const parent = forceUnwrap(
+      'To update an upstream remote, the repository must have a parent',
+      gitHubRepository.parent
+    )
+    const url = forceUnwrap(
+      'Parent repositories are always fully loaded',
+      parent.cloneURL
+    )
+
+    await this.performFailableOperation(() =>
+      setRemoteURL(this.repository, UpstreamRemoteName, url)
     )
   }
 }

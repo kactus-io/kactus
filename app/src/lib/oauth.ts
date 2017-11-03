@@ -86,9 +86,10 @@ export async function requestAuthenticatedUser(
  */
 export function resolveOAuthRequest(account: Account) {
   if (!oauthState) {
-    return fatalError(
+    fatalError(
       '`askUserToOAuth` must be called before resolving an auth request.'
     )
+    return
   }
 
   oauthState.resolve(account)
@@ -104,9 +105,10 @@ export function resolveOAuthRequest(account: Account) {
  */
 export function rejectOAuthRequest(error: Error) {
   if (!oauthState) {
-    return fatalError(
+    fatalError(
       '`askUserToOAuth` must be called before rejecting an auth request.'
     )
+    return
   }
 
   oauthState.reject(error)

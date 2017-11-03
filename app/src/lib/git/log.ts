@@ -1,5 +1,5 @@
 import { git } from './core'
-import { AppFileStatus, FileChange } from '../../models/status'
+import { AppFileStatus, CommittedFileChange } from '../../models/status'
 import { Repository } from '../../models/repository'
 import { Commit } from '../../models/commit'
 import { CommitIdentity } from '../../models/commit-identity'
@@ -73,6 +73,7 @@ export async function getCommits(
       '-z',
       '--no-color',
       ...additionalArgs,
+      '--',
     ],
     repository.path,
     'getCommits',
@@ -115,7 +116,7 @@ export async function getChangedFiles(
   repository: Repository,
   sketchFiles: ReadonlyArray<IKactusFile>,
   sha: string
-): Promise<ReadonlyArray<FileChange>> {
+): Promise<ReadonlyArray<CommittedFileChange>> {
   // opt-in for rename detection (-M) and copies detection (-C)
   // this is equivalent to the user configuring 'diff.renames' to 'copies'
   // NOTE: order here matters - doing -M before -C means copies aren't detected
@@ -130,6 +131,7 @@ export async function getChangedFiles(
     '--name-status',
     '--format=format:',
     '-z',
+    '--',
   ]
   const result = await git(args, repository.path, 'getChangedFiles')
 
@@ -138,7 +140,7 @@ export async function getChangedFiles(
   // Remove the trailing empty line
   lines.splice(-1, 1)
 
-  const files: FileChange[] = []
+  const files: CommittedFileChange[] = []
   for (let i = 0; i < lines.length; i++) {
     const statusText = lines[i]
 
@@ -154,7 +156,7 @@ export async function getChangedFiles(
 
     const sketchFile = sketchFiles.find(f => path.indexOf(f.id) === 0)
 
-    files.push(new FileChange(path, status, sketchFile, oldPath))
+    files.push(new CommittedFileChange(path, status, sha, sketchFile, oldPath))
   }
 
   return files

@@ -1,5 +1,5 @@
 import * as Path from 'path'
-import * as Fs from 'fs'
+import * as fileSystem from '../../lib/file-system'
 import { remote } from 'electron'
 import { importFolder } from 'kactus-cli'
 import { IKactusFile } from '../kactus'
@@ -21,7 +21,6 @@ import {
   IDiff,
   IImageDiff,
   Image,
-  maximumDiffStringSize,
   LineEndingsChange,
   parseLineEndingText,
   ISketchDiff,
@@ -43,13 +42,52 @@ import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
 import { assertNever } from '../fatal-error'
 
 /**
+ * V8 has a limit on the size of string it can create, and unless we want to
+ * trigger an unhandled exception we need to do the encoding conversion by hand.
+ *
+ * This is a hard limit on how big a buffer can be and still be converted into
+ * a string.
+ */
+const MaxDiffBufferSize = 268435441
+
+/**
+ * Where `MaxDiffBufferSize` is a hard limit, this is a suggested limit. Diffs
+ * bigger than this _could_ be displayed but it might cause some slowness.
+ */
+const MaxReasonableDiffSize = 3000000
+
+/**
+ * The longest line length we should try to display. If a diff has a line longer
+ * than this, we probably shouldn't attempt it.
+ */
+const MaxLineLength = 500000
+
+/**
  * Utility function to check whether parsing this buffer is going to cause
  * issues at runtime.
  *
  * @param output A buffer of binary text from a spawned process
  */
-function isValidBuffer(output: Buffer) {
-  return output.length < maximumDiffStringSize
+function isValidBuffer(buffer: Buffer) {
+  return buffer.length < MaxDiffBufferSize
+}
+
+/** Is the buffer too large for us to reasonably represent? */
+function isBufferTooLarge(buffer: Buffer) {
+  return !isValidBuffer(buffer) || buffer.length >= MaxReasonableDiffSize
+}
+
+/** Is the diff too large for us to reasonably represent? */
+function isDiffTooLarge(diff: IRawDiff) {
+  for (const hunk of diff.hunks) {
+    for (const line of hunk.lines) {
+      if (line.text.length > MaxLineLength) {
+        return true
+      }
+    }
+  }
+
+  return false
 }
 
 /**
@@ -89,11 +127,16 @@ export async function getCommitDiff(
     repository.path,
     'getCommitDiff'
   )
-  if (!isValidBuffer(output)) {
+  if (isBufferTooLarge(output)) {
     return { kind: DiffType.TooLarge, length: output.length }
   }
 
   const diffText = diffFromRawDiffOutput(output)
+
+  if (isDiffTooLarge(diffText)) {
+    return { kind: DiffType.TooLarge, length: output.length }
+  }
+
   return convertDiff(
     sketchPath,
     repository,
@@ -182,7 +225,7 @@ export async function getWorkingDirectoryDiff(
     'getWorkingDirectoryDiff',
     successExitCodes
   )
-  if (!isValidBuffer(output)) {
+  if (isBufferTooLarge(output)) {
     // we know we can't transform this process output into a diff, so let's
     // just return a placeholder for now that we can display to the user
     // to say we're at the limits of the runtime
@@ -190,8 +233,11 @@ export async function getWorkingDirectoryDiff(
   }
 
   const diffText = diffFromRawDiffOutput(output)
-  const lineEndingsChange = parseLineEndingsWarning(error)
+  if (isDiffTooLarge(diffText)) {
+    return { kind: DiffType.TooLarge, length: output.length }
+  }
 
+  const lineEndingsChange = parseLineEndingsWarning(error)
   return convertDiff(
     sketchPath,
     repository,
@@ -525,6 +571,15 @@ function diffFromRawDiffOutput(output: Buffer): IRawDiff {
   return parser.parse(pieces[pieces.length - 1])
 }
 
+/**
+ * Retrieve the binary contents of a blob from the object database
+ *
+ * Returns an image object containing the base64 encoded string,
+ * as <img> tags support the data URI scheme instead of
+ * needing to reference a file:// URI
+ *
+ * https://en.wikipedia.org/wiki/Data_URI_scheme
+ */
 export async function getBlobImage(
   repository: Repository,
   path: string,
@@ -549,27 +604,17 @@ export async function getWorkingDirectoryImage(
 /**
  * Retrieve the binary contents of a blob from the working directory
  *
- * Returns a promise containing the base64 encoded string,
+ * Returns an image object containing the base64 encoded string,
  * as <img> tags support the data URI scheme instead of
  * needing to reference a file:// URI
  *
  * https://en.wikipedia.org/wiki/Data_URI_scheme
- *
  */
 async function getImage(path: string): Promise<Image> {
-  const extension = Path.extname(path)
-  const contents = await new Promise<string>((resolve, reject) => {
-    Fs.readFile(path, { flag: 'r' }, (error, buffer) => {
-      if (error) {
-        reject(error)
-        return
-      }
-      resolve(buffer.toString('base64'))
-    })
-  })
+  const contents = await fileSystem.readFile(path)
   const diff: Image = {
-    contents: contents,
-    mediaType: getMediaType(extension),
+    contents: contents.toString('base64'),
+    mediaType: getMediaType(Path.extname(path)),
   }
   return diff
 }

@@ -542,7 +542,7 @@ export class List extends React.Component<IListProps, IListState> {
     this.grid = ref
   }
 
-  private onFakeScrollRef = (ref: HTMLDivElement) => {
+  private onFakeScrollRef = (ref: HTMLDivElement | null) => {
     this.fakeScroll = ref
   }
 
@@ -568,9 +568,9 @@ export class List extends React.Component<IListProps, IListState> {
 
     return (
       <Grid
-        aria-label={null!}
+        aria-label={''}
         key="grid"
-        role={null!}
+        role={''}
         ref={this.onGridRef}
         autoContainerWidth={true}
         width={width}

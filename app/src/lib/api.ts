@@ -42,6 +42,7 @@ export interface IAPIRepository {
   readonly private: boolean
   readonly fork: boolean
   readonly default_branch: string
+  readonly parent: IAPIRepository | null
 }
 
 /**
@@ -108,14 +109,20 @@ export interface IAPIIssue {
 export type APIRefState = 'failure' | 'pending' | 'success'
 
 /** The API response to a ref status request. */
-interface IAPIRefStatus {
+export interface IAPIRefStatus {
   readonly state: APIRefState
+  readonly total_count: number
 }
 
 interface IAPIPullRequestRef {
   readonly ref: string
   readonly sha: string
-  readonly repo: IAPIRepository
+
+  /**
+   * The repository in which this ref lives. It could be null if the repository
+   * has been deleted since the PR was opened.
+   */
+  readonly repo: IAPIRepository | null
 }
 
 /** Information about a pull request as returned by the GitHub API. */
@@ -434,12 +441,12 @@ export class API {
     owner: string,
     name: string,
     ref: string
-  ): Promise<APIRefState> {
+  ): Promise<IAPIRefStatus> {
     const path = `repos/${owner}/${name}/commits/${ref}/status`
     try {
       const response = await this.request('GET', path)
       const status = await parsedResponse<IAPIRefStatus>(response)
-      return status.state
+      return status
     } catch (e) {
       log.warn(
         `fetchCombinedRefStatus: failed for repository ${owner}/${name} on ref ${ref}`,
@@ -864,10 +871,10 @@ export async function checkUnlockedKactus(
   try {
     const path = `${KactusAPIEndpoint}/checkUnlocked`
     const response = await fetch(path, {
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': getUserAgent(),
-      },
+      headers: [
+        ['Content-Type', 'application/json'],
+        ['User-Agent', getUserAgent()],
+      ],
       method: 'put',
       body: JSON.stringify({
         githubId: user.id,
@@ -904,10 +911,10 @@ export async function unlockKactusFullAccess(
   try {
     const path = `${KactusAPIEndpoint}/unlock`
     const response = await fetch(path, {
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': getUserAgent(),
-      },
+      headers: [
+        ['Content-Type', 'application/json'],
+        ['User-Agent', getUserAgent()],
+      ],
       method: 'post',
       body: JSON.stringify({
         token,
@@ -933,10 +940,10 @@ export async function cancelKactusSubscription(
   try {
     const path = `${KactusAPIEndpoint}/unsubscribe`
     const response = await fetch(path, {
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': getUserAgent(),
-      },
+      headers: [
+        ['Content-Type', 'application/json'],
+        ['User-Agent', getUserAgent()],
+      ],
       method: 'delete',
       body: JSON.stringify({
         githubId: account.id,
@@ -960,10 +967,10 @@ export async function fetchCoupon(
       coupon
     )}?requestId=${requestId}`
     const response = await fetch(path, {
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': getUserAgent(),
-      },
+      headers: [
+        ['Content-Type', 'application/json'],
+        ['User-Agent', getUserAgent()],
+      ],
       method: 'get',
     })
     const res = await parsedResponse<IAPICoupon>(response)

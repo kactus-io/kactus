@@ -9,14 +9,15 @@ import {
   WorkingDirectoryFileChange,
   FileType,
   TFileOrSketchPartChange,
+  TSketchPartChange,
 } from '../../models/status'
 import { DiffSelectionType } from '../../models/diff'
 import { CommitIdentity } from '../../models/commit-identity'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { ICommitMessage } from '../../lib/app-state'
 import { IGitHubUser } from '../../lib/databases'
-import { IAutocompletionProvider } from '../autocompletion'
 import { Dispatcher } from '../../lib/dispatcher'
+import { IAutocompletionProvider } from '../autocompletion'
 import { Repository } from '../../models/repository'
 import { showContextualMenu, IMenuItem } from '../main-process-proxy'
 import { IKactusFile } from '../../lib/kactus'
@@ -31,7 +32,7 @@ interface IChangesListProps {
   readonly selectedSketchPartID: string | null
   readonly sketchFiles: Array<IKactusFile>
   readonly onFileSelectionChanged: (file: WorkingDirectoryFileChange) => void
-  readonly onSketchPartSelectionChanged: (file: TFileOrSketchPartChange) => void
+  readonly onSketchPartSelectionChanged: (file: TSketchPartChange) => void
   readonly onSketchFileSelectionChanged: (file: IKactusFile) => void
   readonly onIncludeChanged: (path: string, include: boolean) => void
   readonly onSelectAll: (selectAll: boolean) => void
@@ -283,13 +284,22 @@ export class ChangesList extends React.Component<
 
   private onFileSelectionChanged = (row: number) => {
     const file = this.state.visibleFileList[row]
-    if (file.type === FileType.SketchFile) {
-      const sketchFile = this.props.sketchFiles.find(f => f.id === file.id)
-      this.props.onSketchFileSelectionChanged(sketchFile!)
-    } else if (file.type === FileType.NormalFile) {
-      this.props.onFileSelectionChanged(file)
-    } else {
-      this.props.onSketchPartSelectionChanged(file)
+    switch (file.type) {
+      case FileType.SketchFile: {
+        const sketchFile = this.props.sketchFiles.find(f => f.id === file.id)
+        this.props.onSketchFileSelectionChanged(sketchFile!)
+        return
+      }
+      case FileType.NormalFile: {
+        this.props.onFileSelectionChanged(file)
+        return
+      }
+      case FileType.LayerFile:
+      case FileType.PageFile: {
+        // @ts-ignore
+        this.props.onSketchPartSelectionChanged(file)
+        return
+      }
     }
   }
 
