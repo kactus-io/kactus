@@ -19,7 +19,7 @@ import {
 
 const distPath = getDistPath()
 const productName = getProductName()
-const outputDir = path.join(distPath, '..', 'installer')
+// const outputDir = path.join(distPath, '..', 'installer')
 
 if (process.platform === 'darwin') {
   packageOSX()
