@@ -3,18 +3,18 @@
 import * as fs from 'fs-extra'
 import * as cp from 'child_process'
 import * as path from 'path'
-import * as electronInstaller from 'electron-winstaller'
+// import * as electronInstaller from 'electron-winstaller'
 import {
-  getDistRoot,
+  // getDistRoot,
   getDistPath,
   getProductName,
   getOSXZipPath,
-  getWindowsIdentifierName,
-  getCompanyName,
-  getWindowsStandaloneName,
-  getWindowsInstallerName,
-  shouldMakeDelta,
-  getUpdatesURL,
+  // getWindowsIdentifierName,
+  // getCompanyName,
+  // getWindowsStandaloneName,
+  // getWindowsInstallerName,
+  // shouldMakeDelta,
+  // getUpdatesURL,
 } from './dist-info'
 
 const distPath = getDistPath()
