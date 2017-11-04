@@ -2,7 +2,7 @@
 
 import * as fs from 'fs-extra'
 import * as cp from 'child_process'
-import * as path from 'path'
+// import * as path from 'path'
 // import * as electronInstaller from 'electron-winstaller'
 import {
   // getDistRoot,
