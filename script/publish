@@ -38,7 +38,7 @@ const token = process.env.KACTUSBOT_TOKEN
 const repo = 'kactus-io/kactus'
 
 console.log('Packaging…')
-cp.execSync('yarn package')
+cp.execSync('npm run package')
 
 let uploadPromise = null
 if (process.platform === 'darwin') {
