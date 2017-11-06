@@ -38,9 +38,7 @@ copyEmoji()
 console.log('Copying static resources…')
 copyStaticResources()
 
-const isFork =
-  process.env.CIRCLE_PR_USERNAME ||
-  process.env.TRAVIS_SECURE_ENV_VARS !== 'true'
+const isFork = process.env.CIRCLE_PR_USERNAME
 if (
   process.env.CIRCLE_BUILD_IMAGE &&
   process.env.CIRCLE_BUILD_IMAGE === 'osx' &&
