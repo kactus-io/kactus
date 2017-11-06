@@ -42,8 +42,8 @@ const isFork =
   process.env.CIRCLE_PR_USERNAME ||
   process.env.TRAVIS_SECURE_ENV_VARS !== 'true'
 if (
-  process.platform === 'darwin' &&
-  (process.env.CIRCLECI || process.env.TRAVIS) &&
+  process.env.CIRCLE_BUILD_IMAGE &&
+  process.env.CIRCLE_BUILD_IMAGE === 'osx' &&
   !isFork
 ) {
   console.log('Setting up keychain…')
