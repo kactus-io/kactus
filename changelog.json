@@ -1,6 +1,7 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.12": ["[Fixed] Code signing on macOS"],
     "0.2.11": [
       "[New] Add PR list",
       "[Fixed] Fix preview of sketch document",

@@ -50,8 +50,8 @@ if (process.platform === 'darwin') {
   process.exit(1)
 }
 
-var releaseId
-var tag = 'v' + distInfo.getVersion()
+let releaseId
+const tag = 'v' + distInfo.getVersion()
 
 console.log('Uploading ' + tag + '…')
 

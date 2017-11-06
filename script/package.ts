@@ -37,9 +37,11 @@ function packageOSX() {
   const dest = getOSXZipPath()
   fs.removeSync(dest)
 
-  cp.execSync(
-    `ditto -ck --keepParent "${distPath}/${productName}.app" "${dest}"`
-  )
+  const pathToApp = `"${distPath}/${productName}.app"`
+
+  cp.execSync(`codesign -vvvv ${pathToApp}`)
+
+  cp.execSync(`ditto -ck --keepParent ${pathToApp} "${dest}"`)
   console.log(`Zipped to ${dest}`)
 }
 
