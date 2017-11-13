@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.13": [
+      "[Fixed] A bug breaking Sketch file when using shared text styles in shared pages"
+    ],
     "0.2.12": ["[Fixed] Code signing on macOS"],
     "0.2.11": [
       "[New] Add PR list",
