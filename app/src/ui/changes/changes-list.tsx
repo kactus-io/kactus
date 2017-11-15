@@ -165,19 +165,22 @@ export class ChangesList extends React.Component<
 
   public componentWillReceiveProps(nextProps: IChangesListProps) {
     if (
-      nextProps.workingDirectory.files.length !==
-      this.props.workingDirectory.files.length
+      nextProps.selectedFileID !== this.props.selectedFileID ||
+      nextProps.selectedSketchFileID !== this.props.selectedSketchFileID ||
+      nextProps.selectedSketchPartID !== this.props.selectedSketchPartID
     ) {
-      const fileList = getFileList(
-        nextProps.workingDirectory.files,
-        this.state.files
-      )
-
-      this.setState({
-        files: fileList,
-        visibleFileList: getOpenedFilesList(fileList),
-      })
+      return
     }
+
+    const fileList = getFileList(
+      nextProps.workingDirectory.files,
+      this.state.files
+    )
+
+    this.setState({
+      files: fileList,
+      visibleFileList: getOpenedFilesList(fileList),
+    })
   }
 
   private onIncludeAllChanged = (event: React.FormEvent<HTMLInputElement>) => {
