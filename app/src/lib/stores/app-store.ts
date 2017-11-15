@@ -2315,13 +2315,18 @@ export class AppStore {
           })
 
           const { kactus } = this.getRepositoryState(repository)
-          await Promise.all(
-            kactus.files
-              .filter(f => f.parsed)
-              .map(f =>
-                importSketchFile(this.sketchPath, f.path, kactus.config)
-              )
-          )
+          try {
+            await Promise.all(
+              kactus.files
+                .filter(f => f.parsed)
+                .map(f =>
+                  importSketchFile(this.sketchPath, f.path, kactus.config)
+                )
+            )
+          } catch (err) {
+            // probably some merge conflicts
+            log.error('Could not import sketch files during pull', err)
+          }
 
           this.updatePushPullFetchProgress(repository, {
             kind: 'generic',
@@ -2695,11 +2700,16 @@ export class AppStore {
 
     // rebuild sketch files
     const { kactus } = this.getRepositoryState(repository)
-    await Promise.all(
-      kactus.files
-        .filter(f => f.parsed)
-        .map(f => importSketchFile(this.sketchPath, f.path, kactus.config))
-    )
+    try {
+      await Promise.all(
+        kactus.files
+          .filter(f => f.parsed)
+          .map(f => importSketchFile(this.sketchPath, f.path, kactus.config))
+      )
+    } catch (err) {
+      // probably conflicts
+      log.error('Could not import sketch file during merge', err)
+    }
 
     await this._refreshRepository(repository)
   }
