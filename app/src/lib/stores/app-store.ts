@@ -106,6 +106,7 @@ import {
   getDefaultRemote,
   formatAsLocalRef,
   getWorkingDirectorySketchPreview,
+  checkoutFileWithOption,
 } from '../git'
 
 import { launchExternalEditor } from '../editors'
@@ -1374,7 +1375,7 @@ export class AppStore {
   ): Promise<void> {
     await this.isImporting(repository, file, async () => {
       const kactusConfig = this.getRepositoryState(repository).kactus.config
-      await importSketchFile(this.sketchPath, file.path, kactusConfig)
+      await importSketchFile(repository, this.sketchPath, file, kactusConfig)
       await this._loadStatus(repository, {
         skipParsingModifiedSketchFiles: true,
       })
@@ -1859,7 +1860,7 @@ export class AppStore {
         await Promise.all(
           kactus.files
             .filter(f => f.parsed)
-            .map(f => importSketchFile(this.sketchPath, f.path, kactus.config))
+            .map(f => importSketchFile(repository, this.sketchPath, f, kactus.config))
         )
       }
     } finally {
@@ -2377,7 +2378,7 @@ export class AppStore {
               kactus.files
                 .filter(f => f.parsed)
                 .map(f =>
-                  importSketchFile(this.sketchPath, f.path, kactus.config)
+                  importSketchFile(repository, this.sketchPath, f, kactus.config)
                 )
             )
           } catch (err) {
@@ -2544,7 +2545,7 @@ export class AppStore {
     await Promise.all(
       kactus.files
         .filter(f => f.parsed)
-        .map(f => importSketchFile(this.sketchPath, f.path, kactus.config))
+        .map(f => importSketchFile(repository, this.sketchPath, f, kactus.config))
     )
 
     await this._refreshRepository(repository)
@@ -2761,7 +2762,7 @@ export class AppStore {
       await Promise.all(
         kactus.files
           .filter(f => f.parsed)
-          .map(f => importSketchFile(this.sketchPath, f.path, kactus.config))
+          .map(f => importSketchFile(repository, this.sketchPath, f, kactus.config))
       )
     } catch (err) {
       // probably conflicts
@@ -3599,5 +3600,16 @@ export class AppStore {
     })
 
     this.emitUpdate()
+  }
+
+  public async _resolveConflict(
+    repository: Repository,
+    path: string,
+    option: 'ours' | 'theirs'
+  ): Promise<void> {
+    await checkoutFileWithOption(repository, path, option)
+    return this._loadStatus(repository, {
+      skipParsingModifiedSketchFiles: true,
+    })
   }
 }

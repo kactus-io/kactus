@@ -11,6 +11,7 @@ import {
   DeletedImageDiff,
 } from './image-diffs'
 import { BinaryFile } from './binary-file'
+import { ConflictedSketchDiff } from './conflicted-sketch-diff'
 
 import { Editor } from 'codemirror'
 import { CodeMirrorHost } from './code-mirror-host'
@@ -939,6 +940,43 @@ export class Diff extends React.Component<IDiffProps, {}> {
     this.props.dispatcher.changeImageDiffType(type)
   }
 
+  private onPickOurs = () => {
+    if (!this.props.file) {
+      log.error('This can not be happening...')
+      return
+    }
+    this.props.dispatcher.resolveConflict(
+      this.props.repository,
+      this.props.file.path,
+      'ours'
+    )
+  }
+
+  private onPickTheirs = () => {
+    if (!this.props.file) {
+      log.error('This can not be happening...')
+      return
+    }
+    this.props.dispatcher.resolveConflict(
+      this.props.repository,
+      this.props.file.path,
+      'theirs'
+    )
+  }
+
+  private renderSketchConflictedDiff(diff: ISketchDiff) {
+    return (
+      <ConflictedSketchDiff
+        onChangeDiffType={this.onChangeImageDiffType}
+        diffType={this.props.imageDiffType}
+        current={diff.current!}
+        previous={diff.previous!}
+        onPickOurs={this.onPickOurs}
+        onPickTheirs={this.onPickTheirs}
+      />
+    )
+  }
+
   private renderImage(imageDiff: IImageDiff | ISketchDiff) {
     if (imageDiff.current && imageDiff.previous) {
       return (
@@ -1094,6 +1132,18 @@ export class Diff extends React.Component<IDiffProps, {}> {
         return this.renderTextDiff(diff)
       }
 
+      let content
+      if (this.props.file && this.props.showAdvancedDiffs) {
+        content = this.renderTextDiff(diff)
+      } else if (
+        this.props.file &&
+        this.props.file.status === AppFileStatus.Conflicted
+      ) {
+        content = this.renderSketchConflictedDiff(diff)
+      } else {
+        content = this.renderImage(diff)
+      }
+
       return (
         <div className="sketch-diff-wrapper">
           {this.props.file && (
@@ -1119,9 +1169,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
               />
             </div>
           )}
-          {this.props.file && this.props.showAdvancedDiffs
-            ? this.renderTextDiff(diff)
-            : this.renderImage(diff)}
+          {content}
         </div>
       )
     }

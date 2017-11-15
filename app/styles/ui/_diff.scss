@@ -584,3 +584,54 @@
     }
   }
 }
+
+.panel.image.conflicted {
+  .content {
+    display: flex;
+    flex-direction: row;
+    align-self: center;
+  }
+
+  .content {
+    margin: var(--spacing-double) var(--spacing-double) var(--spacing-quad);
+  }
+
+  .callout {
+    display: flex;
+    flex-direction: column;
+
+    max-width: 370px;
+    align-items: center;
+
+    text-align: center;
+
+    padding: 0 var(--spacing-quad);
+
+    div {
+      margin: var(--spacing) 0;
+    }
+
+    button {
+      flex-grow: 0;
+    }
+  }
+
+  .callout:not(:last-child) {
+    border-right: var(--base-border);
+  }
+
+  .image-diff-header {
+    display: none;
+  }
+
+  .image-diff-two-up img {
+    border: 1px solid var(--text-secondary-color) !important;
+  }
+
+  .image-diff-swipe .sizing-container .image-container div {
+    border: 1px solid var(--text-secondary-color) !important;
+  }
+  .image-diff-onion-skin .sizing-container .image-container div {
+    border: 1px solid var(--text-secondary-color) !important;
+  }
+}

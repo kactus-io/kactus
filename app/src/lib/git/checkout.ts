@@ -79,3 +79,13 @@ export async function checkoutPaths(
     'checkoutPaths'
   )
 }
+
+/** resolve conflicts. */
+export async function checkoutFileWithOption(
+  repository: Repository,
+  path: string,
+  option: 'ours' | 'theirs'
+): Promise<void> {
+  await git(['checkout', '--' + option, path], repository.path, 'checkoutFile')
+  await git(['add', path], repository.path, 'addFile')
+}

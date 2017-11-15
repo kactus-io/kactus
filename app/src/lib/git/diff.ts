@@ -383,17 +383,35 @@ async function getSketchDiff(
     // Ideally we'd show all three versions and let the user pick but that's
     // a bit out of scope for now.
     if (file.status === AppFileStatus.Conflicted) {
-      return {
-        kind: DiffType.Sketch,
-        text: (diff || { contents: '' }).contents,
-        hunks: (diff || { hunks: [] }).hunks,
-        sketchFile: kactusFile,
-        type: type,
-      }
+      promises[0] = getHEADsha(repository, 'MERGE_HEAD').then(sha => {
+        return getOldSketchPreview(
+          sketchPath,
+          kactusFile,
+          repository,
+          file.path,
+          sha,
+          type,
+          _type ? Path.basename(file.id) : undefined
+        )
+      })
+      promises[1] = getHEADsha(repository, 'ORIG_HEAD').then(sha => {
+        return getOldSketchPreview(
+          sketchPath,
+          kactusFile,
+          repository,
+          file.path,
+          sha,
+          type,
+          _type ? Path.basename(file.id) : undefined
+        )
+      })
     }
 
     // Does it even exist in the working directory?
-    if (file.status !== AppFileStatus.Deleted) {
+    if (
+      file.status !== AppFileStatus.Conflicted &&
+      file.status !== AppFileStatus.Deleted
+    ) {
       promises[0] = getWorkingDirectorySketchPreview(
         sketchPath,
         kactusFile,
@@ -404,7 +422,10 @@ async function getSketchDiff(
       )
     }
 
-    if (file.status !== AppFileStatus.New) {
+    if (
+      file.status !== AppFileStatus.Conflicted &&
+      file.status !== AppFileStatus.New
+    ) {
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
       promises[1] = getOldSketchPreview(

@@ -1358,4 +1358,12 @@ export class Dispatcher {
   ): Promise<void> {
     return this.appStore._getSketchFilePreview(repository, sketchFile)
   }
+
+  public resolveConflict(
+    repository: Repository,
+    path: string,
+    option: 'ours' | 'theirs'
+  ): Promise<void> {
+    return this.appStore._resolveConflict(repository, path, option)
+  }
 }

@@ -245,18 +245,25 @@ export async function parseSketchFile(
   return parseFile(f.path + '.sketch', config)
 }
 
-export function importSketchFile(
+export async function importSketchFile(
+  repository: Repository,
   sketchPath: string,
-  path: string,
+  f: IKactusFile,
   config: IFullKactusConfig
 ) {
-  return importFolder(path, config).then(() => {
-    return runPluginCommand(
-      sketchPath,
-      Path.resolve(__dirname, './plugin.sketchplugin'),
-      'refresh-files'
-    )
-  })
+  const storagePath = Path.join(
+    getTempPath(),
+    'kactus',
+    String(repository.id),
+    f.id
+  )
+  await remove(storagePath)
+  await importFolder(f.path, config)
+  return runPluginCommand(
+    sketchPath,
+    Path.resolve(__dirname, './plugin.sketchplugin'),
+    'refresh-files'
+  )
 }
 
 export function getKactusStoragePaths(
