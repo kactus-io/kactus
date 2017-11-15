@@ -237,7 +237,7 @@ function copyDependencies() {
     Object.keys(newDependencies).length ||
     Object.keys(newDevDependencies).length
   ) {
-    console.log('  Installing npm dependencies…')
+    console.log('  Installing dependencies via npm…')
     cp.execSync('npm install', { cwd: outRoot, env: process.env })
   }
 

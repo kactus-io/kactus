@@ -60,6 +60,7 @@ import { readPartialFile } from '../../lib/file-system'
 
 import { DiffSyntaxMode, IDiffSyntaxModeSpec } from './diff-syntax-mode'
 import { highlight } from '../../lib/highlighter/worker'
+import { ITokens } from '../../lib/highlighter/types'
 
 /** The longest line for which we'd try to calculate a line diff. */
 const MaxIntraLineDiffStringLength = 4096
@@ -74,10 +75,27 @@ const narrowNoNewlineSymbol = new OcticonSymbol(
   8,
   'm 16,1 0,3 c 0,0.55 -0.45,1 -1,1 l -3,0 0,2 -3,-3 3,-3 0,2 2,0 0,-2 2,0 z M 8,4 C 8,6.2 6.2,8 4,8 1.8,8 0,6.2 0,4 0,1.8 1.8,0 4,0 6.2,0 8,1.8 8,4 Z M 1.5,5.66 5.66,1.5 C 5.18,1.19 4.61,1 4,1 2.34,1 1,2.34 1,4 1,4.61 1.19,5.17 1.5,5.66 Z M 7,4 C 7,3.39 6.81,2.83 6.5,2.34 L 2.34,6.5 C 2.82,6.81 3.39,7 4,7 5.66,7 7,5.66 7,4 Z'
 )
+type ChangedFile = WorkingDirectoryFileChange | CommittedFileChange
+
+interface ILineFilters {
+  readonly oldLineFilter: Array<number>
+  readonly newLineFilter: Array<number>
+}
+
+interface IFileContents {
+  readonly file: ChangedFile
+  readonly oldContents: Buffer
+  readonly newContents: Buffer
+}
+
+interface IFileTokens {
+  readonly oldTokens: ITokens
+  readonly newTokens: ITokens
+}
 
 async function getOldFileContent(
   repository: Repository,
-  file: WorkingDirectoryFileChange | CommittedFileChange
+  file: ChangedFile
 ): Promise<Buffer> {
   if (file.status === AppFileStatus.New) {
     return new Buffer(0)
@@ -107,7 +125,7 @@ async function getOldFileContent(
 
 async function getNewFileContent(
   repository: Repository,
-  file: WorkingDirectoryFileChange | CommittedFileChange
+  file: ChangedFile
 ): Promise<Buffer> {
   if (file.status === AppFileStatus.Deleted) {
     return new Buffer(0)
@@ -131,13 +149,38 @@ async function getNewFileContent(
   return assertNever(file, 'Unknown file change type')
 }
 
+async function getFileContents(
+  repo: Repository,
+  file: ChangedFile,
+  lineFilters: ILineFilters
+): Promise<IFileContents> {
+  const oldContentsPromise = lineFilters.oldLineFilter.length
+    ? getOldFileContent(repo, file)
+    : Promise.resolve(new Buffer(0))
+
+  const newContentsPromise = lineFilters.newLineFilter.length
+    ? getNewFileContent(repo, file)
+    : Promise.resolve(new Buffer(0))
+
+  const [oldContents, newContents] = await Promise.all([
+    oldContentsPromise.catch(e => {
+      log.error('Could not load old contents for syntax highlighting', e)
+      return new Buffer(0)
+    }),
+    newContentsPromise.catch(e => {
+      log.error('Could not load new contents for syntax highlighting', e)
+      return new Buffer(0)
+    }),
+  ])
+
+  return { file, oldContents, newContents }
+}
+
 /**
  * Figure out which lines we need to have tokenized in
  * both the old and new version of the file.
  */
-function getLineFilters(
-  diff: ITextDiff
-): { oldLineFilter: Array<number>; newLineFilter: Array<number> } {
+function getLineFilters(diff: ITextDiff): ILineFilters {
   const oldLineFilter = new Array<number>()
   const newLineFilter = new Array<number>()
 
@@ -181,6 +224,60 @@ function getLineFilters(
   }
 
   return { oldLineFilter, newLineFilter }
+}
+
+async function highlightContents(
+  contents: IFileContents,
+  tabSize: number,
+  lineFilters: ILineFilters
+): Promise<IFileTokens> {
+  const { file, oldContents, newContents } = contents
+
+  const [oldTokens, newTokens] = await Promise.all([
+    highlight(
+      oldContents.toString('utf8'),
+      Path.extname(file.oldPath || file.path),
+      tabSize,
+      lineFilters.oldLineFilter
+    ).catch(e => {
+      log.error('Highlighter worked failed for old contents', e)
+      return {}
+    }),
+    highlight(
+      newContents.toString('utf8'),
+      Path.extname(file.path),
+      tabSize,
+      lineFilters.newLineFilter
+    ).catch(e => {
+      log.error('Highlighter worked failed for new contents', e)
+      return {}
+    }),
+  ])
+
+  return { oldTokens, newTokens }
+}
+
+/**
+ * Checks to see if any key parameters in the props object that are used
+ * when performing highlighting has changed. This is used to determine
+ * whether highlighting should abort in between asynchronous operations
+ * due to some factor (like which file is currently selected) have changed
+ * and thus rendering the in-flight highlighting data useless.
+ */
+function highlightParametersEqual(newProps: IDiffProps, prevProps: IDiffProps) {
+  if (newProps === prevProps) {
+    return true
+  }
+
+  return (
+    newProps.file &&
+    prevProps.file &&
+    newProps.file.path === prevProps.file.path &&
+    newProps.file.oldPath === prevProps.file.oldPath &&
+    newProps.diff.kind === DiffType.Text &&
+    prevProps.diff.kind === DiffType.Text &&
+    newProps.diff.text === prevProps.diff.text
+  )
 }
 
 /** The props for the Diff component. */
@@ -348,86 +445,36 @@ export class Diff extends React.Component<IDiffProps, {}> {
     const diff = this.props.diff
     const repo = this.props.repository
 
-    if (!cm) {
+    if (!cm || diff.kind !== DiffType.Text) {
       return
     }
 
-    if (diff.kind !== DiffType.Text) {
-      return
-    }
+    // Store the current props to that we can see if anything
+    // changes from underneath us as we're making asynchronous
+    // operations that makes our data stale or useless.
+    const propsSnapshot = this.props
 
     if (!file) {
       return
     }
 
     const lineFilters = getLineFilters(diff)
+    const contents = await getFileContents(repo, file, lineFilters)
 
-    const oldContentsPromise = lineFilters.oldLineFilter.length
-      ? getOldFileContent(repo, file)
-      : Promise.resolve(new Buffer(0))
-
-    const newContentsPromise = lineFilters.newLineFilter.length
-      ? getNewFileContent(repo, file)
-      : Promise.resolve(new Buffer(0))
-
-    const [oldContents, newContents] = await Promise.all([
-      oldContentsPromise.catch(e => {
-        log.error('Could not load old contents for syntax highlighting', e)
-        return new Buffer(0)
-      }),
-      newContentsPromise.catch(e => {
-        log.error('Could not load new contents for syntax highlighting', e)
-        return new Buffer(0)
-      }),
-    ])
-
-    // Check to see whether something has changes since
-    // we started loading contents that makes our contents
-    // potentially stale.
-    if (
-      !this.props.file ||
-      this.props.file.path !== file.path ||
-      this.props.file.oldPath !== file.oldPath ||
-      this.props.diff.kind !== DiffType.Text ||
-      this.props.diff.text !== diff.text
-    ) {
+    if (!highlightParametersEqual(this.props, propsSnapshot)) {
       return
     }
 
-    const tabSize = cm.getOption('tabSize') || 4
+    const tsOpt = cm.getOption('tabSize')
+    const tabSize = typeof tsOpt === 'number' ? tsOpt : 4
 
-    const [oldTokens, newTokens] = await Promise.all([
-      highlight(
-        oldContents.toString('utf8'),
-        Path.extname(file.oldPath || file.path),
-        tabSize,
-        lineFilters.oldLineFilter
-      ),
-      highlight(
-        newContents.toString('utf8'),
-        Path.extname(file.path),
-        tabSize,
-        lineFilters.newLineFilter
-      ),
-    ])
-
-    // Check to see whether something has changes since
-    // we started highlighting that makes our tokens
-    // potentially stale.
-    if (
-      this.props.file.path !== file.path ||
-      this.props.file.oldPath !== file.oldPath ||
-      this.props.diff.kind !== DiffType.Text ||
-      this.props.diff.text !== diff.text
-    ) {
-      return
-    }
+    const tokens = await highlightContents(contents, tabSize, lineFilters)
 
     const spec: IDiffSyntaxModeSpec = {
       name: DiffSyntaxMode.ModeName,
       diff,
-      oldTokens,
-      newTokens,
+      oldTokens: tokens.oldTokens,
+      newTokens: tokens.newTokens,
     }
 
     cm.setOption('mode', spec)

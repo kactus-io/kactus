@@ -16,7 +16,8 @@ dependencies:
     - "~/.electron"
 
   pre:
-    - brew install node || brew upgrade node
+    - brew update
+    - brew upgrade node@8
 
   override:
     - npm install
