@@ -249,6 +249,7 @@ export type TFileOrSketchPartChange =
       id: string
       parts: Array<string>
       name: string
+      status?: AppFileStatus
     }
 
 export type TSketchPartChange = {

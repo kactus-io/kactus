@@ -10,6 +10,7 @@ import {
   FileType,
   TFileOrSketchPartChange,
   TSketchPartChange,
+  AppFileStatus,
 } from '../../models/status'
 import { DiffSelectionType } from '../../models/diff'
 import { CommitIdentity } from '../../models/commit-identity'
@@ -89,8 +90,22 @@ function getFileList(
     } else {
       const previousFile = files[i - 1] || {}
 
+      const conflicted = f.status === AppFileStatus.Conflicted
+
       f.parts.forEach((part, i, arr) => {
         if (part === (previousFile.parts || [])[i]) {
+          if (conflicted) {
+            const correspondingPart = prev.find(
+              p => p.type !== FileType.NormalFile && p.name === part
+            )
+            if (
+              correspondingPart &&
+              !correspondingPart.status &&
+              correspondingPart.type !== FileType.NormalFile
+            ) {
+              correspondingPart.status = AppFileStatus.Conflicted
+            }
+          }
           return
         }
         const parts = arr.slice(0, i)
@@ -115,6 +130,7 @@ function getFileList(
           id,
           name: part,
           parts,
+          status: conflicted ? AppFileStatus.Conflicted : undefined,
         })
       })
 
@@ -225,6 +241,7 @@ export class ChangesList extends React.Component<
           opened={file.opened}
           availableWidth={this.props.availableWidth}
           onOpenChanged={this.onOpenChanged}
+          conflicted={file.status === AppFileStatus.Conflicted}
         />
       )
     }
