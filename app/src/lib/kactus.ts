@@ -11,6 +11,7 @@ import {
 import { getUserDataPath, getTempPath } from '../ui/lib/app-proxy'
 import { Repository } from '../models/repository'
 import { Account } from '../models/account'
+import { Image } from '../models/diff'
 import { IGitAccount } from './git/authentication'
 import { getDotComAPIEndpoint } from './api'
 import { sketchtoolPath, runPluginCommand, getSketchVersion } from './sketch'
@@ -20,6 +21,7 @@ export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string }
 export type IKactusFile = _IKactusFile & {
   isParsing: boolean
   isImporting: boolean
+  preview?: Image
 }
 
 interface IKactusStatusResult {

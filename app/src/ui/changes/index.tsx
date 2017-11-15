@@ -47,6 +47,10 @@ export class Changes extends React.Component<IChangesProps, {}> {
     this.props.dispatcher.openSketchFile(file)
   }
 
+  private onGetPreview = (file: IKactusFile) => {
+    this.props.dispatcher.getSketchFilePreview(this.props.repository, file)
+  }
+
   public render() {
     const diff = this.props.diff
     const file = this.props.file
@@ -57,6 +61,7 @@ export class Changes extends React.Component<IChangesProps, {}> {
       return (
         <SketchFileView
           sketchFile={sketchFile}
+          onGetPreview={this.onGetPreview}
           onExport={this.onSketchParse}
           onImport={this.onSketchImport}
           onOpenSketchFile={this.onOpenSketchFile}

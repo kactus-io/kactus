@@ -398,7 +398,7 @@ async function getSketchDiff(
         sketchPath,
         kactusFile,
         repository,
-        file,
+        file.path,
         type,
         _type ? Path.basename(file.id) : undefined
       )
@@ -730,11 +730,11 @@ function getImagePath(
   return path
 }
 
-async function getWorkingDirectorySketchPreview(
+export async function getWorkingDirectorySketchPreview(
   sketchPath: string,
   sketchFile: IKactusFile,
   repository: Repository,
-  file: FileChange,
+  file: string,
   type: IKactusFileType,
   name?: string
 ) {
@@ -748,8 +748,7 @@ async function getWorkingDirectorySketchPreview(
     sketchFile.id
   )
 
-  const path = getImagePath(storagePath, file.path, type)
-  console.log(path)
+  const path = getImagePath(storagePath, file, type)
 
   if (await pathExists(path)) {
     return getImage(path)
@@ -760,7 +759,7 @@ async function getWorkingDirectorySketchPreview(
   return generatePreview(
     sketchPath,
     sketchFilePath,
-    file.path,
+    file,
     storagePath,
     type,
     name

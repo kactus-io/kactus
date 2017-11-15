@@ -35,6 +35,7 @@ import {
   DiffSelectionType,
   DiffType,
   IDiff,
+  IKactusFileType,
 } from '../../models/diff'
 import {
   matchGitHubRepository,
@@ -104,6 +105,7 @@ import {
   checkoutBranch,
   getDefaultRemote,
   formatAsLocalRef,
+  getWorkingDirectorySketchPreview,
 } from '../git'
 
 import { launchExternalEditor } from '../editors'
@@ -3501,5 +3503,33 @@ export class AppStore {
     }
 
     return gitStore.addUpstreamRemoteIfNeeded()
+  }
+
+  public async _getSketchFilePreview(
+    repository: Repository,
+    sketchFile: IKactusFile
+  ): Promise<void> {
+    const image = await getWorkingDirectorySketchPreview(
+      this.sketchPath,
+      sketchFile,
+      repository,
+      sketchFile.path + '.sketch',
+      IKactusFileType.Document
+    )
+    this.updateKactusState(repository, state => {
+      return {
+        files: state.files.map(
+          f =>
+            f.id === sketchFile.id
+              ? {
+                  ...f,
+                  preview: image,
+                }
+              : f
+        ),
+      }
+    })
+
+    this.emitUpdate()
   }
 }

@@ -1348,4 +1348,11 @@ export class Dispatcher {
   public ignoreExistingUpstreamRemote(repository: Repository): Promise<void> {
     return this.appStore._ignoreExistingUpstreamRemote(repository)
   }
+
+  public getSketchFilePreview(
+    repository: Repository,
+    sketchFile: IKactusFile
+  ): Promise<void> {
+    return this.appStore._getSketchFilePreview(repository, sketchFile)
+  }
 }

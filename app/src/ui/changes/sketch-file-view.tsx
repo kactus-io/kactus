@@ -6,6 +6,7 @@ import { IKactusFile } from '../../lib/kactus'
 import { Loading } from '../lib/loading'
 
 interface ISketchFileViewProps {
+  readonly onGetPreview: (file: IKactusFile) => void
   readonly onExport: (file: IKactusFile) => void
   readonly onImport: (file: IKactusFile) => void
   readonly onOpenSketchFile: (file: IKactusFile) => void
@@ -17,6 +18,19 @@ export class SketchFileView extends React.Component<
   ISketchFileViewProps,
   Readonly<{}>
 > {
+  constructor(props: ISketchFileViewProps) {
+    super(props)
+    if (!props.sketchFile.preview) {
+      props.onGetPreview(props.sketchFile)
+    }
+  }
+
+  componentWillReceiveProps(nextProps: ISketchFileViewProps) {
+    if (!nextProps.sketchFile.preview) {
+      nextProps.onGetPreview(nextProps.sketchFile)
+    }
+  }
+
   private handleOpen = () => {
     this.props.onOpenSketchFile(this.props.sketchFile)
   }
@@ -30,8 +44,15 @@ export class SketchFileView extends React.Component<
   }
 
   public render() {
+    const preview = this.props.sketchFile.preview
+
     return (
       <UiView className="panel blankslate" id="blank-slate">
+        <div className="preview">
+          {preview && (
+            <img src={`data:${preview.mediaType};base64,${preview.contents}`} />
+          )}
+        </div>
         <div className="title">{this.props.sketchFile.id}</div>
         <div className="content">
           <div className="callout">
