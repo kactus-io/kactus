@@ -1,6 +1,11 @@
 {
   "unreleased": [],
   "releases": {
+    "0.2.14": [
+      "[Fixed] Could not unselect a changed file",
+      "[Improved] Optimize SVG to reduce the bundle size and render time",
+      "[Improved] add preview to the sketch file view"
+    ],
     "0.2.13": [
       "[Fixed] A bug breaking Sketch file when using shared text styles in shared pages"
     ],
