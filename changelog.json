@@ -1,6 +1,12 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.0": [
+      "[New] Add a view to fix conflicts",
+      "[Improved] Safer regeneration of sketch file",
+      "[Improved] Show conflicts icon all the way up (to make sure you don't commit conflicts because the file is folded)",
+      "[Fixed] Fix typo (refound -> refund)"
+    ],
     "0.2.14": [
       "[Fixed] Could not unselect a changed file",
       "[Improved] Optimize SVG to reduce the bundle size and render time",
