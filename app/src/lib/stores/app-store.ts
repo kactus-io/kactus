@@ -1860,7 +1860,9 @@ export class AppStore {
         await Promise.all(
           kactus.files
             .filter(f => f.parsed)
-            .map(f => importSketchFile(repository, this.sketchPath, f, kactus.config))
+            .map(f =>
+              importSketchFile(repository, this.sketchPath, f, kactus.config)
+            )
         )
       }
     } finally {
@@ -2378,7 +2380,12 @@ export class AppStore {
               kactus.files
                 .filter(f => f.parsed)
                 .map(f =>
-                  importSketchFile(repository, this.sketchPath, f, kactus.config)
+                  importSketchFile(
+                    repository,
+                    this.sketchPath,
+                    f,
+                    kactus.config
+                  )
                 )
             )
           } catch (err) {
@@ -2545,7 +2552,9 @@ export class AppStore {
     await Promise.all(
       kactus.files
         .filter(f => f.parsed)
-        .map(f => importSketchFile(repository, this.sketchPath, f, kactus.config))
+        .map(f =>
+          importSketchFile(repository, this.sketchPath, f, kactus.config)
+        )
     )
 
     await this._refreshRepository(repository)
@@ -2762,7 +2771,9 @@ export class AppStore {
       await Promise.all(
         kactus.files
           .filter(f => f.parsed)
-          .map(f => importSketchFile(repository, this.sketchPath, f, kactus.config))
+          .map(f =>
+            importSketchFile(repository, this.sketchPath, f, kactus.config)
+          )
       )
     } catch (err) {
       // probably conflicts

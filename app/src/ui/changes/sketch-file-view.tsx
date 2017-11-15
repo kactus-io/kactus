@@ -18,14 +18,14 @@ export class SketchFileView extends React.Component<
   ISketchFileViewProps,
   Readonly<{}>
 > {
-  constructor(props: ISketchFileViewProps) {
+  public constructor(props: ISketchFileViewProps) {
     super(props)
     if (!props.sketchFile.preview) {
       props.onGetPreview(props.sketchFile)
     }
   }
 
-  componentWillReceiveProps(nextProps: ISketchFileViewProps) {
+  public componentWillReceiveProps(nextProps: ISketchFileViewProps) {
     if (!nextProps.sketchFile.preview) {
       nextProps.onGetPreview(nextProps.sketchFile)
     }
