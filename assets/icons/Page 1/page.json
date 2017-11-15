@@ -34,6 +34,10 @@
   "layers": [
     {
       "class": "artboard",
+      "id": "B12FBA0B-76A6-47AC-85A9-13C4058D5F81"
+    },
+    {
+      "class": "artboard",
       "id": "7039527D-185E-495A-9F5D-834F920048E7"
     },
     {
@@ -47,6 +51,18 @@
     {
       "class": "artboard",
       "id": "A9B27BF6-B8C1-4FFD-A120-AF8269749E58"
+    },
+    {
+      "class": "artboard",
+      "id": "5C2AB4E3-0F47-4FD7-98EF-7727BAA2D661"
+    },
+    {
+      "class": "artboard",
+      "id": "AF9E259A-B321-49C1-BA52-554124B061AB"
+    },
+    {
+      "class": "artboard",
+      "id": "C0457993-14CF-4643-A166-009B22D41F7D"
     }
   ],
   "name": "Page 1",
