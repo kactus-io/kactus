@@ -935,7 +935,7 @@ export async function unlockKactusFullAccess(
 
 export async function cancelKactusSubscription(
   account: Account,
-  options: { refound: boolean }
+  options: { refund: boolean }
 ): Promise<boolean> {
   try {
     const path = `${KactusAPIEndpoint}/unsubscribe`
@@ -947,7 +947,7 @@ export async function cancelKactusSubscription(
       method: 'delete',
       body: JSON.stringify({
         githubId: account.id,
-        refound: options.refound,
+        refund: options.refund,
       }),
     })
     const res = await parsedResponse<{ ok: boolean }>(response)

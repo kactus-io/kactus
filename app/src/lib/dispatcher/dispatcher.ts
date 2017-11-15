@@ -1181,7 +1181,7 @@ export class Dispatcher {
 
   public async cancelKactusSubscription(
     user: Account,
-    options: { refound: boolean }
+    options: { refund: boolean }
   ): Promise<void> {
     try {
       await this.appStore._cancelKactusSubscription(user, options)

@@ -3055,7 +3055,7 @@ export class AppStore {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _cancelKactusSubscription(
     user: Account,
-    options: { refound: boolean }
+    options: { refund: boolean }
   ): Promise<void> {
     this.isCancellingKactusFullAccess = true
     this.emitUpdate()

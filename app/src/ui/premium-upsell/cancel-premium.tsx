@@ -17,12 +17,12 @@ interface ICancelPremiumProps {
 
 export class CancelPremium extends React.Component<
   ICancelPremiumProps,
-  { refound: boolean }
+  { refund: boolean }
 > {
   public constructor(props: ICancelPremiumProps) {
     super(props)
     this.state = {
-      refound: false,
+      refund: false,
     }
   }
   public componentWillUpdate(nextProps: ICancelPremiumProps) {
@@ -36,7 +36,7 @@ export class CancelPremium extends React.Component<
 
   private onCancelSubscription = () => {
     this.props.dispatcher.cancelKactusSubscription(this.props.user, {
-      refound: this.state.refound,
+      refund: this.state.refund,
     })
   }
 
@@ -89,9 +89,9 @@ export class CancelPremium extends React.Component<
           </Row>
           <Row>
             <Checkbox
-              label="I want to cancel immediately and a refound for the rest of the period (as opposed to cancel at the end of the period)"
-              value={this.state.refound ? CheckboxValue.On : CheckboxValue.Off}
-              onChange={this.onRefoundChanged}
+              label="I want to cancel immediately and a refund for the rest of the period (as opposed to cancel at the end of the period)"
+              value={this.state.refund ? CheckboxValue.On : CheckboxValue.Off}
+              onChange={this.onRefundChanged}
             />
           </Row>
         </DialogContent>
@@ -108,9 +108,9 @@ export class CancelPremium extends React.Component<
     )
   }
 
-  private onRefoundChanged = (event: React.FormEvent<HTMLInputElement>) => {
+  private onRefundChanged = (event: React.FormEvent<HTMLInputElement>) => {
     const value = event.currentTarget.checked
 
-    this.setState({ refound: value })
+    this.setState({ refund: value })
   }
 }
