@@ -31,7 +31,6 @@ interface IRepositoryProps {
   readonly commitSummaryWidth: number
   readonly issuesStore: IssuesStore
   readonly gitHubUserStore: GitHubUserStore
-  readonly showAdvancedDiffs: boolean
   readonly onViewCommitOnGitHub: (SHA: string) => void
   readonly imageDiffType: ImageDiffType
   readonly askForConfirmationOnDiscardChanges: boolean
@@ -203,7 +202,6 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
             repository={this.props.repository}
             dispatcher={this.props.dispatcher}
             imageDiffType={this.props.imageDiffType}
-            showAdvancedDiffs={this.props.showAdvancedDiffs}
             file={selectedFile}
             selectedSketchPartID={selectedSketchPartID}
             diff={diff}
@@ -217,7 +215,6 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
         <History
           repository={this.props.repository}
           imageDiffType={this.props.imageDiffType}
-          showAdvancedDiffs={this.props.showAdvancedDiffs}
           dispatcher={this.props.dispatcher}
           history={this.props.state.historyState}
           emoji={this.props.emoji}

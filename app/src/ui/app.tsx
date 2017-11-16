@@ -1658,7 +1658,6 @@ export class App extends React.Component<IAppProps, IAppState> {
         <RepositoryView
           repository={selectedState.repository}
           imageDiffType={this.state.imageDiffType}
-          showAdvancedDiffs={this.state.showAdvancedDiffs}
           state={selectedState.state}
           dispatcher={this.props.dispatcher}
           emoji={this.state.emoji}

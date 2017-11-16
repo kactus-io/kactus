@@ -168,9 +168,6 @@ const confirmDiscardChangesDefault: boolean = true
 const confirmRepoRemovalKey: string = 'confirmRepoRemoval'
 const confirmDiscardChangesKey: string = 'confirmDiscardChanges'
 
-const showAdvancedDiffsDefault: boolean = false
-const showAdvancedDiffsKey: string = 'showAdvancedDiffs'
-
 const sketchPathDefault: string = SKETCH_PATH
 const sketchPathKey: string = 'sketchPathType'
 
@@ -269,7 +266,6 @@ export class AppStore {
     | ((repository: Repository | null) => void)
     | null = null
 
-  private showAdvancedDiffs: boolean = showAdvancedDiffsDefault
   private isUnlockingKactusFullAccess: boolean = false
   private isCancellingKactusFullAccess: boolean = false
   private sketchVersion: string | null | undefined
@@ -619,7 +615,6 @@ export class AppStore {
       titleBarStyle: this.showWelcomeFlow ? 'light' : 'dark',
       highlightAccessKeys: this.highlightAccessKeys,
       isUpdateAvailableBannerVisible: this.isUpdateAvailableBannerVisible,
-      showAdvancedDiffs: this.showAdvancedDiffs,
       askForConfirmationOnRepositoryRemoval: this.confirmRepoRemoval,
       askForConfirmationOnDiscardChanges: this.confirmDiscardChanges,
       selectedExternalEditor: this.selectedExternalEditor,
@@ -1107,13 +1102,6 @@ export class AppStore {
     this.selectedShell = shellValue ? parseShell(shellValue) : DefaultShell
 
     this.updatePreferredAppMenuItemLabels()
-
-    const showAdvancedDiffsValue = localStorage.getItem(showAdvancedDiffsKey)
-
-    this.showAdvancedDiffs =
-      showAdvancedDiffsValue === null
-        ? showAdvancedDiffsDefault
-        : showAdvancedDiffsValue === '1'
 
     const imageDiffTypeValue = localStorage.getItem(imageDiffTypeKey)
 
@@ -3009,17 +2997,6 @@ export class AppStore {
     }
 
     return result
-  }
-
-  public _toggleAdvancedDiffs(): Promise<void> {
-    this.showAdvancedDiffs = !this.showAdvancedDiffs
-    localStorage.setItem(
-      showAdvancedDiffsKey,
-      this.showAdvancedDiffs ? '1' : '0'
-    )
-    this.emitUpdate()
-
-    return Promise.resolve()
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */

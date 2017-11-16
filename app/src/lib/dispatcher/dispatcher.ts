@@ -1146,10 +1146,6 @@ export class Dispatcher {
     }
   }
 
-  public toggleAdvancedDiffs(): Promise<void> {
-    return this.appStore._toggleAdvancedDiffs()
-  }
-
   /** create a new Sketch File. */
   public createNewSketchFile(
     repository: Repository,

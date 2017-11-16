@@ -81,15 +81,51 @@ export enum IKactusFileType {
   Style,
 }
 
-export interface ISketchDiff {
-  readonly kind: DiffType.Sketch
+export interface IVisualTextDiffData {
+  /**
+   * The previous image, if the file was modified or deleted
+   *
+   * Will be undefined for an added image
+   */
+  readonly previous?: Image
+  /**
+   * The current image, if the file was added or modified
+   *
+   * Will be undefined for a deleted image
+   */
+  readonly current?: Image
+
+  /** The unified text diff - including headers and context */
+  readonly text?: string
+  /** The diff contents organized by hunk - how the git CLI outputs to the caller */
+  readonly hunks?: ReadonlyArray<DiffHunk>
+}
+
+export interface ITextDiffData {
   /** The unified text diff - including headers and context */
   readonly text: string
   /** The diff contents organized by hunk - how the git CLI outputs to the caller */
   readonly hunks: ReadonlyArray<DiffHunk>
-  readonly sketchFile: IKactusFile
+}
+
+export interface IImageDiffData {
+  /**
+   * The previous image, if the file was modified or deleted
+   *
+   * Will be undefined for an added image
+   */
   readonly previous?: Image
+  /**
+   * The current image, if the file was added or modified
+   *
+   * Will be undefined for a deleted image
+   */
   readonly current?: Image
+}
+
+export interface ISketchDiff extends ITextDiffData, IImageDiffData {
+  readonly kind: DiffType.Sketch
+  readonly sketchFile: IKactusFile
   readonly type: IKactusFileType
 }
 
@@ -115,30 +151,14 @@ export function parseLineEndingText(text: string): LineEnding | null {
   }
 }
 
-export interface ITextDiff {
+export interface ITextDiff extends ITextDiffData {
   readonly kind: DiffType.Text
-  /** The unified text diff - including headers and context */
-  readonly text: string
-  /** The diff contents organized by hunk - how the git CLI outputs to the caller */
-  readonly hunks: ReadonlyArray<DiffHunk>
   /** A warning from Git that the line endings have changed in this file and will affect the commit */
   readonly lineEndingsChange?: LineEndingsChange
 }
 
-export interface IImageDiff {
+export interface IImageDiff extends IImageDiffData {
   readonly kind: DiffType.Image
-  /**
-   * The previous image, if the file was modified or deleted
-   *
-   * Will be undefined for an added image
-   */
-  readonly previous?: Image
-  /**
-   * The current image, if the file was added or modified
-   *
-   * Will be undefined for a deleted image
-   */
-  readonly current?: Image
 }
 
 export interface IBinaryDiff {

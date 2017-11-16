@@ -50,6 +50,9 @@ export enum ImageDiffType {
 
   /** Highlight differences. */
   Difference,
+
+  /** Text differences for SVGs and sketch files. */
+  Text,
 }
 
 export type PossibleSelections =
@@ -167,9 +170,6 @@ export interface IAppState {
 
   /** What type of visual diff mode we should use to compare images */
   readonly imageDiffType: ImageDiffType
-
-  /** Whether we should show the text diffs for a sketch file */
-  readonly showAdvancedDiffs: boolean
 
   readonly isUnlockingKactusFullAccess: boolean
   readonly isCancellingKactusFullAccess: boolean

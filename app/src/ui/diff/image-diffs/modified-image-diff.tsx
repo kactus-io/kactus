@@ -1,7 +1,7 @@
 import * as React from 'react'
 
 import { ImageDiffType } from '../../../lib/app-state'
-import { Image } from '../../../models/diff'
+import { Image, DiffHunk } from '../../../models/diff'
 import { TabBar, TabBarType } from '../../tab-bar'
 import { TwoUp } from './two-up'
 import { DifferenceBlend } from './difference-blend'
@@ -9,10 +9,13 @@ import { OnionSkin } from './onion-skin'
 import { Swipe } from './swipe'
 import { assertNever } from '../../../lib/fatal-error'
 import { ISize, getMaxFitSize } from './sizing'
+import { TextDiff, ITextDiffUtilsProps } from '../text-diff'
 
-interface IModifiedImageDiffProps {
+interface IModifiedImageDiffProps extends ITextDiffUtilsProps {
   readonly previous: Image
   readonly current: Image
+  readonly text?: string
+  readonly hunks?: ReadonlyArray<DiffHunk>
   readonly diffType: ImageDiffType
   readonly onChangeDiffType: (type: ImageDiffType) => void
 }
@@ -156,6 +159,7 @@ export class ModifiedImageDiff extends React.Component<
           <span>Swipe</span>
           <span>Onion Skin</span>
           <span>Difference</span>
+          {this.props.text ? <span>Text</span> : null}
         </TabBar>
       </div>
     )
@@ -185,6 +189,30 @@ export class ModifiedImageDiff extends React.Component<
 
       case ImageDiffType.Difference:
         return <DifferenceBlend {...this.getCommonProps(maxSize)} />
+
+      case ImageDiffType.Text:
+        if (this.props.text && this.props.hunks) {
+          return (
+            <TextDiff
+              repository={this.props.repository}
+              readOnly={this.props.readOnly}
+              file={this.props.file}
+              text={this.props.text}
+              hunks={this.props.hunks}
+              onIncludeChanged={this.props.onIncludeChanged}
+            />
+          )
+        }
+        return (
+          <TwoUp
+            {...this.getCommonProps(maxSize)}
+            containerWidth={
+              (this.state.containerSize && this.state.containerSize.width) || 0
+            }
+            previousImageSize={this.state.previousImageSize}
+            currentImageSize={this.state.currentImageSize}
+          />
+        )
 
       default:
         return assertNever(type, `Unknown diff type: ${type}`)

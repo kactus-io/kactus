@@ -19,7 +19,6 @@ interface IChangesProps {
   readonly file: WorkingDirectoryFileChange | null
   readonly diff: IDiff | null
   readonly dispatcher: Dispatcher
-  readonly showAdvancedDiffs: boolean
   readonly imageDiffType: ImageDiffType
   readonly loadingDiff: boolean
   readonly selectedSketchPartID: string | null
@@ -84,7 +83,6 @@ export class Changes extends React.Component<IChangesProps, {}> {
             <Diff
               repository={this.props.repository}
               imageDiffType={this.props.imageDiffType}
-              showAdvancedDiffs={this.props.showAdvancedDiffs}
               file={file}
               readOnly={false}
               onIncludeChanged={this.onDiffLineIncludeChanged}
@@ -104,7 +102,6 @@ export class Changes extends React.Component<IChangesProps, {}> {
             <Diff
               repository={this.props.repository}
               imageDiffType={this.props.imageDiffType}
-              showAdvancedDiffs={this.props.showAdvancedDiffs}
               file={file}
               readOnly={false}
               onIncludeChanged={this.onDiffLineIncludeChanged}
