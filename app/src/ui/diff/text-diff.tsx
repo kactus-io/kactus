@@ -276,7 +276,7 @@ export interface ITextDiffUtilsProps {
   readonly readOnly: boolean
 
   /** The file whose diff should be displayed. */
-  readonly file: WorkingDirectoryFileChange | CommittedFileChange | null
+  readonly file: ChangedFile | null
 
   /** Called when the includedness of lines or a range of lines has changed. */
   readonly onIncludeChanged?: (diffSelection: DiffSelection) => void
