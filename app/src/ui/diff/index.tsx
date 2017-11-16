@@ -152,7 +152,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
   private renderContent() {
     const diff = this.props.diff
 
-    if (diff.kind === DiffType.Image) {
+    if (diff.kind === DiffType.Image || diff.kind === DiffType.VisualText) {
       return this.renderImage(diff)
     }
 

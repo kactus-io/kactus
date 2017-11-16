@@ -49,6 +49,8 @@ export class DiffHunk {
 export enum DiffType {
   /** changes to a text file, which may be partially selected for commit */
   Text,
+  /** changes to files of a known format, which can be viewed as images or text in the app */
+  VisualText,
   /** changes to files of a known format, which can be viewed in the app */
   Image,
   /** changes to an unknown file format, which Git is unable to present in a human-friendly format */
@@ -106,6 +108,8 @@ export interface ITextDiffData {
   readonly text: string
   /** The diff contents organized by hunk - how the git CLI outputs to the caller */
   readonly hunks: ReadonlyArray<DiffHunk>
+  /** A warning from Git that the line endings have changed in this file and will affect the commit */
+  readonly lineEndingsChange?: LineEndingsChange
 }
 
 export interface IImageDiffData {
@@ -153,12 +157,14 @@ export function parseLineEndingText(text: string): LineEnding | null {
 
 export interface ITextDiff extends ITextDiffData {
   readonly kind: DiffType.Text
-  /** A warning from Git that the line endings have changed in this file and will affect the commit */
-  readonly lineEndingsChange?: LineEndingsChange
 }
 
 export interface IImageDiff extends IImageDiffData {
   readonly kind: DiffType.Image
+}
+
+export interface IVisualTextDiff extends ITextDiffData, IImageDiffData {
+  readonly kind: DiffType.VisualText
 }
 
 export interface IBinaryDiff {
@@ -178,6 +184,7 @@ export interface IDiffTooLarge {
 /** The union of diff types that can be rendered in Kactus */
 export type IDiff =
   | ITextDiff
+  | IVisualTextDiff
   | IImageDiff
   | IBinaryDiff
   | ISketchDiff
