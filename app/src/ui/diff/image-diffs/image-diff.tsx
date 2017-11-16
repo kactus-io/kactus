@@ -5,7 +5,8 @@ import { DeletedImageDiff } from './deleted-image-diff'
 
 import { ImageDiffType } from '../../../lib/app-state'
 import { Image, DiffHunk } from '../../../models/diff'
-import { ITextDiffUtilsProps } from '../text-diff'
+import { TextDiff, ITextDiffUtilsProps } from '../text-diff'
+import { TabBar, TabBarType } from '../../tab-bar'
 
 /** The props for the Diff component. */
 interface IDiffProps extends ITextDiffUtilsProps {
@@ -24,57 +25,92 @@ interface IDiffProps extends ITextDiffUtilsProps {
 
 /** A component which renders a diff for a file. */
 export class ImageDiff extends React.Component<IDiffProps, {}> {
-  public render() {
-    const { current, previous } = this.props
-    if (current && previous) {
+  private isModified = () => {
+    return this.props.current && this.props.previous
+  }
+  private onChangeDiffType = (index: number) => {
+    if (this.isModified()) {
+      this.props.onChangeImageDiffType(index)
+      return
+    }
+    this.props.onChangeImageDiffType(
+      index === 1 ? ImageDiffType.Text : ImageDiffType.TwoUp
+    )
+  }
+
+  private renderContent() {
+    if (
+      this.props.imageDiffType === ImageDiffType.Text &&
+      this.props.text &&
+      this.props.hunks
+    ) {
+      return (
+        <TextDiff
+          repository={this.props.repository}
+          readOnly={this.props.readOnly}
+          file={this.props.file}
+          text={this.props.text}
+          hunks={this.props.hunks}
+          onIncludeChanged={this.props.onIncludeChanged}
+        />
+      )
+    }
+    if (this.props.current && this.props.previous) {
       return (
         <ModifiedImageDiff
-          onChangeDiffType={this.props.onChangeImageDiffType}
           diffType={this.props.imageDiffType}
-          current={current}
-          previous={previous}
-          text={this.props.text}
-          hunks={this.props.hunks}
-          repository={this.props.repository}
-          file={this.props.file}
-          readOnly={this.props.readOnly}
-          onIncludeChanged={this.props.onIncludeChanged}
+          current={this.props.current}
+          previous={this.props.previous}
         />
       )
     }
 
-    if (current) {
-      return (
-        <NewImageDiff
-          onChangeDiffType={this.props.onChangeImageDiffType}
-          diffType={this.props.imageDiffType}
-          current={current}
-          text={this.props.text}
-          hunks={this.props.hunks}
-          repository={this.props.repository}
-          file={this.props.file}
-          readOnly={this.props.readOnly}
-          onIncludeChanged={this.props.onIncludeChanged}
-        />
-      )
+    if (this.props.current) {
+      return <NewImageDiff current={this.props.current} />
     }
 
-    if (previous) {
-      return (
-        <DeletedImageDiff
-          onChangeDiffType={this.props.onChangeImageDiffType}
-          diffType={this.props.imageDiffType}
-          previous={previous}
-          text={this.props.text}
-          hunks={this.props.hunks}
-          repository={this.props.repository}
-          file={this.props.file}
-          readOnly={this.props.readOnly}
-          onIncludeChanged={this.props.onIncludeChanged}
-        />
-      )
+    if (this.props.previous) {
+      return <DeletedImageDiff previous={this.props.previous} />
     }
 
     return null
+  }
+
+  public render() {
+    const isModified = this.isModified()
+    const shouldRenderTabBar = this.props.text || isModified
+    let tabs
+    if (isModified) {
+      tabs = [
+        <span key="2-up">2-up</span>,
+        <span key="swipe">Swipe</span>,
+        <span key="onion">Onion Skin</span>,
+        <span key="diff">Difference</span>,
+      ]
+    } else {
+      tabs = [<span key="visual">Visual</span>]
+    }
+    if (this.props.text) {
+      tabs.push(<span key="text">Text</span>)
+    }
+    return (
+      <div className="panel image" id="diff">
+        {this.renderContent()}
+
+        {shouldRenderTabBar ? (
+          <TabBar
+            selectedIndex={
+              isModified
+                ? this.props.imageDiffType
+                : this.props.imageDiffType === ImageDiffType.Text ? 1 : 0
+            }
+            onTabClicked={this.onChangeDiffType}
+            type={TabBarType.Switch}
+          >
+            {tabs}
+          </TabBar>
+        ) : null}
+      </div>
+    )
   }
 }

@@ -1,23 +1,18 @@
 import * as React from 'react'
 
 import { ImageDiffType } from '../../../lib/app-state'
-import { Image, DiffHunk } from '../../../models/diff'
-import { TabBar, TabBarType } from '../../tab-bar'
+import { Image } from '../../../models/diff'
 import { TwoUp } from './two-up'
 import { DifferenceBlend } from './difference-blend'
 import { OnionSkin } from './onion-skin'
 import { Swipe } from './swipe'
 import { assertNever } from '../../../lib/fatal-error'
 import { ISize, getMaxFitSize } from './sizing'
-import { TextDiff, ITextDiffUtilsProps } from '../text-diff'
 
-interface IModifiedImageDiffProps extends ITextDiffUtilsProps {
+interface IModifiedImageDiffProps {
   readonly previous: Image
   readonly current: Image
-  readonly text?: string
-  readonly hunks?: ReadonlyArray<DiffHunk>
   readonly diffType: ImageDiffType
-  readonly onChangeDiffType: (type: ImageDiffType) => void
 }
 
 export interface ICommonImageDiffProperties {
@@ -146,29 +141,11 @@ export class ModifiedImageDiff extends React.Component<
   }
 
   public render() {
-    return (
-      <div className="panel image" id="diff">
-        {this.renderCurrentDiffType()}
-
-        <TabBar
-          selectedIndex={this.props.diffType}
-          onTabClicked={this.props.onChangeDiffType}
-          type={TabBarType.Switch}
-        >
-          <span>2-up</span>
-          <span>Swipe</span>
-          <span>Onion Skin</span>
-          <span>Difference</span>
-          {this.props.text ? <span>Text</span> : null}
-        </TabBar>
-      </div>
-    )
-  }
-
-  private renderCurrentDiffType() {
     const maxSize = this.getMaxSize()
     const type = this.props.diffType
     switch (type) {
+      case ImageDiffType.Text:
+      // means that we had a visual text diff set on Text but now it's not available. Just default to TwoUp
       case ImageDiffType.TwoUp:
         return (
           <TwoUp
@@ -189,30 +166,6 @@ export class ModifiedImageDiff extends React.Component<
 
       case ImageDiffType.Difference:
         return <DifferenceBlend {...this.getCommonProps(maxSize)} />
-
-      case ImageDiffType.Text:
-        if (this.props.text && this.props.hunks) {
-          return (
-            <TextDiff
-              repository={this.props.repository}
-              readOnly={this.props.readOnly}
-              file={this.props.file}
-              text={this.props.text}
-              hunks={this.props.hunks}
-              onIncludeChanged={this.props.onIncludeChanged}
-            />
-          )
-        }
-        return (
-          <TwoUp
-            {...this.getCommonProps(maxSize)}
-            containerWidth={
-              (this.state.containerSize && this.state.containerSize.width) || 0
-            }
-            previousImageSize={this.state.previousImageSize}
-            currentImageSize={this.state.currentImageSize}
-          />
-        )
 
       default:
         return assertNever(type, `Unknown diff type: ${type}`)
