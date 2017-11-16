@@ -648,8 +648,8 @@ async function generatePreview(
   type: IKactusFileType,
   name?: string
 ) {
-  let path: string
   try {
+    let path: string
     if (type === IKactusFileType.Document) {
       path = await generateDocumentPreview(
         sketchPath,
@@ -715,11 +715,12 @@ async function generatePreview(
     } else {
       return assertNever(type, `Unknown KactusFileType: ${type}`)
     }
+    const image = await getImage(path)
+    return image
   } catch (e) {
     log.error('Failed to generate the preview for ' + file, e)
     return Promise.resolve(undefined)
   }
-  return getImage(path)
 }
 
 function getImagePath(
