@@ -1,5 +1,5 @@
 import { GitProcess } from 'dugite'
-import * as GitPerf from '../../ui/lib/git-perf'
+import * as Perf from '../../ui/lib/perf'
 
 type ProcessOutput = {
   output: Buffer
@@ -27,7 +27,7 @@ export function spawnAndComplete(
   stdOutMaxLength?: number
 ): Promise<ProcessOutput> {
   const commandName = `${name}: git ${args.join(' ')}`
-  return GitPerf.measure(
+  return Perf.measure(
     commandName,
     () =>
       new Promise<ProcessOutput>((resolve, reject) => {

@@ -1,5 +1,5 @@
 import { assertNever } from '../fatal-error'
-import * as GitPerf from '../../ui/lib/git-perf'
+import * as Perf from '../../ui/lib/perf'
 
 import {
   GitProcess,
@@ -112,7 +112,7 @@ export async function git(
 
   const commandName = `${name}: git ${args.join(' ')}`
 
-  const result = await GitPerf.measure(commandName, () =>
+  const result = await Perf.measure(commandName, () =>
     GitProcess.exec(args, path, options)
   )
 

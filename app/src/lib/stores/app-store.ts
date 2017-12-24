@@ -1224,6 +1224,8 @@ export class AppStore {
       // parse the updated files
       const modifiedFiles = kactusStatus.files.filter(f => {
         const oldFile = oldFiles.find(of => of.id === f.id)
+        console.log(f.lastModified)
+        console.log(oldFile && oldFile.lastModified)
         return (
           f.lastModified &&
           (!oldFile || oldFile.lastModified !== f.lastModified)
