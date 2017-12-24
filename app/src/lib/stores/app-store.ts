@@ -107,6 +107,7 @@ import {
   formatAsLocalRef,
   getWorkingDirectorySketchPreview,
   checkoutFileWithOption,
+  getMergeBase,
 } from '../git'
 
 import { launchExternalEditor } from '../editors'
@@ -137,6 +138,16 @@ import { PullRequestStore } from './pull-request-store'
 import { Owner } from '../../models/owner'
 import { PullRequest } from '../../models/pull-request'
 import { PullRequestUpdater } from './helpers/pull-request-updater'
+import * as QueryString from 'querystring'
+
+/**
+ * Enum used by fetch to determine if
+ * a fetch was initiated by the backgroundFetcher
+ */
+export enum FetchType {
+  BackgroundTask,
+  UserInitiatedTask,
+}
 
 function findNext(
   array: ReadonlyArray<string>,
@@ -177,6 +188,9 @@ const imageDiffTypeDefault = ImageDiffType.TwoUp
 const imageDiffTypeKey = 'image-diff-type'
 
 const shellKey = 'shell'
+
+// background fetching should not occur more than once every two minutes
+const BackgroundFetchMinimumInterval = 2 * 60 * 1000
 
 export class AppStore {
   private emitter = new Emitter()
@@ -361,7 +375,9 @@ export class AppStore {
     })
 
     pullRequestStore.onDidError(error => this.emitError(error))
-    pullRequestStore.onDidUpdate(() => this.emitUpdate())
+    pullRequestStore.onDidUpdate(gitHubRepository =>
+      this.onPullRequestStoreUpdated(gitHubRepository)
+    )
   }
 
   /** Load the emoji from disk. */
@@ -470,8 +486,9 @@ export class AppStore {
         defaultBranch: null,
         allBranches: new Array<Branch>(),
         recentBranches: new Array<Branch>(),
-        openPullRequests: null,
+        openPullRequests: [],
         currentPullRequest: null,
+        isLoadingPullRequests: false,
       },
       commitAuthor: null,
       gitHubUsers: new Map<string, IGitHubUser>(),
@@ -881,21 +898,8 @@ export class AppStore {
     const gitHubRepository = repository.gitHubRepository
     if (gitHubRepository) {
       this._updateIssues(gitHubRepository)
-
-      this.pullRequestStore
-        .getPullRequests(gitHubRepository)
-        .then(p =>
-          this.updateStateWithPullRequests(p, repository, gitHubRepository)
-        )
-        .catch(e =>
-          console.warn(
-            `Error getting pull requests for ${gitHubRepository.fullName}`,
-            e
-          )
-        )
     }
 
-    this._refreshPullRequests(repository)
     await this._refreshRepository(repository)
 
     // The selected repository could have changed while we were refreshing.
@@ -914,6 +918,7 @@ export class AppStore {
     this.refreshMentionables(repository)
 
     this.addUpstreamRemoteIfNeeded(repository)
+    this._refreshPullRequests(repository)
 
     return this._repositoryWithRefreshedGitHubRepository(repository)
   }
@@ -956,7 +961,9 @@ export class AppStore {
   private startPullRequestUpdater(repository: Repository) {
     if (this.currentPullRequestUpdater) {
       fatalError(
-        `A pull request updater is already active and cannot start updating on ${repository.name}`
+        `A pull request updater is already active and cannot start updating on ${
+          repository.name
+        }`
       )
 
       return
@@ -991,13 +998,38 @@ export class AppStore {
     }
   }
 
+  private shouldBackgroundFetch(repository: Repository): boolean {
+    const gitStore = this.getGitStore(repository)
+    const lastFetched = gitStore.lastFetched
+
+    if (!lastFetched) {
+      return true
+    }
+
+    const now = new Date()
+    const timeSinceFetch = now.getTime() - lastFetched.getTime()
+
+    if (timeSinceFetch < BackgroundFetchMinimumInterval) {
+      const timeInSeconds = Math.floor(timeSinceFetch / 1000)
+
+      log.debug(
+        `skipping background fetch as repository was fetched ${timeInSeconds}s ago`
+      )
+      return false
+    }
+
+    return true
+  }
+
   private startBackgroundFetching(
     repository: Repository,
     withInitialSkew: boolean
   ) {
     if (this.currentBackgroundFetcher) {
       fatalError(
-        `We should only have on background fetcher active at once, but we're trying to start background fetching on ${repository.name} while another background fetcher is still active!`
+        `We should only have on background fetcher active at once, but we're trying to start background fetching on ${
+          repository.name
+        } while another background fetcher is still active!`
       )
       return
     }
@@ -1011,8 +1043,11 @@ export class AppStore {
       return
     }
 
-    const fetcher = new BackgroundFetcher(repository, account, r =>
-      this.performFetch(r, account, true)
+    const fetcher = new BackgroundFetcher(
+      repository,
+      account,
+      r => this.performFetch(r, account, FetchType.BackgroundTask),
+      r => this.shouldBackgroundFetch(r)
     )
     fetcher.start(withInitialSkew)
     this.currentBackgroundFetcher = fetcher
@@ -1047,18 +1082,17 @@ export class AppStore {
 
     // doing this that the current user can be found by any of their email addresses
     for (const account of accounts) {
-      const userAssociations: ReadonlyArray<
-        IGitHubUser
-      > = account.emails.map(email =>
-        // NB: We're not using object spread here because `account` has more
-        // keys than we want.
-        ({
-          endpoint: account.endpoint,
-          email: email.email,
-          login: account.login,
-          avatarURL: account.avatarURL,
-          name: account.name,
-        })
+      const userAssociations: ReadonlyArray<IGitHubUser> = account.emails.map(
+        email =>
+          // NB: We're not using object spread here because `account` has more
+          // keys than we want.
+          ({
+            endpoint: account.endpoint,
+            email: email.email,
+            login: account.login,
+            avatarURL: account.avatarURL,
+            name: account.name,
+          })
       )
 
       for (const user of userAssociations) {
@@ -1101,7 +1135,7 @@ export class AppStore {
     const shellValue = localStorage.getItem(shellKey)
     this.selectedShell = shellValue ? parseShell(shellValue) : DefaultShell
 
-    this.updatePreferredAppMenuItemLabels()
+    this.updateMenuItemLabels()
 
     const imageDiffTypeValue = localStorage.getItem(imageDiffTypeKey)
 
@@ -1135,16 +1169,48 @@ export class AppStore {
     return null
   }
 
-  /** Update the menu with the names of the user's preferred apps. */
-  private updatePreferredAppMenuItemLabels() {
+  /**
+   * Update menu labels for editor, shell, and pull requests.
+   */
+  private updateMenuItemLabels(repository?: Repository) {
     const editorLabel = this.selectedExternalEditor
       ? `Open in ${this.selectedExternalEditor}`
       : undefined
 
+    const prLabel = repository
+      ? this.getPullRequestLabel(repository)
+      : undefined
+
     updatePreferredAppMenuItemLabels({
       editor: editorLabel,
+      pullRequestLabel: prLabel,
       shell: `Open in ${this.selectedShell}`,
     })
+  }
+
+  private getPullRequestLabel(repository: Repository) {
+    const githubRepository = repository.gitHubRepository
+    const defaultPRLabel = __DARWIN__
+      ? 'Create Pull Request'
+      : 'Create &pull request'
+
+    if (!githubRepository) {
+      return defaultPRLabel
+    }
+
+    const repositoryState = this.repositoryState.get(repository.hash)
+
+    if (!repositoryState) {
+      return defaultPRLabel
+    }
+
+    const branchState = repositoryState.branchesState
+
+    if (!branchState.currentPullRequest) {
+      return defaultPRLabel
+    }
+
+    return __DARWIN__ ? 'Show Pull Request' : 'Show &pull request'
   }
 
   private updateRepositorySelectionAfterRepositoriesChanged() {
@@ -1660,6 +1726,7 @@ export class AppStore {
 
     const section = state.selectedSection
     let refreshSectionPromise: Promise<void>
+
     if (section === RepositorySection.History) {
       refreshSectionPromise = this.refreshHistorySection(repository)
     } else if (section === RepositorySection.Changes) {
@@ -1679,6 +1746,9 @@ export class AppStore {
       refreshSectionPromise,
       gitStore.loadUpstreamRemote(),
     ])
+
+    this._updateCurrentPullRequest(repository)
+    this.updateMenuItemLabels(repository)
   }
 
   /**
@@ -1742,7 +1812,7 @@ export class AppStore {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public _closePopup(): Promise<void> {
     const currentPopup = this.currentPopup
-    if (!currentPopup) {
+    if (currentPopup == null) {
       return Promise.resolve()
     }
 
@@ -1763,8 +1833,18 @@ export class AppStore {
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _closeCurrentFoldout(): Promise<void> {
+    if (this.currentFoldout == null) {
+      return
+    }
+
+    this.currentFoldout = null
+    this.emitUpdate()
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
   public async _closeFoldout(foldout: FoldoutType): Promise<void> {
-    if (!this.currentFoldout) {
+    if (this.currentFoldout == null) {
       return
     }
 
@@ -2150,8 +2230,9 @@ export class AppStore {
         if (prUpdater) {
           const state = this.getRepositoryState(repository)
           const currentPR = state.branchesState.currentPullRequest
-          if (currentPR) {
-            prUpdater.didPushPullRequest(currentPR)
+          const gitHubRepository = repository.gitHubRepository
+          if (currentPR && gitHubRepository) {
+            prUpdater.didPushPullRequest(gitHubRepository, currentPR)
           }
         }
       }
@@ -2292,16 +2373,26 @@ export class AppStore {
       }
 
       const state = this.getRepositoryState(repository)
+      const tip = state.branchesState.tip
 
-      if (state.branchesState.tip.kind === TipState.Unborn) {
+      if (tip.kind === TipState.Unborn) {
         throw new Error('The current branch is unborn.')
       }
 
-      if (state.branchesState.tip.kind === TipState.Detached) {
+      if (tip.kind === TipState.Detached) {
         throw new Error('The current repository is in a detached HEAD state.')
       }
 
-      if (state.branchesState.tip.kind === TipState.Valid) {
+      if (tip.kind === TipState.Valid) {
+        let mergeBase: string | null = null
+        if (tip.branch.upstream) {
+          mergeBase = await getMergeBase(
+            repository,
+            tip.branch.name,
+            tip.branch.upstream
+          )
+        }
+
         const title = `Pulling ${remote.name}`
         const kind = 'pull'
         this.updatePushPullFetchProgress(repository, {
@@ -2354,6 +2445,10 @@ export class AppStore {
             title: refreshTitle,
             value: refreshStartProgress,
           })
+
+          if (mergeBase) {
+            await gitStore.reconcileHistory(mergeBase)
+          }
 
           await this._refreshRepository(repository)
 
@@ -2486,7 +2581,9 @@ export class AppStore {
         const hasValidToken =
           account.token.length > 0 ? 'has token' : 'empty token'
         log.info(
-          `[AppStore.getAccountForRemoteURL] account found for remote: ${remote} - ${account.login} (${hasValidToken})`
+          `[AppStore.getAccountForRemoteURL] account found for remote: ${remote} - ${
+            account.login
+          } (${hasValidToken})`
         )
         return account
       }
@@ -2598,24 +2695,20 @@ export class AppStore {
   }
 
   /** Fetch the repository. */
-  public _fetch(repository: Repository): Promise<void> {
+  public _fetch(repository: Repository, fetchType: FetchType): Promise<void> {
     const retryAction: RetryAction = {
       type: RetryActionType.Fetch,
       repository,
     }
-    return this.withAuthenticatingUser(
-      repository,
-      (repository, account) => {
-        return this.performFetch(repository, account, false)
-      },
-      retryAction
-    )
+    return this.withAuthenticatingUser(repository, (repository, account) => {
+      return this.performFetch(repository, account, fetchType)
+    }, retryAction)
   }
 
   private async performFetch(
     repository: Repository,
     account: IGitAccount | null,
-    backgroundTask: boolean
+    fetchType: FetchType
   ): Promise<void> {
     await this.withPushPull(repository, async () => {
       const gitStore = this.getGitStore(repository)
@@ -2623,8 +2716,9 @@ export class AppStore {
       try {
         const fetchWeight = 0.9
         const refreshWeight = 0.1
+        const isBackgroundTask = fetchType === FetchType.BackgroundTask
 
-        await gitStore.fetch(account, backgroundTask, progress => {
+        await gitStore.fetch(account, isBackgroundTask, progress => {
           this.updatePushPullFetchProgress(repository, {
             ...progress,
             value: progress.value * fetchWeight,
@@ -2653,6 +2747,10 @@ export class AppStore {
         await this.fastForwardBranches(repository)
       } finally {
         this.updatePushPullFetchProgress(repository, null)
+
+        if (fetchType !== FetchType.BackgroundTask) {
+          this._refreshPullRequests(repository)
+        }
       }
     })
   }
@@ -2877,7 +2975,7 @@ export class AppStore {
     localStorage.setItem(externalEditorKey, selectedEditor)
     this.emitUpdate()
 
-    this.updatePreferredAppMenuItemLabels()
+    this.updateMenuItemLabels()
 
     return Promise.resolve()
   }
@@ -2887,7 +2985,7 @@ export class AppStore {
     localStorage.setItem(shellKey, shell)
     this.emitUpdate()
 
-    this.updatePreferredAppMenuItemLabels()
+    this.updateMenuItemLabels()
 
     return Promise.resolve()
   }
@@ -3076,7 +3174,9 @@ export class AppStore {
 
   public _removeAccount(account: Account): Promise<void> {
     log.info(
-      `[AppStore] removing account ${account.login} (${account.name}) from store`
+      `[AppStore] removing account ${account.login} (${
+        account.name
+      }) from store`
     )
     return this.accountsStore.removeAccount(account)
   }
@@ -3255,7 +3355,9 @@ export class AppStore {
       const hasValidToken =
         account.token.length > 0 ? 'has token' : 'empty token'
       log.info(
-        `[AppStore.withAuthenticatingUser] account found for repository: ${repository.name} - ${account.login} (${hasValidToken})`
+        `[AppStore.withAuthenticatingUser] account found for repository: ${
+          repository.name
+        } - ${account.login} (${hasValidToken})`
       )
     }
 
@@ -3416,7 +3518,7 @@ export class AppStore {
     const branch = tip.branch
     const aheadBehind = state.aheadBehind
 
-    if (!aheadBehind) {
+    if (aheadBehind == null) {
       this._showPopup({
         type: PopupType.PushBranchCommits,
         repository,
@@ -3430,8 +3532,29 @@ export class AppStore {
         unPushedCommits: aheadBehind.ahead,
       })
     } else {
-      await this._openCreatePullRequestInBrowser(repository)
+      await this._openCreatePullRequestInBrowser(repository, branch)
     }
+  }
+
+  public async _showPullRequest(repository: Repository): Promise<void> {
+    const gitHubRepository = repository.gitHubRepository
+
+    if (!gitHubRepository) {
+      return
+    }
+
+    const state = this.getRepositoryState(repository)
+    const currentPullRequest = state.branchesState.currentPullRequest
+
+    if (!currentPullRequest) {
+      return
+    }
+
+    const baseURL = `${gitHubRepository.htmlURL}/pull/${
+      currentPullRequest.number
+    }`
+
+    await this._openInBrowser(baseURL)
   }
 
   public async _refreshPullRequests(repository: Repository): Promise<void> {
@@ -3445,36 +3568,44 @@ export class AppStore {
       gitHubRepository.endpoint
     )
     if (!account) {
-      return Promise.resolve()
+      return
     }
 
     await this.pullRequestStore.refreshPullRequests(gitHubRepository, account)
+    return this.updateMenuItemLabels(repository)
+  }
 
+  private async onPullRequestStoreUpdated(gitHubRepository: GitHubRepository) {
     const pullRequests = await this.pullRequestStore.getPullRequests(
       gitHubRepository
     )
+    const isLoading = this.pullRequestStore.isFetchingPullRequests(
+      gitHubRepository
+    )
 
-    this.updateStateWithPullRequests(pullRequests, repository, gitHubRepository)
-  }
+    const repository = this.repositories.find(
+      r =>
+        !!r.gitHubRepository &&
+        r.gitHubRepository.dbID === gitHubRepository.dbID
+    )
+    if (!repository) {
+      return
+    }
 
-  private updateStateWithPullRequests(
-    pullRequests: ReadonlyArray<PullRequest>,
-    repository: Repository,
-    githubRepository: GitHubRepository
-  ) {
     this.updateBranchesState(repository, state => {
       let currentPullRequest = null
       if (state.tip.kind === TipState.Valid) {
         currentPullRequest = this.findAssociatedPullRequest(
           state.tip.branch,
           pullRequests,
-          githubRepository
+          gitHubRepository
         )
       }
 
       return {
         openPullRequests: pullRequests,
         currentPullRequest,
+        isLoadingPullRequests: isLoading,
       }
     })
 
@@ -3505,24 +3636,46 @@ export class AppStore {
     return null
   }
 
+  private _updateCurrentPullRequest(repository: Repository) {
+    const gitHubRepository = repository.gitHubRepository
+
+    if (!gitHubRepository) {
+      return
+    }
+
+    this.updateBranchesState(repository, state => {
+      let currentPullRequest: PullRequest | null = null
+
+      if (state.tip.kind === TipState.Valid) {
+        currentPullRequest = this.findAssociatedPullRequest(
+          state.tip.branch,
+          state.openPullRequests,
+          gitHubRepository
+        )
+      }
+
+      return {
+        currentPullRequest,
+      }
+    })
+
+    this.emitUpdate()
+  }
+
   public async _openCreatePullRequestInBrowser(
-    repository: Repository
+    repository: Repository,
+    branch: Branch
   ): Promise<void> {
     const gitHubRepository = repository.gitHubRepository
     if (!gitHubRepository) {
       return
     }
 
-    const state = this.getRepositoryState(repository)
-    const tip = state.branchesState.tip
+    const urlEncodedBranchName = QueryString.escape(branch.nameWithoutRemote)
+    const baseURL = `${
+      gitHubRepository.htmlURL
+    }/pull/new/${urlEncodedBranchName}`
 
-    if (tip.kind !== TipState.Valid) {
-      return
-    }
-
-    const branch = tip.branch
-
-    const baseURL = `${gitHubRepository.htmlURL}/pull/new/${branch.nameWithoutRemote}`
     await this._openInBrowser(baseURL)
   }
 

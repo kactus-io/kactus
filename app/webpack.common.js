@@ -6,41 +6,19 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const webpack = require('webpack')
 const merge = require('webpack-merge')
+const appInfo = require('./app-info')
+const packageInfo = require('./package-info')
 const distInfo = require('../script/dist-info')
 
-const devClientId = 'e2192ac9bf572ac04bfb'
-const devClientSecret = 'c9b11bb47ee91ef08545a5355658b37a100d46e1'
-const devStripeKey = 'pk_test_wqDaZ2Vc1Vlja0RflUevsa9K'
-
 const channel = distInfo.getReleaseChannel()
-
-const replacements = {
-  __OAUTH_CLIENT_ID__: JSON.stringify(
-    process.env.KACTUS_OAUTH_CLIENT_ID || devClientId
-  ),
-  __OAUTH_SECRET__: JSON.stringify(
-    process.env.KACTUS_OAUTH_CLIENT_SECRET || devClientSecret
-  ),
-  __STRIPE_KEY__: JSON.stringify(process.env.STRIPE_KEY || devStripeKey),
-  __DARWIN__: process.platform === 'darwin',
-  __WIN32__: process.platform === 'win32',
-  __LINUX__: process.platform === 'linux',
-  __DEV__: channel === 'development',
-  __RELEASE_CHANNEL__: JSON.stringify(channel),
-  __UPDATES_URL__: JSON.stringify(distInfo.getUpdatesURL()),
-  __SHA__: JSON.stringify(distInfo.getSHA()),
-  __CLI_COMMANDS__: JSON.stringify(distInfo.getCLICommands()),
-  'process.platform': JSON.stringify(process.platform),
-  'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-  'process.env.TEST_ENV': JSON.stringify(process.env.TEST_ENV),
-}
-
-const outputDir = 'out'
 
 const externals = ['7zip', 'kactus-cli', 'klaw-sync', 'jszip']
 if (channel === 'development') {
   externals.push('devtron')
 }
+
+const outputDir = 'out'
+const replacements = appInfo.getReplacements()
 
 const commonConfig = {
   externals: externals,

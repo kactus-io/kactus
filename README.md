@@ -11,6 +11,8 @@
 
 [![CircleCI](https://circleci.com/gh/kactus-io/kactus/tree/master.svg?style=svg)](https://circleci.com/gh/kactus-io/kactus/tree/master)
 ![Sketch.app](https://img.shields.io/badge/Sketch.app-43-brightgreen.svg)
+[![license](https://img.shields.io/github/license/kactus-io/kactus.svg?style=flat-square)](https://github.com/kactus-io/kactus/blob/master/LICENSE)
+![90+% TypeScript](https://img.shields.io/github/languages/top/kactus-io/kactus.svg?style=flat-square&colorB=green)
 
 Kactus is a tool to bring proper version control _(as in git)_ to designers _(only sketch users for now, but we need to start somewhere, right?)_.
 

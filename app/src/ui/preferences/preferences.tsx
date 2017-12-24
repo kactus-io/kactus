@@ -10,7 +10,7 @@ import { Git } from './git'
 import { assertNever } from '../../lib/fatal-error'
 import { Button } from '../lib/button'
 import { ButtonGroup } from '../lib/button-group'
-import { Dialog, DialogFooter } from '../dialog'
+import { Dialog, DialogFooter, DialogError } from '../dialog'
 import {
   getGlobalConfigValue,
   setGlobalConfigValue,
@@ -21,6 +21,7 @@ import { lookupPreferredEmail } from '../../lib/email'
 import { PopupType } from '../../lib/app-state'
 import { Shell, getAvailableShells } from '../../lib/shells'
 import { getAvailableEditors } from '../../lib/editors/lookup'
+import { disallowedCharacters } from './identifier-rules'
 
 interface IPreferencesProps {
   readonly dispatcher: Dispatcher
@@ -118,6 +119,12 @@ export class Preferences extends React.Component<
   }
 
   public render() {
+    const disallowedCharactersError = this.disallowedCharacterErrorMessage(
+      this.state.committerName,
+      this.state.committerEmail
+    )
+    const hasDisallowedCharacter = disallowedCharactersError !== null
+
     return (
       <Dialog
         id="preferences"
@@ -125,6 +132,7 @@ export class Preferences extends React.Component<
         onDismissed={this.props.onDismissed}
         onSubmit={this.onSave}
       >
+        {this.renderDisallowedCharactersError(disallowedCharactersError)}
         <TabBar
           onTabClicked={this.onTabClicked}
           selectedIndex={this.state.selectedIndex}
@@ -135,7 +143,7 @@ export class Preferences extends React.Component<
         </TabBar>
 
         {this.renderActiveTab()}
-        {this.renderFooter()}
+        {this.renderFooter(hasDisallowedCharacter)}
       </Dialog>
     )
   }
@@ -167,6 +175,27 @@ export class Preferences extends React.Component<
       type: PopupType.CancelPremium,
       user: account,
     })
+  }
+
+  private disallowedCharacterErrorMessage(name: string, email: string) {
+    const disallowedNameCharacters = disallowedCharacters(name)
+    const disallowedEmailCharacters = disallowedCharacters(email)
+
+    if (disallowedNameCharacters !== null) {
+      return `Git name field cannot be a disallowed character "${disallowedNameCharacters}"`
+    } else if (disallowedEmailCharacters !== null) {
+      return `Git email field cannot be a disallowed character "${disallowedEmailCharacters}"`
+    } else {
+      return null
+    }
+  }
+
+  private renderDisallowedCharactersError(message: string | null) {
+    if (message !== null) {
+      return <DialogError>{message}</DialogError>
+    } else {
+      return null
+    }
   }
 
   private renderActiveTab() {
@@ -250,7 +279,7 @@ export class Preferences extends React.Component<
     this.setState({ selectedShell: shell })
   }
 
-  private renderFooter() {
+  private renderFooter(hasDisabledError: boolean) {
     const index = this.state.selectedIndex
     switch (index) {
       case PreferencesTab.Accounts:
@@ -260,7 +289,9 @@ export class Preferences extends React.Component<
         return (
           <DialogFooter>
             <ButtonGroup>
-              <Button type="submit">Save</Button>
+              <Button type="submit" disabled={hasDisabledError}>
+                Save
+              </Button>
               <Button onClick={this.props.onDismissed}>Cancel</Button>
             </ButtonGroup>
           </DialogFooter>

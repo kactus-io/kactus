@@ -14,7 +14,7 @@ change over time as we learn and refine how we work with the community.
 
 [What should I know before I get started?](#what-should-i-know-before-i-get-started)
   * [Code of Conduct](#code-of-conduct)
-  * [The Beta Roadmap](#the-beta-roadmap)
+  * [The Roadmap](#the-roadmap)
 
 [How Can I Contribute?](#how-can-i-contribute)
   * [Reporting Bugs](#reporting-bugs)

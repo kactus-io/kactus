@@ -32,6 +32,7 @@ import { Dialog, DialogContent, DialogFooter, DialogError } from '../dialog'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { LinkButton } from '../lib/link-button'
 import { PopupType } from '../../lib/app-state'
+import { pathExists } from '../../lib/file-system'
 
 /** The sentinel value used to indicate no gitignore should be used. */
 const NoGitIgnoreValue = 'None'
@@ -286,7 +287,11 @@ export class CreateRepository extends React.Component<
     }
 
     try {
-      await writeGitAttributes(fullPath)
+      const gitAttributes = Path.join(fullPath, '.gitattributes')
+      const gitAttributesExists = await pathExists(gitAttributes)
+      if (!gitAttributesExists) {
+        await writeGitAttributes(fullPath)
+      }
     } catch (e) {
       log.error(
         `createRepository: unable to write .gitattributes at ${fullPath}`,
@@ -408,7 +413,7 @@ export class CreateRepository extends React.Component<
     )
   }
 
-  private renderInvalidPathWarning() {
+  private renderInvalidPathError() {
     const isValidPath = this.state.isValidPath
     const pathSet = isValidPath !== null
 
@@ -471,6 +476,8 @@ export class CreateRepository extends React.Component<
         onSubmit={this.createRepository}
         onDismissed={this.props.onDismissed}
       >
+        {this.renderInvalidPathError()}
+
         <DialogContent>
           <Row>
             <TextBox
@@ -504,8 +511,6 @@ export class CreateRepository extends React.Component<
               Choose…
             </Button>
           </Row>
-
-          {this.renderInvalidPathWarning()}
 
           {this.renderGitRepositoryWarning()}
 
