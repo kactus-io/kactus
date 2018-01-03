@@ -47,7 +47,7 @@ describe('git/diff', () => {
 
   beforeEach(() => {
     const testRepoPath = setupFixtureRepository('repo-with-image-changes')
-    repository = new Repository(testRepoPath, -1, null, false)
+    repository = new Repository(testRepoPath, -1, null, false, [])
   })
 
   describe('getWorkingDirectoryImage', () => {
@@ -143,7 +143,7 @@ describe('git/diff', () => {
 
     it('changes for text are not set', async () => {
       const testRepoPath = setupFixtureRepository('repo-with-changes')
-      repository = new Repository(testRepoPath, -1, null, false)
+      repository = new Repository(testRepoPath, -1, null, false, [])
 
       const diffSelection = DiffSelection.fromInitialSelection(
         DiffSelectionType.All
@@ -162,7 +162,7 @@ describe('git/diff', () => {
   describe('getWorkingDirectoryDiff', () => {
     beforeEach(() => {
       const testRepoPath = setupFixtureRepository('repo-with-changes')
-      repository = new Repository(testRepoPath, -1, null, false)
+      repository = new Repository(testRepoPath, -1, null, false, [])
     })
 
     it('counts lines for new file', async () => {
@@ -252,7 +252,7 @@ describe('git/diff', () => {
 
     it('displays a binary diff for a docx file', async () => {
       const repositoryPath = await setupFixtureRepository('diff-rendering-docx')
-      const repo = new Repository(repositoryPath, -1, null, false)
+      const repo = new Repository(repositoryPath, -1, null, false, [])
 
       const status = await getStatus(repo, [])
       const files = status.workingDirectory.files

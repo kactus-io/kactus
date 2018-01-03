@@ -1271,7 +1271,14 @@ export class AppStore {
 
     this.emitUpdate()
 
-    const oldFiles = this.getRepositoryState(repository).kactus.files
+    let oldFiles: {
+      id: string
+      lastModified?: number
+    }[] = this.getRepositoryState(repository).kactus.files
+
+    if (!oldFiles.length) {
+      oldFiles = repository.sketchFiles
+    }
 
     const kactusStatus = await getKactusStatus(this.sketchPath, repository)
     this.updateKactusState(repository, state => {
@@ -1282,6 +1289,7 @@ export class AppStore {
     })
 
     this.emitUpdate()
+
     if (
       (!options || !options.skipParsingModifiedSketchFiles) &&
       kactusStatus.files &&
@@ -1290,8 +1298,6 @@ export class AppStore {
       // parse the updated files
       const modifiedFiles = kactusStatus.files.filter(f => {
         const oldFile = oldFiles.find(of => of.id === f.id)
-        console.log(f.lastModified)
-        console.log(oldFile && oldFile.lastModified)
         return (
           f.lastModified &&
           (!oldFile || oldFile.lastModified !== f.lastModified)
@@ -1302,16 +1308,19 @@ export class AppStore {
         await Promise.all(
           modifiedFiles.map(f => {
             return this.isParsing(repository, f, () => {
-              return parseSketchFile(
-                repository,
-                f,
-                kactusStatus.config
-              ).then(() => {})
+              return parseSketchFile(repository, f, kactusStatus.config).then(
+                () => {}
+              )
             })
           })
         )
       }
     }
+
+    await this.repositoriesStore.updateSketchFiles(
+      repository,
+      kactusStatus.files
+    )
 
     const gitStore = this.getGitStore(repository)
     const status = await gitStore.loadStatus(kactusStatus.files)
@@ -1974,7 +1983,8 @@ export class AppStore {
       repository.path,
       repository.id,
       skeletonGitHubRepository,
-      repository.missing
+      repository.missing,
+      repository.sketchFiles
     )
 
     const account = getAccountForEndpoint(
@@ -2700,9 +2710,13 @@ export class AppStore {
       type: RetryActionType.Fetch,
       repository,
     }
-    return this.withAuthenticatingUser(repository, (repository, account) => {
-      return this.performFetch(repository, account, fetchType)
-    }, retryAction)
+    return this.withAuthenticatingUser(
+      repository,
+      (repository, account) => {
+        return this.performFetch(repository, account, fetchType)
+      },
+      retryAction
+    )
   }
 
   private async performFetch(

@@ -114,7 +114,8 @@ export class RepositoriesStore {
             repo.path,
             repo.id!,
             gitHubRepository,
-            repo.missing
+            repo.missing,
+            repo.sketchFiles
           )
           inflatedRepos.push(inflatedRepo)
         }
@@ -153,10 +154,11 @@ export class RepositoriesStore {
             path,
             gitHubRepositoryID: null,
             missing: false,
+            sketchFiles: [],
           })
         }
 
-        return new Repository(path, id, gitHubRepo, false)
+        return new Repository(path, id, gitHubRepo, false, [])
       }
     )
 
@@ -192,6 +194,7 @@ export class RepositoriesStore {
       path: repository.path,
       missing,
       gitHubRepositoryID,
+      sketchFiles: repository.sketchFiles,
     })
 
     this.emitUpdate()
@@ -200,7 +203,8 @@ export class RepositoriesStore {
       repository.path,
       repository.id,
       repository.gitHubRepository,
-      missing
+      missing,
+      repository.sketchFiles
     )
   }
 
@@ -224,6 +228,7 @@ export class RepositoriesStore {
       missing: false,
       path: path,
       gitHubRepositoryID,
+      sketchFiles: repository.sketchFiles,
     })
 
     this.emitUpdate()
@@ -232,7 +237,45 @@ export class RepositoriesStore {
       path,
       repository.id,
       repository.gitHubRepository,
-      false
+      false,
+      repository.sketchFiles
+    )
+  }
+
+  /** Update the repository's path. */
+  public async updateSketchFiles(
+    repository: Repository,
+    sketchFiles: { id: string; lastModified?: number }[]
+  ): Promise<Repository> {
+    const repoID = repository.id
+    if (!repoID) {
+      return fatalError(
+        '`updateSketchFiles` can only update the path for a repository which has been added to the database.'
+      )
+    }
+
+    const gitHubRepositoryID = repository.gitHubRepository
+      ? repository.gitHubRepository.dbID
+      : null
+    await this.db.repositories.put({
+      id: repository.id,
+      missing: repository.missing,
+      path: repository.path,
+      gitHubRepositoryID,
+      sketchFiles: sketchFiles.map(f => ({
+        id: f.id,
+        lastModified: f.lastModified,
+      })),
+    })
+
+    this.emitUpdate()
+
+    return new Repository(
+      repository.path,
+      repository.id,
+      repository.gitHubRepository,
+      repository.missing,
+      sketchFiles
     )
   }
 
@@ -337,7 +380,8 @@ export class RepositoriesStore {
       repository.path,
       repository.id,
       updatedGitHubRepo,
-      repository.missing
+      repository.missing,
+      repository.sketchFiles
     )
   }
 }

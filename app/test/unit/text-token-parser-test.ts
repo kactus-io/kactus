@@ -69,7 +69,8 @@ describe('Tokenizer', () => {
       'some/path/to/repo',
       1,
       gitHubRepository,
-      false
+      false,
+      []
     )
 
     it('renders an emoji match', () => {

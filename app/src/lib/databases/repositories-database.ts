@@ -24,6 +24,7 @@ export interface IDatabaseRepository {
   readonly gitHubRepositoryID: number | null
   readonly path: string
   readonly missing: boolean
+  readonly sketchFiles: { id: string; lastModified?: number }[]
 }
 
 /** The repositories database. */

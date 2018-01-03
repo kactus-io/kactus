@@ -217,7 +217,7 @@ describe('GitStore', () => {
   describe('repository with HEAD file', () => {
     it('can discard modified change cleanly', async () => {
       const path = await setupFixtureRepository('repository-with-HEAD-file')
-      const repo = new Repository(path, 1, null, false)
+      const repo = new Repository(path, 1, null, false, [])
       const gitStore = new GitStore(repo, shell)
 
       const file = 'README.md'

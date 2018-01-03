@@ -56,7 +56,7 @@ describe('git/commit', () => {
 
   beforeEach(async () => {
     const testRepoPath = setupFixtureRepository('test-repo')
-    repository = new Repository(testRepoPath, -1, null, false)
+    repository = new Repository(testRepoPath, -1, null, false, [])
   })
 
   describe('createCommit normal', () => {
@@ -158,7 +158,7 @@ describe('git/commit', () => {
   describe('createCommit partials', () => {
     beforeEach(async () => {
       const testRepoPath = setupFixtureRepository('repo-with-changes')
-      repository = new Repository(testRepoPath, -1, null, false)
+      repository = new Repository(testRepoPath, -1, null, false, [])
     })
 
     it('can commit some lines from new file', async () => {

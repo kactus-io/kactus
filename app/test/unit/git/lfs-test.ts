@@ -8,7 +8,7 @@ describe('git-lfs', () => {
   describe('isUsingLFS', () => {
     it('returns false for repository not using LFS', async () => {
       const path = await setupFixtureRepository('test-repo')
-      const repository = new Repository(path, -1, null, false)
+      const repository = new Repository(path, -1, null, false, [])
 
       const usingLFS = await isUsingLFS(repository)
       expect(usingLFS).to.equal(false)
@@ -16,7 +16,7 @@ describe('git-lfs', () => {
 
     it('returns true if LFS is tracking a path', async () => {
       const path = await setupFixtureRepository('test-repo')
-      const repository = new Repository(path, -1, null, false)
+      const repository = new Repository(path, -1, null, false, [])
 
       await GitProcess.exec(['lfs', 'track', '*.psd'], repository.path)
 

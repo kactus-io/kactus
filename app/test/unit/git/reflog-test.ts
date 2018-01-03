@@ -27,7 +27,7 @@ describe('git/reflog', () => {
 
   beforeEach(() => {
     const testRepoPath = setupFixtureRepository('test-repo')
-    repository = new Repository(testRepoPath, -1, null, false)
+    repository = new Repository(testRepoPath, -1, null, false, [])
   })
 
   describe('getRecentBranches', () => {

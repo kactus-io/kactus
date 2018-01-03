@@ -27,7 +27,7 @@ describe('git/checkout', () => {
 
   it('can checkout a valid branch name in an existing repository', async () => {
     const path = await setupFixtureRepository('repo-with-many-refs')
-    const repository = new Repository(path, -1, null, false)
+    const repository = new Repository(path, -1, null, false, [])
 
     await checkoutBranch(repository, null, 'commit-with-long-description')
 

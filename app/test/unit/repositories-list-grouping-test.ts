@@ -9,7 +9,7 @@ import { CloningRepository } from '../../src/models/cloning-repository'
 
 describe('repository list grouping', () => {
   const repositories: Array<Repository | CloningRepository> = [
-    new Repository('repo1', 1, null, false),
+    new Repository('repo1', 1, null, false, []),
     new Repository(
       'repo2',
       2,
@@ -18,13 +18,15 @@ describe('repository list grouping', () => {
         new Owner('', getDotComAPIEndpoint(), null),
         1
       ),
-      false
+      false,
+      []
     ),
     new Repository(
       'repo3',
       3,
       new GitHubRepository('my-repo3', new Owner('', '', null), 1),
-      false
+      false,
+      []
     ),
   ]
 
@@ -52,21 +54,23 @@ describe('repository list grouping', () => {
   })
 
   it('sorts repositories alphabetically within each group', () => {
-    const repoA = new Repository('a', 1, null, false)
+    const repoA = new Repository('a', 1, null, false, [])
     const repoB = new Repository(
       'b',
       2,
       new GitHubRepository('b', new Owner('', getDotComAPIEndpoint(), null), 1),
-      false
+      false,
+      []
     )
-    const repoC = new Repository('c', 2, null, false)
+    const repoC = new Repository('c', 2, null, false, [])
     const repoD = new Repository(
       'd',
       2,
       new GitHubRepository('d', new Owner('', getDotComAPIEndpoint(), null), 1),
-      false
+      false,
+      []
     )
-    const repoZ = new Repository('z', 3, null, false)
+    const repoZ = new Repository('z', 3, null, false, [])
 
     const grouped = groupRepositories([repoC, repoB, repoZ, repoD, repoA])
     expect(grouped.length).to.equal(2)
@@ -96,7 +100,8 @@ describe('repository list grouping', () => {
         new Owner('user1', getDotComAPIEndpoint(), null),
         1
       ),
-      false
+      false,
+      []
     )
     const repoB = new Repository(
       'cool-repo',
@@ -106,7 +111,8 @@ describe('repository list grouping', () => {
         new Owner('user2', getDotComAPIEndpoint(), null),
         2
       ),
-      false
+      false,
+      []
     )
     const repoC = new Repository(
       'repo',
@@ -116,7 +122,8 @@ describe('repository list grouping', () => {
         new Owner('user2', getDotComAPIEndpoint(), null),
         2
       ),
-      false
+      false,
+      []
     )
 
     const grouped = groupRepositories([repoA, repoB, repoC])

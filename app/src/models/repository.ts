@@ -13,11 +13,14 @@ export class Repository {
   /** Was the repository missing on disk last we checked? */
   public readonly missing: boolean
 
+  readonly sketchFiles: { id: string; lastModified?: number }[]
+
   public constructor(
     path: string,
     id: number,
     gitHubRepository: GitHubRepository | null,
-    missing: boolean
+    missing: boolean,
+    sketchFiles: { id: string; lastModified?: number }[]
   ) {
     this.path = path
     this.gitHubRepository = gitHubRepository
@@ -25,6 +28,7 @@ export class Repository {
       (gitHubRepository && gitHubRepository.name) || Path.basename(path)
     this.id = id
     this.missing = missing
+    this.sketchFiles = sketchFiles
   }
 
   /**

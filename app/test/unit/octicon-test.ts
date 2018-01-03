@@ -45,7 +45,13 @@ describe('octicon/iconForRepository', () => {
   })
 
   it('shows computer icon for non-GitHub repository', () => {
-    const repository = new Repository('C:/some/path/to/repo', 1, null, false)
+    const repository = new Repository(
+      'C:/some/path/to/repo',
+      1,
+      null,
+      false,
+      []
+    )
     const icon = iconForRepository(repository)
     expect(icon).to.deep.equal(OcticonSymbol.deviceDesktop)
   })
@@ -56,7 +62,8 @@ describe('octicon/iconForRepository', () => {
       'C:/some/path/to/repo',
       1,
       gitHubRepository,
-      false
+      false,
+      []
     )
     const icon = iconForRepository(repository)
     expect(icon).to.deep.equal(OcticonSymbol.repo)
@@ -68,7 +75,8 @@ describe('octicon/iconForRepository', () => {
       'C:/some/path/to/repo',
       1,
       gitHubRepository,
-      false
+      false,
+      []
     )
     const icon = iconForRepository(repository)
     expect(icon).to.deep.equal(OcticonSymbol.lock)
@@ -80,7 +88,8 @@ describe('octicon/iconForRepository', () => {
       'C:/some/path/to/repo',
       1,
       gitHubRepository,
-      false
+      false,
+      []
     )
     const icon = iconForRepository(repository)
     expect(icon).to.deep.equal(OcticonSymbol.repoForked)
