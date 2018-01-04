@@ -1,6 +1,6 @@
 {
   "name": "kactus",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Kactus plugin",
   "main": "../out/plugin.sketchplugin",
   "scripts": {

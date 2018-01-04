@@ -1,6 +1,15 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.1": [
+      "[New] Add visual diffs for SVGs",
+      "[Improved] Fetching the Sketch files is now around 4 times faster!",
+      "[Improved] When there are too many new files (like when adding a new Sketch file), fall to show only the new directory",
+      "[Improved] Store the modification date of sketch files so that there open Kactus is now lightning fast",
+      "[Improved] Add some logs for Kactus to help debugging",
+      "[Improved] Show text diff as an option instead of checkbox",
+      "[Fixed] Fix generating preview for new parts"
+    ],
     "0.3.0": [
       "[New] Add a view to fix conflicts",
       "[Improved] Safer regeneration of sketch file",
