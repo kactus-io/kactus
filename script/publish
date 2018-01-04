@@ -53,7 +53,7 @@ if (process.platform === 'darwin') {
 }
 
 let releaseId
-const tag = 'v' + distInfo.getVersion()
+const tag = 'v' + packageInfo.getVersion()
 
 console.log('Uploading ' + tag + '…')
 
@@ -63,7 +63,7 @@ github
     repo,
     tag,
     distInfo.getReleaseBranchName(),
-    require('../changelog.json').releases[distInfo.getVersion()] || []
+    require('../changelog.json').releases[packageInfo.getVersion()] || []
   )
   .then(function(res) {
     releaseId = res.id
