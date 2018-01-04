@@ -40,7 +40,7 @@ export async function getKactusStatus(
 ): Promise<IKactusStatusResult> {
   const commandName = `[Kactus] get kactus status`
   return Perf.measure(commandName, async () => {
-    const kactus = find(repository.path)
+    const kactus = await find(repository.path)
     const sketchVersion = (await getSketchVersion(sketchPath)) || undefined
     return {
       config: {
