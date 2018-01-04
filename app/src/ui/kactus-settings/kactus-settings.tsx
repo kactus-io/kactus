@@ -105,8 +105,9 @@ export class KactusSettings extends React.Component<
           )
         } catch (e) {
           log.error(
-            `KactusSettings: unable to save kactus config at ${this.props
-              .repository.path}`,
+            `KactusSettings: unable to save kactus config at ${
+              this.props.repository.path
+            }`,
             e
           )
           errors.push(`Failed saving the kactus.json file: ${e}`)

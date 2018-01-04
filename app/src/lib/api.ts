@@ -27,10 +27,9 @@ enum HttpStatusCode {
 /** The note URL used for authorizations the app creates. */
 const NoteURL = 'http://kactus.io/'
 
-const KactusAPIEndpoint = `https://api.kactus.io/${process.env.NODE_ENV ===
-'production'
-  ? 'v1'
-  : 'dev'}`
+const KactusAPIEndpoint = `https://api.kactus.io/${
+  process.env.NODE_ENV === 'production' ? 'v1' : 'dev'
+}`
 
 /**
  * Information about a repository as returned by the GitHub API.

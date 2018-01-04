@@ -13,7 +13,7 @@ export class Repository {
   /** Was the repository missing on disk last we checked? */
   public readonly missing: boolean
 
-  readonly sketchFiles: { id: string; lastModified?: number }[]
+  public readonly sketchFiles: { id: string; lastModified?: number }[]
 
   public constructor(
     path: string,
