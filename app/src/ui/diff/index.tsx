@@ -20,6 +20,7 @@ import {
   IKactusFileType,
   ITextDiffData,
   IVisualTextDiffData,
+  ITextDiff,
 } from '../../models/diff'
 import { Dispatcher } from '../../lib/dispatcher/dispatcher'
 
@@ -149,6 +150,21 @@ export class Diff extends React.Component<IDiffProps, {}> {
     )
   }
 
+  private renderEmpty(diff: ISketchDiff | ITextDiff) {
+    console.log(diff)
+    if (diff.isDirectory) {
+      return (
+        <div className="panel empty">
+          This is a new directory that contains too many files to show them all.
+          This is probably a new Sketch file. Commit it, the diff will show
+          nicely afterwards.
+        </div>
+      )
+    }
+
+    return <div className="panel empty">The file is empty</div>
+  }
+
   private renderContent() {
     const diff = this.props.diff
 
@@ -163,7 +179,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
     if (diff.kind === DiffType.Sketch) {
       if (diff.hunks.length === 0) {
         if (this.props.file && this.props.file.status === AppFileStatus.New) {
-          return <div className="panel empty">The file is empty</div>
+          return this.renderEmpty(diff)
         }
 
         if (
@@ -226,7 +242,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
     if (diff.kind === DiffType.Text) {
       if (diff.hunks.length === 0) {
         if (this.props.file && this.props.file.status === AppFileStatus.New) {
-          return <div className="panel empty">The file is empty</div>
+          return this.renderEmpty(diff)
         }
 
         if (

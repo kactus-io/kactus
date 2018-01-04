@@ -136,6 +136,23 @@ export function pathExists(path: string): Promise<boolean> {
   })
 }
 
+/*
+ * Helper function to promisify and simplify fs.stat.
+ *
+ * @param path Path to check if is directory.
+ */
+export function isDirectory(path: string): Promise<boolean> {
+  return new Promise<boolean>((resolve, reject) => {
+    Fs.stat(path, (error, stats) => {
+      if (error) {
+        resolve(false)
+      } else {
+        resolve(stats.isDirectory())
+      }
+    })
+  })
+}
+
 /**
  * Asynchronous readFile - Asynchronously reads the entire contents of a file.
  *

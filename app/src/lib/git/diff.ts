@@ -481,6 +481,9 @@ async function getSketchDiff(
     previous: previous,
     current: current,
     type: type,
+    isDirectory: await fileSystem.isDirectory(
+      Path.join(repository.path, file.path)
+    ),
   }
 }
 
@@ -537,6 +540,9 @@ export async function convertDiff(
     text: diff.contents,
     hunks: diff.hunks,
     lineEndingsChange,
+    isDirectory: await fileSystem.isDirectory(
+      Path.join(repository.path, file.path)
+    ),
   }
 }
 

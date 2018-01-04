@@ -58,11 +58,35 @@ export async function getStatus(
   repository: Repository,
   sketchFiles: ReadonlyArray<IKactusFile>
 ): Promise<IStatusResult> {
-  const result = await git(
-    ['status', '--untracked-files=all', '--branch', '--porcelain=2', '-z'],
-    repository.path,
-    'getStatus'
-  )
+  let result
+  try {
+    result = await git(
+      ['status', '--untracked-files=all', '--branch', '--porcelain=2', '-z'],
+      repository.path,
+      'getStatus'
+    )
+  } catch (err) {
+    if (
+      err.message.match(
+        /^The output from the command could not fit into the allocated stdout buffer./
+      )
+    ) {
+      // try again without the `--untracked-files=all`
+      result = await git(
+        [
+          'status',
+          '--untracked-files=normal',
+          '--branch',
+          '--porcelain=2',
+          '-z',
+        ],
+        repository.path,
+        'getStatus'
+      )
+    } else {
+      throw err
+    }
+  }
 
   const files = new Array<WorkingDirectoryFileChange>()
 

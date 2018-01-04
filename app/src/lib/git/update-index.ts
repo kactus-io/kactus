@@ -96,6 +96,17 @@ async function updateIndex(
 }
 
 /**
+ * git add a directory.
+ *
+ * @param path   Path of the directory
+ */
+async function addDirectory(repository: Repository, path: string) {
+  const args = ['add', path]
+
+  await git(args, repository.path, 'add')
+}
+
+/**
  * Stage all the given files by either staging the entire path or by applying
  * a patch.
  *
@@ -113,7 +124,9 @@ export async function stageFiles(
   const partial = []
 
   for (const file of files) {
-    if (file.selection.getSelectionType() === DiffSelectionType.All) {
+    if (file.path.match(/\/$/)) {
+      await addDirectory(repository, file.path)
+    } else if (file.selection.getSelectionType() === DiffSelectionType.All) {
       normal.push(file.path)
       if (file.status === AppFileStatus.Renamed && file.oldPath) {
         oldRenamed.push(file.oldPath)
