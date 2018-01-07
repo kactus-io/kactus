@@ -130,7 +130,7 @@ export class AddExistingRepository extends React.Component<
       <Row className="warning-helper-text">
         <Octicon symbol={OcticonSymbol.alert} />
         <div>
-          This directory does not appear to be ignore sketch files.
+          This directory does not appear to ignore sketch files.
           <br />
           <Checkbox
             label="Would you like to ignore them? (recommended)"
