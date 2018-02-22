@@ -14,7 +14,6 @@ dependencies:
     - ".eslintcache"
     - "node_modules"
     - "~/.electron"
-    - "~/Library/Caches/Yarn/v1"
 
   pre:
     - brew update

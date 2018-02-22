@@ -1680,10 +1680,12 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     const result = await this.isCommitting(repository, () => {
       return gitStore.performFailableOperation(async () => {
-        const commitMessage = await formatCommitMessage(repository,
+        const commitMessage = await formatCommitMessage(
+          repository,
           summary,
           description,
-          trailers)
+          trailers
+        )
         return createCommit(
           repository,
           state.kactus.files,
