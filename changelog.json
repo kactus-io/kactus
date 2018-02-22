@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.2": [
+      "[New] Add a new indicator if the branch is a PR",
+      "[Improved] Do not export the commit meta key of the sketch file"
+    ],
     "0.3.1": [
       "[New] Add visual diffs for SVGs",
       "[Improved] Fetching the Sketch files is now around 4 times faster!",
