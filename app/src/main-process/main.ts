@@ -325,7 +325,7 @@ app.on('activate', () => {
 
 app.on('web-contents-created', (event, contents) => {
   contents.on('new-window', (event, url) => {
-    // Prevent links or window.open from opening new windows
+    // Prevent links or window.open from opening new window
     event.preventDefault()
     log.warn(`Prevented new window to: ${url}`)
   })

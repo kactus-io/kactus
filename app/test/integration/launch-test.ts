@@ -25,9 +25,6 @@ describe('App', function(this: any) {
       '.bin',
       'electron'
     )
-    if (process.platform === 'win32') {
-      appPath += '.cmd'
-    }
     app = new Application({
       path: appPath,
       args: [path.join(__dirname, '..', '..', '..', 'out')],

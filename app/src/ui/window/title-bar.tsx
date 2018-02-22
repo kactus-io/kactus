@@ -38,7 +38,7 @@ export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
     this.state = getState(props)
   }
 
-  private onTitlebarDoubleClickDarwin = () => {
+  private onTitlebarDoubleClick = () => {
     const actionOnDoubleClick = remote.systemPreferences.getUserDefault(
       'AppleActionOnDoubleClick',
       'string'
@@ -73,13 +73,11 @@ export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
       <Octicon className="app-icon" symbol={OcticonSymbol.markGithub} />
     ) : null
 
-    const onTitlebarDoubleClick = this.onTitlebarDoubleClickDarwin
-
     return (
       <div
         className={titleBarClass}
         id="desktop-app-title-bar"
-        onDoubleClick={onTitlebarDoubleClick}
+        onDoubleClick={this.onTitlebarDoubleClick}
         style={this.state.style}
       >
         {appIcon}

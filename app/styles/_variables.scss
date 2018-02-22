@@ -63,22 +63,6 @@
   /** Extra small font size, be very conservative with the use of this */
   --font-size-xs: 9px;
 
-  /**
-   * Background color for custom scroll bars.
-   * The color is applied to the thumb part of the scrollbar.
-   *
-   * Note: Only applies to win32 platforms
-   */
-  --scroll-bar-thumb-background-color: rgba(0, 0, 0, 0.2);
-
-  /**
-   * Background color for custom scroll bars in their active state.
-   * The color is applied to the thumb part of the scrollbar.
-   *
-   * Note: Only applies to win32 platforms
-   */
-  --scroll-bar-thumb-background-color-active: rgba(0, 0, 0, 0.5);
-
   // Box
   //
   // We use the term 'box' here to refer to a very high-level generic
@@ -145,17 +129,10 @@
   --box-selected-active-border-color: $gray-400;
 
   /**
-   * The height of the title bar area on Win32 platforms
+   * The height of the title bar area
    * If changed, update titleBarHeight in 'app/src/ui/dialog/dialog.tsx'
   */
-  --win32-title-bar-height: 28px;
-  --win32-title-bar-background-color: $gray-900;
-
-  /**
-   * The height of the title bar area on darwin platforms
-   * If changed, update titleBarHeight in 'app/src/ui/dialog/dialog.tsx'
-  */
-  --darwin-title-bar-height: 22px;
+  --title-bar-height: 22px;
 
   --spacing: 10px;
   --spacing-double: calc(var(--spacing) * 2);
@@ -199,9 +176,6 @@
   --tab-bar-height: 29px;
   --tab-bar-active-color: $green;
   --tab-bar-background-color: $white;
-
-  /** Win32 has custom scrol bars, see _scroll.scss */
-  --win32-scroll-bar-size: 10px;
 
   /**
    * The z-index for popups. Nothing should be higher, but other z-indexes can

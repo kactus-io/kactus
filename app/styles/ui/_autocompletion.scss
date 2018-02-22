@@ -21,16 +21,6 @@
     height: 29px;
     padding: 0 var(--spacing);
   }
-
-  // We can't replicate the nice scrollbars that we have in
-  // the regular autocomplete popup since that's based on List
-  // and this CodeMirror stuff is just an unordered list.
-  // The autocomplete popup is not intended to be used with
-  // a pointer-device anyway so not being able to mouse-wheel
-  // through it shouldn't be a big deal
-  @include win32 {
-    overflow-y: hidden;
-  }
 }
 
 .autocompletion-popup {

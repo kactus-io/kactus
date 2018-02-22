@@ -26,10 +26,5 @@
 
   input {
     @include textboxish;
-
-    // Don't override disabled styles on darwin for text boxes.
-    @include win32 {
-      @include textboxish-disabled;
-    }
   }
 }

@@ -8,8 +8,7 @@ const shouldFix = process.argv.indexOf('--fix') > -1
 
 const root = Path.dirname(__dirname)
 
-const prettier = process.platform === 'win32' ? 'prettier.cmd' : 'prettier'
-const prettierPath = Path.join(root, 'node_modules', '.bin', prettier)
+const prettierPath = Path.join(root, 'node_modules', '.bin', 'prettier')
 
 const args = ['**/*.scss', '--list-different']
 
