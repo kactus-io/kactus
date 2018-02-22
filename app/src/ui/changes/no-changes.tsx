@@ -22,7 +22,6 @@ interface INoChangesProps {
 /** The component to display when there are no local changes. */
 export class NoChanges extends React.Component<INoChangesProps, {}> {
   public render() {
-    const opener = 'Finder'
     return (
       <div className="panel blankslate" id="blank-slate">
         <img src={BlankSlateImage} className="blankslate-image" />
@@ -40,10 +39,8 @@ export class NoChanges extends React.Component<INoChangesProps, {}> {
 
             <div className="callout half">
               <Octicon symbol={OcticonSymbol.fileDirectory} />
-              <div>Open this repository in {opener}</div>
-              <Button onClick={this.props.onOpenRepository}>
-                Open {opener}
-              </Button>
+              <div>Open this repository in Finder</div>
+              <Button onClick={this.props.onOpenRepository}>Open Finder</Button>
             </div>
           </div>
         </div>
