@@ -79,16 +79,7 @@ export function matchExistingRepository(
 ): Repository | CloningRepository | null {
   return (
     repositories.find(r => {
-      if (__WIN32__) {
-        // Windows is guaranteed to be case-insensitive so we can be a
-        // bit more accepting.
-        return (
-          Path.normalize(r.path).toLowerCase() ===
-          Path.normalize(path).toLowerCase()
-        )
-      } else {
-        return Path.normalize(r.path) === Path.normalize(path)
-      }
+      return Path.normalize(r.path) === Path.normalize(path)
     }) || null
   )
 }

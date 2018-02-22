@@ -136,7 +136,7 @@ export function request(
 
 /** Get the user agent to use for all requests. */
 export function getUserAgent() {
-  const platform = __DARWIN__ ? 'Macintosh' : 'Windows'
+  const platform = 'Macintosh'
   return `Kactus/${appProxy.getVersion()} (${platform})`
 }
 

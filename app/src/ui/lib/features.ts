@@ -42,6 +42,6 @@ function featureFlag(
  */
 export const shouldRenderApplicationMenu = featureFlag(
   'should-render-application-menu',
-  __DARWIN__ ? false : true,
+  false,
   true
 )

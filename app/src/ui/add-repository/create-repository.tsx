@@ -368,7 +368,7 @@ export class CreateRepository extends React.Component<
     return (
       <Row>
         <Select
-          label={__DARWIN__ ? 'Git Ignore' : 'Git ignore'}
+          label="Git Ignore"
           value={this.state.gitIgnore}
           onChange={this.onGitIgnoreChange}
         >
@@ -469,9 +469,7 @@ export class CreateRepository extends React.Component<
     return (
       <Dialog
         id="create-repository"
-        title={
-          __DARWIN__ ? 'Create a New Repository' : 'Create a new repository'
-        }
+        title="Create a New Repository"
         loading={this.state.creating}
         onSubmit={this.createRepository}
         onDismissed={this.props.onDismissed}
@@ -502,7 +500,7 @@ export class CreateRepository extends React.Component<
           <Row>
             <TextBox
               value={this.state.path}
-              label={__DARWIN__ ? 'Local Path' : 'Local path'}
+              label="Local Path"
               placeholder="repository path"
               onValueChanged={this.onPathChanged}
               disabled={readOnlyPath}
@@ -533,7 +531,7 @@ export class CreateRepository extends React.Component<
         <DialogFooter>
           <ButtonGroup>
             <Button type="submit" disabled={disabled}>
-              {__DARWIN__ ? 'Create Repository' : 'Create repository'}
+              Create Repository
             </Button>
 
             <Button onClick={this.props.onDismissed}>Cancel</Button>

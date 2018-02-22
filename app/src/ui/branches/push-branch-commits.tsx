@@ -125,10 +125,10 @@ export class PushBranchCommits extends React.Component<
 
   private renderDialogTitle() {
     if (renderPublishView(this.props.unPushedCommits)) {
-      return __DARWIN__ ? 'Publish Branch?' : 'Publish branch?'
+      return 'Publish Branch?'
     }
 
-    return __DARWIN__ ? `Push Local Changes?` : `Push local changes?`
+    return `Push Local Changes?`
   }
 
   private renderButtonGroup() {
@@ -136,7 +136,7 @@ export class PushBranchCommits extends React.Component<
       return (
         <ButtonGroup>
           <Button type="submit" onClick={this.onPushOrPublishButtonClick}>
-            {__DARWIN__ ? 'Publish Branch' : 'Publish branch'}
+            Publish Branch
           </Button>
           <Button onClick={this.cancel}>Cancel</Button>
         </ButtonGroup>
@@ -146,10 +146,10 @@ export class PushBranchCommits extends React.Component<
     return (
       <ButtonGroup>
         <Button type="submit" onClick={this.onPushOrPublishButtonClick}>
-          {__DARWIN__ ? 'Push Commits' : 'Push commits'}
+          Push Commits
         </Button>
         <Button onClick={this.onCreateWithoutPushButtonClick}>
-          {__DARWIN__ ? 'Create Without Pushing' : 'Create without pushing'}
+          Create Without Pushing
         </Button>
       </ButtonGroup>
     )

@@ -37,9 +37,6 @@ function getReplacements() {
       process.env.KACTUS_OAUTH_CLIENT_SECRET || devClientSecret
     ),
     __STRIPE_KEY__: JSON.stringify(process.env.STRIPE_KEY || devStripeKey),
-    __DARWIN__: process.platform === 'darwin',
-    __WIN32__: process.platform === 'win32',
-    __LINUX__: process.platform === 'linux',
     __DEV__: channel === 'development',
     __RELEASE_CHANNEL__: s(channel),
     __UPDATES_URL__: s(distInfo.getUpdatesURL()),

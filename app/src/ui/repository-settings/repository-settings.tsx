@@ -83,7 +83,7 @@ export class RepositorySettings extends React.Component<
     return (
       <Dialog
         id="repository-settings"
-        title={__DARWIN__ ? 'Repository Settings' : 'Repository settings'}
+        title="Repository Settings"
         onDismissed={this.props.onDismissed}
         onSubmit={this.onSubmit}
         disabled={this.state.disabled}
@@ -95,7 +95,7 @@ export class RepositorySettings extends React.Component<
           selectedIndex={this.state.selectedTab}
         >
           <span>Remote</span>
-          <span>{__DARWIN__ ? 'Ignored Files' : 'Ignored files'}</span>
+          <span>Ignored Files</span>
         </TabBar>
 
         {this.renderActiveTab()}

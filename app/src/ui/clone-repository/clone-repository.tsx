@@ -61,6 +61,9 @@ interface ICloneRepositoryState {
    * The repository identifier that was last parsed from the user-entered URL.
    */
   readonly lastParsedIdentifier: IRepositoryIdentifier | null
+
+  /** Should the component clear the filter text on render? */
+  readonly shouldClearFilter: boolean
 }
 
 /** The component for cloning a repository. */
@@ -77,7 +80,14 @@ export class CloneRepository extends React.Component<
       loading: false,
       error: null,
       lastParsedIdentifier: null,
+      shouldClearFilter: false,
     }
+  }
+
+  public componentWillReceiveProps(nextProps: ICloneRepositoryProps) {
+    this.setState({
+      shouldClearFilter: this.props.selectedTab !== nextProps.selectedTab,
+    })
   }
 
   public componentDidMount() {
@@ -92,7 +102,7 @@ export class CloneRepository extends React.Component<
     return (
       <Dialog
         className="clone-repository"
-        title={__DARWIN__ ? 'Clone a Repository' : 'Clone a repository'}
+        title="Clone a Repository"
         onSubmit={this.clone}
         onDismissed={this.props.onDismissed}
         loading={this.state.loading}
@@ -176,6 +186,7 @@ export class CloneRepository extends React.Component<
               onGitHubRepositorySelected={this.updateUrl}
               onChooseDirectory={this.onChooseDirectory}
               onDismissed={this.props.onDismissed}
+              shouldClearFilter={this.state.shouldClearFilter}
             />
           )
         }
@@ -197,7 +208,7 @@ export class CloneRepository extends React.Component<
   }
 
   private renderSignIn(tab: CloneRepositoryTab) {
-    const signInTitle = __DARWIN__ ? 'Sign In' : 'Sign in'
+    const signInTitle = 'Sign In'
     switch (tab) {
       case CloneRepositoryTab.DotCom:
         return (

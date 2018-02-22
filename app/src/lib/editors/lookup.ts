@@ -1,8 +1,9 @@
-import { ExternalEditor, ExternalEditorError } from './shared'
+import {
+  ExternalEditor,
+  ExternalEditorError,
+  getAvailableEditors,
+} from './utils'
 import { IFoundEditor } from './found-editor'
-import { getAvailableEditors as getAvailableEditorsDarwin } from './darwin'
-import { getAvailableEditors as getAvailableEditorsWindows } from './win32'
-import { getAvailableEditors as getAvailableEditorsLinux } from './linux'
 
 let editorCache: ReadonlyArray<IFoundEditor<ExternalEditor>> | null = null
 
@@ -10,35 +11,15 @@ let editorCache: ReadonlyArray<IFoundEditor<ExternalEditor>> | null = null
  * Resolve a list of installed editors on the user's machine, using the known
  * install identifiers that each OS supports.
  */
-export async function getAvailableEditors(): Promise<
+export async function getCachedAvailableEditors(): Promise<
   ReadonlyArray<IFoundEditor<ExternalEditor>>
 > {
   if (editorCache && editorCache.length > 0) {
     return editorCache
   }
 
-  if (__DARWIN__) {
-    editorCache = await getAvailableEditorsDarwin()
-    return editorCache
-  }
-
-  if (__WIN32__) {
-    editorCache = await getAvailableEditorsWindows()
-    return editorCache
-  }
-
-  if (__LINUX__) {
-    editorCache = await getAvailableEditorsLinux()
-    return editorCache
-  }
-
-  log.warn(
-    `Platform not currently supported for resolving editors: ${
-      process.platform
-    }`
-  )
-
-  return []
+  editorCache = await getAvailableEditors()
+  return editorCache
 }
 
 /**
@@ -51,7 +32,7 @@ export async function getAvailableEditors(): Promise<
 export async function findEditorOrDefault(
   name: string | null
 ): Promise<IFoundEditor<ExternalEditor>> {
-  const editors = await getAvailableEditors()
+  const editors = await getCachedAvailableEditors()
   if (editors.length === 0) {
     throw new ExternalEditorError(
       'No suitable editors installed for Kactus to launch. Install Atom for your platform and try again and restart Kactus to try again.',
@@ -62,7 +43,7 @@ export async function findEditorOrDefault(
   if (name) {
     const match = editors.find(p => p.editor === name) || null
     if (!match) {
-      const menuItemName = __DARWIN__ ? 'Preferences' : 'Options'
+      const menuItemName = 'Preferences'
       const message = `The editor '${name}' could not be found. Please open ${menuItemName} and choose an available editor.`
 
       throw new ExternalEditorError(message, { openPreferences: true })

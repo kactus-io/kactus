@@ -8,15 +8,5 @@ export function openKactus(url: string = '') {
 
   url = 'x-kactus-client://' + url
 
-  if (__DARWIN__) {
-    return ChildProcess.spawn('open', [url], { env })
-  } else if (__WIN32__) {
-    return ChildProcess.spawn('cmd', ['/c', 'start', url], { env })
-  } else {
-    throw new Error(
-      `Kactus command line interface not currently supported on platform ${
-        process.platform
-      }`
-    )
-  }
+  return ChildProcess.spawn('open', [url], { env })
 }

@@ -11,15 +11,9 @@ import { createUniqueId, releaseUniqueId } from '../lib/id-pool'
 const dismissGracePeriodMs = 250
 
 /**
- * The time (in milliseconds) that we should wait after focusing before we
- * re-enable click dismissal. Note that this is only used on Windows.
- */
-const DisableClickDismissalDelay = 500
-
-/**
  * Title bar height in pixels. Values taken from 'app/styles/_variables.scss'.
  */
-const titleBarHeight = __DARWIN__ ? 22 : 28
+const titleBarHeight = 22
 
 interface IDialogProps {
   /**
@@ -196,24 +190,6 @@ export class Dialog extends React.Component<IDialogProps, IDialogState> {
 
     this.setState({ isAppearing: true })
     this.scheduleDismissGraceTimeout()
-
-    window.addEventListener('focus', this.onWindowFocus)
-  }
-
-  private onWindowFocus = () => {
-    // On Windows and Linux, a click which focuses the window will also get
-    // passed down into the DOM. But we don't want to dismiss the dialog based
-    // on that click. See https://github.com/desktop/desktop/issues/2486.
-    if (__WIN32__ || __LINUX__) {
-      this.clearClickDismissalTimer()
-
-      this.disableClickDismissal = true
-
-      this.disableClickDismissalTimeoutId = window.setTimeout(() => {
-        this.disableClickDismissal = false
-        this.disableClickDismissalTimeoutId = null
-      }, DisableClickDismissalDelay)
-    }
   }
 
   private clearClickDismissalTimer() {
@@ -229,8 +205,6 @@ export class Dialog extends React.Component<IDialogProps, IDialogState> {
     if (this.state.titleId) {
       releaseUniqueId(this.state.titleId)
     }
-
-    window.removeEventListener('focus', this.onWindowFocus)
   }
 
   public componentDidUpdate() {
@@ -307,7 +281,7 @@ export class Dialog extends React.Component<IDialogProps, IDialogState> {
   }
 
   private onKeyDown = (event: KeyboardEvent) => {
-    const shortcutKey = __DARWIN__ ? event.metaKey : event.ctrlKey
+    const shortcutKey = event.metaKey
     if (shortcutKey && event.key === 'w') {
       this.onDialogCancel(event)
     }

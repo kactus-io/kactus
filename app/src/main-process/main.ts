@@ -7,7 +7,6 @@ import { AppWindow } from './app-window'
 import { buildDefaultMenu, MenuEvent, findMenuItemByID } from './menu'
 import { shellNeedsPatching, updateEnvironmentForProcess } from '../lib/shell'
 import { parseAppURL } from '../lib/parse-app-url'
-import { handleSquirrelEvent } from './squirrel-updater'
 import { fatalError } from '../lib/fatal-error'
 
 import { IMenuItemState } from '../lib/menu-update'
@@ -30,7 +29,6 @@ let mainWindow: AppWindow | null = null
 
 const launchTime = now()
 
-let preventQuit = false
 let readyTime: number | null = null
 
 type OnDidLoadFn = (window: AppWindow) => void
@@ -38,8 +36,6 @@ type OnDidLoadFn = (window: AppWindow) => void
 let onDidLoadFns: Array<OnDidLoadFn> | null = []
 
 function handleUncaughtException(error: Error) {
-  preventQuit = true
-
   if (mainWindow) {
     mainWindow.destroy()
     mainWindow = null
@@ -56,26 +52,8 @@ process.on('uncaughtException', (error: Error) => {
   handleUncaughtException(error)
 })
 
-let handlingSquirrelEvent = false
-if (__WIN32__ && process.argv.length > 1) {
-  const arg = process.argv[1]
-
-  const promise = handleSquirrelEvent(arg)
-  if (promise) {
-    handlingSquirrelEvent = true
-    promise
-      .catch(e => {
-        log.error(`Failed handling Squirrel event: ${arg}`, e)
-      })
-      .then(() => {
-        app.quit()
-      })
-  } else {
-    handleAppURL(arg)
-  }
-}
-
 function handleAppURL(url: string) {
+  log.info('Processing protocol url')
   const action = parseAppURL(url)
   onDidLoad(window => {
     // This manual focus call _shouldn't_ be necessary, but is for Chrome on
@@ -85,33 +63,25 @@ function handleAppURL(url: string) {
   })
 }
 
-let isDuplicateInstance = false
-// If we're handling a Squirrel event we don't want to enforce single instance.
-// We want to let the updated instance launch and do its work. It will then quit
-// once it's done.
-if (!handlingSquirrelEvent) {
-  isDuplicateInstance = app.makeSingleInstance((args, workingDirectory) => {
-    // Someone tried to run a second instance, we should focus our window.
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) {
-        mainWindow.restore()
-      }
-
-      if (!mainWindow.isVisible()) {
-        mainWindow.show()
-      }
-
-      mainWindow.focus()
+const isDuplicateInstance = app.makeSingleInstance((args, workingDirectory) => {
+  // Someone tried to run a second instance, we should focus our window.
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore()
     }
 
-    if (args.length > 1) {
-      handleAppURL(args[1])
+    if (!mainWindow.isVisible()) {
+      mainWindow.show()
     }
-  })
 
-  if (isDuplicateInstance) {
-    app.quit()
+    mainWindow.focus()
   }
+
+  handlePossibleProtocolLauncherArgs(args)
+})
+
+if (isDuplicateInstance) {
+  app.quit()
 }
 
 if (shellNeedsPatching(process)) {
@@ -119,15 +89,31 @@ if (shellNeedsPatching(process)) {
 }
 
 app.on('will-finish-launching', () => {
+  // macOS only
   app.on('open-url', (event, url) => {
     event.preventDefault()
-
     handleAppURL(url)
   })
 })
 
+/**
+ * Attempt to detect and handle any protocol handler arguments passed
+ * either via the command line directly to the current process or through
+ * IPC from a duplicate instance (see makeSingleInstance)
+ *
+ * @param args Essentially process.argv, i.e. the first element is the exec
+ *             path
+ */
+function handlePossibleProtocolLauncherArgs(args: ReadonlyArray<string>) {
+  log.info(`Received possible protocol arguments: ${args.length}`)
+
+  if (args.length > 1) {
+    handleAppURL(args[1])
+  }
+}
+
 app.on('ready', () => {
-  if (isDuplicateInstance || handlingSquirrelEvent) {
+  if (isDuplicateInstance) {
     return
   }
 
@@ -143,11 +129,7 @@ app.on('ready', () => {
 
   // Also support Github Desktop's protocols.
   app.setAsDefaultProtocolClient('x-github-client')
-  if (__DARWIN__) {
-    app.setAsDefaultProtocolClient('github-mac')
-  } else if (__WIN32__) {
-    app.setAsDefaultProtocolClient('github-windows')
-  }
+  app.setAsDefaultProtocolClient('github-mac')
 
   createWindow()
 
@@ -270,12 +252,9 @@ app.on('ready', () => {
         message,
       }: { certificate: Electron.Certificate; message: string }
     ) => {
-      // This API is only implemented for macOS and Windows right now.
-      if (__DARWIN__ || __WIN32__) {
-        onDidLoad(window => {
-          window.showCertificateTrustDialog(certificate, message)
-        })
-      }
+      onDidLoad(window => {
+        window.showCertificateTrustDialog(certificate, message)
+      })
     }
   )
 
@@ -381,9 +360,6 @@ function createWindow() {
 
   window.onClose(() => {
     mainWindow = null
-    if (!__DARWIN__ && !preventQuit) {
-      app.quit()
-    }
   })
 
   window.onDidLoad(() => {

@@ -45,8 +45,7 @@ export const AuthenticationErrors: ReadonlySet<DugiteError> = new Set([
 ])
 
 function getAskPassTrampolinePath(): string {
-  const extension = __WIN32__ ? 'bat' : 'sh'
-  return Path.resolve(__dirname, 'static', `ask-pass-trampoline.${extension}`)
+  return Path.resolve(__dirname, 'static', `ask-pass-trampoline.sh`)
 }
 
 function getAskPassScriptPath(): string {

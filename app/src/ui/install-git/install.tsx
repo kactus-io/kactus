@@ -45,15 +45,14 @@ export class InstallGit extends React.Component<IInstallGitProps, {}> {
       <Dialog
         id="install-git"
         type="warning"
-        title={__DARWIN__ ? 'Unable to Locate Git' : 'Unable to locate Git'}
+        title="Unable to Locate Git"
         onSubmit={this.props.onDismissed}
         onDismissed={this.props.onDismissed}
       >
         <DialogContent>
           <p>
             We were unable to locate Git on your system. This means you won't be
-            able to execute any Git commands in the{' '}
-            {__DARWIN__ ? 'Terminal window' : 'command prompt'}.
+            able to execute any Git commands in the Terminal window.
           </p>
           <p>
             To help you get Git installed and configured for your operating

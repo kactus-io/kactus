@@ -9,8 +9,6 @@ import { Checkbox, CheckboxValue } from '../lib/checkbox'
 
 const GitIgnoreFileName = '.gitignore'
 
-const RestrictedFileExtensions = ['.cmd', '.exe', '.bat', '.sh']
-
 interface IChangedFileProps {
   readonly path: string
   readonly status: AppFileStatus
@@ -105,7 +103,7 @@ export class ChangedFile extends React.Component<IChangedFileProps, {}> {
     const fileName = Path.basename(this.props.path)
     const items: IMenuItem[] = [
       {
-        label: __DARWIN__ ? 'Discard Changes…' : 'Discard changes…',
+        label: 'Discard Changes…',
         action: () => this.props.onDiscardChanges(this.props.path),
       },
       { type: 'separator' },
@@ -118,29 +116,25 @@ export class ChangedFile extends React.Component<IChangedFileProps, {}> {
 
     if (extension.length) {
       items.push({
-        label: __DARWIN__
-          ? `Ignore All ${extension} Files`
-          : `Ignore all ${extension} files`,
+        label: `Ignore All ${extension} Files`,
         action: () => this.props.onIgnore(`*${extension}`),
         enabled: fileName !== GitIgnoreFileName,
       })
     }
 
-    const isSafeExtension = __WIN32__
-      ? RestrictedFileExtensions.indexOf(extension.toLowerCase()) === -1
-      : true
+    const isSafeExtension = true
+
+    const revealInFileManagerLabel = 'Reveal in Finder'
 
     items.push(
       { type: 'separator' },
       {
-        label: __DARWIN__ ? 'Reveal in Finder' : 'Show in Explorer',
+        label: revealInFileManagerLabel,
         action: () => this.props.onRevealInFileManager(this.props.path),
         enabled: this.props.status !== AppFileStatus.Deleted,
       },
       {
-        label: __DARWIN__
-          ? 'Open with Default Program'
-          : 'Open with default program',
+        label: 'Open with Default Program',
         action: () => this.props.onOpenItem(this.props.path),
         enabled: isSafeExtension && this.props.status !== AppFileStatus.Deleted,
       }

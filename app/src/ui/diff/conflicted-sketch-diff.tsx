@@ -154,16 +154,12 @@ export class ConflictedSketchDiff extends React.Component<
         <div className="content">
           <div className="callout">
             <div>Keep the current version.</div>
-            <Button onClick={this.props.onPickOurs}>
-              {__DARWIN__ ? 'Keep Ours' : 'Keep ours'}
-            </Button>
+            <Button onClick={this.props.onPickOurs}>Keep Ours</Button>
           </div>
 
           <div className="callout">
             <div>Keep the incoming changes.</div>
-            <Button onClick={this.props.onPickTheirs}>
-              {__DARWIN__ ? 'Keep Theirs' : 'Keep theirs'}
-            </Button>
+            <Button onClick={this.props.onPickTheirs}>Keep Theirs</Button>
           </div>
         </div>
 

@@ -2,7 +2,7 @@
  *
  * Utility script for generating a strongly typed representation of all
  * octicons distributed by the octicons NPM package. Enumerates the icons
- * and generates the TypeScript class containing just what Desktop needs.
+ * and generates the TypeScript class containing just what Kactus needs.
  */
 
 import * as fs from 'fs'

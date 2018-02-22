@@ -50,13 +50,11 @@ export class DiscardChanges extends React.Component<
   }
 
   public render() {
-    const trashName = __DARWIN__ ? 'Trash' : 'Recycle Bin'
+    const trashName = 'Trash'
     return (
       <Dialog
         id="discard-changes"
-        title={
-          __DARWIN__ ? 'Confirm Discard Changes' : 'Confirm discard changes'
-        }
+        title="Confirm Discard Changes"
         onDismissed={this.props.onDismissed}
         type="warning"
       >
@@ -79,9 +77,7 @@ export class DiscardChanges extends React.Component<
         <DialogFooter>
           <ButtonGroup destructive={true}>
             <Button type="submit">Cancel</Button>
-            <Button onClick={this.discard}>
-              {__DARWIN__ ? 'Discard Changes' : 'Discard changes'}
-            </Button>
+            <Button onClick={this.discard}>Discard Changes</Button>
           </ButtonGroup>
         </DialogFooter>
       </Dialog>

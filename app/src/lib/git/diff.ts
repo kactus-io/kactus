@@ -123,6 +123,10 @@ export async function getCommitDiff(
     file.path,
   ]
 
+  if (file.oldPath != null) {
+    args.push(file.oldPath)
+  }
+
   const { output } = await spawnAndComplete(
     args,
     repository.path,

@@ -321,7 +321,7 @@ export class PremiumUpsell extends React.Component<
   }
 
   private renderSignIn() {
-    const signInTitle = __DARWIN__ ? 'Sign In' : 'Sign in'
+    const signInTitle = 'Sign In'
     return (
       <div>
         <br />

@@ -22,25 +22,29 @@ interface INoChangesProps {
 /** The component to display when there are no local changes. */
 export class NoChanges extends React.Component<INoChangesProps, {}> {
   public render() {
-    const opener = __DARWIN__ ? 'Finder' : 'Explorer'
+    const opener = 'Finder'
     return (
       <div className="panel blankslate" id="blank-slate">
         <img src={BlankSlateImage} className="blankslate-image" />
-        <div>No local changes</div>
-
         <div className="content">
-          <div className="callout">
-            <Octicon symbol={OcticonSymbol.ruby} />
-            <div>Create a new Sketch File</div>
-            <Button onClick={this.props.onCreateSketchFile}>
-              {__DARWIN__ ? 'Create File' : 'create file'}
-            </Button>
-          </div>
+          <div className="title">No local changes</div>
 
-          <div className="callout">
-            <Octicon symbol={OcticonSymbol.fileDirectory} />
-            <div>Open this repository in {opener}</div>
-            <Button onClick={this.props.onOpenRepository}>Open {opener}</Button>
+          <div className="callouts">
+            <div className="callout half">
+              <Octicon symbol={OcticonSymbol.ruby} />
+              <div>Create a new Sketch File</div>
+              <Button onClick={this.props.onCreateSketchFile}>
+                Create File
+              </Button>
+            </div>
+
+            <div className="callout half">
+              <Octicon symbol={OcticonSymbol.fileDirectory} />
+              <div>Open this repository in {opener}</div>
+              <Button onClick={this.props.onOpenRepository}>
+                Open {opener}
+              </Button>
+            </div>
           </div>
         </div>
         {this.props.loadingDiff && <LoadingOverlay />}

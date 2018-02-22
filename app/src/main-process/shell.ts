@@ -11,15 +11,11 @@ import { shell } from 'electron'
  * @param path directory to open
  */
 export function openDirectorySafe(path: string) {
-  if (__DARWIN__) {
-    const directoryURL = Url.format({
-      pathname: path,
-      protocol: 'file:',
-      slashes: true,
-    })
+  const directoryURL = Url.format({
+    pathname: path,
+    protocol: 'file:',
+    slashes: true,
+  })
 
-    shell.openExternal(directoryURL)
-  } else {
-    shell.openItem(path)
-  }
+  shell.openExternal(directoryURL)
 }

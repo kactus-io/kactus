@@ -76,9 +76,7 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
               Unlock Kactus
             </Button>
           )}
-          <Button onClick={this.logout(account)}>
-            {__DARWIN__ ? 'Sign Out' : 'Sign out'}
-          </Button>
+          <Button onClick={this.logout(account)}>Sign Out</Button>
         </div>
       </Row>
     )
@@ -93,7 +91,7 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
   }
 
   private renderSignIn(type: SignInType) {
-    const signInTitle = __DARWIN__ ? 'Sign In' : 'Sign in'
+    const signInTitle = 'Sign In'
     switch (type) {
       case SignInType.DotCom: {
         return (

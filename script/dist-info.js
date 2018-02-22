@@ -21,15 +21,7 @@ function getDistPath() {
 }
 
 function getExecutableName() {
-  const suffix = process.env.NODE_ENV === 'development' ? '-dev' : ''
-
-  if (process.platform === 'win32') {
-    return `${getWindowsIdentifierName()}${suffix}`
-  } else if (process.platform === 'linux') {
-    return 'desktop'
-  } else {
-    return productName
-  }
+  return productName
 }
 
 function getOSXZipName() {
@@ -38,54 +30,6 @@ function getOSXZipName() {
 
 function getOSXZipPath() {
   return path.join(getDistPath(), '..', getOSXZipName())
-}
-
-function getWindowsInstallerName() {
-  const productName = getExecutableName()
-  return `${productName}Setup.msi`
-}
-
-function getWindowsInstallerPath() {
-  return path.join(getDistPath(), '..', 'installer', getWindowsInstallerName())
-}
-
-function getWindowsStandaloneName() {
-  const productName = getExecutableName()
-  return `${productName}Setup.exe`
-}
-
-function getWindowsStandalonePath() {
-  return path.join(getDistPath(), '..', 'installer', getWindowsStandaloneName())
-}
-
-function getWindowsFullNugetPackageName() {
-  return `${getWindowsIdentifierName()}-${version}-full.nupkg`
-}
-
-function getWindowsFullNugetPackagePath() {
-  return path.join(
-    getDistPath(),
-    '..',
-    'installer',
-    getWindowsFullNugetPackageName()
-  )
-}
-
-function getWindowsDeltaNugetPackageName() {
-  return `${getWindowsIdentifierName()}-${version}-delta.nupkg`
-}
-
-function getWindowsDeltaNugetPackagePath() {
-  return path.join(
-    getDistPath(),
-    '..',
-    'installer',
-    getWindowsDeltaNugetPackageName()
-  )
-}
-
-function getWindowsIdentifierName() {
-  return 'Kactus'
 }
 
 function getBundleSizes() {
@@ -97,12 +41,7 @@ function getBundleSizes() {
 }
 
 function getReleaseBranchName() {
-  let branchName
-  if (process.platform === 'darwin') {
-    branchName = process.env.TRAVIS_BRANCH || process.env.CIRCLE_BRANCH
-  } else if (process.platform === 'win32') {
-    branchName = process.env.APPVEYOR_REPO_BRANCH
-  }
+  const branchName = process.env.TRAVIS_BRANCH || process.env.CIRCLE_BRANCH
 
   return branchName || ''
 }
@@ -186,19 +125,10 @@ module.exports = {
   getDistPath,
   getOSXZipName,
   getOSXZipPath,
-  getWindowsInstallerName,
-  getWindowsInstallerPath,
-  getWindowsStandaloneName,
-  getWindowsStandalonePath,
-  getWindowsFullNugetPackageName,
-  getWindowsFullNugetPackagePath,
-  getWindowsIdentifierName,
   getBundleSizes,
   getReleaseChannel,
   getReleaseSHA,
   getUpdatesURL,
-  getWindowsDeltaNugetPackageName,
-  getWindowsDeltaNugetPackagePath,
   shouldMakeDelta,
   getReleaseBranchName,
   getExecutableName,

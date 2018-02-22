@@ -172,9 +172,9 @@ export class CrashApp extends React.Component<ICrashAppProps, ICrashAppState> {
     // We don't support restarting in dev mode since we can't
     // control the life time of the dev server.
     if (__DEV__) {
-      quitText = __DARWIN__ ? 'Quit' : 'Exit'
+      quitText = 'Quit'
     } else {
-      quitText = __DARWIN__ ? 'Quit and Restart' : 'Exit and restart'
+      quitText = 'Quit and Restart'
     }
 
     return (
@@ -191,11 +191,7 @@ export class CrashApp extends React.Component<ICrashAppProps, ICrashAppState> {
   public render() {
     return (
       <div id="crash-app">
-        <TitleBar
-          showAppIcon={false}
-          titleBarStyle="light"
-          windowState={this.state.windowState}
-        />
+        <TitleBar showAppIcon={false} titleBarStyle="light" />
         <main>
           {this.renderTitle()}
           {this.renderDescription()}

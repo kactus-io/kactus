@@ -143,7 +143,10 @@ export class BranchList extends React.Component<
     this.state = createState(props)
   }
 
-  private renderItem = (item: IBranchListItem) => {
+  private renderItem = (
+    item: IBranchListItem,
+    matches: ReadonlyArray<number>
+  ) => {
     const branch = item.branch
     const commit = branch.tip
     const currentBranchName = this.props.currentBranch
@@ -154,18 +157,18 @@ export class BranchList extends React.Component<
         name={branch.name}
         isCurrentBranch={branch.name === currentBranchName}
         lastCommitDate={commit ? commit.author.date : null}
-        filterText={this.props.filterText}
+        matches={matches}
       />
     )
   }
 
   private getGroupLabel(identifier: BranchGroupIdentifier) {
     if (identifier === 'default') {
-      return __DARWIN__ ? 'Default Branch' : 'Default branch'
+      return 'Default Branch'
     } else if (identifier === 'recent') {
-      return __DARWIN__ ? 'Recent Branches' : 'Recent branches'
+      return 'Recent Branches'
     } else if (identifier === 'other') {
-      return __DARWIN__ ? 'Other Branches' : 'Other branches'
+      return 'Other Branches'
     } else {
       return assertNever(identifier, `Unknown identifier: ${identifier}`)
     }
@@ -224,14 +227,19 @@ export class BranchList extends React.Component<
   }
 
   private renderNoItems = () => {
-    return <NoBranches onCreateNewBranch={this.onCreateNewBranch} />
+    return (
+      <NoBranches
+        onCreateNewBranch={this.onCreateNewBranch}
+        canCreateNewBranch={this.props.canCreateNewBranch}
+      />
+    )
   }
 
   private renderNewButton = () => {
     if (this.props.canCreateNewBranch) {
       return (
         <Button className="new-branch-button" onClick={this.onCreateNewBranch}>
-          New
+          New Branch
         </Button>
       )
     } else {

@@ -1,6 +1,6 @@
 import { spawn } from 'child_process'
 import { pathExists } from '../file-system'
-import { ExternalEditorError, FoundEditor } from './shared'
+import { ExternalEditorError, FoundEditor } from './utils'
 
 /**
  * Open a given folder in the desired external editor.
@@ -15,7 +15,7 @@ export async function launchExternalEditor(
   const editorPath = editor.path
   const exists = await pathExists(editorPath)
   if (!exists) {
-    const label = __DARWIN__ ? 'Preferences' : 'Options'
+    const label = 'Preferences'
     throw new ExternalEditorError(
       `Could not find executable for '${editor.editor}' at path '${
         editor.path

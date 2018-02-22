@@ -33,7 +33,7 @@ export class ShellError extends React.Component<IShellErrorProps, {}> {
   }
 
   public render() {
-    const title = __DARWIN__ ? 'Unable to Open Shell' : 'Unable to open shell'
+    const title = 'Unable to Open Shell'
     return (
       <Dialog
         id="shell-error"
@@ -51,7 +51,7 @@ export class ShellError extends React.Component<IShellErrorProps, {}> {
               Close
             </Button>
             <Button onClick={this.onShowPreferencesDialog}>
-              {__DARWIN__ ? 'Open Preferences' : 'Open options'}
+              Open Preferences
             </Button>
           </ButtonGroup>
         </DialogFooter>

@@ -53,41 +53,44 @@ export class SketchFileView extends React.Component<
             <img src={`data:${preview.mediaType};base64,${preview.contents}`} />
           )}
         </div>
-        <div className="title">{this.props.sketchFile.id}</div>
+
         <div className="content">
-          <div className="callout">
-            <Octicon symbol={OcticonSymbol.ruby} />
-            <div>Open the file in Sketch</div>
-            <Button
-              onClick={this.handleOpen}
-              disabled={!this.props.sketchFile.imported}
-            >
-              {__DARWIN__ ? 'Open File' : 'Open file'}
-            </Button>
-          </div>
+          <div className="title">{this.props.sketchFile.id}</div>
+          <div className="callouts">
+            <div className="callout">
+              <Octicon symbol={OcticonSymbol.ruby} />
+              <div>Open the file in Sketch</div>
+              <Button
+                onClick={this.handleOpen}
+                disabled={!this.props.sketchFile.imported}
+              >
+                Open File
+              </Button>
+            </div>
 
-          <div className="callout">
-            <Octicon symbol={OcticonSymbol.fold} />
-            <div>Regenerate Sketch file from JSON</div>
-            <Button
-              onClick={this.handleImport}
-              disabled={!this.props.sketchFile.parsed}
-            >
-              {this.props.sketchFile.isImporting ? <Loading /> : null}{' '}
-              {__DARWIN__ ? 'Regenerate Sketch File' : 'Regenerate Sketch file'}
-            </Button>
-          </div>
+            <div className="callout">
+              <Octicon symbol={OcticonSymbol.fold} />
+              <div>Regenerate Sketch file from JSON</div>
+              <Button
+                onClick={this.handleImport}
+                disabled={!this.props.sketchFile.parsed}
+              >
+                {this.props.sketchFile.isImporting ? <Loading /> : null}{' '}
+                Regenerate Sketch File
+              </Button>
+            </div>
 
-          <div className="callout">
-            <Octicon symbol={OcticonSymbol.unfold} />
-            <div>Export Sketch file to JSON</div>
-            <Button
-              onClick={this.handleExport}
-              disabled={!this.props.sketchFile.imported}
-            >
-              {this.props.sketchFile.isParsing ? <Loading /> : null}{' '}
-              {__DARWIN__ ? 'Export Sketch File' : 'Export Sketch file'}
-            </Button>
+            <div className="callout">
+              <Octicon symbol={OcticonSymbol.unfold} />
+              <div>Export Sketch file to JSON</div>
+              <Button
+                onClick={this.handleExport}
+                disabled={!this.props.sketchFile.imported}
+              >
+                {this.props.sketchFile.isParsing ? <Loading /> : null} Export
+                Sketch File
+              </Button>
+            </div>
           </div>
         </div>
 

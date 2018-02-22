@@ -7,15 +7,9 @@ import { mkdirIfNeeded } from '../../lib/file-system'
 import { log } from '../log'
 import { openDirectorySafe } from '../shell'
 
-const defaultEditorLabel = __DARWIN__
-  ? 'Open in External Editor'
-  : 'Open in external editor'
-const defaultShellLabel = __DARWIN__
-  ? 'Open in Terminal'
-  : 'Open in Command Prompt'
-const defaultPullRequestLabel = __DARWIN__
-  ? 'Create Pull Request'
-  : 'Create &pull request'
+const defaultEditorLabel = 'Open in External Editor'
+const defaultShellLabel = 'Open in Terminal'
+const defaultPullRequestLabel = 'Create Pull Request'
 
 export function buildDefaultMenu(
   editorLabel: string = defaultEditorLabel,
@@ -25,66 +19,64 @@ export function buildDefaultMenu(
   const template = new Array<Electron.MenuItemConstructorOptions>()
   const separator: Electron.MenuItemConstructorOptions = { type: 'separator' }
 
-  if (__DARWIN__) {
-    template.push({
-      label: 'Kactus',
-      submenu: [
-        {
-          label: 'About Kactus',
-          click: emit('show-about'),
-          id: 'about',
-        },
-        separator,
-        {
-          label: 'Preferences…',
-          id: 'preferences',
-          accelerator: 'CmdOrCtrl+,',
-          click: emit('show-preferences'),
-        },
-        separator,
-        {
-          label: 'Install Command Line Tool…',
-          id: 'install-cli',
-          click: emit('install-cli'),
-        },
-        separator,
-        {
-          role: 'services',
-          submenu: [],
-        },
-        separator,
-        { role: 'hide' },
-        { role: 'hideothers' },
-        { role: 'unhide' },
-        separator,
-        { role: 'quit' },
-      ],
-    })
-  }
-
-  const fileMenu: Electron.MenuItemConstructorOptions = {
-    label: __DARWIN__ ? 'File' : '&File',
+  template.push({
+    label: 'Kactus',
     submenu: [
       {
-        label: __DARWIN__ ? 'New Repository…' : 'New &repository…',
+        label: 'About Kactus',
+        click: emit('show-about'),
+        id: 'about',
+      },
+      separator,
+      {
+        label: 'Preferences…',
+        id: 'preferences',
+        accelerator: 'CmdOrCtrl+,',
+        click: emit('show-preferences'),
+      },
+      separator,
+      {
+        label: 'Install Command Line Tool…',
+        id: 'install-cli',
+        click: emit('install-cli'),
+      },
+      separator,
+      {
+        role: 'services',
+        submenu: [],
+      },
+      separator,
+      { role: 'hide' },
+      { role: 'hideothers' },
+      { role: 'unhide' },
+      separator,
+      { role: 'quit' },
+    ],
+  })
+
+  const fileMenu: Electron.MenuItemConstructorOptions = {
+    label: 'File',
+    submenu: [
+      {
+        label: 'New Repository…',
         id: 'new-repository',
         click: emit('create-repository'),
         accelerator: 'CmdOrCtrl+N',
       },
       {
-        label: __DARWIN__ ? 'New Sketch File…' : 'New &sketch file…',
+        label: 'New Sketch File…',
         id: 'create-sketch-file',
         click: emit('create-sketch-file'),
       },
       separator,
       {
-        label: __DARWIN__ ? 'Add Local Repository…' : 'Add &local repository…',
+        label: 'Add Local Repository…',
         id: 'add-local-repository',
         accelerator: 'CmdOrCtrl+O',
         click: emit('add-local-repository'),
       },
       {
-        label: __DARWIN__ ? 'Clone Repository…' : 'Clo&ne repository…',
+        label: 'Clone Repository…',
         id: 'clone-repository',
         accelerator: 'CmdOrCtrl+Shift+O',
         click: emit('clone-repository'),
@@ -92,89 +84,73 @@ export function buildDefaultMenu(
     ],
   }
 
-  if (!__DARWIN__) {
-    const fileItems = fileMenu.submenu as Electron.MenuItemConstructorOptions[]
-
-    fileItems.push(
-      separator,
-      {
-        label: '&Options…',
-        id: 'preferences',
-        accelerator: 'CmdOrCtrl+,',
-        click: emit('show-preferences'),
-      },
-      separator,
-      { role: 'quit' }
-    )
-  }
-
   template.push(fileMenu)
 
   template.push({
-    label: __DARWIN__ ? 'Edit' : '&Edit',
+    label: 'Edit',
     submenu: [
-      { role: 'undo', label: __DARWIN__ ? 'Undo' : '&Undo' },
-      { role: 'redo', label: __DARWIN__ ? 'Redo' : '&Redo' },
+      { role: 'undo', label: 'Undo' },
+      { role: 'redo', label: 'Redo' },
       separator,
-      { role: 'cut', label: __DARWIN__ ? 'Cut' : 'Cu&t' },
-      { role: 'copy', label: __DARWIN__ ? 'Copy' : '&Copy' },
-      { role: 'paste', label: __DARWIN__ ? 'Paste' : '&Paste' },
-      { role: 'selectall', label: __DARWIN__ ? 'Select All' : 'Select &all' },
+      { role: 'cut', label: 'Cut' },
+      { role: 'copy', label: 'Copy' },
+      { role: 'paste', label: 'Paste' },
+      { role: 'selectall', label: 'Select All' },
     ],
   })
 
   template.push({
-    label: __DARWIN__ ? 'View' : '&View',
+    label: 'View',
     submenu: [
       {
-        label: __DARWIN__ ? 'Show Changes' : '&Changes',
+        label: 'Show Changes',
         id: 'show-changes',
         accelerator: 'CmdOrCtrl+1',
         click: emit('select-changes'),
       },
       {
-        label: __DARWIN__ ? 'Show History' : '&History',
+        label: 'Show History',
         id: 'show-history',
         accelerator: 'CmdOrCtrl+2',
         click: emit('select-history'),
       },
       {
-        label: __DARWIN__ ? 'Show Repository List' : 'Repository &list',
+        label: 'Show Repository List',
         id: 'show-repository-list',
         accelerator: 'CmdOrCtrl+T',
         click: emit('choose-repository'),
       },
       {
-        label: __DARWIN__ ? 'Show Branches List' : '&Branches list',
+        label: 'Show Branches List',
         id: 'show-branches-list',
         accelerator: 'CmdOrCtrl+B',
         click: emit('show-branches'),
       },
       separator,
       {
-        label: __DARWIN__ ? 'Toggle Full Screen' : 'Toggle &full screen',
+        label: 'Toggle Full Screen',
         role: 'togglefullscreen',
       },
       separator,
       {
-        label: __DARWIN__ ? 'Open Sketch' : 'Open S&ketch',
+        label: 'Open Sketch',
         id: 'open-sketch',
         accelerator: 'Ctrl+K',
         click: emit('open-sketch'),
       },
       separator,
       {
-        label: __DARWIN__ ? 'Reset Zoom' : 'Reset zoom',
+        label: 'Reset Zoom',
         accelerator: 'CmdOrCtrl+0',
         click: zoom(ZoomDirection.Reset),
       },
       {
-        label: __DARWIN__ ? 'Zoom In' : 'Zoom in',
+        label: 'Zoom In',
         accelerator: 'CmdOrCtrl+=',
         click: zoom(ZoomDirection.In),
       },
       {
-        label: __DARWIN__ ? 'Zoom Out' : 'Zoom out',
+        label: 'Zoom Out',
         accelerator: 'CmdOrCtrl+-',
         click: zoom(ZoomDirection.Out),
       },
@@ -197,12 +173,8 @@ export function buildDefaultMenu(
       },
       {
         id: 'show-devtools',
-        label: __DARWIN__
-          ? 'Toggle Developer Tools'
-          : '&Toggle developer tools',
-        accelerator: (() => {
-          return __DARWIN__ ? 'Alt+Command+I' : 'Ctrl+Shift+I'
-        })(),
+        label: 'Toggle Developer Tools',
+        accelerator: 'Alt+Command+I',
         click(item: any, focusedWindow: Electron.BrowserWindow) {
           if (focusedWindow) {
             focusedWindow.webContents.toggleDevTools()
@@ -213,30 +185,30 @@ export function buildDefaultMenu(
   })
 
   template.push({
-    label: __DARWIN__ ? 'Repository' : '&Repository',
+    label: 'Repository',
     id: 'repository',
     submenu: [
       {
         id: 'push',
-        label: __DARWIN__ ? 'Push' : 'P&ush',
+        label: 'Push',
         accelerator: 'CmdOrCtrl+P',
         click: emit('push'),
       },
       {
         id: 'pull',
-        label: __DARWIN__ ? 'Pull' : 'Pu&ll',
+        label: 'Pull',
         accelerator: 'CmdOrCtrl+Shift+P',
         click: emit('pull'),
       },
       {
-        label: __DARWIN__ ? 'Remove' : '&Remove',
+        label: 'Remove',
         id: 'remove-repository',
         click: emit('remove-repository'),
       },
       separator,
       {
         id: 'view-repository-on-github',
-        label: __DARWIN__ ? 'View on GitHub' : '&View on GitHub',
+        label: 'View on GitHub',
         accelerator: 'CmdOrCtrl+Shift+G',
         click: emit('view-repository-on-github'),
       },
@@ -247,7 +219,7 @@ export function buildDefaultMenu(
         click: emit('open-in-shell'),
       },
       {
-        label: __DARWIN__ ? 'Show in Finder' : 'Show in E&xplorer',
+        label: 'Show in Finder',
         id: 'open-working-directory',
         accelerator: 'CmdOrCtrl+Shift+F',
         click: emit('open-working-directory'),
@@ -260,12 +232,12 @@ export function buildDefaultMenu(
       },
       separator,
       {
-        label: __DARWIN__ ? 'Repository Settings…' : 'Repository &settings…',
+        label: 'Repository Settings…',
         id: 'show-repository-settings',
         click: emit('show-repository-settings'),
       },
       {
-        label: __DARWIN__ ? 'Kactus Settings…' : '&Kactus settings…',
+        label: 'Kactus Settings…',
         id: 'show-kactus-settings',
         click: emit('show-kactus-settings'),
       },
@@ -273,45 +245,41 @@ export function buildDefaultMenu(
   })
 
   template.push({
-    label: __DARWIN__ ? 'Branch' : '&Branch',
+    label: 'Branch',
     id: 'branch',
     submenu: [
       {
-        label: __DARWIN__ ? 'New Branch…' : 'New &branch…',
+        label: 'New Branch…',
         id: 'create-branch',
         accelerator: 'CmdOrCtrl+Shift+N',
         click: emit('create-branch'),
       },
       {
-        label: __DARWIN__ ? 'Rename…' : '&Rename…',
+        label: 'Rename…',
         id: 'rename-branch',
         click: emit('rename-branch'),
       },
       {
-        label: __DARWIN__ ? 'Delete…' : '&Delete…',
+        label: 'Delete…',
         id: 'delete-branch',
         click: emit('delete-branch'),
       },
       separator,
       {
-        label: __DARWIN__
-          ? 'Update From Default Branch'
-          : '&Update from default branch',
+        label: 'Update From Default Branch',
         id: 'update-branch',
         accelerator: 'CmdOrCtrl+Shift+U',
         click: emit('update-branch'),
       },
       {
-        label: __DARWIN__
-          ? 'Merge Into Current Branch…'
-          : '&Merge into current branch…',
+        label: 'Merge Into Current Branch…',
         id: 'merge-branch',
         accelerator: 'CmdOrCtrl+Shift+M',
         click: emit('merge-branch'),
       },
       separator,
       {
-        label: __DARWIN__ ? 'Compare on GitHub' : '&Compare on GitHub',
+        label: 'Compare on GitHub',
         id: 'compare-branch',
         accelerator: 'CmdOrCtrl+Shift+C',
         click: emit('compare-branch'),
@@ -324,29 +292,26 @@ export function buildDefaultMenu(
       },
     ],
   })
-
-  if (__DARWIN__) {
-    template.push({
-      role: 'window',
-      submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        { role: 'close' },
-        separator,
-        { role: 'front' },
-      ],
-    })
-  }
+  template.push({
+    role: 'window',
+    submenu: [
+      { role: 'minimize' },
+      { role: 'zoom' },
+      { role: 'close' },
+      separator,
+      { role: 'front' },
+    ],
+  })
 
   const submitIssueItem: Electron.MenuItemConstructorOptions = {
-    label: __DARWIN__ ? 'Report Issue…' : 'Report issue…',
+    label: 'Report Issue…',
     click() {
       shell.openExternal('https://github.com/kactus-io/kactus/issues/new')
     },
   }
 
   const contactSupportItem: Electron.MenuItemConstructorOptions = {
-    label: __DARWIN__ ? 'Contact Kactus Support…' : '&Contact Kactus support…',
+    label: 'Contact Kactus Support…',
     click() {
       shell.openExternal(
         `https://kactus.io/contact?from_kactus_app=1&app_version=${app.getVersion()}`
@@ -361,8 +326,10 @@ export function buildDefaultMenu(
     },
   }
 
+  const showLogsLabel = 'Show Logs in Finder'
+
   const showLogsItem: Electron.MenuItemConstructorOptions = {
-    label: __DARWIN__ ? 'Show Logs in Finder' : 'S&how logs in Explorer',
+    label: showLogsLabel,
     click() {
       const logPath = getLogDirectoryPath()
       mkdirIfNeeded(logPath)
@@ -398,25 +365,10 @@ export function buildDefaultMenu(
     )
   }
 
-  if (__DARWIN__) {
-    template.push({
-      role: 'help',
-      submenu: helpItems,
-    })
-  } else {
-    template.push({
-      label: '&Help',
-      submenu: [
-        ...helpItems,
-        separator,
-        {
-          label: '&About Kactus',
-          click: emit('show-about'),
-          id: 'about',
-        },
-      ],
-    })
-  }
+  template.push({
+    role: 'help',
+    submenu: helpItems,
+  })
 
   ensureItemIds(template)
 

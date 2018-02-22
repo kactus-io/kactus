@@ -23,7 +23,7 @@ const BlacklistedNames = new Set(['LOCAL_GIT_DIRECTORY'])
  * @param process The process to inspect.
  */
 export function shellNeedsPatching(process: NodeJS.Process): boolean {
-  return __DARWIN__ && !process.env.PWD
+  return !process.env.PWD
 }
 
 type ShellResult = {
@@ -113,10 +113,6 @@ function getUserShell() {
 async function getEnvironmentFromShell(
   updateEnvironment: (env: IndexLookup) => void
 ): Promise<void> {
-  if (__WIN32__) {
-    return
-  }
-
   const shellEnvText = await getRawShellEnv()
   if (!shellEnvText) {
     return

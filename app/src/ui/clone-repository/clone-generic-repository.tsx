@@ -51,7 +51,7 @@ export class CloneGenericRepository extends React.Component<
         <Row>
           <TextBox
             value={this.props.path}
-            label={__DARWIN__ ? 'Local Path' : 'Local path'}
+            label="Local Path"
             placeholder="repository path"
             onValueChanged={this.props.onPathChanged}
           />

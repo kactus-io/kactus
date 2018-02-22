@@ -8,4 +8,5 @@ app/node_modules/
 .awcache
 *.sketch
 .idea/
+.vs/
 .eslintcache

@@ -34,7 +34,7 @@ export class ConfirmRemoveRepository extends React.Component<
         id="confirm-remove-repository"
         key="remove-repository-confirmation"
         type="warning"
-        title={__DARWIN__ ? 'Remove Repository' : 'Remove repository'}
+        title="Remove Repository"
         onDismissed={this.cancel}
         onSubmit={this.cancel}
       >

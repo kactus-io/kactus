@@ -99,9 +99,7 @@ describe('parseAppURL', () => {
 
   describe('openLocalRepo', () => {
     it('parses local paths', () => {
-      const path = __WIN32__
-        ? 'C:\\Users\\johnsmith\\repo'
-        : '/Users/johnsmith/repo'
+      const path = '/Users/johnsmith/repo'
       const result = parseAppURL(
         `x-github-client://openLocalRepo/${encodeURIComponent(path)}`
       )

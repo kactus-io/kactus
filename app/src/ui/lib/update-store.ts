@@ -9,7 +9,6 @@ import { Emitter, Disposable } from 'event-kit'
 
 import { sendWillQuitSync } from '../main-process-proxy'
 import { ErrorWithMetadata } from '../../lib/error-with-metadata'
-import { parseError } from '../../lib/squirrel-error-parser'
 
 /** The states the auto updater can be in. */
 export enum UpdateStatus {
@@ -90,12 +89,7 @@ class UpdateStore {
   private onAutoUpdaterError = (error: Error) => {
     this.status = UpdateStatus.UpdateNotAvailable
 
-    if (__WIN32__) {
-      const parsedError = parseError(error)
-      this.emitError(parsedError || error)
-    } else {
-      this.emitError(error)
-    }
+    this.emitError(error)
   }
 
   private onCheckingForUpdate = () => {
@@ -156,13 +150,6 @@ class UpdateStore {
    *                       this check user-initiated?
    */
   public checkForUpdates(inBackground: boolean) {
-    // An update has been downloaded and the app is waiting to be restarted.
-    // Checking for updates again may result in the running app being nuked
-    // when it finds a subsequent update.
-    if (__WIN32__ && this.status === UpdateStatus.UpdateReady) {
-      return
-    }
-
     this.userInitiatedUpdate = !inBackground
 
     try {

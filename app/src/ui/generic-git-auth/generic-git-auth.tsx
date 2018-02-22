@@ -48,7 +48,7 @@ export class GenericGitAuthentication extends React.Component<
     return (
       <Dialog
         id="generic-git-auth"
-        title={__DARWIN__ ? `Authentication Failed` : `Authentication failed`}
+        title="Authentication Failed"
         onDismissed={this.props.onDismiss}
         onSubmit={this.save}
       >
@@ -81,7 +81,7 @@ export class GenericGitAuthentication extends React.Component<
         <DialogFooter>
           <ButtonGroup>
             <Button type="submit" disabled={disabled}>
-              {__DARWIN__ ? 'Save and Retry' : 'Save and retry'}
+              Save and Retry
             </Button>
             <Button onClick={this.props.onDismiss}>Cancel</Button>
           </ButtonGroup>

@@ -31,21 +31,16 @@ export class UntrustedCertificate extends React.Component<
 > {
   public render() {
     const host = URL.parse(this.props.url).hostname
-    const type = __DARWIN__ ? 'warning' : 'error'
-    const buttonGroup = __DARWIN__ ? (
+    const type = 'warning'
+    const buttonGroup = (
       <ButtonGroup destructive={true}>
         <Button type="submit">Cancel</Button>
         <Button onClick={this.onContinue}>View Certificate</Button>
       </ButtonGroup>
-    ) : (
-      <ButtonGroup>
-        <Button type="submit">Close</Button>
-        <Button onClick={this.onContinue}>Add certificate</Button>
-      </ButtonGroup>
     )
     return (
       <Dialog
-        title={__DARWIN__ ? 'Untrusted Server' : 'Untrusted server'}
+        title="Untrusted Server"
         onDismissed={this.props.onDismissed}
         onSubmit={this.props.onDismissed}
         type={type}

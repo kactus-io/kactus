@@ -152,7 +152,7 @@ export class AddExistingRepository extends React.Component<
     return (
       <Dialog
         id="add-existing-repository"
-        title={__DARWIN__ ? 'Add Local Repository' : 'Add local repository'}
+        title="Add Local Repository"
         onSubmit={this.addRepository}
         onDismissed={this.props.onDismissed}
       >
@@ -160,7 +160,7 @@ export class AddExistingRepository extends React.Component<
           <Row>
             <TextBox
               value={this.state.path}
-              label={__DARWIN__ ? 'Local Path' : 'Local path'}
+              label="Local Path"
               placeholder="repository path"
               onValueChanged={this.onPathChanged}
               autoFocus={true}
@@ -173,7 +173,7 @@ export class AddExistingRepository extends React.Component<
         <DialogFooter>
           <ButtonGroup>
             <Button disabled={disabled} type="submit">
-              {__DARWIN__ ? 'Add Repository' : 'Add repository'}
+              Add Repository
             </Button>
             <Button onClick={this.props.onDismissed}>Cancel</Button>
           </ButtonGroup>

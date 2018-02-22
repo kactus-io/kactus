@@ -42,16 +42,6 @@ const repo = 'kactus-io/kactus'
 console.log('Packaging…')
 cp.execSync('npm run package')
 
-let uploadPromise = null
-if (process.platform === 'darwin') {
-  uploadPromise = uploadOSXAssets
-} else if (process.platform === 'win32') {
-  uploadPromise = uploadWindowsAssets
-} else {
-  console.error(`I dunno how to publish a release for ${process.platform} :(`)
-  process.exit(1)
-}
-
 let releaseId
 const tag = 'v' + packageInfo.getVersion()
 
@@ -67,7 +57,7 @@ github
   )
   .then(function(res) {
     releaseId = res.id
-    return uploadPromise(releaseId)
+    return uploadOSXAssets(releaseId)
   })
   .then(artifacts => {
     const names = artifacts.map(function(item, index) {
@@ -85,33 +75,5 @@ function uploadOSXAssets(releaseId) {
   const uploads = [
     github.updateAsset(token, repo, releaseId, distInfo.getOSXZipPath()),
   ]
-  return Promise.all(uploads)
-}
-
-function uploadWindowsAssets() {
-  const uploads = [
-    upload(
-      distInfo.getWindowsInstallerName(),
-      distInfo.getWindowsInstallerPath()
-    ),
-    upload(
-      distInfo.getWindowsStandaloneName(),
-      distInfo.getWindowsStandalonePath()
-    ),
-    upload(
-      distInfo.getWindowsFullNugetPackageName(),
-      distInfo.getWindowsFullNugetPackagePath()
-    ),
-  ]
-
-  if (distInfo.shouldMakeDelta()) {
-    uploads.push(
-      upload(
-        distInfo.getWindowsDeltaNugetPackageName(),
-        distInfo.getWindowsDeltaNugetPackagePath()
-      )
-    )
-  }
-
   return Promise.all(uploads)
 }

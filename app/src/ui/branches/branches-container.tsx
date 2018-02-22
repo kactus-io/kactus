@@ -55,16 +55,12 @@ export class BranchesContainer extends React.Component<
     }
   }
 
-  private onItemClick = (item: Branch) => {
-    this.checkoutBranch(item.nameWithoutRemote)
-  }
-
-  private checkoutBranch(branch: string) {
+  private onItemClick = (branch: Branch) => {
     this.props.dispatcher.closeFoldout(FoldoutType.Branch)
 
     const currentBranch = this.props.currentBranch
 
-    if (!currentBranch || currentBranch.name !== branch) {
+    if (currentBranch == null || currentBranch.name !== branch.name) {
       this.props.dispatcher.checkoutBranch(this.props.repository, branch)
     }
   }
@@ -115,8 +111,7 @@ export class BranchesContainer extends React.Component<
       >
         <span>Branches</span>
         <span className="pull-request-tab">
-          {__DARWIN__ ? 'Pull Requests' : 'Pull requests'}
-
+          Pull Requests
           {countElement}
         </span>
       </TabBar>
@@ -234,27 +229,11 @@ export class BranchesContainer extends React.Component<
   }
 
   private onPullRequestClicked = (pullRequest: PullRequest) => {
-    const gitHubRepository = this.props.repository.gitHubRepository
-    if (!gitHubRepository) {
-      return log.error(
-        `We shouldn't be checking out a PR on a repository that doesn't have a GitHub repository.`
-      )
-    }
-
-    const head = pullRequest.head
-    const isRefInThisRepo =
-      head.gitHubRepository &&
-      head.gitHubRepository.cloneURL === gitHubRepository.cloneURL
-    if (isRefInThisRepo) {
-      this.checkoutBranch(head.ref)
-    } else {
-      log.debug(
-        `onPullRequestClicked, but we can't checkout the branch: '${
-          head.ref
-        }' belongs to fork '${pullRequest.author}'`
-      )
-      // TODO: It's in a fork so we'll need to do ... something.
-    }
+    this.props.dispatcher.closeFoldout(FoldoutType.Branch)
+    this.props.dispatcher.checkoutPullRequest(
+      this.props.repository,
+      pullRequest
+    )
 
     this.onPullRequestSelectionChanged(pullRequest)
   }

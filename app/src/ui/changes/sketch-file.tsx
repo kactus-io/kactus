@@ -51,14 +51,12 @@ export class SketchFile extends React.Component<
 
     const items: IMenuItem[] = [
       {
-        label: __DARWIN__ ? 'Export Sketch To JSON…' : 'Export to JSON…',
+        label: 'Export Sketch To JSON…',
         action: () => this.props.onParse(this.props.file),
         enabled: this.props.file.imported,
       },
       {
-        label: __DARWIN__
-          ? 'Regenerate Sketch File From JSON…'
-          : 'Regenerate Sketch File From JSON…',
+        label: 'Regenerate Sketch File From JSON…',
         action: () => this.props.onImport(this.props.file),
         enabled: this.props.file.parsed,
       },

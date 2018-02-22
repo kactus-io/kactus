@@ -3,10 +3,9 @@ import { Repository } from '../../models/repository'
 import { Octicon, iconForRepository } from '../octicons'
 import { showContextualMenu, IMenuItem } from '../main-process-proxy'
 import { Repositoryish } from './group-repositories'
+import { HighlightText } from '../lib/highlight-text'
 
-const defaultEditorLabel = __DARWIN__
-  ? 'Open in External Editor'
-  : 'Open in external editor'
+const defaultEditorLabel = 'Open in External Editor'
 
 interface IRepositoryListItemProps {
   readonly repository: Repositoryish
@@ -14,7 +13,7 @@ interface IRepositoryListItemProps {
   /** Called when the repository should be removed. */
   readonly onRemoveRepository: (repository: Repositoryish) => void
 
-  /** Called when the repository should be shown in Finder/Explorer. */
+  /** Called when the repository should be shown in Finder/Explorer/File Manager. */
   readonly onShowRepository: (repository: Repositoryish) => void
 
   /** Called when the repository should be shown in the shell. */
@@ -32,8 +31,8 @@ interface IRepositoryListItemProps {
   /** The label for the user's preferred shell. */
   readonly shellLabel: string
 
-  /** The text entered by the user to filter their repository list */
-  readonly filterText: string
+  /** The characters in the repository name to highlight */
+  readonly matches: ReadonlyArray<number>
 }
 
 /** A repository item. */
@@ -41,24 +40,6 @@ export class RepositoryListItem extends React.Component<
   IRepositoryListItemProps,
   {}
 > {
-  private renderHighlightedName(name: string) {
-    const filterText = this.props.filterText
-    const matchStart = name.indexOf(filterText)
-    const matchLength = filterText.length
-
-    if (matchStart === -1) {
-      return <span>{name}</span>
-    }
-
-    return (
-      <span>
-        {name.substr(0, matchStart)}
-        <mark>{name.substr(matchStart, matchLength)}</mark>
-        {name.substr(matchStart + matchLength)}
-      </span>
-    )
-  }
-
   public render() {
     const repository = this.props.repository
     const path = repository.path
@@ -83,7 +64,10 @@ export class RepositoryListItem extends React.Component<
 
         <div className="name">
           {prefix ? <span className="prefix">{prefix}</span> : null}
-          {this.renderHighlightedName(repository.name)}
+          <HighlightText
+            text={repository.name}
+            highlight={this.props.matches}
+          />
         </div>
       </div>
     )
@@ -96,7 +80,7 @@ export class RepositoryListItem extends React.Component<
     ) {
       return (
         nextProps.repository.id !== this.props.repository.id ||
-        nextProps.filterText !== this.props.filterText
+        nextProps.matches !== this.props.matches
       )
     } else {
       return true
@@ -112,6 +96,8 @@ export class RepositoryListItem extends React.Component<
       ? `Open in ${this.props.externalEditorLabel}`
       : defaultEditorLabel
 
+    const showRepositoryLabel = 'Show in Finder'
+
     const items: ReadonlyArray<IMenuItem> = [
       {
         label: `Open in ${this.props.shellLabel}`,
@@ -119,7 +105,7 @@ export class RepositoryListItem extends React.Component<
         enabled: !missing,
       },
       {
-        label: __DARWIN__ ? 'Show in Finder' : 'Show in Explorer',
+        label: showRepositoryLabel,
         action: this.showRepository,
         enabled: !missing,
       },

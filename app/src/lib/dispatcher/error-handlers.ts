@@ -5,7 +5,7 @@ import {
   RepositoryDoesNotExistErrorCode,
 } from 'dugite'
 import { ErrorWithMetadata } from '../error-with-metadata'
-import { ExternalEditorError } from '../editors/shared'
+import { ExternalEditorError } from '../editors'
 import { AuthenticationErrors } from '../git/authentication'
 import { Repository } from '../../models/repository'
 import { PopupType } from '../../lib/app-state'

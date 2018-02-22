@@ -22,6 +22,8 @@ import { IAutocompletionProvider } from '../autocompletion'
 import { Repository } from '../../models/repository'
 import { showContextualMenu, IMenuItem } from '../main-process-proxy'
 import { IKactusFile } from '../../lib/kactus'
+import { IAuthor } from '../../models/author'
+import { ITrailer } from '../../lib/git/interpret-trailers'
 
 const RowHeight = 29
 
@@ -37,7 +39,11 @@ interface IChangesListProps {
   readonly onSketchFileSelectionChanged: (file: IKactusFile) => void
   readonly onIncludeChanged: (path: string, include: boolean) => void
   readonly onSelectAll: (selectAll: boolean) => void
-  readonly onCreateCommit: (message: ICommitMessage) => Promise<boolean>
+  readonly onCreateCommit: (
+    summary: string,
+    description: string | null,
+    trailers?: ReadonlyArray<ITrailer>
+  ) => Promise<boolean>
   readonly onDiscardChanges: (file: WorkingDirectoryFileChange) => void
   readonly onDiscardAllChanges: (
     files: ReadonlyArray<WorkingDirectoryFileChange>
@@ -77,6 +83,21 @@ interface IChangesListProps {
   readonly onIgnore: (pattern: string) => void
 
   readonly isLoadingStatus: boolean
+
+  /**
+   * Whether or not to show a field for adding co-authors to
+   * a commit (currently only supported for GH/GHE repositories)
+   */
+  readonly showCoAuthoredBy: boolean
+
+  /**
+   * A list of authors (name, email pairs) which have been
+   * entered into the co-authors input box in the commit form
+   * and which _may_ be used in the subsequent commit to add
+   * Co-Authored-By commit message trailers depending on whether
+   * the user has chosen to do so.
+   */
+  readonly coAuthors: ReadonlyArray<IAuthor>
 }
 
 function getFileList(
@@ -293,7 +314,7 @@ export class ChangesList extends React.Component<
 
     const items: IMenuItem[] = [
       {
-        label: __DARWIN__ ? 'Discard All Changes…' : 'Discard all changes…',
+        label: 'Discard All Changes…',
         action: this.onDiscardAllChanges,
         enabled: this.props.workingDirectory.files.length > 0,
       },
@@ -395,6 +416,8 @@ export class ChangesList extends React.Component<
           contextualCommitMessage={this.props.contextualCommitMessage}
           autocompletionProviders={this.props.autocompletionProviders}
           isCommitting={this.props.isCommitting}
+          showCoAuthoredBy={this.props.showCoAuthoredBy}
+          coAuthors={this.props.coAuthors}
         />
       </div>
     )

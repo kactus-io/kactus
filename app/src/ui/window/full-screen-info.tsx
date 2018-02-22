@@ -90,7 +90,7 @@ export class FullScreenInfo extends React.Component<
       return null
     }
 
-    const kbdShortcut = __DARWIN__ ? '⌃⌘F' : 'F11'
+    const kbdShortcut = '⌃⌘F'
 
     return (
       <div key="notification" className="toast-notification">

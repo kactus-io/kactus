@@ -45,9 +45,7 @@ export class InitializeLFS extends React.Component<IInitializeLFSProps, {}> {
         <DialogFooter>
           <ButtonGroup>
             <Button type="submit">Initialize Git LFS</Button>
-            <Button onClick={this.props.onDismissed}>
-              {__DARWIN__ ? 'Not Now' : 'Not now'}
-            </Button>
+            <Button onClick={this.props.onDismissed}>Not Now</Button>
           </ButtonGroup>
         </DialogFooter>
       </Dialog>

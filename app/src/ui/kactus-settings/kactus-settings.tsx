@@ -52,7 +52,7 @@ export class KactusSettings extends React.Component<
     return (
       <Dialog
         id="kactus-settings"
-        title={__DARWIN__ ? 'Kactus Settings' : 'Kactus settings'}
+        title="Kactus Settings"
         onDismissed={this.props.onDismissed}
         onSubmit={this.onSubmit}
         disabled={this.state.disabled}

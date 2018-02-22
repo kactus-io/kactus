@@ -239,7 +239,7 @@ export class CreateBranch extends React.Component<
     return (
       <Dialog
         id="create-branch"
-        title={__DARWIN__ ? 'Create a Branch' : 'Create a branch'}
+        title="Create a Branch"
         onSubmit={this.createBranch}
         onDismissed={this.props.onDismissed}
         loading={this.state.isCreatingBranch}
@@ -268,7 +268,7 @@ export class CreateBranch extends React.Component<
         <DialogFooter>
           <ButtonGroup>
             <Button type="submit" disabled={disabled}>
-              {__DARWIN__ ? 'Create Branch' : 'Create branch'}
+              Create Branch
             </Button>
             <Button onClick={this.props.onDismissed}>Cancel</Button>
           </ButtonGroup>

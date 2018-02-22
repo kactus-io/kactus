@@ -90,7 +90,7 @@ export class BranchDropdown extends React.Component<IBranchDropdownProps> {
     let icon = OcticonSymbol.gitBranch
     let iconClassName: string | undefined = undefined
     let title: string
-    let description = __DARWIN__ ? 'Current Branch' : 'Current branch'
+    let description = 'Current Branch'
     let canOpen = true
     let tooltip: string
 
@@ -122,7 +122,7 @@ export class BranchDropdown extends React.Component<IBranchDropdownProps> {
 
     if (checkoutProgress) {
       title = checkoutProgress.targetBranch
-      description = __DARWIN__ ? 'Switching to Branch' : 'Switching to branch'
+      description = 'Switching to Branch'
 
       if (checkoutProgress.value > 0) {
         const friendlyProgress = Math.round(checkoutProgress.value * 100)

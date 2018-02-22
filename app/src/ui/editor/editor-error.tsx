@@ -49,9 +49,7 @@ export class EditorError extends React.Component<IEditorErrorProps, {}> {
   }
 
   public render() {
-    const title = __DARWIN__
-      ? 'Unable to Open External Editor'
-      : 'Unable to open external editor'
+    const title = 'Unable to Open External Editor'
 
     let buttonGroup: JSX.Element | null = null
     if (this.props.viewPreferences) {
@@ -61,7 +59,7 @@ export class EditorError extends React.Component<IEditorErrorProps, {}> {
             Close
           </Button>
           <Button onClick={this.onShowPreferencesDialog}>
-            {__DARWIN__ ? 'Open Preferences' : 'Open options'}
+            Open Preferences
           </Button>
         </ButtonGroup>
       )

@@ -51,12 +51,8 @@ export class AppWindow {
         // Enable, among other things, the ResizeObserver
         experimentalFeatures: true,
       },
-    }
-
-    if (__DARWIN__) {
-      windowOptions.titleBarStyle = 'hidden'
-    } else if (__WIN32__) {
-      windowOptions.frame = false
+      acceptFirstMouse: true,
+      titleBarStyle: 'hidden',
     }
 
     this.window = new BrowserWindow(windowOptions)
@@ -75,14 +71,12 @@ export class AppWindow {
     // on macOS, when the user closes the window we really just hide it. This
     // lets us activate quickly and keep all our interesting logic in the
     // renderer.
-    if (__DARWIN__) {
-      this.window.on('close', e => {
-        if (!quitting) {
-          e.preventDefault()
-          Menu.sendActionToFirstResponder('hide:')
-        }
-      })
-    }
+    this.window.on('close', e => {
+      if (!quitting) {
+        e.preventDefault()
+        Menu.sendActionToFirstResponder('hide:')
+      }
+    })
   }
 
   public load() {

@@ -139,7 +139,7 @@ export class Advanced extends React.Component<
 
   private renderExternalEditor() {
     const options = this.props.availableEditors
-    const label = __DARWIN__ ? 'External Editor' : 'External editor'
+    const label = 'External Editor'
 
     if (options.length === 0) {
       // this is emulating the <Select/> component's UI so the styles are
@@ -200,7 +200,7 @@ export class Advanced extends React.Component<
 
     return (
       <div className="brutalism">
-        <strong>{__DARWIN__ ? 'Merge Tool' : 'Merge tool'}</strong>
+        <strong>Merge Tool</strong>
 
         <Row>
           <TextBox

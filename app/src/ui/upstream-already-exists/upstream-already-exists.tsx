@@ -43,9 +43,7 @@ export class UpstreamAlreadyExists extends React.Component<
     const replacementURL = parent.cloneURL
     return (
       <Dialog
-        title={
-          __DARWIN__ ? 'Upstream Already Exists' : 'Upstream already exists'
-        }
+        title="Upstream Already Exists"
         onDismissed={this.props.onDismissed}
         onSubmit={this.onIgnore}
         type="warning"

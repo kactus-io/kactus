@@ -1,4 +1,4 @@
-import { Emitter, Disposable } from 'event-kit'
+import { Disposable } from 'event-kit'
 import { Account } from '../../models/account'
 import { assertNever, fatalError } from '../fatal-error'
 import { askUserToOAuth } from '../../lib/oauth'
@@ -23,6 +23,7 @@ import {
 import { AuthenticationMode } from '../../lib/2fa'
 
 import { minimumSupportedEnterpriseVersion } from '../../lib/enterprise'
+import { TypedBaseStore } from './base-store'
 
 const ClientID = process.env.TEST_ENV ? '' : __OAUTH_CLIENT_ID__!
 const ClientSecret = process.env.TEST_ENV ? '' : __OAUTH_SECRET__!
@@ -183,25 +184,11 @@ export interface ISuccessState {
  * A store encapsulating all logic related to signing in a user
  * to GitHub.com, or a GitHub Enterprise instance.
  */
-export class SignInStore {
-  private readonly emitter = new Emitter()
+export class SignInStore extends TypedBaseStore<SignInState | null> {
   private state: SignInState | null = null
-
-  private emitUpdate() {
-    this.emitter.emit('did-update', this.getState())
-  }
 
   private emitAuthenticate(account: Account, retryAction?: RetryAction) {
     this.emitter.emit('did-authenticate', { account, retryAction })
-  }
-
-  private emitError(error: Error) {
-    this.emitter.emit('did-error', error)
-  }
-
-  /** Register a function to be called when the store updates. */
-  public onDidUpdate(fn: (state: ISignInState) => void): Disposable {
-    return this.emitter.on('did-update', fn)
   }
 
   /**
@@ -212,16 +199,6 @@ export class SignInStore {
     fn: (args: { account: Account; retryAction?: RetryAction }) => void
   ): Disposable {
     return this.emitter.on('did-authenticate', fn)
-  }
-
-  /**
-   * Register an even handler which will be invoked whenever
-   * an unexpected error occurs during the sign-in process. Note
-   * that some error are handled in the flow and passed along in
-   * the sign in state for inline presentation to the user.
-   */
-  public onDidError(fn: (error: Error) => void): Disposable {
-    return this.emitter.on('did-error', fn)
   }
 
   /**
@@ -238,7 +215,7 @@ export class SignInStore {
    */
   private setState(state: SignInState | null) {
     this.state = state
-    this.emitUpdate()
+    this.emitUpdate(this.getState())
   }
 
   private async endpointSupportsBasicAuth(endpoint: string): Promise<boolean> {

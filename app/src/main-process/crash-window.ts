@@ -44,12 +44,7 @@ export class CrashWindow {
         // be able to degrade gracefully.
         experimentalFeatures: false,
       },
-    }
-
-    if (__DARWIN__) {
-      windowOptions.titleBarStyle = 'hidden'
-    } else if (__WIN32__) {
-      windowOptions.frame = false
+      titleBarStyle: 'hidden',
     }
 
     this.window = new BrowserWindow(windowOptions)

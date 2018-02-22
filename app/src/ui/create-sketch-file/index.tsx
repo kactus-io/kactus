@@ -52,7 +52,7 @@ export class CreateSketchFile extends React.Component<
     return (
       <Dialog
         id="create-sketch-file"
-        title={__DARWIN__ ? 'Create a Sketch File' : 'Create a sketch file'}
+        title="Create a Sketch File"
         onSubmit={this.createFile}
         onDismissed={this.props.onDismissed}
         loading={this.state.isCreatingFile}
@@ -73,7 +73,7 @@ export class CreateSketchFile extends React.Component<
         <DialogFooter>
           <ButtonGroup>
             <Button type="submit" disabled={disabled}>
-              {__DARWIN__ ? 'Create File' : 'Create file'}
+              Create File
             </Button>
             <Button onClick={this.props.onDismissed}>Cancel</Button>
           </ButtonGroup>

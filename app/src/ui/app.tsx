@@ -59,7 +59,6 @@ import {
 } from './main-process-proxy'
 import { DiscardChanges } from './discard-changes'
 import { Welcome } from './welcome'
-import { AppMenuBar } from './app-menu'
 import { UpdateAvailable, SketchVersionOutdated } from './updates'
 import { Preferences } from './preferences'
 import { Merge } from './merge-branch'
@@ -88,6 +87,7 @@ import { GenericGitAuthentication } from './generic-git-auth'
 import { ShellError } from './shell'
 import { InitializeLFS, AttributeMismatch } from './lfs'
 import { UpstreamAlreadyExists } from './upstream-already-exists'
+import { DeletePullRequest } from './delete-branch/delete-pull-request-dialog'
 
 /** The interval at which we should check for updates. */
 const UpdateCheckInterval = 1000 * 60 * 60 * 4
@@ -239,6 +239,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     )
 
     log.info(`launching: ${getVersion()} (${getOS()})`)
+    log.info(`execPath: '${process.execPath}'`)
   }
 
   private onMenuEvent(name: MenuEvent): any {
@@ -430,17 +431,19 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
 
     const tip = state.state.branchesState.tip
-    const existsOnRemote = state.state.aheadBehind !== null
 
     if (tip.kind === TipState.Valid) {
       const currentPullRequest = state.state.branchesState.currentPullRequest
       if (currentPullRequest) {
-        this.props.dispatcher.postError(
-          new Error(
-            `You can't delete this branch because it has an open pull request.`
-          )
-        )
+        this.props.dispatcher.showPopup({
+          type: PopupType.DeletePullRequest,
+          repository: state.repository,
+          branch: tip.branch,
+          pullRequest: currentPullRequest,
+        })
       } else {
+        const existsOnRemote = state.state.aheadBehind !== null
+
         this.props.dispatcher.showPopup({
           type: PopupType.DeleteBranch,
           repository: state.repository,
@@ -551,6 +554,9 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
 
     document.body.ondrop = e => {
+      if (this.state.currentPopup != null) {
+        return
+      }
       const files = e.dataTransfer.files
       this.handleDragAndDrop(files)
       e.preventDefault()
@@ -813,56 +819,6 @@ export class App extends React.Component<IAppProps, IAppState> {
     this.openInExternalEditor(repository)
   }
 
-  /**
-   * Conditionally renders a menu bar. The menu bar is currently only rendered
-   * on Windows.
-   */
-  private renderAppMenuBar() {
-    // We only render the app menu bar on Windows
-    if (!__WIN32__) {
-      return null
-    }
-
-    // Have we received an app menu from the main process yet?
-    if (!this.state.appMenuState.length) {
-      return null
-    }
-
-    // Don't render the menu bar during the welcome flow
-    if (this.state.showWelcomeFlow) {
-      return null
-    }
-
-    const currentFoldout = this.state.currentFoldout
-
-    // AppMenuBar requires us to pass a strongly typed AppMenuFoldout state or
-    // null if the AppMenu foldout is not currently active.
-    const foldoutState =
-      currentFoldout && currentFoldout.type === FoldoutType.AppMenu
-        ? currentFoldout
-        : null
-
-    return (
-      <AppMenuBar
-        appMenu={this.state.appMenuState}
-        dispatcher={this.props.dispatcher}
-        highlightAppMenuAccessKeys={this.state.highlightAccessKeys}
-        foldoutState={foldoutState}
-        onLostFocus={this.onMenuBarLostFocus}
-      />
-    )
-  }
-
-  private onMenuBarLostFocus = () => {
-    // Note: This event is emitted in an animation frame separate from
-    // that of the AppStore. See onLostFocusWithin inside of the AppMenuBar
-    // for more details. This means that it's possible that the current
-    // app state in this component's state might be out of date so take
-    // caution when considering app state in this method.
-    this.props.dispatcher.closeFoldout(FoldoutType.AppMenu)
-    this.props.dispatcher.setAppMenuState(menu => menu.withReset())
-  }
-
   private renderTitlebar() {
     const inFullScreen = this.state.windowState === 'full-screen'
 
@@ -874,22 +830,17 @@ export class App extends React.Component<IAppProps, IAppState> {
     // the title bar when the menu bar is active. On other platforms we
     // never render the title bar while in full-screen mode.
     if (inFullScreen) {
-      if (!__WIN32__ || !menuBarActive) {
+      if (!menuBarActive) {
         return null
       }
     }
 
-    const showAppIcon = __WIN32__ && !this.state.showWelcomeFlow
-
     return (
       <TitleBar
-        showAppIcon={showAppIcon}
+        showAppIcon={false}
         titleBarStyle={this.state.titleBarStyle}
-        windowState={this.state.windowState}
         windowZoomFactor={this.state.windowZoomFactor}
-      >
-        {this.renderAppMenuBar()}
-      </TitleBar>
+      />
     )
   }
 
@@ -1259,6 +1210,17 @@ export class App extends React.Component<IAppProps, IAppState> {
             onIgnore={this.onIgnoreExistingUpstreamRemote}
           />
         )
+
+      case PopupType.DeletePullRequest:
+        return (
+          <DeletePullRequest
+            dispatcher={this.props.dispatcher}
+            repository={popup.repository}
+            branch={popup.branch}
+            onDismissed={this.onPopupDismissed}
+            pullRequest={popup.pullRequest}
+          />
+        )
       default:
         return assertNever(popup, `Unknown popup type: ${popup}`)
     }
@@ -1294,7 +1256,7 @@ export class App extends React.Component<IAppProps, IAppState> {
   }
 
   private onOpenShellIgnoreWarning = (path: string) => {
-    this.props.dispatcher.openShell(path, true)
+    this.props.dispatcher.openShell(path)
     this.onPopupDismissed()
   }
 
@@ -1457,7 +1419,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       title = repository.name
     } else {
       icon = OcticonSymbol.repo
-      title = __DARWIN__ ? 'Select a Repository' : 'Select a repository'
+      title = 'Select a Repository'
     }
 
     const isOpen =
@@ -1478,7 +1440,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       <ToolbarDropdown
         icon={icon}
         title={title}
-        description={__DARWIN__ ? 'Current Repository' : 'Current repository'}
+        description="Current Repository"
         foldoutStyle={foldoutStyle}
         onDropdownStateChanged={this.onRepositoryDropdownStateChanged}
         dropdownContentRenderer={this.renderRepositoryList}
@@ -1599,7 +1561,7 @@ export class App extends React.Component<IAppProps, IAppState> {
   private renderBranchToolbarButton(): JSX.Element | null {
     const selection = this.state.selectedState
 
-    if (!selection || selection.type !== SelectionType.Repository) {
+    if (selection == null || selection.type !== SelectionType.Repository) {
       return null
     }
 
@@ -1710,6 +1672,7 @@ export class App extends React.Component<IAppProps, IAppState> {
           askForConfirmationOnDiscardChanges={
             this.state.askForConfirmationOnDiscardChanges
           }
+          accounts={this.state.accounts}
         />
       )
     } else if (selectedState.type === SelectionType.CloningRepository) {

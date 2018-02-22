@@ -1,16 +1,9 @@
 import * as React from 'react'
 
 import { remote } from 'electron'
-import { WindowState } from '../../lib/window-state'
-import { WindowControls } from './window-controls'
 import { Octicon, OcticonSymbol } from '../octicons'
 
 interface ITitleBarProps {
-  /**
-   * The current state of the Window, ie maximized, minimized full-screen etc.
-   */
-  readonly windowState: WindowState
-
   /** Whether we should hide the toolbar (and show inverted window controls) */
   readonly titleBarStyle: 'light' | 'dark'
 
@@ -32,12 +25,6 @@ interface ITitleBarState {
 }
 
 function getState(props: ITitleBarProps): ITitleBarState {
-  // See windowZoomFactor in ITitleBarProps, this is only
-  // applicable on macOS.
-  if (!__DARWIN__) {
-    return { style: undefined }
-  }
-
   return {
     style: props.windowZoomFactor
       ? { zoom: 1 / props.windowZoomFactor }
@@ -73,33 +60,12 @@ export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
   }
 
   public componentWillReceiveProps(nextProps: ITitleBarProps) {
-    if (__DARWIN__) {
-      if (this.props.windowZoomFactor !== nextProps.windowZoomFactor) {
-        this.setState(getState(nextProps))
-      }
+    if (this.props.windowZoomFactor !== nextProps.windowZoomFactor) {
+      this.setState(getState(nextProps))
     }
   }
 
   public render() {
-    const inFullScreen = this.props.windowState === 'full-screen'
-    const isMaximized = this.props.windowState === 'maximized'
-
-    // No Windows controls when we're in full-screen mode.
-    const winControls = __WIN32__ && !inFullScreen ? <WindowControls /> : null
-
-    // On Windows it's not possible to resize a frameless window if the
-    // element that sits flush along the window edge has -webkit-app-region: drag.
-    // The menu bar buttons all have no-drag but the area between menu buttons and
-    // window controls need to disable dragging so we add a 3px tall element which
-    // disables drag while still letting users drag the app by the titlebar below
-    // those 3px.
-    const topResizeHandle =
-      __WIN32__ && !isMaximized ? <div className="resize-handle top" /> : null
-
-    // And a 3px wide element on the left hand side.
-    const leftResizeHandle =
-      __WIN32__ && !isMaximized ? <div className="resize-handle left" /> : null
-
     const titleBarClass =
       this.props.titleBarStyle === 'light' ? 'light-title-bar' : ''
 
@@ -107,9 +73,7 @@ export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
       <Octicon className="app-icon" symbol={OcticonSymbol.markGithub} />
     ) : null
 
-    const onTitlebarDoubleClick = __DARWIN__
-      ? this.onTitlebarDoubleClickDarwin
-      : undefined
+    const onTitlebarDoubleClick = this.onTitlebarDoubleClickDarwin
 
     return (
       <div
@@ -118,11 +82,8 @@ export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
         onDoubleClick={onTitlebarDoubleClick}
         style={this.state.style}
       >
-        {topResizeHandle}
-        {leftResizeHandle}
         {appIcon}
         {this.props.children}
-        {winControls}
       </div>
     )
   }

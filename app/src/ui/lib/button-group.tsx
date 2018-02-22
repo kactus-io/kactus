@@ -40,19 +40,12 @@ export class ButtonGroup extends React.Component<IButtonGroupProps, {}> {
     // in the correct order. The tslint rule button-group-order
     // _should_ ensure that it's always Ok, Cancel in markup but
     // we're a little bit more lax here.
-    if (buttons.length > 1) {
-      if (
-        __DARWIN__ &&
-        buttons[0].props.type === 'submit' &&
-        this.props.destructive !== true
-      ) {
-        buttons.reverse()
-      } else if (
-        __WIN32__ &&
-        buttons[buttons.length - 1].props.type === 'submit'
-      ) {
-        buttons.reverse()
-      }
+    if (
+      buttons.length > 1 &&
+      buttons[0].props.type === 'submit' &&
+      this.props.destructive !== true
+    ) {
+      buttons.reverse()
     }
 
     return <div className="button-group">{buttons}</div>
