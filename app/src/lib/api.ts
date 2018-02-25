@@ -977,6 +977,7 @@ export async function unlockKactusFullAccess(
       body: JSON.stringify({
         token,
         githubId: account.id,
+        githubToken: account.token,
         email: options.email,
         login: account.login,
         enterprise: options.enterprise,
@@ -1005,6 +1006,7 @@ export async function cancelKactusSubscription(
       method: 'delete',
       body: JSON.stringify({
         githubId: account.id,
+        githubToken: account.token,
         refund: options.refund,
       }),
     })

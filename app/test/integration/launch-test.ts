@@ -16,7 +16,7 @@ describe('App', function(this: any) {
   let app: any
 
   beforeEach(function() {
-    let appPath = path.join(
+    const appPath = path.join(
       __dirname,
       '..',
       '..',
