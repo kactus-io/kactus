@@ -16,7 +16,7 @@ export class Start extends React.Component<IStartProps, {}> {
         <h1 className="welcome-title">Welcome to Kactus</h1>
         <p className="welcome-text">
           Kactus is a seamless way to collaborate with your team on GitHub and
-          GitHub Enterprise . Sign in below to get started with your existing
+          GitHub Enterprise. Sign in below to get started with your existing
           projects.
         </p>
 
