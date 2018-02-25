@@ -13,10 +13,6 @@ function getProductName() {
     : productName
 }
 
-function getCompanyName() {
-  return appPackage.companyName
-}
-
 function getVersion() {
   return appPackage.version
 }
@@ -27,7 +23,6 @@ function getBundleID() {
 
 module.exports = {
   getProductName,
-  getCompanyName,
   getVersion,
   getBundleID,
 }

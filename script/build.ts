@@ -9,12 +9,7 @@ import * as packager from 'electron-packager'
 
 const legalEagle: LegalEagle = require('legal-eagle')
 
-import {
-  getBundleID,
-  getCompanyName,
-  getProductName,
-  getVersion,
-} from '../app/package-info'
+import { getBundleID, getProductName, getVersion } from '../app/package-info'
 
 import { getReleaseChannel, getDistRoot, getExecutableName } from './dist-info'
 
