@@ -26,5 +26,6 @@
 
   input {
     @include textboxish;
+    @include textboxish-disabled;
   }
 }

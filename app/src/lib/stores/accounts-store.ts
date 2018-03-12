@@ -24,6 +24,16 @@ interface IEmail {
   readonly visibility: EmailVisibility
 }
 
+function isKeyChainError(e: any) {
+  const error = e as Error
+  return (
+    error.message &&
+    error.message.startsWith(
+      'The user name or passphrase you entered is not correct'
+    )
+  )
+}
+
 /** The data-only interface for storage. */
 interface IAccount {
   readonly token: string
@@ -85,7 +95,16 @@ export class AccountsStore extends BaseStore {
       )
     } catch (e) {
       log.error(`Error adding account '${account.login}'`, e)
-      this.emitError(e)
+
+      if (isKeyChainError(e)) {
+        this.emitError(
+          new Error(
+            `Kactus was unable to store the account token in the keychain. Please check you have unlocked access to the 'login' keychain.`
+          )
+        )
+      } else {
+        this.emitError(e)
+      }
       return
     }
 

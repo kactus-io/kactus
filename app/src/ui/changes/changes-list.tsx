@@ -20,10 +20,11 @@ import { IGitHubUser } from '../../lib/databases'
 import { Dispatcher } from '../../lib/dispatcher'
 import { IAutocompletionProvider } from '../autocompletion'
 import { Repository } from '../../models/repository'
-import { showContextualMenu, IMenuItem } from '../main-process-proxy'
+import { showContextualMenu } from '../main-process-proxy'
 import { IKactusFile } from '../../lib/kactus'
 import { IAuthor } from '../../models/author'
 import { ITrailer } from '../../lib/git/interpret-trailers'
+import { IMenuItem } from '../../lib/menu-item'
 
 const RowHeight = 29
 

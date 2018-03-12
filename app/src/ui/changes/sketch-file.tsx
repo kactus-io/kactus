@@ -1,7 +1,8 @@
 import * as React from 'react'
 
 import { PathText } from '../lib/path-text'
-import { showContextualMenu, IMenuItem } from '../main-process-proxy'
+import { IMenuItem } from '../../lib/menu-item'
+import { showContextualMenu } from '../main-process-proxy'
 import { IKactusFile } from '../../lib/kactus'
 import { Loading } from '../lib/loading'
 

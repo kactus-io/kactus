@@ -25,6 +25,8 @@ import {
   parseLineEndingText,
   ISketchDiff,
   IKactusFileType,
+  ILargeTextDiff,
+  IUnrenderableDiff,
 } from '../../models/diff'
 
 import { spawnAndComplete } from './spawn'
@@ -42,23 +44,23 @@ import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
 import { assertNever } from '../fatal-error'
 
 /**
- * V8 has a limit on the size of string it can create, and unless we want to
+ * V8 has a limit on the size of string it can create (~256MB), and unless we want to
  * trigger an unhandled exception we need to do the encoding conversion by hand.
  *
  * This is a hard limit on how big a buffer can be and still be converted into
  * a string.
  */
-const MaxDiffBufferSize = 268435441
+const MaxDiffBufferSize = 70e6 // 70MB in decimal
 
 /**
  * Where `MaxDiffBufferSize` is a hard limit, this is a suggested limit. Diffs
  * bigger than this _could_ be displayed but it might cause some slowness.
  */
-const MaxReasonableDiffSize = 3000000
+const MaxReasonableDiffSize = MaxDiffBufferSize / 16 // ~4.375MB in decimal
 
 /**
  * The longest line length we should try to display. If a diff has a line longer
- * than this, we probably shouldn't attempt it.
+ * than this, we probably shouldn't attempt it
  */
 const MaxLineLength = 500000
 
@@ -66,15 +68,15 @@ const MaxLineLength = 500000
  * Utility function to check whether parsing this buffer is going to cause
  * issues at runtime.
  *
- * @param output A buffer of binary text from a spawned process
+ * @param buffer A buffer of binary text from a spawned process
  */
 function isValidBuffer(buffer: Buffer) {
-  return buffer.length < MaxDiffBufferSize
+  return buffer.length <= MaxDiffBufferSize
 }
 
 /** Is the buffer too large for us to reasonably represent? */
 function isBufferTooLarge(buffer: Buffer) {
-  return !isValidBuffer(buffer) || buffer.length >= MaxReasonableDiffSize
+  return buffer.length >= MaxReasonableDiffSize
 }
 
 /** Is the diff too large for us to reasonably represent? */
@@ -93,7 +95,14 @@ function isDiffTooLarge(diff: IRawDiff) {
 /**
  *  Defining the list of known extensions we can render inside the app
  */
-const imageFileExtensions = new Set(['.png', '.jpg', '.jpeg', '.gif', '.ico'])
+const imageFileExtensions = new Set([
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.ico',
+  '.webp',
+])
 const visualTextFileExtensions = new Set(['.svg'])
 
 /**
@@ -132,22 +141,13 @@ export async function getCommitDiff(
     repository.path,
     'getCommitDiff'
   )
-  if (isBufferTooLarge(output)) {
-    return { kind: DiffType.TooLarge, length: output.length }
-  }
 
-  const diffText = diffFromRawDiffOutput(output)
-
-  if (isDiffTooLarge(diffText)) {
-    return { kind: DiffType.TooLarge, length: output.length }
-  }
-
-  return convertDiff(
+  return buildDiff(
     sketchPath,
-    repository,
     kactusFiles,
+    output,
+    repository,
     file,
-    diffText,
     commitish,
     previousCommitish
   )
@@ -230,25 +230,13 @@ export async function getWorkingDirectoryDiff(
     'getWorkingDirectoryDiff',
     successExitCodes
   )
-  if (isBufferTooLarge(output)) {
-    // we know we can't transform this process output into a diff, so let's
-    // just return a placeholder for now that we can display to the user
-    // to say we're at the limits of the runtime
-    return { kind: DiffType.TooLarge, length: output.length }
-  }
-
-  const diffText = diffFromRawDiffOutput(output)
-  if (isDiffTooLarge(diffText)) {
-    return { kind: DiffType.TooLarge, length: output.length }
-  }
-
   const lineEndingsChange = parseLineEndingsWarning(error)
-  return convertDiff(
+  return buildDiff(
     sketchPath,
-    repository,
     kactusFiles,
+    output,
+    repository,
     file,
-    diffText,
     'HEAD',
     previousCommitish,
     lineEndingsChange
@@ -569,6 +557,9 @@ function getMediaType(extension: string) {
   if (extension === '.ico') {
     return 'image/x-icon'
   }
+  if (extension === '.webp') {
+    return 'image/webp'
+  }
 
   // fallback value as per the spec
   return 'text/plain'
@@ -618,6 +609,49 @@ function diffFromRawDiffOutput(output: Buffer): IRawDiff {
   const pieces = result.split('\0')
   const parser = new DiffParser()
   return parser.parse(pieces[pieces.length - 1])
+}
+
+function buildDiff(
+  sketchPath: string,
+  kactusFiles: Array<IKactusFile>,
+  buffer: Buffer,
+  repository: Repository,
+  file: FileChange,
+  commitish: string,
+  previousCommitish?: string,
+  lineEndingsChange?: LineEndingsChange
+): Promise<IDiff> {
+  if (!isValidBuffer(buffer)) {
+    // the buffer's diff is too large to be renderable in the UI
+    return Promise.resolve<IUnrenderableDiff>({ kind: DiffType.Unrenderable })
+  }
+
+  const diff = diffFromRawDiffOutput(buffer)
+
+  if (isBufferTooLarge(buffer) || isDiffTooLarge(diff)) {
+    // we don't want to render by default
+    // but we keep it as an option by
+    // passing in text and hunks
+    const largeTextDiff: ILargeTextDiff = {
+      kind: DiffType.LargeText,
+      text: diff.contents,
+      hunks: diff.hunks,
+      lineEndingsChange,
+    }
+
+    return Promise.resolve(largeTextDiff)
+  }
+
+  return convertDiff(
+    sketchPath,
+    repository,
+    kactusFiles,
+    file,
+    diff,
+    commitish,
+    previousCommitish,
+    lineEndingsChange
+  )
 }
 
 /**

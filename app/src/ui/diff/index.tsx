@@ -2,6 +2,7 @@ import * as React from 'react'
 import { BinaryFile } from './binary-file'
 import { ConflictedSketchDiff } from './conflicted-sketch-diff'
 import { TextDiff } from './text-diff'
+import { assertNever } from '../../lib/fatal-error'
 import { ImageDiff } from './image-diffs'
 
 import { Repository } from '../../models/repository'
@@ -21,12 +22,16 @@ import {
   ITextDiffData,
   IVisualTextDiffData,
   ITextDiff,
+  ILargeTextDiff,
 } from '../../models/diff'
 import { Dispatcher } from '../../lib/dispatcher/dispatcher'
 
 import { Button } from '../lib/button'
 
 import { LoadingOverlay } from '../lib/loading'
+
+// image used when no diff is displayed
+const NoDiffImage = encodePathAsUrl(__dirname, 'static/ufo-alert.svg')
 
 /** The props for the Diff component. */
 interface IDiffProps {
@@ -59,8 +64,20 @@ interface IDiffProps {
   readonly loading: boolean
 }
 
+interface IDiffState {
+  readonly forceShowLargeDiff: boolean
+}
+
 /** A component which renders a diff for a file. */
-export class Diff extends React.Component<IDiffProps, {}> {
+export class Diff extends React.Component<IDiffProps, IDiffState> {
+  public constructor(props: IDiffProps) {
+    super(props)
+
+    this.state = {
+      forceShowLargeDiff: false,
+    }
+  }
+
   private onChangeImageDiffType = (type: ImageDiffType) => {
     this.props.dispatcher.changeImageDiffType(type)
   }
@@ -137,6 +154,42 @@ export class Diff extends React.Component<IDiffProps, {}> {
     )
   }
 
+  private renderLargeTextDiff() {
+    return (
+      <div className="panel empty large-diff">
+        <img src={NoDiffImage} />
+        <p>
+          The diff is too large to be displayed by default.
+          <br />
+          You can try to show it anyways, but performance may be negatively
+          impacted.
+        </p>
+        <Button onClick={this.showLargeDiff}>Show Diff</Button>
+      </div>
+    )
+  }
+
+  private renderUnrenderableDiff() {
+    return (
+      <div className="panel empty large-diff">
+        <img src={NoDiffImage} />
+        <p>The diff is too large to be displayed.</p>
+      </div>
+    )
+  }
+
+  private renderLargeText(diff: ILargeTextDiff) {
+    // guaranteed to be set since this function won't be called if text or hunks are null
+    const textDiff: ITextDiff = {
+      text: diff.text!,
+      hunks: diff.hunks!,
+      kind: DiffType.Text,
+      lineEndingsChange: diff.lineEndingsChange,
+    }
+
+    return this.renderTextDiff(textDiff)
+  }
+
   private renderTextDiff(diff: ITextDiffData) {
     return (
       <TextDiff
@@ -165,104 +218,94 @@ export class Diff extends React.Component<IDiffProps, {}> {
     return <div className="panel empty">The file is empty</div>
   }
 
-  private renderContent() {
-    const diff = this.props.diff
+  private renderDiff(diff: IDiff): JSX.Element | null {
+    switch (diff.kind) {
+      case DiffType.Text: {
+        if (diff.hunks.length === 0) {
+          if (this.props.file && this.props.file.status === AppFileStatus.New) {
+            return this.renderEmpty(diff)
+          }
 
-    if (diff.kind === DiffType.Image || diff.kind === DiffType.VisualText) {
-      return this.renderImage(diff)
-    }
+          if (
+            this.props.file &&
+            this.props.file.status === AppFileStatus.Renamed
+          ) {
+            return (
+              <div className="panel renamed">
+                The file was renamed but not changed
+              </div>
+            )
+          }
 
-    if (diff.kind === DiffType.Binary) {
-      return this.renderBinaryFile()
-    }
-
-    if (diff.kind === DiffType.Sketch) {
-      if (diff.hunks.length === 0) {
-        if (this.props.file && this.props.file.status === AppFileStatus.New) {
-          return this.renderEmpty(diff)
+          return <div className="panel empty">No content changes found</div>
         }
-
-        if (
-          this.props.file &&
-          this.props.file.status === AppFileStatus.Renamed
-        ) {
-          return (
-            <div className="panel renamed">
-              The file was renamed but not changed
-            </div>
-          )
-        }
-      }
-
-      if (diff.type === IKactusFileType.Style) {
         return this.renderTextDiff(diff)
       }
+      case DiffType.Binary:
+        return this.renderBinaryFile()
+      case DiffType.Image:
+      case DiffType.VisualText:
+        return this.renderImage(diff)
+      case DiffType.Sketch: {
+        if (diff.hunks.length === 0) {
+          if (this.props.file && this.props.file.status === AppFileStatus.New) {
+            return this.renderEmpty(diff)
+          }
 
-      let content
-      if (
-        this.props.file &&
-        this.props.file.status === AppFileStatus.Conflicted
-      ) {
-        content = this.renderSketchConflictedDiff(diff)
-      } else {
-        content = this.renderImage(diff)
-      }
-
-      return (
-        <div className="sketch-diff-wrapper">
-          {this.props.file &&
-            this.props.readOnly &&
-            this.props.openSketchFile && (
-              <div className="sketch-diff-checkbox">
-                <Button type="submit" onClick={this.props.openSketchFile}>
-                  Open Sketch file
-                </Button>
+          if (
+            this.props.file &&
+            this.props.file.status === AppFileStatus.Renamed
+          ) {
+            return (
+              <div className="panel renamed">
+                The file was renamed but not changed
               </div>
-            )}
-          {content}
-        </div>
-      )
-    }
-
-    if (diff.kind === DiffType.TooLarge) {
-      const BlankSlateImage = encodePathAsUrl(
-        __dirname,
-        'static/empty-no-file-selected.svg'
-      )
-      const diffSizeMB = Math.round(diff.length / (1024 * 1024))
-      return (
-        <div className="panel empty">
-          <img src={BlankSlateImage} className="blankslate-image" />
-          The diff returned by Git is {diffSizeMB}MB ({diff.length} bytes),
-          which is larger than what can be displayed in Kactus.
-        </div>
-      )
-    }
-
-    if (diff.kind === DiffType.Text) {
-      if (diff.hunks.length === 0) {
-        if (this.props.file && this.props.file.status === AppFileStatus.New) {
-          return this.renderEmpty(diff)
+            )
+          }
         }
 
+        if (diff.type === IKactusFileType.Style) {
+          return this.renderTextDiff(diff)
+        }
+
+        let content
         if (
           this.props.file &&
-          this.props.file.status === AppFileStatus.Renamed
+          this.props.file.status === AppFileStatus.Conflicted
         ) {
-          return (
-            <div className="panel renamed">
-              The file was renamed but not changed
-            </div>
-          )
+          content = this.renderSketchConflictedDiff(diff)
+        } else {
+          content = this.renderImage(diff)
         }
 
-        return <div className="panel empty">No content changes found</div>
+        return (
+          <div className="sketch-diff-wrapper">
+            {this.props.file &&
+              this.props.readOnly &&
+              this.props.openSketchFile && (
+                <div className="sketch-diff-checkbox">
+                  <Button type="submit" onClick={this.props.openSketchFile}>
+                    Open Sketch file
+                  </Button>
+                </div>
+              )}
+            {content}
+          </div>
+        )
       }
-
-      return this.renderTextDiff(diff)
+      case DiffType.LargeText:
+        return this.state.forceShowLargeDiff
+          ? this.renderLargeText(diff)
+          : this.renderLargeTextDiff()
+      case DiffType.Unrenderable:
+        return this.renderUnrenderableDiff()
+      default:
+        return assertNever(diff, `Unsupported diff type: ${diff}`)
     }
+  }
 
-    return null
+  private showLargeDiff = () => {
+    this.setState({ forceShowLargeDiff: true })
   }
 
   public render() {
@@ -275,7 +318,7 @@ export class Diff extends React.Component<IDiffProps, {}> {
           position: 'relative',
         }}
       >
-        {this.renderContent()}
+        {this.renderDiff(this.props.diff)}
         {this.props.loading && <LoadingOverlay />}
       </div>
     )

@@ -549,9 +549,7 @@ export class App extends React.Component<IAppProps, IAppState> {
   }
 
   public componentDidMount() {
-    document.ondragover = document.ondrop = e => {
-      e.preventDefault()
-    }
+    document.ondragover = document.ondrop = e => e.preventDefault()
 
     document.body.ondrop = e => {
       if (this.state.currentPopup != null) {
@@ -844,9 +842,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     )
   }
 
-  private onPopupDismissed = () => {
-    this.props.dispatcher.closePopup()
-  }
+  private onPopupDismissed = () => this.props.dispatcher.closePopup()
 
   private onSignInDialogDismissed = () => {
     this.props.dispatcher.resetSignInState()
@@ -863,9 +859,8 @@ export class App extends React.Component<IAppProps, IAppState> {
     )
   }
 
-  private onUpdateAvailableDismissed = () => {
+  private onUpdateAvailableDismissed = () =>
     this.props.dispatcher.setUpdateBannerVisibility(false)
-  }
 
   private currentPopupContent(): JSX.Element | null {
     // Hide any dialogs while we're displaying an error
@@ -1277,9 +1272,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     this.props.dispatcher.performRetry(retryAction)
   }
 
-  private onCheckForUpdates = () => {
-    this.checkForUpdates(false)
-  }
+  private onCheckForUpdates = () => this.checkForUpdates(false)
 
   private showAcknowledgements = () => {
     this.props.dispatcher.showPopup({ type: PopupType.Acknowledgements })
@@ -1310,9 +1303,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     return <FullScreenInfo windowState={this.state.windowState} />
   }
 
-  private clearError = (error: Error) => {
-    this.props.dispatcher.clearError(error)
-  }
+  private clearError = (error: Error) => this.props.dispatcher.clearError(error)
 
   private onConfirmDiscardChangesChanged = (value: boolean) => {
     this.props.dispatcher.setConfirmDiscardChangesSetting(value)
@@ -1359,7 +1350,6 @@ export class App extends React.Component<IAppProps, IAppState> {
         onSelectionChanged={this.onSelectionChanged}
         repositories={this.state.repositories}
         onRemoveRepository={this.removeRepository}
-        onClose={this.onCloseRepositoryList}
         onOpenInShell={this.openInShell}
         onShowRepository={this.showRepository}
         onOpenInExternalEditor={this.openInExternalEditor}
@@ -1393,10 +1383,6 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
 
     shell.showItemInFolder(repository.path)
-  }
-
-  private onCloseRepositoryList = () => {
-    this.props.dispatcher.closeFoldout(FoldoutType.Repository)
   }
 
   private onRepositoryDropdownStateChanged = (newState: DropdownState) => {

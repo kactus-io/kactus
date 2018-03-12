@@ -56,6 +56,11 @@
       align-items: center;
       padding: 50px;
     }
+    &.large-diff {
+      margin: var(--spacing-double);
+      text-align: center;
+      justify-content: initial;
+    }
   }
 }
 

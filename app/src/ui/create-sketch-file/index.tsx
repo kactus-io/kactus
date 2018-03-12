@@ -65,7 +65,7 @@ export class CreateSketchFile extends React.Component<
             <TextBox
               label="Name"
               autoFocus={true}
-              onChange={this.onFileNameChange}
+              onValueChanged={this.onFileNameChange}
             />
           </Row>
         </DialogContent>
@@ -82,8 +82,7 @@ export class CreateSketchFile extends React.Component<
     )
   }
 
-  private onFileNameChange = (event: React.FormEvent<HTMLInputElement>) => {
-    const str = event.currentTarget.value
+  private onFileNameChange = (str: string) => {
     const alreadyExists = this.props.allFiles.findIndex(b => b.id === str) > -1
     let currentError: Error | null = null
     if (alreadyExists) {

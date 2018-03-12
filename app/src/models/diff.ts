@@ -47,20 +47,22 @@ export class DiffHunk {
 }
 
 export enum DiffType {
-  /** changes to a text file, which may be partially selected for commit */
+  /** Changes to a text file, which may be partially selected for commit */
   Text,
-  /** changes to files of a known format, which can be viewed as images or text in the app */
+  /** Changes to files of a known format, which can be viewed as images or text in the app */
   VisualText,
-  /** changes to files of a known format, which can be viewed in the app */
+  /** Changes to files of a known format, which can be viewed in the app */
   Image,
-  /** changes to an unknown file format, which Git is unable to present in a human-friendly format */
+  /** Changes to an unknown file format, which Git is unable to present in a human-friendly format */
   Binary,
-  /** change to a sketch file */
-  Submodule,
-  /** change to a repository which is included as a submodule of this repository */
+  /** Change to a sketch file */
   Sketch,
-  /** diff too large to render in app */
-  TooLarge,
+  /** Change to a repository which is included as a submodule of this repository */
+  Submodule,
+  /** Diff is large enough to degrade ux if rendered */
+  LargeText,
+  /** Diff that will not be rendered */
+  Unrenderable,
 }
 
 /** indicate what a line in the diff represents */
@@ -172,14 +174,18 @@ export interface IBinaryDiff {
   readonly kind: DiffType.Binary
 }
 
-export interface IDiffTooLarge {
-  readonly kind: DiffType.TooLarge
-  /**
-   * The length of the diff output from Git which exceeds the runtime limits:
-   *
-   * 268435441 bytes = 256MB - 15 bytes
-   */
-  readonly length: number
+export interface ILargeTextDiff {
+  readonly kind: DiffType.LargeText
+  /** The unified text diff - including headers and context */
+  readonly text: string
+  /** The diff contents organized by hunk - how the git CLI outputs to the caller */
+  readonly hunks: ReadonlyArray<DiffHunk>
+  /** A warning from Git that the line endings have changed in this file and will affect the commit */
+  readonly lineEndingsChange?: LineEndingsChange
+}
+
+export interface IUnrenderableDiff {
+  readonly kind: DiffType.Unrenderable
 }
 
 /** The union of diff types that can be rendered in Kactus */
@@ -189,7 +195,8 @@ export type IDiff =
   | IImageDiff
   | IBinaryDiff
   | ISketchDiff
-  | IDiffTooLarge
+  | ILargeTextDiff
+  | IUnrenderableDiff
 
 /** track details related to each line in the diff */
 export class DiffLine {
