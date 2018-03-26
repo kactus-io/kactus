@@ -214,15 +214,16 @@ export function shouldShowPremiumUpsell(
     return false
   }
 
-  let potentialPremiumAccount: Account | undefined
+  let potentialPremiumAccount =
+    accounts.find(a => a.unlockedEnterpriseKactus) ||
+    accounts.find(a => a.unlockedKactus)
 
-  if (account instanceof Account) {
+  if (!potentialPremiumAccount && account instanceof Account) {
     potentialPremiumAccount = account
-  } else {
-    potentialPremiumAccount =
-      accounts.find(a => a.unlockedEnterpriseKactus) ||
-      accounts.find(a => a.unlockedKactus) ||
-      accounts[0]
+  }
+
+  if (!potentialPremiumAccount) {
+    potentialPremiumAccount = accounts[0]
   }
 
   if (repository.gitHubRepository) {

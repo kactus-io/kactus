@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.4": [
+      "[Fixed] Fix a bug where the wrong user account would be used to authenticate"
+    ],
     "0.3.3": [
       "[Improved] Faster Kactus status (finding the Sketch files)",
       "[Improved] Faster Git status (finding the changed files)"
