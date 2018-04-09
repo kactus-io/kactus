@@ -7,23 +7,27 @@
     {
       "name": "Export",
       "identifier": "export",
-      "script": "./export.js"
+      "script": "./export.js",
+      "icon": "export.png"
     },
     {
       "name": "Import",
       "identifier": "import",
-      "script": "./import.js"
+      "script": "./import.js",
+      "icon": "import.png"
     },
     {
       "name": "Open Kactus",
       "identifier": "open-kactus",
       "script": "./open-kactus.js",
-      "shortcut": "control k"
+      "shortcut": "control k",
+      "icon": "icon.png"
     },
     {
       "name": "Refresh files",
       "identifier": "refresh-files",
-      "script": "./refresh-files.js"
+      "script": "./refresh-files.js",
+      "icon": "refresh.png"
     }
   ],
   "menu": {

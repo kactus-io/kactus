@@ -35,7 +35,7 @@ compile:
 test:
   override:
     - npm run test:setup
-    - npm run test
+    # - npm run test
 
 deployment:
   production:
