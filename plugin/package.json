@@ -1,7 +1,12 @@
 {
   "name": "kactus",
-  "version": "0.3.4",
-  "description": "Kactus plugin",
+  "version": "0.3.5",
+  "skpm": {
+    "description": "Kactus plugin",
+    "assets": [
+      "assets/*.png"
+    ]
+  },
   "main": "../out/plugin.sketchplugin",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -23,6 +28,6 @@
   },
   "manifest": "src/manifest.json",
   "devDependencies": {
-    "skpm": "^0.10.5"
+    "@skpm/builder": "^0.4.0"
   }
 }

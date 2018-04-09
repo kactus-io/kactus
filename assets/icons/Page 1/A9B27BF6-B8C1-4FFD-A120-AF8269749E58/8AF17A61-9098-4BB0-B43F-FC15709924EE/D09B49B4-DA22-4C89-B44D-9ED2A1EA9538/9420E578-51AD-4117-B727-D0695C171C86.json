@@ -20,6 +20,7 @@
     "x": 54.5106906534339,
     "y": 15.82263878235927
   },
+  "isClosed": true,
   "isFlippedHorizontal": false,
   "isFlippedVertical": false,
   "isLocked": false,
@@ -84,6 +85,59 @@
       }
     ]
   },
+  "pointRadiusBehaviour": 1,
+  "points": [
+    {
+      "_class": "curvePoint",
+      "cornerRadius": 0,
+      "curveFrom": "{0.26505923900614803, 1.0156088652549469}",
+      "curveMode": 4,
+      "curveTo": "{0.41501316356162693, 0.94888365894019822}",
+      "hasCurveFrom": true,
+      "hasCurveTo": false,
+      "point": "{0.41501316356162693, 0.94888365894019822}"
+    },
+    {
+      "_class": "curvePoint",
+      "cornerRadius": 0,
+      "curveFrom": "{-0.070748596280158352, 0.81988159339835187}",
+      "curveMode": 3,
+      "curveTo": "{0.12908407012957293, 1.0197394732649068}",
+      "hasCurveFrom": true,
+      "hasCurveTo": true,
+      "point": "{0.054742505837245582, 0.94507079000792671}"
+    },
+    {
+      "_class": "curvePoint",
+      "cornerRadius": 0,
+      "curveFrom": "{0.5185830351825772, 0.026804855485913864}",
+      "curveMode": 2,
+      "curveTo": "{0.026784994479446871, 0.51866494774891636}",
+      "hasCurveFrom": true,
+      "hasCurveTo": true,
+      "point": "{0.27300171382371585, 0.27241716253972659}"
+    },
+    {
+      "_class": "curvePoint",
+      "cornerRadius": 0,
+      "curveFrom": "{1.0078394839440952, 0.1173604926273592}",
+      "curveMode": 3,
+      "curveTo": "{0.81944398127163742, -0.070741041364692836}",
+      "hasCurveFrom": true,
+      "hasCurveTo": true,
+      "point": "{0.94525278238174515, 0.054765894322570612}"
+    },
+    {
+      "_class": "curvePoint",
+      "cornerRadius": 0,
+      "curveFrom": "{0.97543418668846138, 0.3461326285636388}",
+      "curveMode": 4,
+      "curveTo": "{1.0151465607762464, 0.22412082273095604}",
+      "hasCurveFrom": false,
+      "hasCurveTo": true,
+      "point": "{0.97543418668846138, 0.3461326285636388}"
+    }
+  ],
   "resizingConstraint": 63,
   "resizingType": 0,
   "rotation": 0,

@@ -1,4 +1,4 @@
-export default function (context) {
+export default function(context) {
   const documents = NSApplication.sharedApplication().orderedDocuments()
 
   for (let i = 0; i < documents.length; i++) {

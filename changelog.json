@@ -5,7 +5,8 @@
       "[Fixed] Fix the color of the buttons on hover",
       "[Fixed] Do not try to generate a file preview when it hasn't been imported yet",
       "[Fixed] Do not try to generate a file preview when we failed to generate one",
-      "[Improved] Try to recover when some references in a file are missing. This can be due to a merge than went wrong for example"
+      "[Improved] Try to recover when some references in a file are missing. This can be due to a merge than went wrong for example",
+      "[Improved] Prepare the plugin for Sketch 50"
     ],
     "0.3.4": [
       "[Fixed] Fix a bug where the wrong user account would be used to authenticate"
