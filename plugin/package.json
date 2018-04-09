@@ -2,12 +2,12 @@
   "name": "kactus",
   "version": "0.3.5",
   "skpm": {
-    "description": "Kactus plugin",
+    "description": "A proper version control tool for designers",
+    "main": "../out/plugin.sketchplugin",
     "assets": [
       "assets/*.png"
     ]
   },
-  "main": "../out/plugin.sketchplugin",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "skpm-build"
