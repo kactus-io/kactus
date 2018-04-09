@@ -63,8 +63,7 @@ export class ConflictedSketchDiff extends React.Component<
   IConflictedSketchDiffProps,
   IConflictedSketchDiffState
 > {
-  private container: HTMLElement | null
-
+  private container: HTMLElement | null = null
   private readonly resizeObserver: ResizeObserver
   private resizedTimeoutID: number | null = null
 

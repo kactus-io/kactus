@@ -21,7 +21,7 @@
 
   --button-background: #{$green};
   --button-border-radius: 2px;
-  --button-hover-background: lighten(#{$green}, 5%);
+  --button-hover-background: #{lighten($green, 5%)};
   --button-text-color: #{$white};
   --button-focus-border-color: #{$green-600};
 
@@ -30,7 +30,7 @@
   --secondary-button-background: #{$gray-000};
   --secondary-button-hover-background: #{$white};
   --secondary-button-text-color: var(--text-color);
-  --secondary-button-focus-shadow-color: rgba(#{$gray-200}, 0.75);
+  --secondary-button-focus-shadow-color: #{rgba($gray-200, 0.75)};
   --secondary-button-focus-border-color: #{$gray-300};
 
   // Typography
@@ -196,7 +196,7 @@
    * Variables for form elements
    */
   --text-field-height: 25px;
-  --text-field-focus-shadow-color: rgba(#{$green}, 0.25);
+  --text-field-focus-shadow-color: #{rgba($green, 0.25)};
 
   /**
    * Diff view
@@ -216,10 +216,10 @@
   --diff-selected-gutter-color: #{$green-600};
   --diff-selected-text-color: var(--background-color);
 
-  --diff-add-background-color: darken(#{$green-000}, 2%);
+  --diff-add-background-color: #{darken($green-000, 2%)};
   --diff-add-border-color: #{$green-300};
   --diff-add-gutter-color: #{$green-300};
-  --diff-add-gutter-background-color: darken(#{$green-100}, 3%);
+  --diff-add-gutter-background-color: #{darken($green-100, 3%)};
   --diff-add-inner-background-color: #acf2bd;
   --diff-add-text-color: var(--diff-text-color);
 
@@ -232,7 +232,7 @@
 
   --diff-hunk-background-color: #{$blue-000};
   --diff-hunk-border-color: #{$blue-200};
-  --diff-hunk-gutter-color: darken(#{$blue-200}, 5%);
+  --diff-hunk-gutter-color: #{darken($blue-200, 5%)};
   --diff-hunk-gutter-background-color: #{$blue-100};
   --diff-hunk-text-color: #{$gray};
 

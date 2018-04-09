@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.5": [
+      "[Fixed] Fix the color of the buttons on hover"
+    ],
     "0.3.4": [
       "[Fixed] Fix a bug where the wrong user account would be used to authenticate"
     ],
