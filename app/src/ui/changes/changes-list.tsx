@@ -1,9 +1,10 @@
 import * as React from 'react'
+import * as Path from 'path'
+
 import { CommitMessage } from './commit-message'
 import { ChangedFile } from './changed-file'
 import { ChangedSketchPart } from './changed-sketch-part'
 import { List, ClickSource } from '../lib/list'
-
 import {
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
@@ -27,6 +28,8 @@ import { ITrailer } from '../../lib/git/interpret-trailers'
 import { IMenuItem } from '../../lib/menu-item'
 
 const RowHeight = 29
+const defaultEditorLabel = 'Open in External Editor'
+const GitIgnoreFileName = '.gitignore'
 
 interface IChangesListProps {
   readonly repository: Repository
@@ -99,6 +102,16 @@ interface IChangesListProps {
    * the user has chosen to do so.
    */
   readonly coAuthors: ReadonlyArray<IAuthor>
+
+  /** The name of the currently selected external editor */
+  readonly externalEditorLabel?: string
+
+  /**
+   * Callback to open a selected file using the configured external editor
+   *
+   * @param fullPath The full path to the file on disk
+   */
+  readonly onOpenInExternalEditor: (fullPath: string) => void
 }
 
 function getFileList(
@@ -189,7 +202,7 @@ export class ChangesList extends React.Component<
     files: Array<TFileOrSketchPartChange>
     visibleFileList: Array<TFileOrSketchPartChange>
   }
-> {
+  > {
   public constructor(props: IChangesListProps) {
     super(props)
 
@@ -246,11 +259,8 @@ export class ChangesList extends React.Component<
           include={includeAll}
           key={file.id}
           onIncludeChanged={this.props.onIncludeChanged}
-          onDiscardChanges={this.onDiscardChanges}
-          onRevealInFileManager={this.props.onRevealInFileManager}
-          onOpenItem={this.props.onOpenItem}
           availableWidth={this.props.availableWidth}
-          onIgnore={this.props.onIgnore}
+          onContextMenu={this.onItemContextMenu}
         />
       )
     } else {
@@ -364,6 +374,69 @@ export class ChangesList extends React.Component<
         })
       }
     }
+  }
+
+  private onItemContextMenu = (
+    path: string,
+    status: AppFileStatus,
+    event: React.MouseEvent<any>
+  ) => {
+    event.preventDefault()
+
+    const extension = Path.extname(path)
+    const fileName = Path.basename(path)
+    const revealInFileManagerLabel = 'Reveal in Finder'
+    const openInExternalEditor = this.props.externalEditorLabel
+      ? `Open in ${this.props.externalEditorLabel}`
+      : defaultEditorLabel
+    const items: IMenuItem[] = [
+      {
+        label: 'Discard Changes…',
+        action: () => this.onDiscardChanges(path),
+      },
+      {
+        label: 'Discard All Changes…',
+        action: () => this.onDiscardAllChanges(),
+      },
+      { type: 'separator' },
+      {
+        label: 'Ignore',
+        action: () => this.props.onIgnore(path),
+        enabled: fileName !== GitIgnoreFileName,
+      },
+    ]
+
+    if (extension.length) {
+      items.push({
+        label: `Ignore All ${extension} Files`,
+        action: () => this.props.onIgnore(`*${extension}`),
+        enabled: fileName !== GitIgnoreFileName,
+      })
+    }
+
+    items.push(
+      { type: 'separator' },
+      {
+        label: revealInFileManagerLabel,
+        action: () => this.props.onRevealInFileManager(path),
+        enabled: status !== AppFileStatus.Deleted,
+      },
+      {
+        label: openInExternalEditor,
+        action: () => {
+          const fullPath = Path.join(this.props.repository.path, path)
+          this.props.onOpenInExternalEditor(fullPath)
+        },
+        enabled: status !== AppFileStatus.Deleted,
+      },
+      {
+        label: 'Open with Default Program',
+        action: () => this.props.onOpenItem(path),
+        enabled: status !== AppFileStatus.Deleted,
+      }
+    )
+
+    showContextualMenu(items)
   }
 
   public render() {

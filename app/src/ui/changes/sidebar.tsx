@@ -55,12 +55,21 @@ interface IChangesSidebarProps {
   readonly isLoadingStatus: boolean
   readonly askForConfirmationOnDiscardChanges: boolean
   readonly accounts: ReadonlyArray<Account>
+  /** The name of the currently selected external editor */
+  readonly externalEditorLabel?: string
+
+  /**
+   * Callback to open a selected file using the configured external editor
+   *
+   * @param fullPath The full path to the file on disk
+   */
+  readonly onOpenInExternalEditor: (fullPath: string) => void
 }
 
 export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
   private autocompletionProviders: ReadonlyArray<
     IAutocompletionProvider<any>
-  > | null
+  > | null = null
 
   public constructor(props: IChangesSidebarProps) {
     super(props)
@@ -357,6 +366,8 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           isCommitting={this.props.isCommitting}
           showCoAuthoredBy={this.props.changes.showCoAuthoredBy}
           coAuthors={this.props.changes.coAuthors}
+          externalEditorLabel={this.props.externalEditorLabel}
+          onOpenInExternalEditor={this.props.onOpenInExternalEditor}
         />
         {this.renderMostRecentLocalCommit()}
       </div>

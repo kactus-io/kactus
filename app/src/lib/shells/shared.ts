@@ -10,6 +10,7 @@ export enum Shell {
   Terminal = 'Terminal',
   Hyper = 'Hyper',
   iTerm2 = 'iTerm2',
+  PowerShellCore = 'PowerShell Core',
 }
 
 export const Default = Shell.Terminal
@@ -27,6 +28,10 @@ export function parse(label: string): Shell {
     return Shell.iTerm2
   }
 
+  if (label === Shell.PowerShellCore) {
+    return Shell.PowerShellCore
+  }
+
   return Default
 }
 
@@ -38,6 +43,8 @@ function getBundleID(shell: Shell): string {
       return 'com.googlecode.iterm2'
     case Shell.Hyper:
       return 'co.zeit.hyper'
+    case Shell.PowerShellCore:
+      return 'com.microsoft.powershell'
     default:
       return assertNever(shell, `Unknown shell: ${shell}`)
   }
@@ -55,7 +62,7 @@ async function getShellPath(shell: Shell): Promise<string | null> {
 
 export async function getAvailableShells(): Promise<
   ReadonlyArray<IFoundShell<Shell>>
-> {
+  > {
   const [terminalPath, hyperPath, iTermPath] = await Promise.all([
     getShellPath(Shell.Terminal),
     getShellPath(Shell.Hyper),
@@ -94,7 +101,7 @@ let shellCache: ReadonlyArray<FoundShell> | null = null
 /** Get the shells available for the user. */
 export async function getCachedAvailableShells(): Promise<
   ReadonlyArray<FoundShell>
-> {
+  > {
   if (shellCache) {
     return shellCache
   }
@@ -127,7 +134,7 @@ export async function launchShell(
     const label = 'Preferences'
     throw new ShellError(
       `Could not find executable for '${shell.shell}' at path '${
-        shell.path
+      shell.path
       }'.  Please open ${label} and select an available shell.`
     )
   }

@@ -202,7 +202,7 @@ export class List extends React.Component<IListProps, IListState> {
   private gridStyle: React.CSSProperties = { overflowX: 'hidden' }
 
   private list: HTMLDivElement | null = null
-  private grid: React.Component<any, any> | null
+  private grid: React.Component<any, any> | null = null
   private readonly resizeObserver: ResizeObserver | null = null
   private updateSizeTimeoutId: number | null = null
 
@@ -530,8 +530,8 @@ export class List extends React.Component<IListProps, IListState> {
   /**
    * Renders the react-virtualized Grid component
    *
-   * @param {width} - The width of the Grid as given by AutoSizer
-   * @param {height} - The height of the Grid as given by AutoSizer
+   * @param width - The width of the Grid as given by AutoSizer
+   * @param height - The height of the Grid as given by AutoSizer
    */
   private renderGrid(width: number, height: number) {
     let scrollToRow = this.props.scrollToRow
@@ -592,9 +592,9 @@ export class List extends React.Component<IListProps, IListState> {
     scrollTop,
     clientHeight,
   }: {
-    scrollTop: number
-    clientHeight: number
-  }) => {
+      scrollTop: number
+      clientHeight: number
+    }) => {
     if (this.props.onScroll) {
       this.props.onScroll(scrollTop, clientHeight)
     }

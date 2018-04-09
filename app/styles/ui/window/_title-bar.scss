@@ -1,29 +1,23 @@
 @import '../../mixins';
-
 #desktop-app-title-bar {
   -webkit-app-region: drag;
   flex-grow: 0;
   flex-shrink: 0;
   width: 100%;
-
   display: flex;
   flex-direction: row;
-
   height: var(--title-bar-height);
   background: linear-gradient(to bottom, #3b3f46 0%, #2b2e33 100%);
   border-bottom: 1px solid #000;
-
   .resize-handle {
     position: absolute;
     top: 0px;
     left: 0px;
     -webkit-app-region: no-drag;
-
     &.top {
       width: 100%;
       height: 3px;
     }
-
     &.left {
       width: 3px;
       height: var(--title-bar-height);
@@ -34,7 +28,6 @@
 #desktop-app-title-bar.light-title-bar {
   background: transparent;
   border-bottom: none;
-
   position: fixed;
   z-index: 1;
 }

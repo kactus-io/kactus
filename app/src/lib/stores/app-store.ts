@@ -228,7 +228,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private readonly repositorySettingsStores = new Map<
     string,
     RepositorySettingsStore
-  >()
+    >()
   public readonly gitHubUserStore: GitHubUserStore
   private readonly cloningRepositoriesStore: CloningRepositoriesStore
   private readonly emojiStore: EmojiStore
@@ -928,7 +928,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const gitHubRepository = repository.gitHubRepository
 
     if (gitHubRepository != null) {
-      this._updateIssues(gitHubRepository)
+      this._refreshIssues(gitHubRepository)
       this.loadPullRequests(repository, async () => {
         const promiseForPRs = this.pullRequestStore.fetchPullRequestsFromCache(
           gitHubRepository
@@ -976,14 +976,14 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return this._repositoryWithRefreshedGitHubRepository(repository)
   }
 
-  public async _updateIssues(repository: GitHubRepository) {
+  public async _refreshIssues(repository: GitHubRepository) {
     const user = getAccountForEndpoint(this.accounts, repository.endpoint)
     if (!user) {
       return
     }
 
     try {
-      await this._issuesStore.fetchIssues(repository, user)
+      await this._issuesStore.refreshIssues(repository, user)
     } catch (e) {
       log.warn(`Unable to fetch issues for ${repository.fullName}`, e)
     }
@@ -1015,7 +1015,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     if (this.currentPullRequestUpdater) {
       fatalError(
         `A pull request updater is already active and cannot start updating on ${
-          repository.name
+        repository.name
         }`
       )
 
@@ -1081,7 +1081,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     if (this.currentBackgroundFetcher) {
       fatalError(
         `We should only have on background fetcher active at once, but we're trying to start background fetching on ${
-          repository.name
+        repository.name
         } while another background fetcher is still active!`
       )
       return
@@ -1360,7 +1360,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
           modifiedFiles.map(f => {
             return this.isParsing(repository, f, () => {
               return parseSketchFile(repository, f, kactusStatus.config).then(
-                () => {}
+                () => { }
               )
             })
           })
@@ -1534,9 +1534,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
       selectedFileID: null,
       selectedSketchPart: selectedPart
         ? {
-            id: selectedPart.id,
-            type: selectedPart.type,
-          }
+          id: selectedPart.id,
+          type: selectedPart.type,
+        }
         : null,
     }))
     this.updateKactusState(repository, state => ({ selectedFileID: null }))
@@ -2673,7 +2673,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
           account.token.length > 0 ? 'has token' : 'empty token'
         log.info(
           `[AppStore.getAccountForRemoteURL] account found for remote: ${remote} - ${
-            account.login
+          account.login
           } (${hasValidToken})`
         )
         return account
@@ -2885,6 +2885,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
         if (fetchType === FetchType.UserInitiatedTask) {
           this._refreshPullRequests(repository)
+          if (repository.gitHubRepository != null) {
+            this._refreshIssues(repository.gitHubRepository)
+          }
         }
       }
     })
@@ -3047,13 +3050,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
   }
 
   /** Takes a repository path and opens it using the user's configured editor */
-  public async _openInExternalEditor(path: string): Promise<void> {
+  public async _openInExternalEditor(fullPath: string): Promise<void> {
     const selectedExternalEditor =
       this.getState().selectedExternalEditor || null
 
     try {
       const match = await findEditorOrDefault(selectedExternalEditor)
-      await launchExternalEditor(path, match)
+      await launchExternalEditor(fullPath, match)
     } catch (error) {
       this.emitError(error)
     }
@@ -3193,15 +3196,11 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return this.signInStore.setTwoFactorOTP(otp)
   }
 
-  public _setAppFocusState(isFocused: boolean): Promise<void> {
-    const changed = this.appIsFocused !== isFocused
-    this.appIsFocused = isFocused
-
-    if (changed) {
+  public async _setAppFocusState(isFocused: boolean): Promise<void> {
+    if (this.appIsFocused !== isFocused) {
+      this.appIsFocused = isFocused
       this.emitUpdate()
     }
-
-    return Promise.resolve()
   }
 
   /**
@@ -3311,7 +3310,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
   public _removeAccount(account: Account): Promise<void> {
     log.info(
       `[AppStore] removing account ${account.login} (${
-        account.name
+      account.name
       }) from store`
     )
     return this.accountsStore.removeAccount(account)
@@ -3430,7 +3429,12 @@ export class AppStore extends TypedBaseStore<IAppState> {
       await this.repositoriesStore.removeRepository(id)
     }
 
-    this._showFoldout({ type: FoldoutType.Repository })
+    const allRepositories = await this.repositoriesStore.getAll()
+    if (allRepositories.length === 0) {
+      this._closeFoldout(FoldoutType.Repository)
+    } else {
+      this._showFoldout({ type: FoldoutType.Repository })
+    }
   }
 
   public async _cloneAgain(url: string, path: string): Promise<void> {
@@ -3492,7 +3496,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         account.token.length > 0 ? 'has token' : 'empty token'
       log.info(
         `[AppStore.withAuthenticatingUser] account found for repository: ${
-          repository.name
+        repository.name
         } - ${account.login} (${hasValidToken})`
       )
     }
@@ -3688,7 +3692,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     const baseURL = `${gitHubRepository.htmlURL}/pull/${
       currentPullRequest.number
-    }`
+      }`
 
     await this._openInBrowser(baseURL)
   }
@@ -3815,7 +3819,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const urlEncodedBranchName = QueryString.escape(branch.nameWithoutRemote)
     const baseURL = `${
       gitHubRepository.htmlURL
-    }/pull/new/${urlEncodedBranchName}`
+      }/pull/new/${urlEncodedBranchName}`
 
     await this._openInBrowser(baseURL)
   }
@@ -3875,9 +3879,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
           f =>
             f.id === sketchFile.id
               ? {
-                  ...f,
-                  preview: image,
-                }
+                ...f,
+                preview: image,
+              }
               : f
         ),
       }
@@ -3939,7 +3943,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       if (remote.url !== cloneURL) {
         const error = new Error(
           `Expected PR remote ${remoteName} url to be ${cloneURL} got ${
-            remote.url
+          remote.url
           }.`
         )
 

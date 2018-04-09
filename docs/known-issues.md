@@ -18,6 +18,20 @@ Please check the [open](https://github.com/kactus-io/kactus/labels/bug) and [clo
 
 ## macOS
 
+### Checking for updates triggers a 'Could not create temporary directory: Permission denied' message - [#4115](https://github.com/desktop/desktop/issues/4115)
+
+This issue seems to be caused by missing permissions for the `~/Library/Caches/io.kactus.KactusClient.ShipIt` folder. This is a directory that Desktop uses to create and unpack temporary files as part of updating the application.
+
+**Workaround:**
+
+ - Close Kactus
+ - Open Finder and navigate to `~/Library/Caches/`
+ - Context-click `io.kactus.KactusClient.ShipIt` and select **Get Info**
+ - Expand the **Sharing & Permissions** section
+ - If you do not see the "You can read and write" message, add yourself with
+   the "Read & Write" permissions
+ - Start Kactus again and check for updates
+
 ### App frozen or very slow after creating new repository - [#67](https://github.com/kactus-io/kactus/issues/67)
 
 when you first add a file, hundreds (even thousands) of files are created so Kactus has some issue to grab them all.

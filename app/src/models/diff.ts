@@ -10,16 +10,21 @@ export const maximumDiffStringSize = 268435441
 /**
  * A container for holding an image for display in the application
  */
-export type Image = {
+export class Image {
   /**
    * The base64 encoded contents of the image
    */
-  readonly contents: string
+  public readonly contents: string
 
   /**
    * The data URI media type, so the browser can render the image correctly
    */
-  readonly mediaType: string
+  public readonly mediaType: string
+
+  public constructor(contents: string, mediaType: string) {
+    this.contents = contents
+    this.mediaType = mediaType
+  }
 }
 
 /** each diff is made up of a number of hunks */

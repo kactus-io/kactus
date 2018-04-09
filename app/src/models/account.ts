@@ -6,25 +6,6 @@ import { getDotComAPIEndpoint, IAPIEmail } from '../lib/api'
  * This contains a token that will be used for operations that require authentication.
  */
 export class Account {
-  /** The access token used to perform operations on behalf of this account */
-  public readonly token: string
-  /** The login name for this account  */
-  public readonly login: string
-  /** The server for this account - GitHub or a GitHub Enterprise instance */
-  public readonly endpoint: string
-  /** The current list of email addresses associated with the account */
-  public readonly emails: ReadonlyArray<IAPIEmail>
-  /** The profile URL to render for this account */
-  public readonly avatarURL: string
-  /** The database id for this account */
-  public readonly id: number
-  /** The friendly name associated with this account */
-  public readonly name: string
-  /** Wether the user has full access to Kactus */
-  public readonly unlockedKactus: boolean
-  /** Wether the user has enterprise access to Kactus */
-  public readonly unlockedEnterpriseKactus: boolean
-
   /** Create an account which can be used to perform unauthenticated API actions */
   public static anonymous(): Account {
     return new Account(
@@ -41,26 +22,25 @@ export class Account {
   }
 
   public constructor(
-    login: string,
-    endpoint: string,
-    token: string,
-    emails: ReadonlyArray<IAPIEmail>,
-    avatarURL: string,
-    id: number,
-    name: string,
-    unlockedKactus: boolean,
-    unlockedEnterpriseKactus: boolean
-  ) {
-    this.login = login
-    this.endpoint = endpoint
-    this.token = token
-    this.emails = emails
-    this.avatarURL = avatarURL
-    this.id = id
-    this.name = name
-    this.unlockedKactus = unlockedKactus
-    this.unlockedEnterpriseKactus = unlockedEnterpriseKactus
-  }
+    /** The login name for this account  */
+    public readonly login: string,
+    /** The server for this account - GitHub or a GitHub Enterprise instance */
+    public readonly endpoint: string,
+    /** The access token used to perform operations on behalf of this account */
+    public readonly token: string,
+    /** The current list of email addresses associated with the account */
+    public readonly emails: ReadonlyArray<IAPIEmail>,
+    /** The profile URL to render for this account */
+    public readonly avatarURL: string,
+    /** The database id for this account */
+    public readonly id: number,
+    /** The friendly name associated with this account */
+    public readonly name: string,
+    /** Wether the user has full access to Kactus */
+    public readonly unlockedKactus: boolean,
+    /** Wether the user has enterprise access to Kactus */
+    public readonly unlockedEnterpriseKactus: boolean
+  ) { }
 
   public withToken(token: string): Account {
     return new Account(

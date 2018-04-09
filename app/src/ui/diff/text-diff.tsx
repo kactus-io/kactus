@@ -291,8 +291,8 @@ interface ITextDiffProps extends ITextDiffUtilsProps {
 
 /** A component which renders a diff for a file. */
 export class TextDiff extends React.Component<ITextDiffProps, {}> {
-  private codeMirror: Editor | null
-  private gutterWidth: number | null
+  private codeMirror: Editor | null = null
+  private gutterWidth: number | null = null
 
   /**
    * We store the scroll position before reloading the same diff so that we can
@@ -735,7 +735,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
           onMouseMove={this.onGutterMouseMove}
         />,
         gutterReactContainer,
-        function(this: DiffLineGutter) {
+        function (this: DiffLineGutter) {
           if (this !== undefined) {
             cache.set(index, this)
           }
@@ -924,9 +924,9 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
     const text =
       this.props.text.indexOf('\r') !== -1
         ? this.props.text
-            // Capture the \r if followed by (positive lookahead) a \n or
-            // the end of the string. Note that this does not capture the \n.
-            .replace(/\r(?=\n|$)/g, '')
+          // Capture the \r if followed by (positive lookahead) a \n or
+          // the end of the string. Note that this does not capture the \n.
+          .replace(/\r(?=\n|$)/g, '')
         : this.props.text
 
     return (

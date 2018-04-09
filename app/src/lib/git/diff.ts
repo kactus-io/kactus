@@ -102,6 +102,7 @@ const imageFileExtensions = new Set([
   '.gif',
   '.ico',
   '.webp',
+  '.bmp',
 ])
 const visualTextFileExtensions = new Set(['.svg'])
 
@@ -560,6 +561,9 @@ function getMediaType(extension: string) {
   if (extension === '.webp') {
     return 'image/webp'
   }
+  if (extension === '.bmp') {
+    return 'image/bmp'
+  }
 
   // fallback value as per the spec
   return 'text/plain'
@@ -670,11 +674,7 @@ export async function getBlobImage(
 ): Promise<Image> {
   const extension = Path.extname(path)
   const contents = await getBlobContents(repository, commitish, path)
-  const diff: Image = {
-    contents: contents.toString('base64'),
-    mediaType: getMediaType(extension),
-  }
-  return diff
+  return new Image(contents.toString('base64'), getMediaType(extension))
 }
 
 export async function getWorkingDirectoryImage(
@@ -695,11 +695,10 @@ export async function getWorkingDirectoryImage(
  */
 async function getImage(path: string): Promise<Image> {
   const contents = await fileSystem.readFile(path)
-  const diff: Image = {
-    contents: contents.toString('base64'),
-    mediaType: getMediaType(Path.extname(path)),
-  }
-  return diff
+  return new Image(
+    contents.toString('base64'),
+    getMediaType(Path.extname(path))
+  )
 }
 
 async function generatePreview(
@@ -892,7 +891,7 @@ async function getOldSketchPreview(
     let config
     try {
       config = remote.require(Path.join(storagePath, 'kactus.json')) // get the config in the commitish
-    } catch (err) {}
+    } catch (err) { }
     await importFolder(sketchStoragePath, config)
   }
 
