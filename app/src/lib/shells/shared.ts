@@ -62,7 +62,7 @@ async function getShellPath(shell: Shell): Promise<string | null> {
 
 export async function getAvailableShells(): Promise<
   ReadonlyArray<IFoundShell<Shell>>
-  > {
+> {
   const [terminalPath, hyperPath, iTermPath] = await Promise.all([
     getShellPath(Shell.Terminal),
     getShellPath(Shell.Hyper),
@@ -101,7 +101,7 @@ let shellCache: ReadonlyArray<FoundShell> | null = null
 /** Get the shells available for the user. */
 export async function getCachedAvailableShells(): Promise<
   ReadonlyArray<FoundShell>
-  > {
+> {
   if (shellCache) {
     return shellCache
   }
@@ -134,7 +134,7 @@ export async function launchShell(
     const label = 'Preferences'
     throw new ShellError(
       `Could not find executable for '${shell.shell}' at path '${
-      shell.path
+        shell.path
       }'.  Please open ${label} and select an available shell.`
     )
   }

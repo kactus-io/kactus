@@ -32,11 +32,7 @@ const frontMatter: <T>(
   path: string
 ) => IFrontMatterResult<T> = require('front-matter')
 
-import {
-  getBundleID,
-  getProductName,
-  getVersion,
-} from '../app/package-info'
+import { getBundleID, getProductName, getVersion } from '../app/package-info'
 
 import { getReleaseChannel, getDistRoot, getExecutableName } from './dist-info'
 
@@ -121,7 +117,7 @@ function packageApp(
     }
     throw new Error(
       `Unable to convert to platform for electron-packager: '${
-      process.platform
+        process.platform
       }`
     )
   }
@@ -323,7 +319,7 @@ function updateLicenseDump(callback: (err: Error | null) => void) {
           const license = summary[key]
           licensesMessage += `${key} (${license.repository}): ${
             license.license
-            }\n`
+          }\n`
         }
 
         const message = `The following dependencies have unknown or non-permissive licenses. Check it out and update ${overridesPath} if appropriate:\n${licensesMessage}`

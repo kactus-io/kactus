@@ -40,7 +40,7 @@ export class Account {
     public readonly unlockedKactus: boolean,
     /** Wether the user has enterprise access to Kactus */
     public readonly unlockedEnterpriseKactus: boolean
-  ) { }
+  ) {}
 
   public withToken(token: string): Account {
     return new Account(

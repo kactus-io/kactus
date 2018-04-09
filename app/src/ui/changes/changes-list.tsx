@@ -202,7 +202,7 @@ export class ChangesList extends React.Component<
     files: Array<TFileOrSketchPartChange>
     visibleFileList: Array<TFileOrSketchPartChange>
   }
-  > {
+> {
   public constructor(props: IChangesListProps) {
     super(props)
 

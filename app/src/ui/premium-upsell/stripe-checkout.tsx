@@ -21,7 +21,7 @@ let stripeHandler: IStripeCheckout | undefined
 export class Checkout extends React.Component<
   IStripeCheckoutProps,
   IStripeCheckoutState
-  > {
+> {
   private _success: boolean = false
 
   public constructor(props: IStripeCheckoutProps) {

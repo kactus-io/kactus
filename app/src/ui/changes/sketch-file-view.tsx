@@ -17,7 +17,7 @@ interface ISketchFileViewProps {
 export class SketchFileView extends React.Component<
   ISketchFileViewProps,
   Readonly<{}>
-  > {
+> {
   public constructor(props: ISketchFileViewProps) {
     super(props)
     if (!props.sketchFile.preview && props.sketchFile.imported) {
@@ -26,7 +26,11 @@ export class SketchFileView extends React.Component<
   }
 
   public componentWillReceiveProps(nextProps: ISketchFileViewProps) {
-    if (!nextProps.sketchFile.preview && !nextProps.sketchFile.previewError && nextProps.sketchFile.imported) {
+    if (
+      !nextProps.sketchFile.preview &&
+      !nextProps.sketchFile.previewError &&
+      nextProps.sketchFile.imported
+    ) {
       nextProps.onGetPreview(nextProps.sketchFile)
     }
   }
@@ -55,7 +59,10 @@ export class SketchFileView extends React.Component<
           {previewError && (
             <div>
               <Octicon symbol={OcticonSymbol.alert} />
-              <div>Couldn't generate the preview for the file. Be careful, this could indicate that the file cannot be opened by Sketch.</div>
+              <div>
+                Couldn't generate the preview for the file. Be careful, this
+                could indicate that the file cannot be opened by Sketch.
+              </div>
             </div>
           )}
         </div>

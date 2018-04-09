@@ -27,8 +27,11 @@
   --secondary-button-focus-border-color: #{$gray-300}; // Typography
   //
   // Font, line-height, and color for body text, headings, and more.
-  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
-  --font-family-monospace: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', Arial, sans-serif;
+  --font-family-monospace: Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   /**
    * Font weight to use for semibold text
    */
@@ -193,7 +196,9 @@
   --diff-delete-hover-background-color: #{$red-200};
   --diff-delete-hover-border-color: #{$red-300};
   --diff-delete-hover-gutter-color: #{$red-300};
-  --diff-delete-hover-text-color: var(--text-color); // Note that this duration *must* match the `UndoCommitAnimationTimeout`
+  --diff-delete-hover-text-color: var(
+    --text-color
+  ); // Note that this duration *must* match the `UndoCommitAnimationTimeout`
   // specified in `changes/index.tsx`.
   --undo-animation-duration: 500ms;
   /**
@@ -210,8 +215,20 @@
   --dialog-error-color: #{$red};
   /** Inline paths and code */
   --path-segment-background: #{$green-000};
-  --path-segment-padding: var(--spacing-third); // http://easings.net/#easeOutBack
-  --easing-ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.275); // http://easings.net/#easeInBack
-  --easing-ease-in-back: cubic-bezier(0.6, -0.28, 0.735, 0.045); // http://easings.net/#easeOutQuint
+  --path-segment-padding: var(
+    --spacing-third
+  ); // http://easings.net/#easeOutBack
+  --easing-ease-out-back: cubic-bezier(
+    0.175,
+    0.885,
+    0.32,
+    1.275
+  ); // http://easings.net/#easeInBack
+  --easing-ease-in-back: cubic-bezier(
+    0.6,
+    -0.28,
+    0.735,
+    0.045
+  ); // http://easings.net/#easeOutQuint
   --easing-ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
 }

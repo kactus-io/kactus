@@ -592,9 +592,9 @@ export class List extends React.Component<IListProps, IListState> {
     scrollTop,
     clientHeight,
   }: {
-      scrollTop: number
-      clientHeight: number
-    }) => {
+    scrollTop: number
+    clientHeight: number
+  }) => {
     if (this.props.onScroll) {
       this.props.onScroll(scrollTop, clientHeight)
     }

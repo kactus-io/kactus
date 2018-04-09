@@ -1049,7 +1049,7 @@ export class Dispatcher {
         const unknownAction: IUnknownAction = action
         log.warn(
           `Unknown URL action: ${
-          unknownAction.name
+            unknownAction.name
           } - payload: ${JSON.stringify(unknownAction)}`
         )
     }
