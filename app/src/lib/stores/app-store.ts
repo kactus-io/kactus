@@ -3873,19 +3873,37 @@ export class AppStore extends TypedBaseStore<IAppState> {
       sketchFile.path + '.sketch',
       IKactusFileType.Document
     )
-    this.updateKactusState(repository, state => {
-      return {
-        files: state.files.map(
-          f =>
-            f.id === sketchFile.id
-              ? {
-                ...f,
-                preview: image,
-              }
-              : f
-        ),
-      }
-    })
+    if (image) {
+      this.updateKactusState(repository, state => {
+        return {
+          files: state.files.map(
+            f =>
+              f.id === sketchFile.id
+                ? {
+                  ...f,
+                  preview: image,
+                  previewError: undefined
+                }
+                : f
+          ),
+        }
+      })
+    } else {
+      this.updateKactusState(repository, state => {
+        return {
+          files: state.files.map(
+            f =>
+              f.id === sketchFile.id
+                ? {
+                  ...f,
+                  preview: undefined,
+                  previewError: true,
+                }
+                : f
+          ),
+        }
+      })
+    }
 
     this.emitUpdate()
   }

@@ -17,16 +17,16 @@ interface ISketchFileViewProps {
 export class SketchFileView extends React.Component<
   ISketchFileViewProps,
   Readonly<{}>
-> {
+  > {
   public constructor(props: ISketchFileViewProps) {
     super(props)
-    if (!props.sketchFile.preview) {
+    if (!props.sketchFile.preview && props.sketchFile.imported) {
       props.onGetPreview(props.sketchFile)
     }
   }
 
   public componentWillReceiveProps(nextProps: ISketchFileViewProps) {
-    if (!nextProps.sketchFile.preview) {
+    if (!nextProps.sketchFile.preview && !nextProps.sketchFile.previewError && nextProps.sketchFile.imported) {
       nextProps.onGetPreview(nextProps.sketchFile)
     }
   }
@@ -44,13 +44,19 @@ export class SketchFileView extends React.Component<
   }
 
   public render() {
-    const preview = this.props.sketchFile.preview
+    const { preview, previewError } = this.props.sketchFile
 
     return (
       <UiView className="panel blankslate" id="blank-slate">
         <div className="preview">
           {preview && (
             <img src={`data:${preview.mediaType};base64,${preview.contents}`} />
+          )}
+          {previewError && (
+            <div>
+              <Octicon symbol={OcticonSymbol.alert} />
+              <div>Couldn't generate the preview for the file. Be careful, this could indicate that the file cannot be opened by Sketch.</div>
+            </div>
           )}
         </div>
 
@@ -93,11 +99,6 @@ export class SketchFileView extends React.Component<
             </div>
           </div>
         </div>
-
-        {/*<p className='footer'>
-          Alternatively, you can drag and drop a local repository here
-          to add it.
-        </p>*/}
       </UiView>
     )
   }

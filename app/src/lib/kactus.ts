@@ -23,6 +23,7 @@ export type IKactusFile = _IKactusFile & {
   isParsing: boolean
   isImporting: boolean
   preview?: Image
+  previewError?: boolean
 }
 
 interface IKactusStatusResult {
@@ -75,11 +76,11 @@ export async function generateDocumentPreview(
     return new Promise<string>((resolve, reject) => {
       exec(
         sketchtoolPath(sketchPath) +
-          ' export preview "' +
-          file +
-          '" --output="' +
-          output +
-          '" --filename=document.png --overwriting=YES --max-size=1000 --compression=0.7 --save-for-web=YES',
+        ' export preview "' +
+        file +
+        '" --output="' +
+        output +
+        '" --filename=document.png --overwriting=YES --max-size=1000 --compression=0.7 --save-for-web=YES',
         (err, stdout, stderr) => {
           if (err) {
             return reject(err)
@@ -104,13 +105,13 @@ export async function generatePagePreview(
       new Promise<string>((resolve, reject) => {
         exec(
           sketchtoolPath(sketchPath) +
-            ' export pages "' +
-            file +
-            '" --item="' +
-            name +
-            '" --output="' +
-            output +
-            '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png --compression=0.7',
+          ' export pages "' +
+          file +
+          '" --item="' +
+          name +
+          '" --output="' +
+          output +
+          '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png --compression=0.7',
           (err, stdout, stderr) => {
             if (err) {
               return reject(err)
@@ -136,13 +137,13 @@ export async function generateArtboardPreview(
       new Promise<string>((resolve, reject) => {
         exec(
           sketchtoolPath(sketchPath) +
-            ' export artboards "' +
-            file +
-            '" --item="' +
-            id +
-            '" --output="' +
-            output +
-            '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --include-symbols=YES --formats=png --compression=0.7',
+          ' export artboards "' +
+          file +
+          '" --item="' +
+          id +
+          '" --output="' +
+          output +
+          '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --include-symbols=YES --formats=png --compression=0.7',
           (err, stdout, stderr) => {
             if (err) {
               return reject(err)
@@ -167,13 +168,13 @@ export async function generateLayerPreview(
       new Promise<string>((resolve, reject) => {
         exec(
           sketchtoolPath(sketchPath) +
-            ' export layers "' +
-            file +
-            '" --item="' +
-            id +
-            '" --output="' +
-            output +
-            '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png --compression=0.7',
+          ' export layers "' +
+          file +
+          '" --item="' +
+          id +
+          '" --output="' +
+          output +
+          '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png --compression=0.7',
           (err, stdout, stderr) => {
             if (err) {
               return reject(err)
