@@ -10,7 +10,7 @@
   "main": "../out/plugin.sketchplugin",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "skpm build"
+    "build": "skpm-build"
   },
   "keywords": [
     "kactus",
