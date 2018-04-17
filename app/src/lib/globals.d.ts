@@ -280,7 +280,6 @@ interface IStripeCheckout {
     panelLabel: string
     amount: number
     email?: string
-    bitcoin: boolean
   }): void
   close(): void
 }

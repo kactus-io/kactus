@@ -80,7 +80,6 @@ export class Checkout extends React.Component<
       panelLabel: 'Unlock ({{amount}}/month)',
       amount: this.props.price * 100,
       email: !enterprise && primaryEmail ? primaryEmail.email : undefined,
-      bitcoin: true,
     })
   }
 
