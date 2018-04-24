@@ -178,6 +178,13 @@ function findNext(
   })
 }
 
+/**
+ * As fast-forwarding local branches is proportional to the number of local
+ * branches, and is run after every fetch/push/pull, this is skipped when the
+ * number of eligible branches is greater than a given threshold.
+ */
+const FastForwardBranchesThreshold = 20
+
 const LastSelectedRepositoryIDKey = 'last-selected-repository-id'
 
 const defaultSidebarWidth: number = 250
@@ -465,7 +472,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         workingDirectory: WorkingDirectoryStatus.fromFiles(
           new Array<WorkingDirectoryFileChange>()
         ),
-        selectedFileID: null,
+        selectedFileIDs: [],
         diff: null,
         contextualCommitMessage: null,
         commitMessage: null,
@@ -1413,18 +1420,39 @@ export class AppStore extends TypedBaseStore<IAppState> {
         })
         .sort((x, y) => caseInsensitiveCompare(x.path, y.path))
 
+      // Collect all the currently available file ids into a set to avoid O(N)
+      // lookups using .find on the mergedFiles array.
+      const mergedFileIds = new Set(mergedFiles.map(x => x.id))
+
+      // The previously selected files might not be available in the working
+      // directory any more due to having been committed or discarded so we'll
+      // do a pass over and filter out any selected files that aren't available.
+      let selectedFileIDs = state.selectedFileIDs.filter(id =>
+        mergedFileIds.has(id)
+      )
+
+      // Select the first file if we don't have anything selected and we
+      // have something to select.
+      if (selectedFileIDs.length === 0 && mergedFiles.length > 0) {
+        selectedFileIDs = [mergedFiles[0].id]
+      }
+
+      // The file selection could have changed if the previously selected files
+      // are no longer selectable (they were discarded or committed) but if they
+      // were not changed we can reuse the diff. Note, however that we only render
+      // a diff when a single file is selected. If the previous selection was
+      // a single file with the same id as the current selection we can keep the
+      // diff we had, if not we'll clear it.
       const workingDirectory = WorkingDirectoryStatus.fromFiles(mergedFiles)
 
-      const selectedFileID = state.selectedFileID
+      const diff =
+        selectedFileIDs.length === 1 &&
+        state.selectedFileIDs.length === 1 &&
+        state.selectedFileIDs[0] === selectedFileIDs[0]
+          ? state.diff
+          : null
 
-      // The file selection could have changed if the previously selected file
-      // is no longer selectable (it was reverted or committed) but if it hasn't
-      // changed we can reuse the diff.
-      const sameSelectedFileExists = selectedFileID
-        ? workingDirectory.findFileWithID(selectedFileID)
-        : null
-      const diff = sameSelectedFileExists ? state.diff : null
-      return { workingDirectory, selectedFileID, diff }
+      return { workingDirectory, selectedFileIDs, diff }
     })
 
     this.updateRepositoryState(repository, state => {
@@ -1458,10 +1486,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _changeChangesSelection(
     repository: Repository,
-    selectedFile: WorkingDirectoryFileChange | null
+    selectedFiles: WorkingDirectoryFileChange[]
   ): Promise<void> {
     this.updateChangesState(repository, state => ({
-      selectedFileID: selectedFile ? selectedFile.id : null,
+      selectedFileIDs: selectedFiles.map(file => file.id),
       selectedSketchPart: null,
     }))
     this.updateKactusState(repository, state => ({ selectedFileID: null }))
@@ -1516,7 +1544,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       selectedFileID: selectedFile ? selectedFile.id : null,
     }))
     this.updateChangesState(repository, state => ({
-      selectedFileID: null,
+      selectedFileIDs: [],
       selectedSketchPart: null,
       diff: null,
     }))
@@ -1531,7 +1559,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     selectedPart: TSketchPartChange | null
   ): Promise<void> {
     this.updateChangesState(repository, state => ({
-      selectedFileID: null,
+      selectedFileIDs: [],
       selectedSketchPart: selectedPart
         ? {
             id: selectedPart.id,
@@ -1558,22 +1586,30 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     const stateBeforeLoad = this.getRepositoryState(repository)
     const changesStateBeforeLoad = stateBeforeLoad.changesState
-    const selectedFileIDBeforeLoad = changesStateBeforeLoad.selectedFileID
+    const selectedFileIDsBeforeLoad = changesStateBeforeLoad.selectedFileIDs
+
+    // We only render diffs when a single file is selected.
+    if (selectedFileIDsBeforeLoad.length > 1) {
+      if (changesStateBeforeLoad.diff !== null) {
+        this.updateChangesState(repository, state => ({ diff: null }))
+        this.emitUpdate()
+      }
+      return
+    }
+
+    const selectedFileIdBeforeLoad = selectedFileIDsBeforeLoad[0]
+    const selectedFileBeforeLoad = selectedFileIdBeforeLoad
+      ? changesStateBeforeLoad.workingDirectory.findFileWithID(
+          selectedFileIdBeforeLoad
+        )
+      : null
     const selectedSketchPartBeforeLoad =
       changesStateBeforeLoad.selectedSketchPart
 
     let diff: IDiff
-
-    if (selectedFileIDBeforeLoad) {
-      const selectedFileBeforeLoad = changesStateBeforeLoad.workingDirectory.findFileWithID(
-        selectedFileIDBeforeLoad
-      )
-      if (!selectedFileBeforeLoad) {
-        this.updateChangesState(repository, state => ({ loadingDiff: false }))
-        this.emitUpdate()
-        return
-      }
-
+    if (selectedFileBeforeLoad !== null) {
+      this.updateChangesState(repository, state => ({ loadingDiff: true }))
+      this.emitUpdate()
       diff = await getWorkingDirectoryDiff(
         this.sketchPath,
         repository,
@@ -1582,6 +1618,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
         stateBeforeLoad.historyState.history[0]
       )
     } else if (selectedSketchPartBeforeLoad) {
+      this.updateChangesState(repository, state => ({ loadingDiff: true }))
+      this.emitUpdate()
       diff = await getWorkingDirectoryPartDiff(
         this.sketchPath,
         repository,
@@ -1590,25 +1628,29 @@ export class AppStore extends TypedBaseStore<IAppState> {
         stateBeforeLoad.historyState.history[0]
       )
     } else {
-      this.updateChangesState(repository, state => ({ loadingDiff: false }))
+      this.updateChangesState(repository, state => ({ diff: null }))
       this.emitUpdate()
       return
     }
 
     const stateAfterLoad = this.getRepositoryState(repository)
     const changesState = stateAfterLoad.changesState
-    const selectedFileID = changesState.selectedFileID
+
+    // A different file (or files) could have been selected while we were
+    // loading the diff in which case we no longer care about the diff we
+    // just loaded.
+    if (changesState.selectedFileIDs.length > 1) {
+      return
+    }
+
+    const selectedFileID = changesState.selectedFileIDs[0]
     const selectedSketchPart = changesState.selectedSketchPart
 
-    // A different file could have been selected while we were loading the diff
-    // in which case we no longer care about the diff we just loaded.
     if (
-      (!selectedFileID || selectedFileID !== selectedFileIDBeforeLoad) &&
+      (!selectedFileID || selectedFileID !== selectedFileIdBeforeLoad) &&
       (!selectedSketchPart ||
         selectedSketchPart !== selectedSketchPartBeforeLoad)
     ) {
-      this.updateChangesState(repository, state => ({ loadingDiff: false }))
-      this.emitUpdate()
       return
     }
 
@@ -1616,9 +1658,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
       const currentlySelectedFile = changesState.workingDirectory.findFileWithID(
         selectedFileID
       )
-      if (!currentlySelectedFile) {
+
+      if (currentlySelectedFile === null) {
         this.updateChangesState(repository, state => ({ loadingDiff: false }))
-        this.emitUpdate()
         return
       }
 
@@ -1757,8 +1799,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
       )
 
       const workingDirectory = WorkingDirectoryStatus.fromFiles(newFiles)
-      const diff = state.selectedFileID ? state.diff : null
-      return { workingDirectory, diff }
+
+      return { workingDirectory }
     })
 
     this.emitUpdate()
@@ -2605,6 +2647,15 @@ export class AppStore extends TypedBaseStore<IAppState> {
       )
     })
 
+    if (eligibleBranches.length >= FastForwardBranchesThreshold) {
+      log.info(
+        `skipping fast-forward work because there are ${
+          eligibleBranches.length
+        } local branches - this will run again when there are less than ${FastForwardBranchesThreshold} local branches tracking remotes`
+      )
+      return
+    }
+
     for (const branch of eligibleBranches) {
       const aheadBehind = await getBranchAheadBehind(repository, branch)
       if (!aheadBehind) {
@@ -3150,7 +3201,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return this.statsStore.recordLaunchStats(stats)
   }
 
-  public async _ignore(repository: Repository, pattern: string): Promise<void> {
+  public async _ignore(
+    repository: Repository,
+    pattern: string | string[]
+  ): Promise<void> {
     const repoSettingsStore = this.getRepositorySettingsStore(repository)
 
     await repoSettingsStore.ignore(pattern)
@@ -3933,16 +3987,25 @@ export class AppStore extends TypedBaseStore<IAppState> {
       head.gitHubRepository.cloneURL === gitHubRepository.cloneURL
 
     if (isRefInThisRepo) {
-      // We need to fetch FIRST because someone may have created a PR since the last fetch
       const defaultRemote = await getDefaultRemote(repository)
-      // TODO: I think we could skip this fetch if we know that we have the branch locally
-      // already. That way we'd match the behavior of checking out a branch.
-      if (defaultRemote) {
-        await this._fetchRemote(
-          repository,
-          defaultRemote,
-          FetchType.UserInitiatedTask
-        )
+      // if we don't have a default remote here, it's probably going
+      // to just crash and burn on checkout, but that's okay
+      if (defaultRemote != null) {
+        // the remote ref will be something like `origin/my-cool-branch`
+        const remoteRef = `${defaultRemote.name}/${head.ref}`
+        const gitStore = this.getGitStore(repository)
+
+        const remoteRefExists =
+          gitStore.allBranches.find(branch => branch.name === remoteRef) != null
+
+        // only try a fetch here if we can't find the ref
+        if (!remoteRefExists) {
+          await this._fetchRemote(
+            repository,
+            defaultRemote,
+            FetchType.UserInitiatedTask
+          )
+        }
       }
       await this._checkoutBranch(repository, head.ref)
     } else if (head.gitHubRepository != null) {
@@ -3966,7 +4029,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         )
 
         log.error(error.message)
-        this.emitError(error)
+        return this.emitError(error)
       }
 
       await this._fetchRemote(repository, remote, FetchType.UserInitiatedTask)
@@ -3988,6 +4051,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
       await this._checkoutBranch(repository, localBranchName)
     }
+
+    this.statsStore.recordPRBranchCheckout()
   }
 
   /**

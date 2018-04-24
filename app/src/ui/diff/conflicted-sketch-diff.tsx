@@ -205,7 +205,7 @@ export class ConflictedSketchDiff extends React.Component<
         return <DifferenceBlend {...this.getCommonProps(maxSize)} />
 
       case ImageDiffType.Text:
-        if (this.props.text && this.props.hunks) {
+        if (this.props.text && this.props.hunks && this.props.file) {
           return (
             <TextDiff
               repository={this.props.repository}

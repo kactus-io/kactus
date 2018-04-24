@@ -1,56 +1,45 @@
-import { clipboard } from 'electron'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import * as Path from 'path'
+import { clipboard } from 'electron'
+import { Editor } from 'codemirror'
 import { Disposable } from 'event-kit'
 
-import { assertNever } from '../../lib/fatal-error'
+import { fatalError } from '../../lib/fatal-error'
 
-import { Editor } from 'codemirror'
-import { CodeMirrorHost } from './code-mirror-host'
-import { Repository } from '../../models/repository'
+import { DiffHunk, DiffLineType, DiffSelection } from '../../models/diff'
 import {
-  CommittedFileChange,
   WorkingDirectoryFileChange,
-  AppFileStatus,
+  CommittedFileChange,
 } from '../../models/status'
-import {
-  DiffSelection,
-  ITextDiffData,
-  DiffLine,
-  DiffLineType,
-  DiffHunk,
-} from '../../models/diff'
 
+import { Octicon, OcticonSymbol } from '../octicons'
+
+import { IEditorConfigurationExtra } from './editor-configuration-extra'
+import { DiffSyntaxMode, IDiffSyntaxModeSpec } from './diff-syntax-mode'
+import { CodeMirrorHost } from './code-mirror-host'
+import { DiffLineGutter } from './diff-line-gutter'
 import {
   diffLineForIndex,
   diffHunkForIndex,
   findInteractiveDiffRange,
   lineNumberForDiffLine,
 } from './diff-explorer'
-import { DiffLineGutter } from './diff-line-gutter'
-import { IEditorConfigurationExtra } from './editor-configuration-extra'
-import { ISelectionStrategy } from './selection/selection-strategy'
-import { DragDropSelection } from './selection/drag-drop-selection-strategy'
-import { RangeSelection } from './selection/range-selection-strategy'
-import { Octicon, OcticonSymbol } from '../octicons'
-
-import { fatalError } from '../../lib/fatal-error'
-
 import { RangeSelectionSizePixels } from './edge-detection'
-import { relativeChanges } from './changed-range'
-import { getPartialBlobContents } from '../../lib/git/show'
-import { readPartialFile } from '../../lib/file-system'
 
-import { DiffSyntaxMode, IDiffSyntaxModeSpec } from './diff-syntax-mode'
-import { highlight } from '../../lib/highlighter/worker'
-import { ITokens } from '../../lib/highlighter/types'
+import { ISelectionStrategy } from './selection/selection-strategy'
+import { RangeSelection } from './selection/range-selection-strategy'
+import { DragDropSelection } from './selection/drag-drop-selection-strategy'
+
+import {
+  getLineFilters,
+  getFileContents,
+  highlightContents,
+} from './syntax-highlighting'
+import { relativeChanges } from './changed-range'
+import { Repository } from '../../models/repository'
 
 /** The longest line for which we'd try to calculate a line diff. */
 const MaxIntraLineDiffStringLength = 4096
-
-/** The maximum number of bytes we'll process for highlighting. */
-const MaxHighlightContentLength = 256 * 1024
 
 // This is a custom version of the no-newline octicon that's exactly as
 // tall as it needs to be (8px) which helps with aligning it on the line.
@@ -59,187 +48,8 @@ const narrowNoNewlineSymbol = new OcticonSymbol(
   8,
   'm 16,1 0,3 c 0,0.55 -0.45,1 -1,1 l -3,0 0,2 -3,-3 3,-3 0,2 2,0 0,-2 2,0 z M 8,4 C 8,6.2 6.2,8 4,8 1.8,8 0,6.2 0,4 0,1.8 1.8,0 4,0 6.2,0 8,1.8 8,4 Z M 1.5,5.66 5.66,1.5 C 5.18,1.19 4.61,1 4,1 2.34,1 1,2.34 1,4 1,4.61 1.19,5.17 1.5,5.66 Z M 7,4 C 7,3.39 6.81,2.83 6.5,2.34 L 2.34,6.5 C 2.82,6.81 3.39,7 4,7 5.66,7 7,5.66 7,4 Z'
 )
+
 type ChangedFile = WorkingDirectoryFileChange | CommittedFileChange
-
-interface ILineFilters {
-  readonly oldLineFilter: Array<number>
-  readonly newLineFilter: Array<number>
-}
-
-interface IFileContents {
-  readonly file: ChangedFile
-  readonly oldContents: Buffer
-  readonly newContents: Buffer
-}
-
-interface IFileTokens {
-  readonly oldTokens: ITokens
-  readonly newTokens: ITokens
-}
-
-async function getOldFileContent(
-  repository: Repository,
-  file: ChangedFile
-): Promise<Buffer> {
-  if (file.status === AppFileStatus.New) {
-    return new Buffer(0)
-  }
-
-  let commitish
-
-  if (file instanceof WorkingDirectoryFileChange) {
-    // If we pass an empty string here we get the contents
-    // that are in the index. But since we call diff with
-    // --no-index (see diff.ts) we need to look at what's
-    // actually committed to get the appropriate content.
-    commitish = 'HEAD'
-  } else if (file instanceof CommittedFileChange) {
-    commitish = `${file.commitish}^`
-  } else {
-    return assertNever(file, 'Unknown file change type')
-  }
-
-  return getPartialBlobContents(
-    repository,
-    commitish,
-    file.oldPath || file.path,
-    MaxHighlightContentLength
-  )
-}
-
-async function getNewFileContent(
-  repository: Repository,
-  file: ChangedFile
-): Promise<Buffer> {
-  if (file.status === AppFileStatus.Deleted) {
-    return new Buffer(0)
-  }
-
-  if (file instanceof WorkingDirectoryFileChange) {
-    return readPartialFile(
-      Path.join(repository.path, file.path),
-      0,
-      MaxHighlightContentLength - 1
-    )
-  } else if (file instanceof CommittedFileChange) {
-    return getPartialBlobContents(
-      repository,
-      file.commitish,
-      file.path,
-      MaxHighlightContentLength
-    )
-  }
-
-  return assertNever(file, 'Unknown file change type')
-}
-
-async function getFileContents(
-  repo: Repository,
-  file: ChangedFile,
-  lineFilters: ILineFilters
-): Promise<IFileContents> {
-  const oldContentsPromise = lineFilters.oldLineFilter.length
-    ? getOldFileContent(repo, file)
-    : Promise.resolve(new Buffer(0))
-
-  const newContentsPromise = lineFilters.newLineFilter.length
-    ? getNewFileContent(repo, file)
-    : Promise.resolve(new Buffer(0))
-
-  const [oldContents, newContents] = await Promise.all([
-    oldContentsPromise.catch(e => {
-      log.error('Could not load old contents for syntax highlighting', e)
-      return new Buffer(0)
-    }),
-    newContentsPromise.catch(e => {
-      log.error('Could not load new contents for syntax highlighting', e)
-      return new Buffer(0)
-    }),
-  ])
-
-  return { file, oldContents, newContents }
-}
-
-/**
- * Figure out which lines we need to have tokenized in
- * both the old and new version of the file.
- */
-function getLineFilters(diff: ITextDiffData): ILineFilters {
-  const oldLineFilter = new Array<number>()
-  const newLineFilter = new Array<number>()
-
-  const diffLines = new Array<DiffLine>()
-
-  let anyAdded = false
-  let anyDeleted = false
-
-  for (const hunk of diff.hunks) {
-    for (const line of hunk.lines) {
-      anyAdded = anyAdded || line.type === DiffLineType.Add
-      anyDeleted = anyDeleted || line.type === DiffLineType.Delete
-      diffLines.push(line)
-    }
-  }
-
-  for (const line of diffLines) {
-    // So this might need a little explaining. What we're trying
-    // to achieve here is if the diff contains only additions or
-    // only deletions we'll source all the highlighted lines from
-    // either the before or after file. That way we can completely
-    // disregard loading, and highlighting, the other version.
-    if (line.oldLineNumber !== null && line.newLineNumber !== null) {
-      if (anyAdded && !anyDeleted) {
-        newLineFilter.push(line.newLineNumber - 1)
-      } else {
-        oldLineFilter.push(line.oldLineNumber - 1)
-      }
-    } else {
-      // If there's a mix (meaning we'll have to read from both
-      // anyway) we'll prioritize the old version since
-      // that's immutable and less likely to be the subject of a
-      // race condition when someone rapidly modifies the file on
-      // disk.
-      if (line.oldLineNumber !== null) {
-        oldLineFilter.push(line.oldLineNumber - 1)
-      } else if (line.newLineNumber !== null) {
-        newLineFilter.push(line.newLineNumber - 1)
-      }
-    }
-  }
-
-  return { oldLineFilter, newLineFilter }
-}
-
-async function highlightContents(
-  contents: IFileContents,
-  tabSize: number,
-  lineFilters: ILineFilters
-): Promise<IFileTokens> {
-  const { file, oldContents, newContents } = contents
-
-  const [oldTokens, newTokens] = await Promise.all([
-    highlight(
-      oldContents.toString('utf8'),
-      Path.extname(file.oldPath || file.path),
-      tabSize,
-      lineFilters.oldLineFilter
-    ).catch(e => {
-      log.error('Highlighter worked failed for old contents', e)
-      return {}
-    }),
-    highlight(
-      newContents.toString('utf8'),
-      Path.extname(file.path),
-      tabSize,
-      lineFilters.newLineFilter
-    ).catch(e => {
-      log.error('Highlighter worked failed for new contents', e)
-      return {}
-    }),
-  ])
-
-  return { oldTokens, newTokens }
-}
 
 /**
  * Checks to see if any key parameters in the props object that are used
@@ -257,8 +67,6 @@ function highlightParametersEqual(
   }
 
   return (
-    newProps.file &&
-    prevProps.file &&
     newProps.file.path === prevProps.file.path &&
     newProps.file.oldPath === prevProps.file.oldPath &&
     newProps.text === prevProps.text
@@ -282,16 +90,15 @@ export interface ITextDiffUtilsProps {
   readonly onIncludeChanged?: (diffSelection: DiffSelection) => void
 }
 
-/** The props for the Diff component. */
 interface ITextDiffProps extends ITextDiffUtilsProps {
-  /** The diff that should be rendered */
+  readonly file: ChangedFile
   readonly text: string
   readonly hunks: ReadonlyArray<DiffHunk>
 }
 
-/** A component which renders a diff for a file. */
 export class TextDiff extends React.Component<ITextDiffProps, {}> {
   private codeMirror: Editor | null = null
+
   private gutterWidth: number | null = null
 
   /**
@@ -309,98 +116,19 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
   private readonly lineCleanup = new Map<any, Disposable>()
 
   /**
-   * Maintain the current state of the user interacting with the diff gutter
-   */
-  private selection: ISelectionStrategy | null = null
-
-  /**
    *  a local cache of gutter elements, keyed by the row in the diff
    */
   private cachedGutterElements = new Map<number, DiffLineGutter>()
 
-  public componentWillReceiveProps(nextProps: ITextDiffProps) {
-    // If we're reloading the same file, we want to save the current scroll
-    // position and restore it after the diff's been updated.
-    const sameFile =
-      nextProps.file &&
-      this.props.file &&
-      nextProps.file.id === this.props.file.id
+  /**
+   * Maintain the current state of the user interacting with the diff gutter
+   */
+  private selection: ISelectionStrategy | null = null
 
-    // Happy path, if the text hasn't changed we won't re-render
-    // and subsequently won't have to restore the scroll position.
-    const textHasChanged = nextProps.text !== this.props.text
-
-    const codeMirror = this.codeMirror
-    if (codeMirror && sameFile && textHasChanged) {
-      const scrollInfo = codeMirror.getScrollInfo()
-      this.scrollPositionToRestore = {
-        left: scrollInfo.left,
-        top: scrollInfo.top,
-      }
-    } else {
-      this.scrollPositionToRestore = null
-    }
-
-    if (codeMirror && textHasChanged) {
-      codeMirror.setOption('mode', { name: DiffSyntaxMode.ModeName })
-    }
-
-    // HACK: This entire section is a hack. Whenever we receive
-    // props we update all currently visible gutter elements with
-    // the selection state from the file.
-    if (nextProps.file instanceof WorkingDirectoryFileChange) {
-      const selection = nextProps.file.selection
-      const oldSelection =
-        this.props.file instanceof WorkingDirectoryFileChange
-          ? this.props.file.selection
-          : null
-
-      // Nothing has changed
-      if (oldSelection === selection) {
-        return
-      }
-
-      this.gutterWidth = null
-
-      const diff = {
-        text: nextProps.text,
-        hunks: nextProps.hunks,
-      }
-      this.cachedGutterElements.forEach((element, index) => {
-        if (!element) {
-          console.error('expected DOM element for diff gutter not found')
-          return
-        }
-
-        const line = diffLineForIndex(diff, index)
-        const isIncludable = line ? line.isIncludeableLine() : false
-        const isSelected = selection.isSelected(index) && isIncludable
-        element.setSelected(isSelected)
-      })
-    }
-  }
-
-  public componentWillUnmount() {
-    this.dispose()
-  }
-
-  public componentDidUpdate() {
-    if (this.codeMirror) {
-      this.codeMirror.setOption('mode', { name: DiffSyntaxMode.ModeName })
-    }
-  }
-
-  public componentDidMount() {
-    this.initDiffSyntaxMode()
-  }
-
-  public async initDiffSyntaxMode() {
+  private async initDiffSyntaxMode() {
     const cm = this.codeMirror
     const file = this.props.file
-    const diff = {
-      text: this.props.text,
-      hunks: this.props.hunks,
-    }
+    const hunks = this.props.hunks
     const repo = this.props.repository
 
     if (!cm) {
@@ -412,11 +140,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
     // operations that makes our data stale or useless.
     const propsSnapshot = this.props
 
-    if (!file) {
-      return
-    }
-
-    const lineFilters = getLineFilters(diff)
+    const lineFilters = getLineFilters(hunks)
     const contents = await getFileContents(repo, file, lineFilters)
 
     if (!highlightParametersEqual(this.props, propsSnapshot)) {
@@ -428,9 +152,13 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
 
     const tokens = await highlightContents(contents, tabSize, lineFilters)
 
+    if (!highlightParametersEqual(this.props, propsSnapshot)) {
+      return
+    }
+
     const spec: IDiffSyntaxModeSpec = {
       name: DiffSyntaxMode.ModeName,
-      diff,
+      hunks: this.props.hunks,
       oldTokens: tokens.oldTokens,
       newTokens: tokens.newTokens,
     }
@@ -508,7 +236,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
    */
   private startSelection = (
     file: WorkingDirectoryFileChange,
-    diff: ITextDiffData,
+    hunks: ReadonlyArray<DiffHunk>,
     index: number,
     isRangeSelection: boolean
   ) => {
@@ -517,7 +245,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
     const desiredSelection = !selected
 
     if (isRangeSelection) {
-      const range = findInteractiveDiffRange(diff, index)
+      const range = findInteractiveDiffRange(hunks, index)
       if (!range) {
         console.error('unable to find range for given line in diff')
         return
@@ -569,7 +297,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
 
   private onGutterMouseDown = (
     index: number,
-    diff: ITextDiffData,
+    hunks: ReadonlyArray<DiffHunk>,
     isRangeSelection: boolean
   ) => {
     if (!(this.props.file instanceof WorkingDirectoryFileChange)) {
@@ -580,12 +308,12 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
     }
 
     if (isRangeSelection) {
-      const hunk = diffHunkForIndex(diff, index)
+      const hunk = diffHunkForIndex(hunks, index)
       if (!hunk) {
         console.error('unable to find hunk for given line in diff')
       }
     }
-    this.startSelection(this.props.file, diff, index, isRangeSelection)
+    this.startSelection(this.props.file, hunks, index, isRangeSelection)
   }
 
   private onGutterMouseMove = (index: number) => {
@@ -599,7 +327,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
 
   private onDiffTextMouseMove = (
     ev: MouseEvent,
-    diff: ITextDiffData,
+    hunks: ReadonlyArray<DiffHunk>,
     index: number
   ) => {
     const isActive = this.isMouseCursorNearGutter(ev)
@@ -607,7 +335,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
       return
     }
 
-    const diffLine = diffLineForIndex(diff, index)
+    const diffLine = diffLineForIndex(hunks, index)
     if (!diffLine) {
       return
     }
@@ -616,7 +344,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
       return
     }
 
-    const range = findInteractiveDiffRange(diff, index)
+    const range = findInteractiveDiffRange(hunks, index)
     if (!range) {
       console.error('unable to find range for given index in diff')
       return
@@ -627,7 +355,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
 
   private onDiffTextMouseDown = (
     ev: MouseEvent,
-    diff: ITextDiffData,
+    hunks: ReadonlyArray<DiffHunk>,
     index: number
   ) => {
     const isActive = this.isMouseCursorNearGutter(ev)
@@ -646,16 +374,16 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
         return
       }
 
-      this.startSelection(this.props.file, diff, index, true)
+      this.startSelection(this.props.file, hunks, index, true)
     }
   }
 
   private onDiffTextMouseLeave = (
     ev: MouseEvent,
-    diff: ITextDiffData,
+    hunks: ReadonlyArray<DiffHunk>,
     index: number
   ) => {
-    const range = findInteractiveDiffRange(diff, index)
+    const range = findInteractiveDiffRange(hunks, index)
     if (!range) {
       console.error('unable to find range for given index in diff')
       return
@@ -676,6 +404,17 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
     return deltaX >= 0 && deltaX <= RangeSelectionSizePixels
   }
 
+  private isSelectionEnabled = () => {
+    return this.selection == null
+  }
+
+  private restoreScrollPosition(cm: Editor) {
+    const scrollPosition = this.scrollPositionToRestore
+    if (cm && scrollPosition) {
+      cm.scrollTo(scrollPosition.left, scrollPosition.top)
+    }
+  }
+
   private renderLine = (instance: any, line: any, element: HTMLElement) => {
     const existingLineDisposable = this.lineCleanup.get(line)
 
@@ -687,14 +426,9 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
       this.lineCleanup.delete(line)
     }
 
-    const diff = {
-      text: this.props.text,
-      hunks: this.props.hunks,
-    }
-
     const index = instance.getLineNumber(line) as number
 
-    const diffLine = diffLineForIndex(diff, index)
+    const diffLine = diffLineForIndex(this.props.hunks, index)
     if (diffLine) {
       const diffLineElement = element.children[0] as HTMLSpanElement
 
@@ -722,13 +456,15 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
 
       const cache = this.cachedGutterElements
 
+      const hunks = this.props.hunks
+
       ReactDOM.render(
         <DiffLineGutter
           line={diffLine}
           isIncluded={isIncluded}
           index={index}
           readOnly={this.props.readOnly}
-          diff={diff}
+          hunks={hunks}
           updateRangeHoverState={this.updateRangeHoverState}
           isSelectionEnabled={this.isSelectionEnabled}
           onMouseDown={this.onGutterMouseDown}
@@ -743,15 +479,15 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
       )
 
       const onMouseMoveLine: (ev: MouseEvent) => void = ev => {
-        this.onDiffTextMouseMove(ev, diff, index)
+        this.onDiffTextMouseMove(ev, hunks, index)
       }
 
       const onMouseDownLine: (ev: MouseEvent) => void = ev => {
-        this.onDiffTextMouseDown(ev, diff, index)
+        this.onDiffTextMouseDown(ev, hunks, index)
       }
 
       const onMouseLeaveLine: (ev: MouseEvent) => void = ev => {
-        this.onDiffTextMouseLeave(ev, diff, index)
+        this.onDiffTextMouseLeave(ev, hunks, index)
       }
 
       if (!this.props.readOnly) {
@@ -812,19 +548,44 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
     }
   }
 
-  private isSelectionEnabled = () => {
-    return this.selection == null
+  private getAndStoreCodeMirrorInstance = (cmh: CodeMirrorHost | null) => {
+    this.codeMirror = cmh === null ? null : cmh.getEditor()
   }
 
-  private restoreScrollPosition(cm: Editor) {
-    const scrollPosition = this.scrollPositionToRestore
-    if (cm && scrollPosition) {
-      cm.scrollTo(scrollPosition.left, scrollPosition.top)
+  private onCopy = (editor: Editor, event: Event) => {
+    event.preventDefault()
+
+    // Remove the diff line markers from the copied text. The beginning of the
+    // selection might start within a line, in which case we don't have to trim
+    // the diff type marker. But for selections that span multiple lines, we'll
+    // trim it.
+    const doc = editor.getDoc()
+    const lines = doc.getSelections()
+    const selectionRanges = doc.listSelections()
+    const lineContent: Array<string> = []
+
+    for (let i = 0; i < lines.length; i++) {
+      const range = selectionRanges[i]
+      const content = lines[i]
+      const contentLines = content.split('\n')
+      for (const [i, line] of contentLines.entries()) {
+        if (i === 0 && range.head.ch > 0) {
+          lineContent.push(line)
+        } else {
+          lineContent.push(line.substr(1))
+        }
+      }
+
+      const textWithoutMarkers = lineContent.join('\n')
+      clipboard.writeText(textWithoutMarkers)
     }
   }
 
-  private markIntraLineChanges(codeMirror: Editor, diff: ITextDiffData) {
-    for (const hunk of diff.hunks) {
+  private markIntraLineChanges(
+    codeMirror: Editor,
+    hunks: ReadonlyArray<DiffHunk>
+  ) {
+    for (const hunk of hunks) {
       const additions = hunk.lines.filter(l => l.type === DiffLineType.Add)
       const deletions = hunk.lines.filter(l => l.type === DiffLineType.Delete)
       if (additions.length !== deletions.length) {
@@ -847,7 +608,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
         )
         const addRange = changeRanges.stringARange
         if (addRange.length > 0) {
-          const addLineNumber = lineNumberForDiffLine(addLine, diff)
+          const addLineNumber = lineNumberForDiffLine(addLine, hunks)
           if (addLineNumber > -1) {
             const addFrom = {
               line: addLineNumber,
@@ -865,7 +626,7 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
 
         const deleteRange = changeRanges.stringBRange
         if (deleteRange.length > 0) {
-          const deleteLineNumber = lineNumberForDiffLine(deleteLine, diff)
+          const deleteLineNumber = lineNumberForDiffLine(deleteLine, hunks)
           if (deleteLineNumber > -1) {
             const deleteFrom = {
               line: deleteLineNumber,
@@ -887,11 +648,86 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
   private onChanges = (cm: Editor) => {
     this.restoreScrollPosition(cm)
 
-    const diff = {
-      text: this.props.text,
-      hunks: this.props.hunks,
+    this.markIntraLineChanges(cm, this.props.hunks)
+  }
+
+  public componentWillReceiveProps(nextProps: ITextDiffProps) {
+    // If we're reloading the same file, we want to save the current scroll
+    // position and restore it after the diff's been updated.
+    const sameFile =
+      nextProps.file &&
+      this.props.file &&
+      nextProps.file.id === this.props.file.id
+
+    // Happy path, if the text hasn't changed we won't re-render
+    // and subsequently won't have to restore the scroll position.
+    const textHasChanged = nextProps.text !== this.props.text
+
+    const codeMirror = this.codeMirror
+    if (codeMirror && sameFile && textHasChanged) {
+      const scrollInfo = codeMirror.getScrollInfo()
+      this.scrollPositionToRestore = {
+        left: scrollInfo.left,
+        top: scrollInfo.top,
+      }
+    } else {
+      this.scrollPositionToRestore = null
     }
-    this.markIntraLineChanges(cm, diff)
+
+    if (codeMirror && this.props.text !== nextProps.text) {
+      codeMirror.setOption('mode', { name: DiffSyntaxMode.ModeName })
+    }
+
+    // HACK: This entire section is a hack. Whenever we receive
+    // props we update all currently visible gutter elements with
+    // the selection state from the file.
+    if (nextProps.file instanceof WorkingDirectoryFileChange) {
+      const selection = nextProps.file.selection
+      const oldSelection =
+        this.props.file instanceof WorkingDirectoryFileChange
+          ? this.props.file.selection
+          : null
+
+      // Nothing has changed
+      if (oldSelection === selection) {
+        return
+      }
+
+      this.gutterWidth = null
+
+      const hunks = nextProps.hunks
+      this.cachedGutterElements.forEach((element, index) => {
+        if (!element) {
+          console.error('expected DOM element for diff gutter not found')
+          return
+        }
+
+        const line = diffLineForIndex(hunks, index)
+        const isIncludable = line ? line.isIncludeableLine() : false
+        const isSelected = selection.isSelected(index) && isIncludable
+        element.setSelected(isSelected)
+      })
+    }
+  }
+
+  public componentWillUnmount() {
+    this.dispose()
+  }
+
+  public componentDidUpdate(prevProps: ITextDiffProps) {
+    if (this.props.text === prevProps.text) {
+      return
+    }
+
+    if (this.codeMirror) {
+      this.codeMirror.setOption('mode', { name: DiffSyntaxMode.ModeName })
+    }
+
+    this.initDiffSyntaxMode()
+  }
+
+  public componentDidMount() {
+    this.initDiffSyntaxMode()
   }
 
   public render() {
@@ -941,38 +777,5 @@ export class TextDiff extends React.Component<ITextDiffProps, {}> {
         onCopy={this.onCopy}
       />
     )
-  }
-
-  private onCopy = (editor: CodeMirror.Editor, event: Event) => {
-    event.preventDefault()
-
-    // Remove the diff line markers from the copied text. The beginning of the
-    // selection might start within a line, in which case we don't have to trim
-    // the diff type marker. But for selections that span multiple lines, we'll
-    // trim it.
-    const doc = editor.getDoc()
-    const lines = doc.getSelections()
-    const selectionRanges = doc.listSelections()
-    const lineContent: Array<string> = []
-
-    for (let i = 0; i < lines.length; i++) {
-      const range = selectionRanges[i]
-      const content = lines[i]
-      const contentLines = content.split('\n')
-      for (const [i, line] of contentLines.entries()) {
-        if (i === 0 && range.head.ch > 0) {
-          lineContent.push(line)
-        } else {
-          lineContent.push(line.substr(1))
-        }
-      }
-
-      const textWithoutMarkers = lineContent.join('\n')
-      clipboard.writeText(textWithoutMarkers)
-    }
-  }
-
-  private getAndStoreCodeMirrorInstance = (cmh: CodeMirrorHost | null) => {
-    this.codeMirror = cmh === null ? null : cmh.getEditor()
   }
 }

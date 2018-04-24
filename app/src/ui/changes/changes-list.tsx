@@ -6,12 +6,12 @@ import { ChangedFile } from './changed-file'
 import { ChangedSketchPart } from './changed-sketch-part'
 import { List, ClickSource } from '../lib/list'
 import {
+  AppFileStatus,
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
   FileType,
   TFileOrSketchPartChange,
   TSketchPartChange,
-  AppFileStatus,
 } from '../../models/status'
 import { DiffSelectionType } from '../../models/diff'
 import { CommitIdentity } from '../../models/commit-identity'
@@ -26,15 +26,15 @@ import { IKactusFile } from '../../lib/kactus'
 import { IAuthor } from '../../models/author'
 import { ITrailer } from '../../lib/git/interpret-trailers'
 import { IMenuItem } from '../../lib/menu-item'
+import { arrayEquals } from '../../lib/equality'
 
 const RowHeight = 29
-const defaultEditorLabel = 'Open in External Editor'
 const GitIgnoreFileName = '.gitignore'
 
 interface IChangesListProps {
   readonly repository: Repository
   readonly workingDirectory: WorkingDirectoryStatus
-  readonly selectedFileID: string | null
+  readonly selectedFileIDs: string[]
   readonly selectedSketchFileID: string | null
   readonly selectedSketchPartID: string | null
   readonly sketchFiles: Array<IKactusFile>
@@ -84,7 +84,7 @@ interface IChangesListProps {
   readonly autocompletionProviders: ReadonlyArray<IAutocompletionProvider<any>>
 
   /** Called when the given pattern should be ignored. */
-  readonly onIgnore: (pattern: string) => void
+  readonly onIgnore: (pattern: string | string[]) => void
 
   readonly isLoadingStatus: boolean
 
@@ -131,12 +131,12 @@ function getFileList(
         if (part === (previousFile.parts || [])[i]) {
           if (conflicted) {
             const correspondingPart = prev.find(
-              p => p.type !== FileType.NormalFile && p.name === part
+              p => !(p instanceof WorkingDirectoryFileChange) && p.name === part
             )
             if (
               correspondingPart &&
               !correspondingPart.status &&
-              correspondingPart.type !== FileType.NormalFile
+              !(correspondingPart instanceof WorkingDirectoryFileChange)
             ) {
               correspondingPart.status = AppFileStatus.Conflicted
             }
@@ -155,7 +155,8 @@ function getFileList(
         const oldSketchPart = oldList && oldList.find(f => f.id === id)
         prev.push({
           opened:
-            oldSketchPart && oldSketchPart.type !== FileType.NormalFile
+            oldSketchPart &&
+            !(oldSketchPart instanceof WorkingDirectoryFileChange)
               ? oldSketchPart.opened
               : i === 0,
           type:
@@ -187,7 +188,9 @@ function getOpenedFilesList(files: Array<TFileOrSketchPartChange>) {
       if (
         parent &&
         (parent.type === FileType.NormalFile ||
-          parents.every(p => p.type === FileType.NormalFile || p.opened))
+          parents.every(
+            p => p instanceof WorkingDirectoryFileChange || p.opened
+          ))
       ) {
         prev.push(f)
       }
@@ -196,12 +199,14 @@ function getOpenedFilesList(files: Array<TFileOrSketchPartChange>) {
   }, res)
 }
 
+interface IChangesState {
+  readonly files: Array<TFileOrSketchPartChange>
+  readonly visibleFileList: Array<TFileOrSketchPartChange>
+}
+
 export class ChangesList extends React.Component<
   IChangesListProps,
-  {
-    files: Array<TFileOrSketchPartChange>
-    visibleFileList: Array<TFileOrSketchPartChange>
-  }
+  IChangesState
 > {
   public constructor(props: IChangesListProps) {
     super(props)
@@ -216,7 +221,7 @@ export class ChangesList extends React.Component<
 
   public componentWillReceiveProps(nextProps: IChangesListProps) {
     if (
-      nextProps.selectedFileID !== this.props.selectedFileID ||
+      !arrayEquals(nextProps.selectedFileIDs, this.props.selectedFileIDs) ||
       nextProps.selectedSketchFileID !== this.props.selectedSketchFileID ||
       nextProps.selectedSketchPartID !== this.props.selectedSketchPartID
     ) {
@@ -242,7 +247,7 @@ export class ChangesList extends React.Component<
   private renderRow = (row: number): JSX.Element => {
     const file = this.state.visibleFileList[row]
 
-    if (file.type === FileType.NormalFile) {
+    if (file instanceof WorkingDirectoryFileChange) {
       const selection = file.selection.getSelectionType()
 
       const includeAll =
@@ -296,7 +301,7 @@ export class ChangesList extends React.Component<
 
   private onOpenChanged = (id: string, opened: boolean) => {
     const fileList = this.state.files.map(f => {
-      if (f.id === id && f.type !== FileType.NormalFile) {
+      if (f.id === id && !(f instanceof WorkingDirectoryFileChange)) {
         return {
           ...f,
           opened,
@@ -310,14 +315,28 @@ export class ChangesList extends React.Component<
     })
   }
 
-  private onDiscardChanges = (path: string) => {
+  private onDiscardChanges = (paths: string | string[]) => {
     const workingDirectory = this.props.workingDirectory
-    const file = workingDirectory.files.find(f => f.path === path)
-    if (!file) {
-      return
-    }
 
-    this.props.onDiscardChanges(file)
+    if (paths instanceof Array) {
+      const files: WorkingDirectoryFileChange[] = []
+      paths.forEach(path => {
+        const file = workingDirectory.files.find(f => f.path === path)
+        if (file) {
+          files.push(file)
+        }
+      })
+      if (files.length) {
+        this.props.onDiscardAllChanges(files)
+      }
+    } else {
+      const file = workingDirectory.files.find(f => f.path === paths)
+      if (!file) {
+        return
+      }
+
+      this.props.onDiscardChanges(file)
+    }
   }
 
   private onContextMenu = (event: React.MouseEvent<any>) => {
@@ -334,8 +353,8 @@ export class ChangesList extends React.Component<
     showContextualMenu(items)
   }
 
-  private onFileSelectionChanged = (row: number) => {
-    const file = this.state.visibleFileList[row]
+  private onFileSelectionChanged = (rows: ReadonlyArray<number>) => {
+    const file = this.state.visibleFileList[rows[0]]
     switch (file.type) {
       case FileType.SketchFile: {
         const sketchFile = this.props.sketchFiles.find(f => f.id === file.id)
@@ -360,7 +379,7 @@ export class ChangesList extends React.Component<
       const file = this.state.visibleFileList[row]
       if (file.type !== FileType.NormalFile) {
         const fileList = this.state.files.map(f => {
-          if (f.id === file.id && f.type !== FileType.NormalFile) {
+          if (f.id === file.id && !(f instanceof WorkingDirectoryFileChange)) {
             return {
               ...f,
               opened: e.key === 'ArrowRight',
@@ -383,36 +402,76 @@ export class ChangesList extends React.Component<
   ) => {
     event.preventDefault()
 
-    const extension = Path.extname(path)
-    const fileName = Path.basename(path)
-    const revealInFileManagerLabel = 'Reveal in Finder'
-    const openInExternalEditor = this.props.externalEditorLabel
-      ? `Open in ${this.props.externalEditorLabel}`
-      : defaultEditorLabel
+    const wd = this.props.workingDirectory
+    const selectedFiles = new Array<WorkingDirectoryFileChange>()
+    const paths = new Array<string>()
+    const extensions = new Set<string>()
+
+    this.props.selectedFileIDs.forEach(fileID => {
+      const newFile = wd.findFileWithID(fileID)
+      if (newFile) {
+        selectedFiles.push(newFile)
+        paths.push(newFile.path)
+
+        const extension = Path.extname(newFile.path)
+        if (extension.length) {
+          extensions.add(extension)
+        }
+      }
+    })
+
     const items: IMenuItem[] = [
       {
-        label: 'Discard Changes…',
-        action: () => this.onDiscardChanges(path),
+        label:
+          paths.length === 1
+            ? `Discard Changes…`
+            : `Discard ${paths.length} Selected Changes…`,
+        action: () => this.onDiscardChanges(paths),
       },
       {
         label: 'Discard All Changes…',
         action: () => this.onDiscardAllChanges(),
       },
       { type: 'separator' },
-      {
-        label: 'Ignore',
-        action: () => this.props.onIgnore(path),
-        enabled: fileName !== GitIgnoreFileName,
-      },
     ]
 
-    if (extension.length) {
+    if (paths.length === 1) {
       items.push({
-        label: `Ignore All ${extension} Files`,
-        action: () => this.props.onIgnore(`*${extension}`),
-        enabled: fileName !== GitIgnoreFileName,
+        label: 'Ignore File',
+        action: () => this.props.onIgnore(path),
+        enabled: Path.basename(path) !== GitIgnoreFileName,
+      })
+    } else if (paths.length > 1) {
+      items.push({
+        label: `Ignore ${paths.length} selected files`,
+        action: () => {
+          // Filter out any .gitignores that happens to be selected, ignoring
+          // those doesn't make sense.
+          this.props.onIgnore(
+            paths.filter(path => Path.basename(path) !== GitIgnoreFileName)
+          )
+        },
+        // Enable this action as long as there's something selected which isn't
+        // a .gitignore file.
+        enabled: paths.some(path => Path.basename(path) !== GitIgnoreFileName),
       })
     }
+
+    // Five menu items should be enough for everyone
+    Array.from(extensions)
+      .slice(0, 5)
+      .forEach(extension => {
+        items.push({
+          label: `Ignore All ${extension} Files`,
+          action: () => this.props.onIgnore(`*${extension}`),
+        })
+      })
+
+    const revealInFileManagerLabel = 'Reveal in Finder'
+
+    const openInExternalEditor = this.props.externalEditorLabel
+      ? `Open in ${this.props.externalEditorLabel}`
+      : 'Open in External Editor'
 
     items.push(
       { type: 'separator' },
@@ -444,7 +503,7 @@ export class ChangesList extends React.Component<
     const { visibleFileList } = this.state
     const selectedRow = visibleFileList.findIndex(
       file =>
-        file.id === this.props.selectedFileID ||
+        this.props.selectedFileIDs.includes(file.id) ||
         file.id === this.props.selectedSketchFileID ||
         file.id === this.props.selectedSketchPartID
     )
@@ -470,7 +529,7 @@ export class ChangesList extends React.Component<
           rowCount={visibleFileList.length}
           rowHeight={RowHeight}
           rowRenderer={this.renderRow}
-          selectedRow={selectedRow}
+          selectedRows={[selectedRow]}
           onSelectionChanged={this.onFileSelectionChanged}
           invalidationProps={this.props.workingDirectory}
           onRowClick={this.props.onRowClick}

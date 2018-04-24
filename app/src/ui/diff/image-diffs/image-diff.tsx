@@ -42,7 +42,8 @@ export class ImageDiff extends React.Component<IDiffProps, {}> {
     if (
       this.props.imageDiffType === ImageDiffType.Text &&
       this.props.text &&
-      this.props.hunks
+      this.props.hunks &&
+      this.props.file
     ) {
       return (
         <TextDiff

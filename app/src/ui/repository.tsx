@@ -5,6 +5,7 @@ import { TipState } from '../models/tip'
 import { UiView } from './ui-view'
 import { Changes, ChangesSidebar } from './changes'
 import { NoChanges } from './changes/no-changes'
+import { MultipleSelection } from './changes/multiple-selection'
 import { History, HistorySidebar } from './history'
 import { Resizable } from './resizable'
 import { TabBar } from './tab-bar'
@@ -179,32 +180,35 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
     )
   }
 
-  private renderContent(): JSX.Element {
+  private renderContent(): JSX.Element | null {
     const selectedSection = this.props.state.selectedSection
 
     if (selectedSection === RepositorySection.Changes) {
       const changesState = this.props.state.changesState
-      const selectedFileID = changesState.selectedFileID
+      const selectedFileIDs = changesState.selectedFileIDs
       const selectedSketchPartID = changesState.selectedSketchPart
         ? changesState.selectedSketchPart.id
         : null
-      const selectedFile = selectedFileID
-        ? changesState.workingDirectory.findFileWithID(selectedFileID)
-        : null
-      const diff = changesState.diff
       const kactusState = this.props.state.kactus
       const selectedSketchFileID = kactusState.selectedFileID
       const selectedSketchFile = selectedSketchFileID
         ? kactusState.files.find(f => f.id === selectedSketchFileID) || null
         : null
 
+      if (selectedFileIDs.length > 1) {
+        return <MultipleSelection count={selectedFileIDs.length} />
+      }
+
       if (
         !selectedSketchFile &&
-        (!changesState.workingDirectory.files.length ||
-          !selectedFile ||
-          !diff) &&
-        (!selectedSketchPartID || !diff)
+        (changesState.workingDirectory.files.length === 0 ||
+          selectedFileIDs.length === 0 ||
+          changesState.diff === null) &&
+        (!selectedSketchPartID || !changesState.diff === null)
       ) {
+        // TODO: The case where diff is null is likely while the diff is loading,
+        // we should have a dedicated loading state for diffs instead of showing
+        // NoChanges.
         return (
           <NoChanges
             onOpenRepository={this.openRepository}
@@ -213,6 +217,13 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
           />
         )
       } else {
+        const workingDirectory = changesState.workingDirectory
+        const selectedFile = workingDirectory.findFileWithID(selectedFileIDs[0])
+
+        if (selectedFileIDs[0] && !selectedFile) {
+          return null
+        }
+
         return (
           <Changes
             repository={this.props.repository}
@@ -220,7 +231,7 @@ export class RepositoryView extends React.Component<IRepositoryProps, {}> {
             imageDiffType={this.props.imageDiffType}
             file={selectedFile}
             selectedSketchPartID={selectedSketchPartID}
-            diff={diff}
+            diff={changesState.diff}
             sketchFile={selectedSketchFile}
             loadingDiff={changesState.loadingDiff}
           />

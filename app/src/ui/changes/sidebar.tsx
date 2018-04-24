@@ -133,7 +133,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
   }
 
   private onFileSelectionChanged = (file: WorkingDirectoryFileChange) => {
-    this.props.dispatcher.changeChangesSelection(this.props.repository, file)
+    this.props.dispatcher.changeChangesSelection(this.props.repository, [file])
   }
 
   private onIncludeChanged = (path: string, include: boolean) => {
@@ -176,18 +176,14 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
   private onDiscardAllChanges = (
     files: ReadonlyArray<WorkingDirectoryFileChange>
   ) => {
-    if (!this.props.askForConfirmationOnDiscardChanges) {
-      this.props.dispatcher.discardChanges(this.props.repository, files)
-    } else {
-      this.props.dispatcher.showPopup({
-        type: PopupType.ConfirmDiscardChanges,
-        repository: this.props.repository,
-        files,
-      })
-    }
+    this.props.dispatcher.showPopup({
+      type: PopupType.ConfirmDiscardChanges,
+      repository: this.props.repository,
+      files,
+    })
   }
 
-  private onIgnore = (pattern: string) => {
+  private onIgnore = (pattern: string | string[]) => {
     this.props.dispatcher.ignore(this.props.repository, pattern)
   }
 
@@ -236,11 +232,18 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
    * Handles click events from the List item container, note that this is
    * Not the same thing as the element returned by the row renderer in ChangesList
    */
-  private onChangedItemClick = (row: number, source: ClickSource) => {
+  private onChangedItemClick = (
+    rows: number | number[],
+    source: ClickSource
+  ) => {
     // Toggle selection when user presses the spacebar or enter while focused
-    // on a list item
+    // on a list item or on the list's container
     if (source.kind === 'keyboard') {
-      this.onToggleInclude(row)
+      if (rows instanceof Array) {
+        rows.forEach(row => this.onToggleInclude(row))
+      } else {
+        this.onToggleInclude(rows)
+      }
     }
   }
 
@@ -308,7 +311,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
 
   public render() {
     const changesState = this.props.changes
-    const selectedFileID = changesState.selectedFileID
+    const selectedFileIDs = changesState.selectedFileIDs
     const selectedSketchPartID =
       changesState.selectedSketchPart && changesState.selectedSketchPart.id
     const selectedSketchFileID = this.props.kactus.selectedFileID
@@ -341,7 +344,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           repository={this.props.repository}
           sketchFiles={this.props.kactus.files}
           workingDirectory={changesState.workingDirectory}
-          selectedFileID={selectedFileID}
+          selectedFileIDs={selectedFileIDs}
           selectedSketchFileID={selectedSketchFileID}
           selectedSketchPartID={selectedSketchPartID}
           onFileSelectionChanged={this.onFileSelectionChanged}

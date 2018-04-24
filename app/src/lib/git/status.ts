@@ -64,7 +64,9 @@ export async function getStatus(
     'getStatus'
   )
 
-  const files = new Array<WorkingDirectoryFileChange>()
+  // Map of files keyed on their paths.
+  // Note, map maintains insertion order
+  const files = new Map<string, WorkingDirectoryFileChange>()
 
   let currentBranch: string | undefined = undefined
   let currentUpstreamBranch: string | undefined = undefined
@@ -92,10 +94,7 @@ export async function getStatus(
         // same path, we should ensure that we only draw one entry in the
         // changes list - see if an entry already exists for this path and
         // remove it if found
-        const existingEntry = files.findIndex(p => p.path === entry.path)
-        if (existingEntry > -1) {
-          files.splice(existingEntry, 1)
-        }
+        files.delete(entry.path)
       }
 
       // for now we just poke at the existing summary
@@ -106,7 +105,8 @@ export async function getStatus(
 
       const sketchFile = sketchFiles.find(f => entry.path.indexOf(f.id) === 0)
 
-      files.push(
+      files.set(
+        entry.path,
         new WorkingDirectoryFileChange(
           entry.path,
           summary,
@@ -139,7 +139,7 @@ export async function getStatus(
     }
   }
 
-  const workingDirectory = WorkingDirectoryStatus.fromFiles(files)
+  const workingDirectory = WorkingDirectoryStatus.fromFiles([...files.values()])
 
   return {
     currentBranch,

@@ -12,11 +12,12 @@ You will need to install these tools on your machine:
 
 ## Verification
 
-Validate you have these commands available and that the versions look similar:
+Then verify you have these commands available in your shell and that the found
+versions look similar to the below output:
 
 ```shellsession
 $ node -v
-v7.8.0
+v8.10.0
 
 $ python --version
 Python 2.7.13
@@ -34,7 +35,7 @@ is as follows:
 * Run `npm install` to get all required dependencies on your machine.
 * Run `npm run build:dev` to create a development build of the app.
 * Run `npm run start` to launch the application. Changes will be compiled in the
-  background. The app can then be reloaded to see the changes (Ctrl/Command+R).
+  background. The app can then be reloaded to see the changes (<kbd>Ctrl/Command+Alt+R</kbd>).
 
 **Optional Tip**: You can use `screen` to avoid filling your terminal with logging output:
 

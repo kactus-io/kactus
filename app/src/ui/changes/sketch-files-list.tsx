@@ -44,8 +44,8 @@ export class SketchFilesList extends React.Component<
     )
   }
 
-  private onFileSelectionChanged = (row: number) => {
-    const file = this.props.files[row]
+  private onFileSelectionChanged = (rows: ReadonlyArray<number>) => {
+    const file = this.props.files[rows[0]]
     this.props.onFileSelectionChanged(file)
   }
 
@@ -75,7 +75,7 @@ export class SketchFilesList extends React.Component<
           rowCount={this.props.files.length}
           rowHeight={RowHeight}
           rowRenderer={this.renderRow}
-          selectedRow={selectedRow}
+          selectedRows={[selectedRow]}
           onSelectionChanged={this.onFileSelectionChanged}
           invalidationProps={this.props.files}
           onRowClick={this.props.onRowClick}

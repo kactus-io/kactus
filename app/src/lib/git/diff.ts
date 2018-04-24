@@ -490,7 +490,8 @@ export async function convertDiff(
   previousCommitish?: string,
   lineEndingsChange?: LineEndingsChange
 ): Promise<IDiff> {
-  const extension = Path.extname(file.path)
+  const extension = Path.extname(file.path).toLowerCase()
+
   if (diff.isBinary) {
     // some extension we don't know how to parse, never mind
     if (!imageFileExtensions.has(extension)) {

@@ -1,13 +1,12 @@
 import * as React from 'react'
-import { BinaryFile } from './binary-file'
-import { ConflictedSketchDiff } from './conflicted-sketch-diff'
-import { TextDiff } from './text-diff'
-import { assertNever } from '../../lib/fatal-error'
-import { ImageDiff } from './image-diffs'
+import { Editor } from 'codemirror'
 
-import { Repository } from '../../models/repository'
+import { assertNever } from '../../lib/fatal-error'
 import { encodePathAsUrl } from '../../lib/path'
 import { ImageDiffType } from '../../lib/app-state'
+import { Dispatcher } from '../../lib/dispatcher/dispatcher'
+
+import { Repository } from '../../models/repository'
 import {
   CommittedFileChange,
   WorkingDirectoryFileChange,
@@ -24,14 +23,25 @@ import {
   ITextDiff,
   ILargeTextDiff,
 } from '../../models/diff'
-import { Dispatcher } from '../../lib/dispatcher/dispatcher'
 
 import { Button } from '../lib/button'
+
+import { ImageDiff } from './image-diffs'
+import { BinaryFile } from './binary-file'
+import { ConflictedSketchDiff } from './conflicted-sketch-diff'
+import { diffLineForIndex } from './diff-explorer'
+import { DiffLineGutter } from './diff-line-gutter'
+import { DiffSyntaxMode } from './diff-syntax-mode'
+
+import { ISelectionStrategy } from './selection/selection-strategy'
+import { TextDiff } from './text-diff'
 
 import { LoadingOverlay } from '../lib/loading'
 
 // image used when no diff is displayed
 const NoDiffImage = encodePathAsUrl(__dirname, 'static/ufo-alert.svg')
+
+type ChangedFile = WorkingDirectoryFileChange | CommittedFileChange
 
 /** The props for the Diff component. */
 interface IDiffProps {
@@ -45,7 +55,7 @@ interface IDiffProps {
   readonly readOnly: boolean
 
   /** The file whose diff should be displayed. */
-  readonly file: WorkingDirectoryFileChange | CommittedFileChange | null
+  readonly file: ChangedFile | null
 
   /** Called when the includedness of lines or a range of lines has changed. */
   readonly onIncludeChanged?: (diffSelection: DiffSelection) => void
@@ -70,12 +80,98 @@ interface IDiffState {
 
 /** A component which renders a diff for a file. */
 export class Diff extends React.Component<IDiffProps, IDiffState> {
+  private codeMirror: Editor | null = null
+
+  /**
+   * Maintain the current state of the user interacting with the diff gutter
+   */
+  private selection: ISelectionStrategy | null = null
+
+  /**
+   *  a local cache of gutter elements, keyed by the row in the diff
+   */
+  private cachedGutterElements = new Map<number, DiffLineGutter>()
+
   public constructor(props: IDiffProps) {
     super(props)
 
     this.state = {
       forceShowLargeDiff: false,
     }
+  }
+
+  public componentWillReceiveProps(nextProps: IDiffProps) {
+    const codeMirror = this.codeMirror
+
+    if (
+      codeMirror &&
+      nextProps.diff.kind === DiffType.Text &&
+      (this.props.diff.kind !== DiffType.Text ||
+        this.props.diff.text !== nextProps.diff.text)
+    ) {
+      codeMirror.setOption('mode', { name: DiffSyntaxMode.ModeName })
+    }
+
+    // HACK: This entire section is a hack. Whenever we receive
+    // props we update all currently visible gutter elements with
+    // the selection state from the file.
+    if (nextProps.file instanceof WorkingDirectoryFileChange) {
+      const selection = nextProps.file.selection
+      const oldSelection =
+        this.props.file instanceof WorkingDirectoryFileChange
+          ? this.props.file.selection
+          : null
+
+      // Nothing has changed
+      if (oldSelection === selection) {
+        return
+      }
+
+      const diff = nextProps.diff
+      this.cachedGutterElements.forEach((element, index) => {
+        if (!element) {
+          console.error('expected DOM element for diff gutter not found')
+          return
+        }
+
+        if (diff.kind === DiffType.Text) {
+          const line = diffLineForIndex(diff.hunks, index)
+          const isIncludable = line ? line.isIncludeableLine() : false
+          const isSelected = selection.isSelected(index) && isIncludable
+          element.setSelected(isSelected)
+        }
+      })
+    }
+  }
+
+  /**
+   * Helper event listener, registered when starting a selection by
+   * clicking anywhere on or near the gutter. Immediately removes itself
+   * from the mouseup event on the document element and ends any current
+   * selection.
+   *
+   * TODO: Once Electron upgrades to Chrome 55 we can drop this in favor
+   * of the 'once' option in addEventListener, see
+   * https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+   */
+  private onDocumentMouseUp = (ev: MouseEvent) => {
+    ev.preventDefault()
+    document.removeEventListener('mouseup', this.onDocumentMouseUp)
+    this.endSelection()
+  }
+
+  /**
+   * complete the selection gesture and apply the change to the diff
+   */
+  private endSelection = () => {
+    if (!this.props.onIncludeChanged || !this.selection) {
+      return
+    }
+
+    this.props.onIncludeChanged(this.selection.done())
+
+    // operation is completed, clean this up
+    this.selection = null
   }
 
   private onChangeImageDiffType = (type: ImageDiffType) => {
@@ -181,8 +277,8 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
   private renderLargeText(diff: ILargeTextDiff) {
     // guaranteed to be set since this function won't be called if text or hunks are null
     const textDiff: ITextDiff = {
-      text: diff.text!,
-      hunks: diff.hunks!,
+      text: diff.text,
+      hunks: diff.hunks,
       kind: DiffType.Text,
       lineEndingsChange: diff.lineEndingsChange,
     }
@@ -191,20 +287,22 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
   }
 
   private renderTextDiff(diff: ITextDiffData) {
+    if (!this.props.file) {
+      return null
+    }
     return (
       <TextDiff
         repository={this.props.repository}
-        readOnly={this.props.readOnly}
         file={this.props.file}
+        readOnly={this.props.readOnly}
+        onIncludeChanged={this.props.onIncludeChanged}
         text={diff.text}
         hunks={diff.hunks}
-        onIncludeChanged={this.props.onIncludeChanged}
       />
     )
   }
 
   private renderEmpty(diff: ISketchDiff | ITextDiff) {
-    console.log(diff)
     if (diff.isDirectory) {
       return (
         <div className="panel empty">

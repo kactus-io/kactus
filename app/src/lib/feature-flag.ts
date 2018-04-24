@@ -14,7 +14,7 @@ function enableDevelopmentFeatures(): boolean {
     return true
   }
 
-  if (process.env.KACTUS_PREVIEW_FEATURES) {
+  if (process.env.KACTUS_PREVIEW_FEATURES === '1') {
     return true
   }
 

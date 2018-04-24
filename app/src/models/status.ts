@@ -174,7 +174,10 @@ export class FileChange {
 
   public readonly parts?: Array<string>
 
-  public readonly type: FileType.NormalFile
+  /** An ID for the file change. */
+  public readonly id: string
+
+  public readonly type: FileType
 
   public constructor(
     path: string,
@@ -187,17 +190,13 @@ export class FileChange {
     this.status = status
     this.oldPath = oldPath
     this.sketchFile = sketchFile
-    this.type = FileType.NormalFile
     if (parts) {
       this.parts = parts
     } else if (sketchFile) {
       this.parts = getSketchFileParts(path, sketchFile)
     }
-  }
-
-  /** An ID for the file change. */
-  public get id(): string {
-    return `${this.status}+${this.path}`
+    this.id = `${this.status}+${this.path}`
+    this.type = FileType.NormalFile
   }
 }
 
@@ -292,9 +291,9 @@ export class WorkingDirectoryStatus {
   /**
    * The list of changes in the repository's working directory
    */
-  public readonly files: ReadonlyArray<WorkingDirectoryFileChange> = new Array<
-    WorkingDirectoryFileChange
-  >()
+  public readonly files: ReadonlyArray<WorkingDirectoryFileChange> = []
+
+  private readonly fileIxById = new Map<string, number>()
 
   /**
    * Update the include checkbox state of the form
@@ -315,6 +314,8 @@ export class WorkingDirectoryStatus {
     includeAll: boolean | null
   ) {
     this.files = files
+    files.forEach((f, ix) => this.fileIxById.set(f.id, ix))
+
     this.includeAll = includeAll
   }
 
@@ -328,7 +329,14 @@ export class WorkingDirectoryStatus {
 
   /** Find the file with the given ID. */
   public findFileWithID(id: string): WorkingDirectoryFileChange | null {
-    return this.files.find(f => f.id === id) || null
+    const ix = this.fileIxById.get(id)
+    return ix !== undefined ? this.files[ix] || null : null
+  }
+
+  /** Find the index of the file with the given ID. Returns -1 if not found */
+  public findFileIndexByID(id: string): number {
+    const ix = this.fileIxById.get(id)
+    return ix !== undefined ? ix : -1
   }
 }
 

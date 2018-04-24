@@ -114,6 +114,13 @@ function handlePossibleProtocolLauncherArgs(args: ReadonlyArray<string>) {
   }
 }
 
+if (process.env.KACTUS_DISABLE_HARDWARE_ACCELERATION) {
+  log.info(
+    `KACTUS_DISABLE_HARDWARE_ACCELERATION environment variable set, disabling hardware acceleration`
+  )
+  app.disableHardwareAcceleration()
+}
+
 app.on('ready', () => {
   if (isDuplicateInstance) {
     return
