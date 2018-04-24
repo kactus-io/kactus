@@ -68,7 +68,6 @@ import {
 } from '../../ui/main-process-proxy'
 import { merge } from '../merge'
 import { getAppPath, getUserDataPath } from '../../ui/lib/app-proxy'
-import { StatsStore, ILaunchStats } from '../stats'
 import { hasShownWelcomeFlow, markWelcomeFlowComplete } from '../welcome'
 import { WindowState, getWindowState } from '../window-state'
 import { fatalError } from '../fatal-error'
@@ -106,7 +105,6 @@ import {
   getMergeBase,
   getRemotes,
   ITrailer,
-  isCoAuthoredByTrailer,
 } from '../git'
 
 import { launchExternalEditor } from '../editors'
@@ -243,7 +241,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private readonly signInStore: SignInStore
   private readonly accountsStore: AccountsStore
   private readonly repositoriesStore: RepositoriesStore
-  private readonly statsStore: StatsStore
   private readonly pullRequestStore: PullRequestStore
 
   /** The issues store for all repositories. */
@@ -305,7 +302,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
     cloningRepositoriesStore: CloningRepositoriesStore,
     emojiStore: EmojiStore,
     issuesStore: IssuesStore,
-    statsStore: StatsStore,
     signInStore: SignInStore,
     accountsStore: AccountsStore,
     repositoriesStore: RepositoriesStore,
@@ -317,7 +313,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.cloningRepositoriesStore = cloningRepositoriesStore
     this.emojiStore = emojiStore
     this._issuesStore = issuesStore
-    this.statsStore = statsStore
     this.signInStore = signInStore
     this.accountsStore = accountsStore
     this.repositoriesStore = repositoriesStore
@@ -1738,19 +1733,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
     })
 
     if (result) {
-      this.statsStore.recordCommit()
-
-      const includedPartialSelections = files.some(
-        file => file.selection.getSelectionType() === DiffSelectionType.Partial
-      )
-      if (includedPartialSelections) {
-        this.statsStore.recordPartialCommit()
-      }
-
-      if (trailers != null && trailers.some(isCoAuthoredByTrailer)) {
-        this.statsStore.recordCoAuthoredCommit()
-      }
-
       await this._refreshRepository(repository)
       await this.refreshChangesSection(repository, {
         includingStatus: true,
@@ -3072,8 +3054,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _openShell(path: string) {
-    this.statsStore.recordOpenShell()
-
     try {
       const match = await findShellOrDefault(this.selectedShell)
       await launchShell(match, path, error => this._pushError(error))
@@ -3128,18 +3108,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return repositorySettingsStore.readGitIgnore()
   }
 
-  /** Has the user opted out of stats reporting? */
-  public getStatsOptOut(): boolean {
-    return this.statsStore.getOptOut()
-  }
-
-  /** Set whether the user has opted out of stats reporting. */
-  public async setStatsOptOut(optOut: boolean): Promise<void> {
-    await this.statsStore.setOptOut(optOut)
-
-    this.emitUpdate()
-  }
-
   public _setConfirmRepositoryRemovalSetting(
     confirmRepoRemoval: boolean
   ): Promise<void> {
@@ -3191,14 +3159,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.isUpdateAvailableBannerVisible = visibility
 
     this.emitUpdate()
-  }
-
-  public _reportStats() {
-    return this.statsStore.reportStats(this.accounts, this.repositories)
-  }
-
-  public _recordLaunchStats(stats: ILaunchStats): Promise<void> {
-    return this.statsStore.recordLaunchStats(stats)
   }
 
   public async _ignore(
@@ -4051,8 +4011,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
       await this._checkoutBranch(repository, localBranchName)
     }
-
-    this.statsStore.recordPRBranchCheckout()
   }
 
   /**

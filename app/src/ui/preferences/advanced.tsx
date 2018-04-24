@@ -3,7 +3,6 @@ import { DialogContent } from '../dialog'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { LinkButton } from '../lib/link-button'
 import { Row } from '../../ui/lib/row'
-import { SamplesURL } from '../../lib/stats'
 import { Select } from '../lib/select'
 import { ExternalEditor, parse as parseEditor } from '../../lib/editors'
 import { Shell, parse as parseShell } from '../../lib/shells'
@@ -12,14 +11,12 @@ import { enableMergeTool } from '../../lib/feature-flag'
 import { IMergeTool } from '../../lib/git/config'
 
 interface IAdvancedPreferencesProps {
-  readonly optOutOfUsageTracking: boolean
   readonly confirmRepositoryRemoval: boolean
   readonly confirmDiscardChanges: boolean
   readonly availableEditors: ReadonlyArray<ExternalEditor>
   readonly selectedExternalEditor?: ExternalEditor
   readonly availableShells: ReadonlyArray<Shell>
   readonly selectedShell: Shell
-  readonly onOptOutofReportingchanged: (checked: boolean) => void
   readonly onConfirmDiscardChangesChanged: (checked: boolean) => void
   readonly onConfirmRepositoryRemovalChanged: (checked: boolean) => void
   readonly onSelectedEditorChanged: (editor: ExternalEditor) => void
@@ -31,7 +28,6 @@ interface IAdvancedPreferencesProps {
 }
 
 interface IAdvancedPreferencesState {
-  readonly optOutOfUsageTracking: boolean
   readonly selectedExternalEditor?: ExternalEditor
   readonly selectedShell: Shell
   readonly confirmRepositoryRemoval: boolean
@@ -46,7 +42,6 @@ export class Advanced extends React.Component<
     super(props)
 
     this.state = {
-      optOutOfUsageTracking: this.props.optOutOfUsageTracking,
       confirmRepositoryRemoval: this.props.confirmRepositoryRemoval,
       confirmDiscardChanges: this.props.confirmDiscardChanges,
       selectedExternalEditor: this.props.selectedExternalEditor,
@@ -83,15 +78,6 @@ export class Advanced extends React.Component<
     })
   }
 
-  private onReportingOptOutChanged = (
-    event: React.FormEvent<HTMLInputElement>
-  ) => {
-    const value = !event.currentTarget.checked
-
-    this.setState({ optOutOfUsageTracking: value })
-    this.props.onOptOutofReportingchanged(value)
-  }
-
   private onConfirmDiscardChangesChanged = (
     event: React.FormEvent<HTMLInputElement>
   ) => {
@@ -126,15 +112,6 @@ export class Advanced extends React.Component<
     const value = parseShell(event.currentTarget.value)
     this.setState({ selectedShell: value })
     this.props.onSelectedShellChanged(value)
-  }
-
-  public reportKactusUsageLabel() {
-    return (
-      <span>
-        Help Kactus improve by submitting{' '}
-        <LinkButton uri={SamplesURL}>anonymous usage data</LinkButton>
-      </span>
-    )
   }
 
   private renderExternalEditor() {
@@ -227,17 +204,6 @@ export class Advanced extends React.Component<
         <Row>{this.renderExternalEditor()}</Row>
         <Row>{this.renderSelectedShell()}</Row>
         {this.renderMergeTool()}
-        <Row>
-          <Checkbox
-            label={this.reportKactusUsageLabel()}
-            value={
-              this.state.optOutOfUsageTracking
-                ? CheckboxValue.Off
-                : CheckboxValue.On
-            }
-            onChange={this.onReportingOptOutChanged}
-          />
-        </Row>
         <Row>
           <Checkbox
             label="Show confirmation dialog before removing repositories"

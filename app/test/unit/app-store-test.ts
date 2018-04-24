@@ -19,15 +19,12 @@ import {
 } from '../../src/lib/stores'
 import {
   TestGitHubUserDatabase,
-  TestStatsDatabase,
   TestIssuesDatabase,
   TestRepositoriesDatabase,
   TestPullRequestDatabase,
 } from '../helpers/databases'
 import { setupEmptyRepository } from '../helpers/repositories'
 import { InMemoryStore, AsyncInMemoryStore } from '../helpers/stores'
-
-import { StatsStore } from '../../src/lib/stats'
 
 import {
   RepositorySection,
@@ -45,9 +42,6 @@ describe('AppStore', () => {
 
     const issuesDb = new TestIssuesDatabase()
     await issuesDb.reset()
-
-    const statsDb = new TestStatsDatabase()
-    await statsDb.reset()
 
     const repositoriesDb = new TestRepositoriesDatabase()
     await repositoriesDb.reset()
@@ -68,7 +62,6 @@ describe('AppStore', () => {
       new CloningRepositoriesStore(),
       new EmojiStore(),
       new IssuesStore(issuesDb),
-      new StatsStore(statsDb),
       new SignInStore(),
       accountsStore,
       repositoriesStore,

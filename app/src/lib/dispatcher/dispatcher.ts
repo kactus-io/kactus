@@ -31,7 +31,6 @@ import { ICommitMessage } from '../stores/git-store'
 import { executeMenuItem } from '../../ui/main-process-proxy'
 import { AppMenu, ExecutableMenuItem } from '../../models/app-menu'
 import { matchExistingRepository } from '../../lib/repository-matching'
-import { ILaunchStats } from '../stats'
 import { fatalError, assertNever } from '../fatal-error'
 import { shell } from '../app-shell'
 import {
@@ -611,16 +610,6 @@ export class Dispatcher {
     return this.appStore._mergeBranch(repository, branch)
   }
 
-  /** Record the given launch stats. */
-  public recordLaunchStats(stats: ILaunchStats): Promise<void> {
-    return this.appStore._recordLaunchStats(stats)
-  }
-
-  /** Report any stats if needed. */
-  public reportStats(): Promise<void> {
-    return this.appStore._reportStats()
-  }
-
   /** Changes the URL for the remote that matches the given name  */
   public setRemoteURL(
     repository: Repository,
@@ -697,11 +686,6 @@ export class Dispatcher {
    */
   public async readGitIgnore(repository: Repository): Promise<string | null> {
     return this.appStore._readGitIgnore(repository)
-  }
-
-  /** Set whether the user has opted out of stats reporting. */
-  public setStatsOptOut(optOut: boolean): Promise<void> {
-    return this.appStore.setStatsOptOut(optOut)
   }
 
   /**

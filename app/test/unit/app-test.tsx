@@ -20,18 +20,15 @@ import {
 import { InMemoryDispatcher } from '../helpers/in-memory-dispatcher'
 import {
   TestGitHubUserDatabase,
-  TestStatsDatabase,
   TestIssuesDatabase,
   TestRepositoriesDatabase,
   TestPullRequestDatabase,
 } from '../helpers/databases'
-import { StatsStore } from '../../src/lib/stats'
 import { InMemoryStore, AsyncInMemoryStore } from '../helpers/stores'
 
 describe('App', () => {
   let appStore: AppStore | null = null
   let dispatcher: Dispatcher | null = null
-  let statsStore: StatsStore | null = null
 
   beforeEach(async () => {
     const db = new TestGitHubUserDatabase()
@@ -39,10 +36,6 @@ describe('App', () => {
 
     const issuesDb = new TestIssuesDatabase()
     await issuesDb.reset()
-
-    const statsDb = new TestStatsDatabase()
-    await statsDb.reset()
-    statsStore = new StatsStore(statsDb)
 
     const repositoriesDb = new TestRepositoriesDatabase()
     await repositoriesDb.reset()
@@ -63,7 +56,6 @@ describe('App', () => {
       new CloningRepositoriesStore(),
       new EmojiStore(),
       new IssuesStore(issuesDb),
-      statsStore,
       new SignInStore(),
       accountsStore,
       repositoriesStore,

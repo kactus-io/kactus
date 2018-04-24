@@ -19,7 +19,6 @@ import {
   withSourceMappedStack,
 } from '../lib/source-map-support'
 import { symlinkSketchPlugin } from '../lib/symlink-sketch-plugin'
-import { now } from './now'
 import { showUncaughtException } from './show-uncaught-exception'
 import { IMenuItem } from '../lib/menu-item'
 import { buildContextMenu } from './menu/build-context-menu'
@@ -28,10 +27,6 @@ enableSourceMaps()
 symlinkSketchPlugin()
 
 let mainWindow: AppWindow | null = null
-
-const launchTime = now()
-
-let readyTime: number | null = null
 
 type OnDidLoadFn = (window: AppWindow) => void
 /** See the `onDidLoad` function. */
@@ -125,8 +120,6 @@ app.on('ready', () => {
   if (isDuplicateInstance) {
     return
   }
-
-  readyTime = now() - launchTime
 
   app.setAsDefaultProtocolClient('x-kactus-client')
 
@@ -363,11 +356,6 @@ function createWindow() {
 
   window.onDidLoad(() => {
     window.show()
-    window.sendLaunchTimingStats({
-      mainReadyTime: readyTime!,
-      loadTime: window.loadTime!,
-      rendererReadyTime: window.rendererReadyTime!,
-    })
 
     const fns = onDidLoadFns!
     onDidLoadFns = null

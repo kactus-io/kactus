@@ -34,7 +34,6 @@ import {
 import { GitHubUserDatabase } from '../lib/databases'
 import { URLActionType } from '../lib/parse-app-url'
 import { SelectionType } from '../lib/app-state'
-import { StatsDatabase, StatsStore } from '../lib/stats'
 import {
   IssuesDatabase,
   RepositoriesDatabase,
@@ -107,7 +106,6 @@ const gitHubUserStore = new GitHubUserStore(
 const cloningRepositoriesStore = new CloningRepositoriesStore()
 const emojiStore = new EmojiStore()
 const issuesStore = new IssuesStore(new IssuesDatabase('IssuesDatabase'))
-const statsStore = new StatsStore(new StatsDatabase('StatsDatabase'))
 const signInStore = new SignInStore()
 
 const accountsStore = new AccountsStore(localStorage, TokenStore)
@@ -125,7 +123,6 @@ const appStore = new AppStore(
   cloningRepositoriesStore,
   emojiStore,
   issuesStore,
-  statsStore,
   signInStore,
   accountsStore,
   repositoriesStore,

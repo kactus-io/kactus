@@ -20,7 +20,6 @@ import { RetryAction } from '../lib/retry-actions'
 import { shouldRenderApplicationMenu } from './lib/features'
 import { matchExistingRepository } from '../lib/repository-matching'
 import { getDotComAPIEndpoint } from '../lib/api'
-import { ILaunchStats } from '../lib/stats'
 import { getVersion, getName } from './lib/app-proxy'
 import { getOS } from '../lib/get-os'
 import { validatedRepositoryPath } from '../lib/stores/helpers/validated-repository-path'
@@ -91,8 +90,6 @@ import { DeletePullRequest } from './delete-branch/delete-pull-request-dialog'
 
 /** The interval at which we should check for updates. */
 const UpdateCheckInterval = 1000 * 60 * 60 * 4
-
-const SendStatsInterval = 1000 * 60 * 60 * 4
 
 const CkeckKactusInterval = 1000 * 60 * 60 * 30
 
@@ -189,17 +186,6 @@ export class App extends React.Component<IAppProps, IAppState> {
     })
 
     ipcRenderer.on(
-      'launch-timing-stats',
-      (event: Electron.IpcMessageEvent, { stats }: { stats: ILaunchStats }) => {
-        console.info(`App ready time: ${stats.mainReadyTime}ms`)
-        console.info(`Load time: ${stats.loadTime}ms`)
-        console.info(`Renderer ready time: ${stats.rendererReadyTime}ms`)
-
-        this.props.dispatcher.recordLaunchStats(stats)
-      }
-    )
-
-    ipcRenderer.on(
       'certificate-error',
       (
         event: Electron.IpcMessageEvent,
@@ -222,9 +208,6 @@ export class App extends React.Component<IAppProps, IAppState> {
     // Loading emoji is super important but maybe less important that loading
     // the app. So defer it until we have some breathing space.
     this.props.appStore.loadEmoji()
-
-    this.props.dispatcher.reportStats()
-    setInterval(() => this.props.dispatcher.reportStats(), SendStatsInterval)
 
     this.props.dispatcher.installGlobalLFSFilters(false)
 
@@ -935,7 +918,6 @@ export class App extends React.Component<IAppProps, IAppState> {
               this.state.askForConfirmationOnDiscardChanges
             }
             selectedExternalEditor={this.state.selectedExternalEditor}
-            optOutOfUsageTracking={this.props.appStore.getStatsOptOut()}
             enterpriseAccount={this.getEnterpriseAccount()}
             onDismissed={this.onPopupDismissed}
             selectedShell={this.state.selectedShell}

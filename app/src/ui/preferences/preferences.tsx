@@ -28,7 +28,6 @@ interface IPreferencesProps {
   readonly dotComAccount: Account | null
   readonly enterpriseAccount: Account | null
   readonly onDismissed: () => void
-  readonly optOutOfUsageTracking: boolean
   readonly initialSelectedTab?: PreferencesTab
   readonly confirmRepositoryRemoval: boolean
   readonly confirmDiscardChanges: boolean
@@ -111,7 +110,6 @@ export class Preferences extends React.Component<
     this.setState({
       committerName,
       committerEmail,
-      optOutOfUsageTracking: this.props.optOutOfUsageTracking,
       confirmRepositoryRemoval: this.props.confirmRepositoryRemoval,
       confirmDiscardChanges: this.props.confirmDiscardChanges,
       availableShells,
@@ -224,12 +222,10 @@ export class Preferences extends React.Component<
       case PreferencesTab.Advanced: {
         return (
           <Advanced
-            optOutOfUsageTracking={this.state.optOutOfUsageTracking}
             confirmRepositoryRemoval={this.state.confirmRepositoryRemoval}
             confirmDiscardChanges={this.state.confirmDiscardChanges}
             availableEditors={this.state.availableEditors}
             selectedExternalEditor={this.state.selectedExternalEditor}
-            onOptOutofReportingchanged={this.onOptOutofReportingChanged}
             onConfirmRepositoryRemovalChanged={
               this.onConfirmRepositoryRemovalChanged
             }
@@ -247,10 +243,6 @@ export class Preferences extends React.Component<
       default:
         return assertNever(index, `Unknown tab index: ${index}`)
     }
-  }
-
-  private onOptOutofReportingChanged = (value: boolean) => {
-    this.setState({ optOutOfUsageTracking: value })
   }
 
   private onConfirmRepositoryRemovalChanged = (value: boolean) => {
@@ -315,7 +307,6 @@ export class Preferences extends React.Component<
   private onSave = async () => {
     await setGlobalConfigValue('user.name', this.state.committerName)
     await setGlobalConfigValue('user.email', this.state.committerEmail)
-    await this.props.dispatcher.setStatsOptOut(this.state.optOutOfUsageTracking)
     await this.props.dispatcher.setConfirmRepoRemovalSetting(
       this.state.confirmRepositoryRemoval
     )

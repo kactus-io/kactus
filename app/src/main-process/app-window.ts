@@ -4,7 +4,6 @@ import { encodePathAsUrl } from '../lib/path'
 import { registerWindowStateChangedEvents } from '../lib/window-state'
 import { MenuEvent } from './menu'
 import { URLActionType } from '../lib/parse-app-url'
-import { ILaunchStats } from '../lib/stats'
 import { menuFromElectronMenu } from '../models/app-menu'
 import { now } from './now'
 
@@ -193,11 +192,6 @@ export class AppWindow {
     this.show()
 
     this.window.webContents.send('url-action', { action })
-  }
-
-  /** Send the app launch timing stats to the renderer. */
-  public sendLaunchTimingStats(stats: ILaunchStats) {
-    this.window.webContents.send('launch-timing-stats', { stats })
   }
 
   /** Send the app menu to the renderer. */
