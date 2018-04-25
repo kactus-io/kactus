@@ -68,7 +68,7 @@ function getReleaseSHA() {
 }
 
 function getUpdatesURL() {
-  return `https://kactus-autoupdater.herokuapp.com/update/osx/${version}`
+  return `https://update.electronjs.org/kactus-io/kactus/darwin/${version}`
 }
 
 function shouldMakeDelta() {
