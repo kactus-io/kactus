@@ -1,8 +1,8 @@
 export type MenuEvent =
   | 'push'
   | 'pull'
-  | 'select-changes'
-  | 'select-history'
+  | 'create-commit'
+  | 'compare-to-branch'
   | 'add-local-repository'
   | 'create-branch'
   | 'show-branches'
@@ -28,3 +28,4 @@ export type MenuEvent =
   | 'open-pull-request'
   | 'install-cli'
   | 'open-external-editor'
+  | 'select-all'

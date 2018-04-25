@@ -95,7 +95,11 @@ export function buildDefaultMenu(
       { role: 'cut', label: 'Cut' },
       { role: 'copy', label: 'Copy' },
       { role: 'paste', label: 'Paste' },
-      { role: 'selectall', label: 'Select All' },
+      {
+        label: 'Select All',
+        accelerator: 'CmdOrCtrl+A',
+        click: emit('select-all'),
+      },
     ],
   })
 
@@ -103,16 +107,16 @@ export function buildDefaultMenu(
     label: 'View',
     submenu: [
       {
-        label: 'Show Changes',
-        id: 'show-changes',
+        label: 'Create Commit',
+        id: 'create-commit',
         accelerator: 'CmdOrCtrl+1',
-        click: emit('select-changes'),
+        click: emit('create-commit'),
       },
       {
-        label: 'Show History',
-        id: 'show-history',
+        label: 'Compare to Branch',
+        id: 'compare-to-branch',
         accelerator: 'CmdOrCtrl+2',
-        click: emit('select-history'),
+        click: emit('compare-to-branch'),
       },
       {
         label: 'Show Repository List',

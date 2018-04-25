@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { ipcRenderer } from 'electron'
+import { ipcRenderer, remote } from 'electron'
 import { CSSTransitionGroup } from 'react-transition-group'
 
 import * as semver from 'semver'
@@ -236,10 +236,10 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.push()
       case 'pull':
         return this.pull()
-      case 'select-changes':
-        return this.selectChanges()
-      case 'select-history':
-        return this.selectHistory()
+      case 'create-commit':
+        return this.createCommit()
+      case 'compare-to-branch':
+        return this.compareToBranch()
       case 'choose-repository':
         return this.chooseRepository()
       case 'add-local-repository':
@@ -291,9 +291,29 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.props.dispatcher.installCLI()
       case 'open-external-editor':
         return this.openCurrentRepositoryInExternalEditor()
+      case 'select-all':
+        return this.selectAll()
     }
 
     return assertNever(name, `Unknown menu event name: ${name}`)
+  }
+
+  /**
+   * Handler for the 'select-all' menu event, dispatches
+   * a custom DOM event originating from the element which
+   * currently has keyboard focus. Components have a chance
+   * to intercept this event and implement their own 'select
+   * all' logic.
+   */
+  private selectAll() {
+    const event = new CustomEvent('select-all', {
+      bubbles: true,
+      cancelable: true,
+    })
+
+    if (document.activeElement.dispatchEvent(event)) {
+      remote.getCurrentWebContents().selectAll()
+    }
   }
 
   private boomtown() {
@@ -458,7 +478,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     this.props.dispatcher.showPopup({ type: PopupType.About })
   }
 
-  private selectChanges() {
+  private createCommit() {
     const state = this.state.selectedState
     if (state == null || state.type !== SelectionType.Repository) {
       return
@@ -471,7 +491,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     )
   }
 
-  private selectHistory() {
+  private compareToBranch() {
     const state = this.state.selectedState
     if (state == null || state.type !== SelectionType.Repository) {
       return
