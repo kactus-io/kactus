@@ -1,6 +1,13 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.6": [
+      "[Fixed] Remove Bitcoin payment (removed by Stripe)",
+      "[Improved] Remove collection of usage data. We are not looking at them and we don't like collecting data for the sake of it.",
+      "[Improved] Use update.electronjs.org as the update server",
+      "[Improved] Add warning when renaming a branch",
+      "[Improved] Getting the git status should a lot faster (up to 15 times)"
+    ],
     "0.3.5": [
       "[Fixed] Fix the color of the buttons on hover",
       "[Fixed] Do not try to generate a file preview when it hasn't been imported yet",
