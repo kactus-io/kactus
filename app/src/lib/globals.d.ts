@@ -274,12 +274,13 @@ interface IToken {
 
 interface IStripeCheckout {
   open(props: {
-    token: (token: IToken) => void
+    token: (token: IToken, args: any) => void
     opened: () => void
     closed: () => void
     panelLabel: string
     amount: number
     email?: string
+    billingAddress: boolean
   }): void
   close(): void
 }

@@ -1741,9 +1741,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private async updateChangesDiffForCurrentSelection(
     repository: Repository
   ): Promise<void> {
-    this.updateChangesState(repository, state => ({ loadingDiff: true }))
-    this.emitUpdate()
-
     const stateBeforeLoad = this.getRepositoryState(repository)
     const changesStateBeforeLoad = stateBeforeLoad.changesState
     const selectedFileIDsBeforeLoad = changesStateBeforeLoad.selectedFileIDs

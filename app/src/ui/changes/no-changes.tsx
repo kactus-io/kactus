@@ -24,8 +24,10 @@ interface INoChangesProps {
 export class NoChanges extends React.Component<INoChangesProps, {}> {
   public render() {
     return (
-      <div className="panel blankslate" id="blank-slate">
-        <img src={BlankSlateImage} className="blankslate-image" />
+      <div className="panel blankslate ui-view" id="blank-slate">
+        <div className="preview">
+          <img src={BlankSlateImage} className="blankslate-image" />
+        </div>
         <div className="content">
           <div className="title">No local changes</div>
 

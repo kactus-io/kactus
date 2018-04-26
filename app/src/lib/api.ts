@@ -964,6 +964,7 @@ export async function unlockKactusFullAccess(
     email: string
     enterprise: boolean
     coupon?: string
+    metadata?: any
   }
 ): Promise<boolean> {
   try {
@@ -982,6 +983,7 @@ export async function unlockKactusFullAccess(
         login: account.login,
         enterprise: options.enterprise,
         coupon: options.coupon,
+        metadata: options.metadata,
       }),
     })
     const res = await parsedResponse<{ ok: boolean }>(response)

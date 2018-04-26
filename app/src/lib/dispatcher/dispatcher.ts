@@ -1166,6 +1166,7 @@ export class Dispatcher {
       email: string
       enterprise: boolean
       coupon?: string
+      metadata?: any
     }
   ): Promise<void> {
     try {

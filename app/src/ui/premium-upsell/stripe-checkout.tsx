@@ -6,7 +6,7 @@ interface IStripeCheckoutProps {
   readonly onDismissed: () => void
   readonly onLoaded: () => void
   readonly user?: Account
-  readonly onToken: (token: IToken) => void
+  readonly onToken: (token: IToken, args: any) => void
   readonly enterprise: boolean
   readonly price: number
 }
@@ -64,9 +64,9 @@ export class Checkout extends React.Component<
     this.props.onLoaded()
   }
 
-  private onToken = (token: IToken) => {
+  private onToken = (token: IToken, args: any) => {
     this._success = true
-    this.props.onToken(token)
+    this.props.onToken(token, args)
   }
 
   private showStripeDialog = () => {
@@ -80,6 +80,7 @@ export class Checkout extends React.Component<
       panelLabel: 'Unlock ({{amount}}/month)',
       amount: this.props.price * 100,
       email: !enterprise && primaryEmail ? primaryEmail.email : undefined,
+      billingAddress: true,
     })
   }
 

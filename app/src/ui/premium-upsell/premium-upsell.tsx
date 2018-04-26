@@ -112,11 +112,12 @@ export class PremiumUpsell extends React.Component<
     })
   }
 
-  private onToken = async (token: IToken) => {
+  private onToken = async (token: IToken, args: any) => {
     if (!this.props.user) {
       return
     }
     await this.props.dispatcher.unlockKactus(this.props.user, token.id, {
+      metadata: args,
       email: token.email,
       enterprise: this.state.choice === 'enterprise',
       coupon: this.state.coupon !== '' ? this.state.coupon : undefined,
