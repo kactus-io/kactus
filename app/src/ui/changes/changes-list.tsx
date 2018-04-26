@@ -1,10 +1,12 @@
 import * as React from 'react'
 import * as Path from 'path'
 
-import { CommitMessage } from './commit-message'
-import { ChangedFile } from './changed-file'
-import { ChangedSketchPart } from './changed-sketch-part'
-import { List, ClickSource } from '../lib/list'
+import { ICommitMessage } from '../../lib/app-state'
+import { IGitHubUser } from '../../lib/databases'
+import { Dispatcher } from '../../lib/dispatcher'
+import { ITrailer } from '../../lib/git/interpret-trailers'
+import { IMenuItem } from '../../lib/menu-item'
+import { revealInFileManager } from '../../lib/app-shell'
 import {
   AppFileStatus,
   WorkingDirectoryStatus,
@@ -15,17 +17,21 @@ import {
 } from '../../models/status'
 import { DiffSelectionType } from '../../models/diff'
 import { CommitIdentity } from '../../models/commit-identity'
-import { Checkbox, CheckboxValue } from '../lib/checkbox'
-import { ICommitMessage } from '../../lib/app-state'
-import { IGitHubUser } from '../../lib/databases'
-import { Dispatcher } from '../../lib/dispatcher'
-import { IAutocompletionProvider } from '../autocompletion'
 import { Repository } from '../../models/repository'
-import { showContextualMenu } from '../main-process-proxy'
-import { IKactusFile } from '../../lib/kactus'
 import { IAuthor } from '../../models/author'
-import { ITrailer } from '../../lib/git/interpret-trailers'
-import { IMenuItem } from '../../lib/menu-item'
+import { List, ClickSource } from '../lib/list'
+import { Checkbox, CheckboxValue } from '../lib/checkbox'
+import {
+  DefaultEditorLabel,
+  RevealInFileManagerLabel,
+  OpenWithDefaultProgramLabel,
+} from '../lib/context-menu'
+import { CommitMessage } from './commit-message'
+import { ChangedFile } from './changed-file'
+import { ChangedSketchPart } from './changed-sketch-part'
+import { IKactusFile } from '../../lib/kactus'
+import { IAutocompletionProvider } from '../autocompletion'
+import { showContextualMenu } from '../main-process-proxy'
 import { arrayEquals } from '../../lib/equality'
 
 const RowHeight = 29
@@ -54,12 +60,6 @@ interface IChangesListProps {
   ) => void
 
   /**
-   * Called to reveal a file in the native file manager.
-   * @param path The path of the file relative to the root of the repository
-   */
-  readonly onRevealInFileManager: (path: string) => void
-
-  /**
    * Called to open a file it its default application
    * @param path The path of the file relative to the root of the repository
    */
@@ -76,7 +76,6 @@ interface IChangesListProps {
    * List Props for documentation.
    */
   readonly onRowClick?: (row: number, source: ClickSource) => void
-
   readonly commitMessage: ICommitMessage | null
   readonly contextualCommitMessage: ICommitMessage | null
 
@@ -400,9 +399,13 @@ export class ChangesList extends React.Component<
   private onItemContextMenu = (
     path: string,
     status: AppFileStatus,
-    event: React.MouseEvent<any>
+    event: React.MouseEvent<HTMLDivElement>
   ) => {
     event.preventDefault()
+
+    const openInExternalEditor = this.props.externalEditorLabel
+      ? `Open in ${this.props.externalEditorLabel}`
+      : DefaultEditorLabel
 
     const wd = this.props.workingDirectory
     const selectedFiles = new Array<WorkingDirectoryFileChange>()
@@ -469,17 +472,11 @@ export class ChangesList extends React.Component<
         })
       })
 
-    const revealInFileManagerLabel = 'Reveal in Finder'
-
-    const openInExternalEditor = this.props.externalEditorLabel
-      ? `Open in ${this.props.externalEditorLabel}`
-      : 'Open in External Editor'
-
     items.push(
       { type: 'separator' },
       {
-        label: revealInFileManagerLabel,
-        action: () => this.props.onRevealInFileManager(path),
+        label: RevealInFileManagerLabel,
+        action: () => revealInFileManager(this.props.repository, path),
         enabled: status !== AppFileStatus.Deleted,
       },
       {
@@ -491,7 +488,7 @@ export class ChangesList extends React.Component<
         enabled: status !== AppFileStatus.Deleted,
       },
       {
-        label: 'Open with Default Program',
+        label: OpenWithDefaultProgramLabel,
         action: () => this.props.onOpenItem(path),
         enabled: status !== AppFileStatus.Deleted,
       }

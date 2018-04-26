@@ -3,6 +3,8 @@ import { Button } from '../lib/button'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { LoadingOverlay } from '../lib/loading'
 import { encodePathAsUrl } from '../../lib/path'
+import { revealInFileManager } from '../../lib/app-shell'
+import { Repository } from '../../models/repository'
 
 const BlankSlateImage = encodePathAsUrl(
   __dirname,
@@ -10,13 +12,12 @@ const BlankSlateImage = encodePathAsUrl(
 )
 
 interface INoChangesProps {
-  /** Called when the user chooses to open the repository. */
-  readonly onOpenRepository: () => void
-
   /** Called when the user chooses to create a new sketch file */
   readonly onCreateSketchFile: () => void
 
   readonly loadingDiff: boolean
+
+  readonly repository: Repository
 }
 
 /** The component to display when there are no local changes. */
@@ -40,12 +41,16 @@ export class NoChanges extends React.Component<INoChangesProps, {}> {
             <div className="callout half">
               <Octicon symbol={OcticonSymbol.fileDirectory} />
               <div>Open this repository in Finder</div>
-              <Button onClick={this.props.onOpenRepository}>Open Finder</Button>
+              <Button onClick={this.open}>Open Finder</Button>
             </div>
           </div>
         </div>
         {this.props.loadingDiff && <LoadingOverlay />}
       </div>
     )
+  }
+
+  private open = () => {
+    revealInFileManager(this.props.repository, '')
   }
 }

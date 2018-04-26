@@ -253,12 +253,9 @@ export class RepositoryView extends React.Component<
           changesState.diff === null) &&
         (!selectedSketchPartID || !changesState.diff === null)
       ) {
-        // TODO: The case where diff is null is likely while the diff is loading,
-        // we should have a dedicated loading state for diffs instead of showing
-        // NoChanges.
         return (
           <NoChanges
-            onOpenRepository={this.openRepository}
+            repository={this.props.repository}
             onCreateSketchFile={this.handleCreateSketchFile}
             loadingDiff={changesState.loadingDiff}
           />
@@ -296,6 +293,8 @@ export class RepositoryView extends React.Component<
           commitSummaryWidth={this.props.commitSummaryWidth}
           gitHubUsers={this.props.state.gitHubUsers}
           loadingDiff={this.props.state.historyState.loadingDiff}
+          externalEditorLabel={this.props.externalEditorLabel}
+          onOpenInExternalEditor={this.props.onOpenInExternalEditor}
         />
       )
     } else {
@@ -310,10 +309,6 @@ export class RepositoryView extends React.Component<
         {this.renderContent()}
       </UiView>
     )
-  }
-
-  private openRepository = () => {
-    this.props.dispatcher.revealInFileManager(this.props.repository, '')
   }
 
   private onRevertCommit = (commit: Commit) => {

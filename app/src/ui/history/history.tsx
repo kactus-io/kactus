@@ -1,4 +1,6 @@
 import * as React from 'react'
+import * as Path from 'path'
+
 import { CommitSummary } from './commit-summary'
 import { Diff } from '../diff'
 import { DiffType } from '../../models/diff'
@@ -15,6 +17,7 @@ import { encodePathAsUrl } from '../../lib/path'
 import { ThrottledScheduler } from '../lib/throttled-scheduler'
 import { IGitHubUser } from '../../lib/databases'
 import { Resizable } from '../resizable'
+import { openFile } from '../../lib/open-file'
 
 interface IHistoryProps {
   readonly repository: Repository
@@ -26,6 +29,14 @@ interface IHistoryProps {
   readonly gitHubUsers: Map<string, IGitHubUser>
   readonly imageDiffType: ImageDiffType
   readonly loadingDiff: boolean
+  /** The name of the currently selected external editor */
+  readonly externalEditorLabel?: string
+
+  /**
+   * Called to open a file using the user's configured applications
+   * @param path The path of the file relative to the root of the repository
+   */
+  readonly onOpenInExternalEditor: (path: string) => void
 }
 
 interface IHistoryState {
@@ -152,8 +163,21 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
         onSelectedFileChanged={this.onFileSelected}
         selectedFile={this.props.history.selection.file}
         availableWidth={availableWidth}
+        onOpenItem={this.onOpenItem}
+        externalEditorLabel={this.props.externalEditorLabel}
+        onOpenInExternalEditor={this.props.onOpenInExternalEditor}
+        repository={this.props.repository}
       />
     )
+  }
+
+  /**
+   * Open file with default application.
+   * @param path The path of the file relative to the root of the repository
+   */
+  private onOpenItem = (path: string) => {
+    const fullPath = Path.join(this.props.repository.path, path)
+    openFile(fullPath, this.props.dispatcher)
   }
 
   public render() {
