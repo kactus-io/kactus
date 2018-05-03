@@ -14,3 +14,5 @@ resources to get familiar with how things work:
     you need to know to get Kactus up and running
  - **[Tooling](contributing/tooling.md)** - if you have a preferred IDE,
     there's some enhancements to make your life easier
+ - **[Troubleshooting](contributing/troubleshooting.md)** - some additional
+    known issues if you're having environment issues

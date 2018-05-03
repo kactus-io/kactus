@@ -15,7 +15,6 @@
     "postinstall": "cd app && npm install && cd .. && git submodule update --recursive --init && npm run compile:tslint && cd plugin && npm install",
     "start": "cross-env NODE_ENV=development node script/start",
     "start:prod": "cross-env NODE_ENV=production node script/start",
-    "debug": "cross-env NODE_ENV=development node script/debug",
     "compile:plugin": "cd plugin && npm run build",
     "compile:dev": "cross-env NODE_ENV=development parallel-webpack --config app/webpack.development.js && npm run compile:plugin",
     "compile:prod": "cross-env NODE_ENV=production parallel-webpack --config app/webpack.production.js && npm run compile:plugin",
