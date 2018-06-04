@@ -1,4 +1,4 @@
-import * as Fs from './file-system'
+import { ensureDir, writeFile, remove } from 'fs-extra'
 import * as Path from 'path'
 import { exec } from 'child_process'
 import {
@@ -15,7 +15,6 @@ import { Image } from '../models/diff'
 import { IGitAccount } from './git/authentication'
 import { getDotComAPIEndpoint } from './api'
 import { sketchtoolPath, runPluginCommand, getSketchVersion } from './sketch'
-import { remove } from './file-system'
 import * as Perf from '../ui/lib/perf'
 
 export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string }
@@ -72,7 +71,7 @@ export async function generateDocumentPreview(
 ): Promise<string> {
   const commandName = `[Kactus] generate document preview`
   return Perf.measure(commandName, async () => {
-    await Fs.mkdirP(output)
+    await ensureDir(output)
     return new Promise<string>((resolve, reject) => {
       exec(
         sketchtoolPath(sketchPath) +
@@ -202,7 +201,7 @@ export async function saveKactusConfig(
       configToSave.root = configToSave.root.replace(repository.path, '.')
     }
 
-    return await Fs.writeFile(configPath, JSON.stringify(configToSave, null, 2))
+    return await writeFile(configPath, JSON.stringify(configToSave, null, 2))
   })
 }
 

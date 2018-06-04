@@ -6,7 +6,7 @@ import {
   IRepositoryState,
   IHistoryState,
   IAppState,
-  RepositorySection,
+  RepositorySectionTab,
   IChangesState,
   Popup,
   PopupType,
@@ -27,6 +27,7 @@ import {
   CompareActionKind,
   IDisplayHistory,
   ICompareBranch,
+  ICompareFormUpdate,
 } from '../app-state'
 import { Account } from '../../models/account'
 import { Repository } from '../../models/repository'
@@ -305,7 +306,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private isCancellingKactusFullAccess: boolean = false
   private sketchVersion: string | null | undefined
   private sketchPath: string = sketchPathDefault
-  private selectedCloneRepositoryTab: CloneRepositoryTab = CloneRepositoryTab.DotCom
+
+  private selectedCloneRepositoryTab = CloneRepositoryTab.DotCom
 
   private selectedBranchesTab = BranchesTab.Branches
 
@@ -494,7 +496,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         config: {},
         lastChecked: null,
       },
-      selectedSection: RepositorySection.Changes,
+      selectedSection: RepositorySectionTab.Changes,
       branchesState: {
         tip: { kind: TipState.Unknown },
         defaultBranch: null,
@@ -506,6 +508,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
       },
       compareState: {
         formState: { kind: ComparisonView.None },
+        showBranchList: false,
+        filterText: '',
         commitSHAs: [],
         aheadBehindCache: new ComparisonCache(),
         allBranches: new Array<Branch>(),
@@ -896,20 +900,58 @@ export class AppStore extends TypedBaseStore<IAppState> {
       )
 
       if (compare !== null) {
+        const { ahead, behind } = compare
+        const aheadBehind = { ahead, behind }
+
         this.updateCompareState(repository, s => ({
           formState: {
             comparisonBranch,
             kind: action.mode,
-            aheadBehind: { ahead: compare.ahead, behind: compare.behind },
+            aheadBehind,
           },
           commitSHAs: compare.commits.map(commit => commit.sha),
         }))
+
+        const tip = gitStore.tip
+
+        let currentSha: string | null = null
+
+        if (tip.kind === TipState.Valid) {
+          currentSha = tip.branch.tip.sha
+        } else if (tip.kind === TipState.Detached) {
+          currentSha = tip.currentSha
+        }
+
+        if (this.currentAheadBehindUpdater != null && currentSha != null) {
+          const from =
+            action.mode === ComparisonView.Ahead
+              ? comparisonBranch.tip.sha
+              : currentSha
+          const to =
+            action.mode === ComparisonView.Ahead
+              ? currentSha
+              : comparisonBranch.tip.sha
+
+          this.currentAheadBehindUpdater.insert(from, to, aheadBehind)
+        }
 
         return this.emitUpdate()
       }
     } else {
       return assertNever(action, `Unknown action: ${kind}`)
     }
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public _updateCompareForm<K extends keyof ICompareFormUpdate>(
+    repository: Repository,
+    newState: Pick<ICompareFormUpdate, K>
+  ) {
+    this.updateCompareState(repository, state => {
+      return merge(state, newState)
+    })
+
+    this.emitUpdate()
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
@@ -1628,14 +1670,14 @@ export class AppStore extends TypedBaseStore<IAppState> {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _changeRepositorySection(
     repository: Repository,
-    selectedSection: RepositorySection
+    selectedSection: RepositorySectionTab
   ): Promise<void> {
     this.updateRepositoryState(repository, state => ({ selectedSection }))
     this.emitUpdate()
 
-    if (selectedSection === RepositorySection.History) {
+    if (selectedSection === RepositorySectionTab.History) {
       return this.refreshHistorySection(repository)
-    } else if (selectedSection === RepositorySection.Changes) {
+    } else if (selectedSection === RepositorySectionTab.Changes) {
       return this.refreshChangesSection(repository, {
         includingStatus: true,
         clearPartialState: false,
@@ -1984,9 +2026,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const section = state.selectedSection
     let refreshSectionPromise: Promise<void>
 
-    if (section === RepositorySection.History) {
+    if (section === RepositorySectionTab.History) {
       refreshSectionPromise = this.refreshHistorySection(repository)
-    } else if (section === RepositorySection.Changes) {
+    } else if (section === RepositorySectionTab.Changes) {
       refreshSectionPromise = this.refreshChangesSection(repository, {
         includingStatus: false,
         clearPartialState: false,
@@ -2445,7 +2487,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         const refreshWeight = 0.1
 
         // Scale pull and fetch weights to be between 0 and 0.9.
-        const scale = 1 / (pushWeight + fetchWeight) * (1 - refreshWeight)
+        const scale = (1 / (pushWeight + fetchWeight)) * (1 - refreshWeight)
 
         pushWeight *= scale
         fetchWeight *= scale
@@ -2695,7 +2737,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
           const refreshWeight = 0.1
 
           // Scale pull and fetch weights to be between 0 and 0.9.
-          const scale = 1 / (pullWeight + fetchWeight) * (1 - refreshWeight)
+          const scale = (1 / (pullWeight + fetchWeight)) * (1 - refreshWeight)
 
           pullWeight *= scale
           fetchWeight *= scale

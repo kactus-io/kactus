@@ -40,7 +40,7 @@ There is also a list of [known issues](https://github.com/kactus-io/kactus/blob/
 that are being tracked against Desktop, and some of these issues have workarounds.
 
 If you can't find an issue that matches what you're seeing, open a [new issue](https://github.com/kactus-io/kactus/issues/new)
-and fill out the template to provide us with enough information to investigate
+choose the right template and provide us with enough information to investigate
 further.
 
 ## :cactus: How can I contribute to Kactus?

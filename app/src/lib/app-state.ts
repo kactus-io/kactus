@@ -222,6 +222,7 @@ export enum PopupType {
   LFSAttributeMismatch,
   UpstreamAlreadyExists,
   DeletePullRequest,
+  MergeConflicts,
 }
 
 export type PremiumType = 'premium' | 'enterprise'
@@ -310,6 +311,7 @@ export type Popup =
       branch: Branch
       pullRequest: PullRequest
     }
+  | { type: PopupType.MergeConflicts; repository: Repository }
 
 export enum FoldoutType {
   Repository,
@@ -344,7 +346,7 @@ export type Foldout =
   | { type: FoldoutType.AddMenu }
   | AppMenuFoldout
 
-export enum RepositorySection {
+export enum RepositorySectionTab {
   Changes,
   History,
 }
@@ -354,7 +356,7 @@ export interface IRepositoryState {
   readonly changesState: IChangesState
   readonly kactus: IKactusState
   readonly compareState: ICompareState
-  readonly selectedSection: RepositorySection
+  readonly selectedSection: RepositorySectionTab
 
   /**
    * The name and email that will be used for the author info
@@ -689,6 +691,12 @@ export interface ICompareState {
   /** The current state of the compare form, based on user input */
   readonly formState: IDisplayHistory | ICompareBranch
 
+  /** Whether the branch list should be expanded or hidden */
+  readonly showBranchList: boolean
+
+  /** The text entered into the compare branch filter text box */
+  readonly filterText: string
+
   /** The SHAs of commits to render in the compare list */
   readonly commitSHAs: ReadonlyArray<string>
 
@@ -714,6 +722,14 @@ export interface ICompareState {
    * A local cache of ahead/behind computations to compare other refs to the current branch
    */
   readonly aheadBehindCache: ComparisonCache
+}
+
+export interface ICompareFormUpdate {
+  /** The updated filter text to set */
+  readonly filterText: string
+
+  /** Thew new state of the branches list */
+  readonly showBranchList: boolean
 }
 
 export enum CompareActionKind {

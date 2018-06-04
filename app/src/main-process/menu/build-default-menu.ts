@@ -2,10 +2,11 @@ import { Menu, ipcMain, shell, app } from 'electron'
 import { ensureItemIds } from './ensure-item-ids'
 import { MenuEvent } from './menu-event'
 import { getLogDirectoryPath } from '../../lib/logging/get-log-path'
-import { mkdirIfNeeded } from '../../lib/file-system'
+import { ensureDir } from 'fs-extra'
 
 import { log } from '../log'
 import { openDirectorySafe } from '../shell'
+import { enableCompareSidebar } from '../../lib/feature-flag'
 
 const defaultEditorLabel = 'Open in External Editor'
 const defaultShellLabel = 'Open in Terminal'
@@ -107,16 +108,16 @@ export function buildDefaultMenu(
     label: 'View',
     submenu: [
       {
-        label: 'Create Commit',
-        id: 'create-commit',
+        label: 'Show Changes',
+        id: 'show-changes',
         accelerator: 'CmdOrCtrl+1',
-        click: emit('create-commit'),
+        click: emit('show-changes'),
       },
       {
-        label: 'Compare to Branch',
-        id: 'compare-to-branch',
+        label: 'Show History',
+        id: 'show-history',
         accelerator: 'CmdOrCtrl+2',
-        click: emit('compare-to-branch'),
+        click: emit('show-history'),
       },
       {
         label: 'Show Repository List',
@@ -276,6 +277,13 @@ export function buildDefaultMenu(
         click: emit('update-branch'),
       },
       {
+        label: 'Compare to Branch',
+        id: 'compare-to-branch',
+        accelerator: 'CmdOrCtrl+Shift+B',
+        click: emit('compare-to-branch'),
+        visible: enableCompareSidebar(),
+      },
+      {
         label: 'Merge Into Current Branch…',
         id: 'merge-branch',
         accelerator: 'CmdOrCtrl+Shift+M',
@@ -284,9 +292,9 @@ export function buildDefaultMenu(
       separator,
       {
         label: 'Compare on GitHub',
-        id: 'compare-branch',
+        id: 'compare-on-github',
         accelerator: 'CmdOrCtrl+Shift+C',
-        click: emit('compare-branch'),
+        click: emit('compare-on-github'),
       },
       {
         label: pullRequestLabel,
@@ -310,7 +318,9 @@ export function buildDefaultMenu(
   const submitIssueItem: Electron.MenuItemConstructorOptions = {
     label: 'Report Issue…',
     click() {
-      shell.openExternal('https://github.com/kactus-io/kactus/issues/new')
+      shell.openExternal(
+        'https://github.com/kactus-io/kactus/issues/new/choose'
+      )
     },
   }
 
@@ -336,7 +346,7 @@ export function buildDefaultMenu(
     label: showLogsLabel,
     click() {
       const logPath = getLogDirectoryPath()
-      mkdirIfNeeded(logPath)
+      ensureDir(logPath)
         .then(() => {
           openDirectorySafe(logPath)
         })

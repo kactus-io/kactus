@@ -69,8 +69,8 @@ comment to the existing issue if there is extra information you can contribute.
 
 Bugs are tracked as [GitHub issues](https://guides.github.com/features/issues/).
 
-Simply create an issue on the [Kactus issue tracker](https://github.com/kactus-io/kactus/issues)
-and fill out the provided [issue template](ISSUE_TEMPLATE.md).
+Simply create an issue on the [Kactus issue tracker](https://github.com/kactus-io/kactus/issues/new?template=bug_report.md)
+and fill out the provided issue template.
 
 The information we are interested in includes:
 
@@ -104,8 +104,10 @@ information you would like to add.
 
 Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com/features/issues/).
 
-Simply create an issue on the [Kactus issue tracker](https://github.com/kactus-io/kactus/issues)
-and provide the following information:
+Simply create an issue on the [Kactus issue tracker](https://github.com/kactus-io/kactus/issues/new?template=feature_request.md)
+and fill out the provided issue template.
+
+Some additional advice:
 
 * **Use a clear and descriptive title** for the issue to identify the
   suggestion.

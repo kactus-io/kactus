@@ -1,4 +1,5 @@
 import * as Path from 'path'
+import { ensureDir, pathExists, stat } from 'fs-extra'
 import * as fileSystem from '../../lib/file-system'
 import { remote } from 'electron'
 import { importFolder } from 'kactus-cli'
@@ -39,7 +40,6 @@ import {
   generatePagePreview,
   getKactusStoragePaths,
 } from '../kactus'
-import { mkdirP, pathExists } from '../file-system'
 import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
 import { assertNever } from '../fatal-error'
 
@@ -62,7 +62,7 @@ const MaxReasonableDiffSize = MaxDiffBufferSize / 16 // ~4.375MB in decimal
  * The longest line length we should try to display. If a diff has a line longer
  * than this, we probably shouldn't attempt it
  */
-const MaxLineLength = 500000
+const MaxCharactersPerLine = 5000
 
 /**
  * Utility function to check whether parsing this buffer is going to cause
@@ -83,7 +83,7 @@ function isBufferTooLarge(buffer: Buffer) {
 function isDiffTooLarge(diff: IRawDiff) {
   for (const hunk of diff.hunks) {
     for (const line of hunk.lines) {
-      if (line.text.length > MaxLineLength) {
+      if (line.text.length > MaxCharactersPerLine) {
         return true
       }
     }
@@ -474,9 +474,9 @@ async function getSketchDiff(
     previous: previous,
     current: current,
     type: type,
-    isDirectory: await fileSystem.isDirectory(
+    isDirectory: (await stat(
       Path.join(repository.path, file.path)
-    ),
+    )).isDirectory(),
   }
 }
 
@@ -534,9 +534,9 @@ export async function convertDiff(
     text: diff.contents,
     hunks: diff.hunks,
     lineEndingsChange,
-    isDirectory: await fileSystem.isDirectory(
+    isDirectory: (await stat(
       Path.join(repository.path, file.path)
-    ),
+    )).isDirectory(),
   }
 }
 
@@ -675,7 +675,11 @@ export async function getBlobImage(
 ): Promise<Image> {
   const extension = Path.extname(path)
   const contents = await getBlobContents(repository, commitish, path)
-  return new Image(contents.toString('base64'), getMediaType(extension))
+  return new Image(
+    contents.toString('base64'),
+    getMediaType(extension),
+    contents.length
+  )
 }
 
 export async function getWorkingDirectoryImage(
@@ -698,7 +702,8 @@ async function getImage(path: string): Promise<Image> {
   const contents = await fileSystem.readFile(path)
   return new Image(
     contents.toString('base64'),
-    getMediaType(Path.extname(path))
+    getMediaType(Path.extname(path)),
+    contents.length
   )
 }
 
@@ -877,7 +882,7 @@ async function getOldSketchPreview(
     Path.join(sketchStoragePath, 'document.json')
   )
   if (!alreadyExported) {
-    await mkdirP(storagePath)
+    await ensureDir(storagePath)
     await exportTreeAtCommit(
       repository,
       commitish,

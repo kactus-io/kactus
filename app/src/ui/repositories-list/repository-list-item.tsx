@@ -5,6 +5,7 @@ import { showContextualMenu } from '../main-process-proxy'
 import { Repositoryish } from './group-repositories'
 import { IMenuItem } from '../../lib/menu-item'
 import { HighlightText } from '../lib/highlight-text'
+import { IMatches } from '../../lib/fuzzy-find'
 
 const defaultEditorLabel = 'Open in External Editor'
 
@@ -33,7 +34,7 @@ interface IRepositoryListItemProps {
   readonly shellLabel: string
 
   /** The characters in the repository name to highlight */
-  readonly matches: ReadonlyArray<number>
+  readonly matches: IMatches
 }
 
 /** A repository item. */
@@ -67,7 +68,7 @@ export class RepositoryListItem extends React.Component<
           {prefix ? <span className="prefix">{prefix}</span> : null}
           <HighlightText
             text={repository.name}
-            highlight={this.props.matches}
+            highlight={this.props.matches.title}
           />
         </div>
       </div>

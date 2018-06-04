@@ -10,7 +10,12 @@ const root = Path.dirname(__dirname)
 
 const prettierPath = Path.join(root, 'node_modules', '.bin', 'prettier')
 
-const args = ['**/*.scss', '--list-different']
+const args = [
+  '**/*.scss',
+  'app/**/*.{ts,tsx}',
+  'script/**/*.ts',
+  '--list-different',
+]
 
 if (shouldFix) {
   args.push('--write')

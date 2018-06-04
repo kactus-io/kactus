@@ -5,11 +5,12 @@ import { CSSTransitionGroup } from 'react-transition-group'
 import * as semver from 'semver'
 import {
   IAppState,
-  RepositorySection,
+  RepositorySectionTab,
   Popup,
   PopupType,
   FoldoutType,
   SelectionType,
+  CompareActionKind,
 } from '../lib/app-state'
 import { Dispatcher } from '../lib/dispatcher'
 import { AppStore } from '../lib/stores'
@@ -87,6 +88,7 @@ import { ShellError } from './shell'
 import { InitializeLFS, AttributeMismatch } from './lfs'
 import { UpstreamAlreadyExists } from './upstream-already-exists'
 import { DeletePullRequest } from './delete-branch/delete-pull-request-dialog'
+import { MergeConflictsWarning } from './merge-conflicts'
 
 /** The interval at which we should check for updates. */
 const UpdateCheckInterval = 1000 * 60 * 60 * 4
@@ -236,10 +238,10 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.push()
       case 'pull':
         return this.pull()
-      case 'create-commit':
-        return this.createCommit()
-      case 'compare-to-branch':
-        return this.compareToBranch()
+      case 'show-changes':
+        return this.showChanges()
+      case 'show-history':
+        return this.showHistory()
       case 'choose-repository':
         return this.chooseRepository()
       case 'add-local-repository':
@@ -260,18 +262,23 @@ export class App extends React.Component<IAppProps, IAppState> {
         return this.props.dispatcher.showPopup({ type: PopupType.Preferences })
       case 'open-working-directory':
         return this.openCurrentRepositoryWorkingDirectory()
-      case 'update-branch':
+      case 'update-branch': {
         return this.updateBranch()
-      case 'merge-branch':
+      }
+      case 'compare-to-branch': {
+        return this.showHistory(true)
+      }
+      case 'merge-branch': {
         return this.mergeBranch()
+      }
       case 'show-repository-settings':
         return this.showRepositorySettings()
       case 'show-kactus-settings':
         return this.showKactusSettings()
       case 'view-repository-on-github':
         return this.viewRepositoryOnGitHub()
-      case 'compare-branch':
-        return this.compareBranch()
+      case 'compare-on-github':
+        return this.compareBranchOnDotcom()
       case 'open-in-shell':
         return this.openCurrentRepositoryInShell()
       case 'clone-repository':
@@ -377,7 +384,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     })
   }
 
-  private compareBranch() {
+  private compareBranchOnDotcom() {
     const htmlURL = this.getCurrentRepositoryGitHubURL()
     if (!htmlURL) {
       return
@@ -478,20 +485,30 @@ export class App extends React.Component<IAppProps, IAppState> {
     this.props.dispatcher.showPopup({ type: PopupType.About })
   }
 
-  private createCommit() {
+  private async showHistory(showBranchList: boolean = false) {
     const state = this.state.selectedState
     if (state == null || state.type !== SelectionType.Repository) {
       return
     }
 
-    this.props.dispatcher.closeCurrentFoldout()
-    this.props.dispatcher.changeRepositorySection(
+    await this.props.dispatcher.closeCurrentFoldout()
+
+    await this.props.dispatcher.initializeCompare(state.repository, {
+      kind: CompareActionKind.History,
+    })
+
+    await this.props.dispatcher.changeRepositorySection(
       state.repository,
-      RepositorySection.Changes
+      RepositorySectionTab.History
     )
+
+    await this.props.dispatcher.updateCompareForm(state.repository, {
+      filterText: '',
+      showBranchList,
+    })
   }
 
-  private compareToBranch() {
+  private showChanges() {
     const state = this.state.selectedState
     if (state == null || state.type !== SelectionType.Repository) {
       return
@@ -500,7 +517,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     this.props.dispatcher.closeCurrentFoldout()
     this.props.dispatcher.changeRepositorySection(
       state.repository,
-      RepositorySection.History
+      RepositorySectionTab.Changes
     )
   }
 
@@ -1234,6 +1251,14 @@ export class App extends React.Component<IAppProps, IAppState> {
             branch={popup.branch}
             onDismissed={this.onPopupDismissed}
             pullRequest={popup.pullRequest}
+          />
+        )
+      case PopupType.MergeConflicts:
+        return (
+          <MergeConflictsWarning
+            dispatcher={this.props.dispatcher}
+            repository={popup.repository}
+            onDismissed={this.onPopupDismissed}
           />
         )
       default:

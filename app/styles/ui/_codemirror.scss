@@ -24,3 +24,12 @@
 .CodeMirror-selected {
   background: inherit;
 }
+
+.CodeMirror-simplescroll-horizontal,
+.CodeMirror-simplescroll-vertical {
+  background: var(--box-alt-background-color);
+  div {
+    background: var(--scroll-bar-thumb-background-color);
+    border: none;
+  }
+}
