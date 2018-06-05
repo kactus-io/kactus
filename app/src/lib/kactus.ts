@@ -51,14 +51,16 @@ export async function getKactusStatus(
           ? Path.join(repository.path, kactus.config.root)
           : repository.path,
       },
-      files: kactus.files.map(f => {
-        return {
-          ...f,
-          id: f.path.replace(repository.path, '').replace(/^\//, ''),
-          isParsing: false,
-          isImporting: false,
-        }
-      }),
+      files: kactus.files
+        .map(f => {
+          return {
+            ...f,
+            id: f.path.replace(repository.path, '').replace(/^\//, ''),
+            isParsing: false,
+            isImporting: false,
+          }
+        })
+        .sort((a, b) => (a.id > b.id ? 1 : -1)),
       lastChecked: Date.now(),
     }
   })
