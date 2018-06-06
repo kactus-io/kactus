@@ -16,6 +16,9 @@ interface IImageProps {
 export class ImageContainer extends React.Component<IImageProps, {}> {
   public render() {
     const image = this.props.image
+    if (!image) {
+      return null
+    }
     const imageSource = `data:${image.mediaType};base64,${image.contents}`
 
     return (
