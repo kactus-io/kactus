@@ -71,6 +71,7 @@ interface IChangesListProps {
     trailers?: ReadonlyArray<ITrailer>
   ) => Promise<boolean>
   readonly onDiscardChanges: (file: WorkingDirectoryFileChange) => void
+  readonly askForConfirmationOnDiscardChanges: boolean
   readonly onDiscardAllChanges: (
     files: ReadonlyArray<WorkingDirectoryFileChange>
   ) => void
@@ -364,6 +365,15 @@ export class ChangesList extends React.Component<
     }
   }
 
+  private getDiscardChangesMenuItemLabel = (files: ReadonlyArray<string>) => {
+    const label =
+      files.length === 1
+        ? `Discard Changes`
+        : `Discard ${files.length} Selected Changes`
+
+    return this.props.askForConfirmationOnDiscardChanges ? `${label}…` : label
+  }
+
   private onContextMenu = (event: React.MouseEvent<any>) => {
     event.preventDefault()
 
@@ -439,10 +449,7 @@ export class ChangesList extends React.Component<
 
     const items: IMenuItem[] = [
       {
-        label:
-          paths.length === 1
-            ? `Discard Changes…`
-            : `Discard ${paths.length} Selected Changes…`,
+        label: this.getDiscardChangesMenuItemLabel(paths),
         action: () => this.onDiscardChanges(paths),
       },
       {

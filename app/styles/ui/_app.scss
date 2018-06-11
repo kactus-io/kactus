@@ -1,6 +1,6 @@
 @import '../mixins';
 
-#desktop-app {
+#kactus-app {
   // This is just a dummy wrapper needed because react doesn't like
   // being installed into <body>, see https://github.com/facebook/react/issues/3207
   &-container {

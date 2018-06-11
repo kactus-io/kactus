@@ -27,7 +27,10 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   --button-hover-background: #{lighten($green, 5%)};
   --button-text-color: #{$white};
   --button-focus-border-color: #{$green-600};
+
   --link-button-color: #{$green};
+  --link-button-hover-color: #{$green-600};
+
   --secondary-button-background: #{$gray-000};
   --secondary-button-hover-background: #{$white};
   --secondary-button-text-color: var(--text-color);
@@ -166,8 +169,14 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   --toolbar-button-hover-progress-color: #{$gray-700};
   --toolbar-dropdown-open-progress-color: #{$gray-200};
 
-  /** Ahead and behind count bubble in the push/pull/publish button */
-  --toolbar-ahead-behind-background-color: #{$gray-500};
+  /**
+    * Background color for badges inside of toolbar buttons.
+    * Examples of badges are the ahead/behind bubble in the
+    * push/pull button and the PR badge in the branch drop
+    * down button.
+    */
+  --toolbar-badge-background-color: #{$gray-600};
+  --toolbar-badge-active-background-color: #{$gray-200};
 
   --tab-bar-height: 29px;
   --tab-bar-active-color: #{$green};
@@ -240,9 +249,7 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   --diff-delete-hover-background-color: #{$red-200};
   --diff-delete-hover-border-color: #{$red-300};
   --diff-delete-hover-gutter-color: #{$red-300};
-  --diff-delete-hover-text-color: var(
-    --text-color
-  );
+  --diff-delete-hover-text-color: var(--text-color);
 
   // Syntax highlighting text colors
   --syntax-variable-color: #6f42c1;

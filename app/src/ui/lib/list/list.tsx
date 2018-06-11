@@ -327,7 +327,7 @@ export class List extends React.Component<IListProps, IListState> {
     this.list = element
 
     if (element !== null) {
-      // This is a custom event that desktop emits through <App />
+      // This is a custom event that Kactus emits through <App />
       // when the user selects the Edit > Select all menu item. We
       // hijack it and select all list items rather than let it bubble
       // to electron's default behavior which is to select all selectable

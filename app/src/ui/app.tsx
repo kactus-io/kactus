@@ -1370,7 +1370,7 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   private renderApp() {
     return (
-      <div id="desktop-app-contents">
+      <div id="kactus-app-contents">
         {this.renderToolbar()}
         {this.renderUpdateBanner()}
         {this.renderRepository()}
@@ -1664,7 +1664,7 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   private renderToolbar() {
     return (
-      <Toolbar id="desktop-app-toolbar">
+      <Toolbar id="kactus-app-toolbar">
         <div
           className="sidebar-section"
           style={{ width: this.state.sidebarWidth }}
@@ -1754,7 +1754,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     const className = this.state.appIsFocused ? 'focused' : 'blurred'
 
     return (
-      <div id="desktop-app-chrome" className={className}>
+      <div id="kactus-app-chrome" className={className}>
         {this.renderTitlebar()}
         {this.state.showWelcomeFlow
           ? this.renderWelcomeFlow()

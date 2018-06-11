@@ -3,7 +3,7 @@ import { BaseDatabase } from './base-database'
 
 export interface IGitHubUser {
   /**
-   * The internal (to desktop) database id for this user or undefined
+   * The internal (to kactus) database id for this user or undefined
    * if not yet inserted into the database.
    */
   readonly id?: number
@@ -21,7 +21,7 @@ export interface IGitHubUser {
 
 export interface IMentionableAssociation {
   /**
-   * The internal (to desktop) database id for this association
+   * The internal (to kactus) database id for this association
    *  or undefined if not yet inserted into the database.
    */
   readonly id?: number

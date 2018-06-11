@@ -76,7 +76,7 @@ export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
     return (
       <div
         className={titleBarClass}
-        id="desktop-app-title-bar"
+        id="kactus-app-title-bar"
         onDoubleClick={this.onTitlebarDoubleClick}
         style={this.state.style}
       >

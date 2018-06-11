@@ -81,7 +81,7 @@ interface IImageDiffData {
 }
 
 /**
- * Data returned as part of an image diff in Desktop
+ * Data returned as part of an image diff in Kactus
  */
 export interface IImageDiff extends IImageDiffData {
   readonly kind: DiffType.Image
@@ -130,7 +130,7 @@ export interface IUnrenderableDiff {
   readonly kind: DiffType.Unrenderable
 }
 
-/** The union of diff types that can be rendered in Desktop */
+/** The union of diff types that can be rendered in Kactus */
 export type IDiff =
   | ITextDiff
   | IImageDiff

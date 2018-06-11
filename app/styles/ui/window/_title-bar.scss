@@ -1,5 +1,5 @@
 @import '../../mixins';
-#desktop-app-title-bar {
+#kactus-app-title-bar {
   -webkit-app-region: drag;
   flex-grow: 0;
   flex-shrink: 0;
@@ -25,7 +25,7 @@
   }
 }
 
-#desktop-app-title-bar.light-title-bar {
+#kactus-app-title-bar.light-title-bar {
   background: transparent;
   border-bottom: none;
   position: fixed;

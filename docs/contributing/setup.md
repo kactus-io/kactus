@@ -57,16 +57,6 @@ reflected in the running app.
 - `npm run test:unit` - Runs all unit tests
 - `npm run test:integration` - Runs all integration tests
 
-**Pro Tip:** If you're only interested in the results of a single test and don't
-wish to run the entire test suite to see it you can pass along a search string
-in order to only run the tests that match that string.
-
-```shellsession
-$ npm run test:unit -- --grep CloneProgressParser
-```
-
-This example will run all test names containing `CloneProgressParser`.
-
 ## Debugging
 
 Electron ships with Chrome Dev Tools to assist with debugging, profiling and
