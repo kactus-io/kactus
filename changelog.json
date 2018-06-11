@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.8": [
+      "[Fixed] Bug which crash Kactus on startup."
+    ],
     "0.3.7": [
       "[New] New history tab with possibility to compare to a branch",
       "[Improved] Performances when rendering the list of changes.",
