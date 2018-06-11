@@ -15,7 +15,7 @@ interface INoChangesProps {
   /** Called when the user chooses to create a new sketch file */
   readonly onCreateSketchFile: () => void
 
-  readonly loadingDiff: boolean
+  readonly loadingDiff: number | null
 
   readonly repository: Repository
 }

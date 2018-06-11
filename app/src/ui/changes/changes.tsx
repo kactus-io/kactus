@@ -16,7 +16,7 @@ interface IChangesProps {
   readonly diff: IDiff | null
   readonly dispatcher: Dispatcher
   readonly imageDiffType: ImageDiffType
-  readonly loadingDiff: boolean
+  readonly loadingDiff: number | null
   readonly selectedSketchPartID: string | null
 }
 

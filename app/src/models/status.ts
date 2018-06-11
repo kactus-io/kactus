@@ -205,6 +205,12 @@ export class WorkingDirectoryFileChange extends FileChange {
   /** contains the selection details for this file - all, nothing or partial */
   public readonly selection: DiffSelection
 
+  // for the change list
+  public shown: boolean
+  public index: number
+  public opened = false
+  public readonly fakePart = false
+
   public constructor(
     path: string,
     status: AppFileStatus,
@@ -214,7 +220,8 @@ export class WorkingDirectoryFileChange extends FileChange {
     parts?: Array<string>
   ) {
     super(path, status, sketchFile, oldPath, parts)
-
+    this.shown = true
+    this.index = -1
     this.selection = selection
   }
 
@@ -240,19 +247,9 @@ export class WorkingDirectoryFileChange extends FileChange {
   }
 }
 
-export type TFileOrSketchPartChange =
-  | WorkingDirectoryFileChange
-  | {
-      opened: boolean
-      type: SketchFileType
-      id: string
-      parts: Array<string>
-      name: string
-      status?: AppFileStatus
-    }
-
 export type TSketchPartChange = {
   opened: boolean
+  shown: boolean
   type: FileType.LayerFile | FileType.PageFile
   id: string
   parts: Array<string>

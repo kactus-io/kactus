@@ -112,13 +112,16 @@ const visualTextFileExtensions = new Set(['.svg'])
  * @param commitish A commit SHA or some other identifier that ultimately dereferences
  *                  to a commit.
  */
-export async function getCommitDiff(
+export async function getCommitDiff<K extends keyof IDiff>(
   sketchPath: string,
   repository: Repository,
   kactusFiles: Array<IKactusFile>,
   file: FileChange,
   commitish: string,
-  previousCommitish?: string
+  previousCommitish?: string,
+  onSketchPreviews?: (
+    previews: { current: Image | undefined; previous: Image | undefined }
+  ) => void
 ): Promise<IDiff> {
   const args = [
     'log',
@@ -150,7 +153,9 @@ export async function getCommitDiff(
     repository,
     file,
     commitish,
-    previousCommitish
+    previousCommitish,
+    undefined,
+    onSketchPreviews
   )
 }
 
@@ -159,12 +164,15 @@ export async function getCommitDiff(
  * compared against HEAD if it's tracked, if not it'll be compared to an empty file meaning
  * that all content in the file will be treated as additions.
  */
-export async function getWorkingDirectoryDiff(
+export async function getWorkingDirectoryDiff<K extends keyof IDiff>(
   sketchPath: string,
   repository: Repository,
   kactusFiles: Array<IKactusFile>,
   file: WorkingDirectoryFileChange,
-  previousCommitish?: string
+  previousCommitish?: string,
+  onSketchPreviews?: (
+    previews: { current: Image | undefined; previous: Image | undefined }
+  ) => void
 ): Promise<IDiff> {
   let successExitCodes: Set<number> | undefined
   let args: Array<string>
@@ -240,11 +248,12 @@ export async function getWorkingDirectoryDiff(
     file,
     'HEAD',
     previousCommitish,
-    lineEndingsChange
+    lineEndingsChange,
+    onSketchPreviews
   )
 }
 
-export async function getWorkingDirectoryPartDiff(
+export async function getWorkingDirectoryPartDiff<K extends keyof IDiff>(
   sketchPath: string,
   repository: Repository,
   kactusFiles: Array<IKactusFile>,
@@ -252,7 +261,10 @@ export async function getWorkingDirectoryPartDiff(
     id: string
     type: FileType.PageFile | FileType.LayerFile
   },
-  previousCommitish?: string
+  previousCommitish?: string,
+  onSketchPreviews?: (
+    previews: { current: Image | undefined; previous: Image | undefined }
+  ) => void
 ): Promise<IDiff> {
   const kactusFile = kactusFiles.find(
     f => sketchPart.id.indexOf(f.id + '/') === 0
@@ -269,6 +281,7 @@ export async function getWorkingDirectoryPartDiff(
     },
     kactusFile!,
     'HEAD',
+    onSketchPreviews!,
     previousCommitish,
     undefined,
     sketchPart.type
@@ -333,16 +346,23 @@ async function getImageDiff(
   }
 }
 
-async function getSketchDiff(
+async function getSketchDiff<K extends keyof IDiff>(
   sketchPath: string,
   repository: Repository,
   file: FileChange,
   kactusFile: IKactusFile,
   commitish: string,
+  onSketchPreviews: (
+    previews: { current: Image | undefined; previous: Image | undefined }
+  ) => void,
   previousCommitish?: string,
   diff?: IRawDiff,
   _type?: FileType.PageFile | FileType.LayerFile
 ): Promise<ISketchDiff> {
+  if (!onSketchPreviews) {
+    throw new Error('we are missing the hook to update the diff!')
+  }
+
   const name = Path.basename(file.path)
 
   let type: IKactusFileType
@@ -464,15 +484,17 @@ async function getSketchDiff(
     }
   }
 
-  const [current, previous] = await Promise.all(promises)
+  Promise.all(promises).then(([current, previous]) => {
+    onSketchPreviews({ current, previous })
+  })
 
   return {
     kind: DiffType.Sketch,
     text: (diff || { contents: '' }).contents,
     hunks: (diff || { hunks: [] }).hunks,
     sketchFile: kactusFile,
-    previous: previous,
-    current: current,
+    previous: 'loading',
+    current: 'loading',
     type: type,
     isDirectory: (await stat(
       Path.join(repository.path, file.path)
@@ -480,7 +502,7 @@ async function getSketchDiff(
   }
 }
 
-export async function convertDiff(
+export async function convertDiff<K extends keyof IDiff>(
   sketchPath: string,
   repository: Repository,
   kactusFiles: Array<IKactusFile>,
@@ -488,7 +510,10 @@ export async function convertDiff(
   diff: IRawDiff,
   commitish: string,
   previousCommitish?: string,
-  lineEndingsChange?: LineEndingsChange
+  lineEndingsChange?: LineEndingsChange,
+  onSketchPreviews?: (
+    previews: { current: Image | undefined; previous: Image | undefined }
+  ) => void
 ): Promise<IDiff> {
   const extension = Path.extname(file.path).toLowerCase()
 
@@ -524,6 +549,7 @@ export async function convertDiff(
       file,
       kactusFile,
       commitish,
+      onSketchPreviews!,
       previousCommitish,
       diff
     )
@@ -616,7 +642,7 @@ function diffFromRawDiffOutput(output: Buffer): IRawDiff {
   return parser.parse(pieces[pieces.length - 1])
 }
 
-function buildDiff(
+function buildDiff<K extends keyof IDiff>(
   sketchPath: string,
   kactusFiles: Array<IKactusFile>,
   buffer: Buffer,
@@ -624,7 +650,10 @@ function buildDiff(
   file: FileChange,
   commitish: string,
   previousCommitish?: string,
-  lineEndingsChange?: LineEndingsChange
+  lineEndingsChange?: LineEndingsChange,
+  onSketchPreviews?: (
+    previews: { current: Image | undefined; previous: Image | undefined }
+  ) => void
 ): Promise<IDiff> {
   if (!isValidBuffer(buffer)) {
     // the buffer's diff is too large to be renderable in the UI
@@ -655,7 +684,8 @@ function buildDiff(
     diff,
     commitish,
     previousCommitish,
-    lineEndingsChange
+    lineEndingsChange,
+    onSketchPreviews
   )
 }
 

@@ -71,13 +71,13 @@ interface IImageDiffData {
    *
    * Will be undefined for an added image
    */
-  readonly previous?: Image
+  readonly previous?: Image | 'loading'
   /**
    * The current image, if the file was added or modified
    *
    * Will be undefined for a deleted image
    */
-  readonly current?: Image
+  readonly current?: Image | 'loading'
 }
 
 /**
@@ -88,8 +88,8 @@ export interface IImageDiff extends IImageDiffData {
 }
 
 export interface IVisualTextDiffData {
-  readonly previous?: Image
-  readonly current?: Image
+  readonly previous?: Image | 'loading'
+  readonly current?: Image | 'loading'
   readonly text?: string
   readonly hunks?: ReadonlyArray<DiffHunk>
   readonly lineEndingsChange?: LineEndingsChange

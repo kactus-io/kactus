@@ -475,7 +475,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         changedFiles: new Array<CommittedFileChange>(),
         history: new Array<string>(),
         diff: null,
-        loadingDiff: false,
+        loadingDiff: null,
       },
       changesState: {
         workingDirectory: WorkingDirectoryStatus.fromFiles(
@@ -485,7 +485,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         diff: null,
         contextualCommitMessage: null,
         commitMessage: null,
-        loadingDiff: false,
+        loadingDiff: null,
         selectedSketchPart: null,
         coAuthors: [],
         showCoAuthoredBy: false,
@@ -1038,9 +1038,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
     repository: Repository,
     file: CommittedFileChange
   ): Promise<void> {
+    const diffId = Math.random()
     this.updateHistoryState(repository, state => {
       const selection = { sha: state.selection.sha, file }
-      return { selection, loadingDiff: true }
+      return { selection, loadingDiff: diffId }
     })
     this.emitUpdate()
 
@@ -1049,7 +1050,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     if (!sha) {
       this.updateHistoryState(repository, state => {
-        return { loadingDiff: false }
+        return { loadingDiff: null }
       })
       this.emitUpdate()
       if (__DEV__) {
@@ -1069,7 +1070,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
       stateBeforeLoad.kactus.files,
       file,
       sha,
-      previousSha
+      previousSha,
+      this.updateDiffWithSketchPreview.bind(this, repository, diffId)
     )
 
     const stateAfterLoad = this.getRepositoryState(repository)
@@ -1088,10 +1090,17 @@ export class AppStore extends TypedBaseStore<IAppState> {
       return
     }
 
-    this.updateHistoryState(repository, state => {
-      const selection = { sha: state.selection.sha, file }
-      return { selection, diff, loadingDiff: false }
-    })
+    if (diff.kind !== DiffType.Sketch) {
+      this.updateHistoryState(repository, state => {
+        const selection = { sha: state.selection.sha, file }
+          return { selection, diff, loadingDiff: null }
+      })
+    } else {
+      this.updateHistoryState(repository, state => {
+        const selection = { sha: state.selection.sha, file }
+        return { selection, diff }
+      })
+    }
 
     this.emitUpdate()
   }
@@ -1775,6 +1784,23 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.updateChangesDiffForCurrentSelection(repository)
   }
 
+  private async updateDiffWithSketchPreview<K extends keyof IDiff>(
+    repository: Repository,
+    diffId: number,
+    diff: Pick<IDiff, K>
+  ) {
+    const stateBeforeUpdate = this.getRepositoryState(repository)
+    if (stateBeforeUpdate.changesState.loadingDiff !== diffId) {
+      return
+    }
+
+    this.updateChangesState(repository, (state) => ({
+      diff: merge(state.diff, diff),
+      loadingDiff: null
+    }))
+    this.emitUpdate()
+  }
+
   /**
    * Loads or re-loads (refreshes) the diff for the currently selected file
    * in the working directory. This operation is a noop if there's no currently
@@ -1806,25 +1832,28 @@ export class AppStore extends TypedBaseStore<IAppState> {
       changesStateBeforeLoad.selectedSketchPart
 
     let diff: IDiff
+    const diffId = Math.random()
     if (selectedFileBeforeLoad !== null) {
-      this.updateChangesState(repository, state => ({ loadingDiff: true }))
+      this.updateChangesState(repository, state => ({ loadingDiff: diffId }))
       this.emitUpdate()
       diff = await getWorkingDirectoryDiff(
         this.sketchPath,
         repository,
         stateBeforeLoad.kactus.files,
         selectedFileBeforeLoad,
-        stateBeforeLoad.historyState.history[0]
+        stateBeforeLoad.historyState.history[0],
+        this.updateDiffWithSketchPreview.bind(this, repository, diffId)
       )
     } else if (selectedSketchPartBeforeLoad) {
-      this.updateChangesState(repository, state => ({ loadingDiff: true }))
+      this.updateChangesState(repository, state => ({ loadingDiff: diffId }))
       this.emitUpdate()
       diff = await getWorkingDirectoryPartDiff(
         this.sketchPath,
         repository,
         stateBeforeLoad.kactus.files,
         selectedSketchPartBeforeLoad,
-        stateBeforeLoad.historyState.history[0]
+        stateBeforeLoad.historyState.history[0],
+        this.updateDiffWithSketchPreview.bind(this, repository, diffId)
       )
     } else {
       this.updateChangesState(repository, state => ({ diff: null }))
@@ -1859,7 +1888,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       )
 
       if (currentlySelectedFile === null) {
-        this.updateChangesState(repository, state => ({ loadingDiff: false }))
+        this.updateChangesState(repository, state => ({ loadingDiff: null }))
         return
       }
 
@@ -1889,16 +1918,29 @@ export class AppStore extends TypedBaseStore<IAppState> {
       )
       const workingDirectory = WorkingDirectoryStatus.fromFiles(updatedFiles)
 
+      if (diff.kind !== DiffType.Sketch) {
+        this.updateChangesState(repository, () => ({
+              diff,
+              workingDirectory,
+              loadingDiff: null,
+            }))
+          } else {
+            this.updateChangesState(repository, () => ({
+              diff,
+              workingDirectory,
+            }))
+          }
+    } else {
+      if (diff.kind !== DiffType.Sketch) {
       this.updateChangesState(repository, state => ({
         diff,
-        workingDirectory,
-        loadingDiff: false,
+        loadingDiff: null,
       }))
     } else {
       this.updateChangesState(repository, state => ({
         diff,
-        loadingDiff: false,
       }))
+    }
     }
 
     this.emitUpdate()
@@ -1937,6 +1979,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
     })
 
     if (result) {
+      this.updateChangesState(repository, state => ({
+        selectedFileIDs: [],
+        selectedSketchPart: null,
+        diff: null,
+        loadingDiff: null,
+      }))
+      this.updateKactusState(repository, state => ({ selectedFileID: null }))
       await this._refreshRepository(repository)
       await this.refreshChangesSection(repository, {
         includingStatus: true,

@@ -7,12 +7,13 @@ import { ImageDiffType } from '../../../lib/app-state'
 import { Image, DiffHunk } from '../../../models/diff'
 import { TextDiff, ITextDiffUtilsProps } from '../text-diff'
 import { TabBar, TabBarType } from '../../tab-bar'
+import { Loading } from '../../lib/loading'
 
 /** The props for the Diff component. */
 interface IDiffProps extends ITextDiffUtilsProps {
   /** The diff that should be rendered */
-  readonly previous?: Image
-  readonly current?: Image
+  readonly previous?: Image | 'loading'
+  readonly current?: Image | 'loading'
   readonly text?: string
   readonly hunks?: ReadonlyArray<DiffHunk>
 
@@ -56,6 +57,16 @@ export class ImageDiff extends React.Component<IDiffProps, {}> {
         />
       )
     }
+
+    if (
+      (typeof this.props.previous === 'string' &&
+        this.props.previous === 'loading') ||
+      (typeof this.props.current === 'string' &&
+        this.props.current === 'loading')
+    ) {
+      return <Loading />
+    }
+
     if (this.props.current && this.props.previous) {
       return (
         <ModifiedImageDiff
@@ -103,7 +114,9 @@ export class ImageDiff extends React.Component<IDiffProps, {}> {
             selectedIndex={
               isModified
                 ? this.props.imageDiffType
-                : this.props.imageDiffType === ImageDiffType.Text ? 1 : 0
+                : this.props.imageDiffType === ImageDiffType.Text
+                  ? 1
+                  : 0
             }
             onTabClicked={this.onChangeDiffType}
             type={TabBarType.Switch}

@@ -599,7 +599,7 @@ export interface IHistoryState {
 
   readonly diff: IDiff | null
 
-  readonly loadingDiff: boolean
+  readonly loadingDiff: number | null
 }
 
 export interface IKactusState {
@@ -635,7 +635,7 @@ export interface IChangesState {
   /** The commit message for a work-in-progress commit in the changes view. */
   readonly commitMessage: ICommitMessage | null
 
-  readonly loadingDiff: boolean
+  readonly loadingDiff: number | null
 
   readonly selectedSketchPart: {
     id: string

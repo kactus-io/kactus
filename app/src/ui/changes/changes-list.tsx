@@ -12,7 +12,7 @@ import {
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
   FileType,
-  TFileOrSketchPartChange,
+  SketchFileType,
   TSketchPartChange,
 } from '../../models/status'
 import { DiffSelectionType } from '../../models/diff'
@@ -36,6 +36,22 @@ import { arrayEquals } from '../../lib/equality'
 
 const RowHeight = 29
 const GitIgnoreFileName = '.gitignore'
+
+type TFakeSketchPartChange = {
+  opened: boolean
+  shown: boolean
+  index: number
+  type: SketchFileType
+  id: string
+  parts: Array<string>
+  name: string
+  status?: AppFileStatus
+  fakePart: true
+}
+
+type TFileOrSketchPartChange =
+  | WorkingDirectoryFileChange & { index: number; shown: boolean }
+  | TFakeSketchPartChange
 
 interface IChangesListProps {
   readonly repository: Repository
@@ -115,91 +131,100 @@ interface IChangesListProps {
 
 function getFileList(
   files: ReadonlyArray<WorkingDirectoryFileChange>,
-  oldList?: Array<TFileOrSketchPartChange>
+  oldList?: { [id: string]: TFileOrSketchPartChange }
 ) {
-  const acc: Array<TFileOrSketchPartChange> = []
+  const acc: { [id: string]: TFileOrSketchPartChange } = {}
+  const fakePartsAcc: { [id: string]: TFakeSketchPartChange } = {}
+  let parentPartChange: TFakeSketchPartChange | undefined = undefined
+  let index = 0
   return files.reduce((prev, f, i) => {
-    if (!f.parts || !f.sketchFile) {
-      prev.push(f)
-    } else {
+    if (f.parts && f.sketchFile) {
       const previousFile = files[i - 1] || {}
 
       const conflicted = f.status === AppFileStatus.Conflicted
 
       f.parts.forEach((part, i, arr) => {
+        if (i <= 1) {
+          parentPartChange = undefined
+        }
+        const parts = arr.slice(0, i)
+        const parentId = parts.join('/')
+        const id = parentId ? parentId + '/' + part : part
         if (part === (previousFile.parts || [])[i]) {
           if (conflicted) {
-            const correspondingPart = prev.find(
-              p => !(p instanceof WorkingDirectoryFileChange) && p.name === part
-            )
+            const correspondingPart = prev[id]
             if (
               correspondingPart &&
               !correspondingPart.status &&
-              !(correspondingPart instanceof WorkingDirectoryFileChange)
+              correspondingPart.fakePart
             ) {
               correspondingPart.status = AppFileStatus.Conflicted
             }
           }
           return
         }
-        const parts = arr.slice(0, i)
 
-        let id = parts.join('/')
-        if (id) {
-          id += '/' + part
-        } else {
-          id = part
+        const oldSketchPart = oldList && oldList[id]
+
+        const opened =
+          oldSketchPart && oldSketchPart.fakePart
+            ? oldSketchPart.opened
+            : i === 0
+
+        if (!parentPartChange || (i > 1 && parentPartChange.id !== parentId)) {
+          parentPartChange = fakePartsAcc[parentId]
         }
 
-        const oldSketchPart = oldList && oldList.find(f => f.id === id)
-        prev.push({
-          opened:
-            oldSketchPart &&
-            !(oldSketchPart instanceof WorkingDirectoryFileChange)
-              ? oldSketchPart.opened
-              : i === 0,
+        const partChange: TFakeSketchPartChange = {
+          opened,
+          shown:
+            opened || (parentPartChange && parentPartChange.opened) || false,
           type:
             i === 0
               ? FileType.SketchFile
-              : i === 1 ? FileType.PageFile : FileType.LayerFile,
+              : i === 1
+                ? FileType.PageFile
+                : FileType.LayerFile,
           id,
           name: part,
           parts,
           status: conflicted ? AppFileStatus.Conflicted : undefined,
-        })
+          index,
+          fakePart: true,
+        }
+        prev[id] = partChange
+        fakePartsAcc[id] = partChange
+        parentPartChange = partChange
+        index += 1
       })
-
-      prev.push(f)
+      const parentId = f.parts.join('/')
+      if (
+        !parentPartChange ||
+        (f.parts.length > 1 && parentPartChange.id !== parentId)
+      ) {
+        parentPartChange = fakePartsAcc[parentId]
+      } else if (f.parts.length <= 1) {
+        parentPartChange = undefined
+      }
+      f.shown = (parentPartChange && parentPartChange.opened) || false
+    } else {
+      f.shown = true
     }
+    f.index = index
+    prev[f.id] = f
+    index += 1
     return prev
   }, acc)
 }
 
-function getOpenedFilesList(files: Array<TFileOrSketchPartChange>) {
-  const res: Array<TFileOrSketchPartChange> = []
-  return files.reduce((prev, f, i, arr) => {
-    if (!f.parts || !f.parts.length) {
-      prev.push(f)
-    } else {
-      const id = f.parts.join('/')
-      const parent = arr.find(a => a.id === id)
-      const parents = arr.filter(a => id.indexOf(a.id) === 0)
-      if (
-        parent &&
-        (parent.type === FileType.NormalFile ||
-          parents.every(
-            p => p instanceof WorkingDirectoryFileChange || p.opened
-          ))
-      ) {
-        prev.push(f)
-      }
-    }
-    return prev
-  }, res)
+function getOpenedFilesList(files: { [id: string]: TFileOrSketchPartChange }) {
+  const shownFiles = Object.values(files).filter(f => f.shown)
+  shownFiles.sort((a, b) => (a.index > b.index ? 1 : -1))
+  return shownFiles
 }
 
 interface IChangesState {
-  readonly files: Array<TFileOrSketchPartChange>
+  readonly files: { [id: string]: TFileOrSketchPartChange }
   readonly visibleFileList: Array<TFileOrSketchPartChange>
 }
 
@@ -252,7 +277,9 @@ export class ChangesList extends React.Component<
       const includeAll =
         selection === DiffSelectionType.All
           ? true
-          : selection === DiffSelectionType.None ? false : null
+          : selection === DiffSelectionType.None
+            ? false
+            : null
 
       return (
         <ChangedFile
@@ -299,18 +326,15 @@ export class ChangesList extends React.Component<
   }
 
   private onOpenChanged = (id: string, opened: boolean) => {
-    const fileList = this.state.files.map(f => {
-      if (f.id === id && !(f instanceof WorkingDirectoryFileChange)) {
-        return {
-          ...f,
-          opened,
-        }
-      }
-      return f
-    })
+    const files = this.state.files
+    if (!files[id].fakePart) {
+      return
+    }
+    files[id].opened = opened
+    const newFiles = getFileList(this.props.workingDirectory.files, files)
     this.setState({
-      files: fileList,
-      visibleFileList: getOpenedFilesList(fileList),
+      files: newFiles,
+      visibleFileList: getOpenedFilesList(newFiles),
     })
   }
 
@@ -379,19 +403,7 @@ export class ChangesList extends React.Component<
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
       const file = this.state.visibleFileList[row]
       if (file.type !== FileType.NormalFile) {
-        const fileList = this.state.files.map(f => {
-          if (f.id === file.id && !(f instanceof WorkingDirectoryFileChange)) {
-            return {
-              ...f,
-              opened: e.key === 'ArrowRight',
-            }
-          }
-          return f
-        })
-        this.setState({
-          files: fileList,
-          visibleFileList: getOpenedFilesList(fileList),
-        })
+        return this.onOpenChanged(file.id, e.key === 'ArrowRight')
       }
     }
   }

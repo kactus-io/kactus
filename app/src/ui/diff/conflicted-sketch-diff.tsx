@@ -11,10 +11,11 @@ import { assertNever } from '../../lib/fatal-error'
 import { Button } from '../lib/button'
 import { ISize, getMaxFitSize } from './image-diffs/sizing'
 import { TextDiff, ITextDiffUtilsProps } from './text-diff'
+import { Loading } from '../lib/loading'
 
 interface IConflictedSketchDiffProps extends ITextDiffUtilsProps {
-  readonly previous: Image
-  readonly current: Image
+  readonly previous: Image | 'loading'
+  readonly current: Image | 'loading'
   readonly text?: string
   readonly hunks?: ReadonlyArray<DiffHunk>
   readonly diffType: ImageDiffType
@@ -180,6 +181,14 @@ export class ConflictedSketchDiff extends React.Component<
   }
 
   private renderCurrentDiffType() {
+    if (
+      (typeof this.props.previous === 'string' &&
+        this.props.previous === 'loading') ||
+      (typeof this.props.current === 'string' &&
+        this.props.current === 'loading')
+    ) {
+      return <Loading />
+    }
     const maxSize = this.getMaxSize()
     const type = this.props.diffType
     switch (type) {
@@ -235,8 +244,8 @@ export class ConflictedSketchDiff extends React.Component<
   private getCommonProps(maxSize: ISize): ICommonImageDiffProperties {
     return {
       maxSize,
-      previous: this.props.previous,
-      current: this.props.current,
+      previous: this.props.previous as Image,
+      current: this.props.current as Image,
       onPreviousImageLoad: this.onPreviousImageLoad,
       onCurrentImageLoad: this.onCurrentImageLoad,
       onContainerRef: this.onContainerRef,

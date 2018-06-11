@@ -28,7 +28,7 @@ interface IHistoryProps {
   readonly commitSummaryWidth: number
   readonly gitHubUsers: Map<string, IGitHubUser>
   readonly imageDiffType: ImageDiffType
-  readonly loadingDiff: boolean
+  readonly loadingDiff: number | null
   /** The name of the currently selected external editor */
   readonly externalEditorLabel?: string
 

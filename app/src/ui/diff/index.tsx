@@ -71,7 +71,7 @@ interface IDiffProps {
   /** The type of image diff to display. */
   readonly imageDiffType: ImageDiffType
 
-  readonly loading: boolean
+  readonly loading: number | null
 }
 
 interface IDiffState {
