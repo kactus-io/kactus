@@ -3,7 +3,7 @@
   "productName": "Kactus",
   "bundleID": "io.kactus.KactusClient",
   "companyName": "Kactus.io",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "main": "./main.js",
   "repository": {
     "type": "git",
@@ -32,7 +32,7 @@
     "file-url": "^2.0.2",
     "fs-extra": "^6.0.0",
     "fuzzaldrin-plus": "^0.6.0",
-    "kactus-cli": "^0.4.6",
+    "kactus-cli": "^0.5.4",
     "keytar": "^4.0.4",
     "moment": "^2.17.1",
     "mri": "^1.1.0",
