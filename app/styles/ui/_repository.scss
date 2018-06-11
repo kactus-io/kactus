@@ -2,6 +2,7 @@
 
 /** A React component holding the currently selected repository */
 #repository {
+  height: calc(100vh - var(--toolbar-height));
   display: flex;
   flex-direction: row;
   flex: 1;
