@@ -260,7 +260,7 @@ export class PremiumUpsell extends React.Component<
     let price = this.state.choice === 'enterprise' ? 11.99 : 4.99
     if (couponState && couponState !== 'loading') {
       if (couponState.percent_off) {
-        price = price * (100 - couponState.percent_off) / 100
+        price = (price * (100 - couponState.percent_off)) / 100
       } else if (couponState.amount_off) {
         price = Math.max(price - couponState.amount_off, 0)
       }

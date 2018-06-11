@@ -1038,6 +1038,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     repository: Repository,
     file: CommittedFileChange
   ): Promise<void> {
+    // eslint-disable-next-line insecure-random
     const diffId = Math.random()
     this.updateHistoryState(repository, state => {
       const selection = { sha: state.selection.sha, file }
@@ -1093,7 +1094,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     if (diff.kind !== DiffType.Sketch) {
       this.updateHistoryState(repository, state => {
         const selection = { sha: state.selection.sha, file }
-          return { selection, diff, loadingDiff: null }
+        return { selection, diff, loadingDiff: null }
       })
     } else {
       this.updateHistoryState(repository, state => {
@@ -1794,9 +1795,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
       return
     }
 
-    this.updateChangesState(repository, (state) => ({
+    this.updateChangesState(repository, state => ({
       diff: merge(state.diff, diff),
-      loadingDiff: null
+      loadingDiff: null,
     }))
     this.emitUpdate()
   }
@@ -1832,6 +1833,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       changesStateBeforeLoad.selectedSketchPart
 
     let diff: IDiff
+    // eslint-disable-next-line insecure-random
     const diffId = Math.random()
     if (selectedFileBeforeLoad !== null) {
       this.updateChangesState(repository, state => ({ loadingDiff: diffId }))
@@ -1920,27 +1922,27 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
       if (diff.kind !== DiffType.Sketch) {
         this.updateChangesState(repository, () => ({
-              diff,
-              workingDirectory,
-              loadingDiff: null,
-            }))
-          } else {
-            this.updateChangesState(repository, () => ({
-              diff,
-              workingDirectory,
-            }))
-          }
+          diff,
+          workingDirectory,
+          loadingDiff: null,
+        }))
+      } else {
+        this.updateChangesState(repository, () => ({
+          diff,
+          workingDirectory,
+        }))
+      }
     } else {
       if (diff.kind !== DiffType.Sketch) {
-      this.updateChangesState(repository, state => ({
-        diff,
-        loadingDiff: null,
-      }))
-    } else {
-      this.updateChangesState(repository, state => ({
-        diff,
-      }))
-    }
+        this.updateChangesState(repository, state => ({
+          diff,
+          loadingDiff: null,
+        }))
+      } else {
+        this.updateChangesState(repository, state => ({
+          diff,
+        }))
+      }
     }
 
     this.emitUpdate()
