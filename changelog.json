@@ -1,6 +1,12 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.7": [
+      "[New] New history tab with possibility to compare to a branch",
+      "[Improved] Performances when rendering the list of changes.",
+      "[Improved] Performance when getting the preview from Sketch, it is now in another thread so you should be able to interact with the UI while is it fetching them (and look at the text diff)",
+      "[Fixed] A bug where Kactus would crash while trying to show a non-existing preview"
+    ],
     "0.3.6": [
       "[Fixed] Remove Bitcoin payment (removed by Stripe)",
       "[Improved] Remove collection of usage data. We are not looking at them and we don't like collecting data for the sake of it.",

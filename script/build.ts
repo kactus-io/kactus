@@ -125,7 +125,7 @@ function packageApp(
   const options: packager.Options & IPackageAdditionalOptions = {
     name: getExecutableName(),
     platform: toPackagePlatform(process.platform),
-    arch: process.env.TARGET_ARCH || 'x64',
+    arch: 'x64',
     asar: false, // TODO: Probably wanna enable this down the road.
     out: getDistRoot(),
     icon: path.join(projectRoot, 'app', 'static', 'logos', 'icon-logo'),
