@@ -3,7 +3,7 @@
  * for when we add a remote on behalf of
  * the user.
  */
-export const ForkedRemotePrefix = 'github-desktop-'
+export const ForkedRemotePrefix = 'kactus-'
 
 /** A remote as defined in Git. */
 export interface IRemote {

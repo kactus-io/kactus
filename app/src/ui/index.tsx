@@ -179,5 +179,5 @@ ipcRenderer.on(
 
 ReactDOM.render(
   <App dispatcher={dispatcher} appStore={appStore} startTime={startTime} />,
-  document.getElementById('desktop-app-container')!
+  document.getElementById('kactus-app-container')!
 )
