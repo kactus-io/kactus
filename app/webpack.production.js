@@ -11,7 +11,7 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 const config = {
   mode: 'production',
-  devtool: 'source-map',
+  devtool: 'cheap-source-map',
   optimization: {
     minimizer: [new MinifyPlugin()],
   },
