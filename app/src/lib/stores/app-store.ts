@@ -1796,7 +1796,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
     }
 
     if (!stateBeforeUpdate.changesState.diff) {
-      setTimeout(() => this.updateDiffWithSketchPreview(repository, diffId, diff), 100)
+      setTimeout(
+        () => this.updateDiffWithSketchPreview(repository, diffId, diff),
+        100
+      )
       return
     }
 
