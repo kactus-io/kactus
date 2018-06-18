@@ -93,6 +93,8 @@ export async function generateDocumentPreview(
   })
 }
 
+const DUPLICATE_PAGE_REGEX = /(.*)___([0-9]+)$/
+
 export async function generatePagePreview(
   sketchPath: string,
   file: string,
@@ -104,12 +106,19 @@ export async function generatePagePreview(
     commandName,
     () =>
       new Promise<string>((resolve, reject) => {
+        let pageName = name
+        let index = 0
+        const match = DUPLICATE_PAGE_REGEX.exec(name)
+        if (match) {
+          pageName = match[1]
+          index = parseInt(match[2]) - 1
+        }
         exec(
           sketchtoolPath(sketchPath) +
             ' export pages "' +
             file +
             '" --item="' +
-            name +
+            pageName +
             '" --output="' +
             output +
             '" --save-for-web=YES --use-id-for-name=YES --overwriting=YES --formats=png --compression=0.7',
@@ -117,7 +126,13 @@ export async function generatePagePreview(
             if (err) {
               return reject(err)
             }
-            const id = stdout.replace('Exported', '').trim()
+            const id = stdout
+              .split('\n')
+              [index].replace('Exported', '')
+              .trim()
+            if (!id) {
+              return reject(new Error('Failed to generate the preview'))
+            }
             resolve(output + '/' + id)
           }
         )
