@@ -1,6 +1,6 @@
 import * as OS from 'os'
 import * as URL from 'url'
-import { Account } from '../models/account'
+import { Account, Provider } from '../models/account'
 
 import {
   request,
@@ -269,14 +269,16 @@ function toGitHubIsoDateString(date: Date) {
 export class API {
   private endpoint: string
   private token: string
+  private provider: Provider
 
   /** Create a new API client from the given account. */
   public static fromAccount(account: Account): API {
-    return new API(account.endpoint, account.token)
+    return new API(account.provider, account.endpoint, account.token)
   }
 
   /** Create a new API client for the endpoint, authenticated with the token. */
-  public constructor(endpoint: string, token: string) {
+  public constructor(provider: Provider, endpoint: string, token: string) {
+    this.provider = provider || Provider.GitHub
     this.endpoint = endpoint
     this.token = token
   }
@@ -523,7 +525,15 @@ export class API {
     body?: Object,
     customHeaders?: Object
   ): Promise<Response> {
-    return request(this.endpoint, this.token, method, path, body, customHeaders)
+    return request(
+      this.provider,
+      this.endpoint,
+      this.token,
+      method,
+      path,
+      body,
+      customHeaders
+    )
   }
 
   /**
@@ -637,6 +647,7 @@ export type AuthorizationResponse =
  * password.
  */
 export async function createAuthorization(
+  provider: Provider,
   endpoint: string,
   client_id: string,
   client_secret: string,
@@ -651,6 +662,7 @@ export async function createAuthorization(
   const note = await getNote()
 
   const response = await request(
+    provider,
     endpoint,
     null,
     'POST',
@@ -739,10 +751,11 @@ export async function createAuthorization(
 
 /** Fetch the user authenticated by the token. */
 export async function fetchUser(
+  provider: Provider,
   endpoint: string,
   token: string
 ): Promise<Account> {
-  const api = new API(endpoint, token)
+  const api = new API(provider, endpoint, token)
   try {
     const user = await api.fetchAccount()
     const emails = await api.fetchEmails()
@@ -758,6 +771,7 @@ export async function fetchUser(
       endpoint
     )
     return new Account(
+      provider,
       user.login,
       endpoint,
       token,
@@ -776,14 +790,23 @@ export async function fetchUser(
 
 /** Get metadata from the server. */
 export async function fetchMetadata(
+  provider: Provider,
   endpoint: string
 ): Promise<IServerMetadata | null> {
   const url = `${endpoint}/meta`
 
   try {
-    const response = await request(endpoint, null, 'GET', 'meta', undefined, {
-      'Content-Type': 'application/json',
-    })
+    const response = await request(
+      provider,
+      endpoint,
+      null,
+      'GET',
+      'meta',
+      undefined,
+      {
+        'Content-Type': 'application/json',
+      }
+    )
 
     const result = await parsedResponse<IServerMetadata>(response)
     if (!result || result.verifiable_password_authentication === undefined) {
@@ -892,6 +915,7 @@ export function getOAuthAuthorizationURL(
 }
 
 export async function requestOAuthToken(
+  provider: Provider,
   endpoint: string,
   client_id: string,
   client_secret: string,
@@ -901,6 +925,7 @@ export async function requestOAuthToken(
   try {
     const urlBase = getHTMLURL(endpoint)
     const response = await request(
+      provider,
       urlBase,
       null,
       'POST',

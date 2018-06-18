@@ -4,13 +4,14 @@ import {
   matchGitHubRepository,
   urlMatchesRemote,
 } from '../../src/lib/repository-matching'
-import { Account } from '../../src/models/account'
+import { Account, Provider } from '../../src/models/account'
 
 describe('repository-matching', () => {
   describe('matchGitHubRepository', () => {
     it('matches HTTPS URLs', () => {
       const accounts = [
         new Account(
+          Provider.GitHub,
           'alovelace',
           'https://api.github.com',
           '',
@@ -33,6 +34,7 @@ describe('repository-matching', () => {
     it('matches HTTPS URLs without the git extension', () => {
       const accounts = [
         new Account(
+          Provider.GitHub,
           'alovelace',
           'https://api.github.com',
           '',
@@ -55,6 +57,7 @@ describe('repository-matching', () => {
     it('matches git URLs', () => {
       const accounts = [
         new Account(
+          Provider.GitHub,
           'alovelace',
           'https://api.github.com',
           '',
@@ -77,6 +80,7 @@ describe('repository-matching', () => {
     it('matches SSH URLs', () => {
       const accounts = [
         new Account(
+          Provider.GitHub,
           'alovelace',
           'https://api.github.com',
           '',
@@ -99,6 +103,7 @@ describe('repository-matching', () => {
     it(`doesn't match if there aren't any users with that endpoint`, () => {
       const accounts = [
         new Account(
+          Provider.GitHub,
           'alovelace',
           'https://github.babbageinc.com',
           '',

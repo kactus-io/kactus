@@ -1,4 +1,5 @@
 import * as appProxy from '../ui/lib/app-proxy'
+import { Provider } from '../models/account'
 
 /** The HTTP methods available. */
 export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'HEAD'
@@ -101,6 +102,7 @@ export function getAbsoluteUrl(endpoint: string, path: string): string {
  * @param customHeaders - Any optional additional headers to send.
  */
 export function request(
+  provider: Provider,
   endpoint: string,
   token: string | null,
   method: HTTPMethod,

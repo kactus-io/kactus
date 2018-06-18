@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 
-import { Account } from '../../src/models/account'
+import { Account, Provider } from '../../src/models/account'
 import { AccountsStore } from '../../src/lib/stores'
 import { InMemoryStore, AsyncInMemoryStore } from '../helpers/stores'
 
@@ -18,6 +18,7 @@ describe('AccountsStore', () => {
       const newAccountLogin = 'joan'
       await accountsStore!.addAccount(
         new Account(
+          Provider.GitHub,
           newAccountLogin,
           '',
           'deadbeef',

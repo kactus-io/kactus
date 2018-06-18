@@ -11,6 +11,7 @@ import {
   IAuthenticationState,
   ITwoFactorAuthenticationState,
 } from '../../lib/stores'
+import { Provider } from '../../models/account'
 
 interface ISignInProps {
   readonly signInState: SignInState
@@ -28,7 +29,12 @@ export class SignIn extends React.Component<ISignInProps, {}> {
     clientId: string,
     clientSecret: string
   ) => {
-    this.props.dispatcher.setSignInEndpoint(url, clientId, clientSecret)
+    this.props.dispatcher.setSignInEndpoint(
+      Provider.GitHub,
+      url,
+      clientId,
+      clientSecret
+    )
   }
 
   private onCredentialsEntered = (username: string, password: string) => {

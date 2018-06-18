@@ -1,5 +1,10 @@
 import { getDotComAPIEndpoint, IAPIEmail } from '../lib/api'
 
+export enum Provider {
+  GitHub,
+  BitBucket,
+}
+
 /**
  * A GitHub account, representing the user found on GitHub The Website or GitHub Enterprise.
  *
@@ -9,6 +14,7 @@ export class Account {
   /** Create an account which can be used to perform unauthenticated API actions */
   public static anonymous(): Account {
     return new Account(
+      Provider.GitHub,
       '',
       getDotComAPIEndpoint(),
       '',
@@ -22,6 +28,8 @@ export class Account {
   }
 
   public constructor(
+    /** The provider (for now only GH or Bitbucket)  */
+    public readonly provider: Provider,
     /** The login name for this account  */
     public readonly login: string,
     /** The server for this account - GitHub or a GitHub Enterprise instance */
@@ -44,6 +52,7 @@ export class Account {
 
   public withToken(token: string): Account {
     return new Account(
+      this.provider,
       this.login,
       this.endpoint,
       token,
@@ -58,6 +67,7 @@ export class Account {
 
   public unlockKactus(enterprise: boolean): Account {
     return new Account(
+      this.provider,
       this.login,
       this.endpoint,
       this.token,
@@ -72,6 +82,7 @@ export class Account {
 
   public cancelKactusSubscription(): Account {
     return new Account(
+      this.provider,
       this.login,
       this.endpoint,
       this.token,

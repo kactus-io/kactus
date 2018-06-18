@@ -7,6 +7,7 @@ import {
   IAuthenticationState,
   ITwoFactorAuthenticationState,
 } from '../../lib/stores'
+import { Provider } from '../../models/account'
 import { assertNever } from '../../lib/fatal-error'
 import { Button } from '../lib/button'
 import { LinkButton } from '../lib/link-button'
@@ -70,6 +71,7 @@ export class SignIn extends React.Component<ISignInProps, ISignInState> {
     switch (state.kind) {
       case SignInStep.EndpointEntry:
         this.props.dispatcher.setSignInEndpoint(
+          Provider.GitHub,
           this.state.endpoint,
           this.state.clientId,
           this.state.clientSecret

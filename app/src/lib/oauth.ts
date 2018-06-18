@@ -1,10 +1,11 @@
 import { shell } from './app-shell'
-import { Account } from '../models/account'
+import { Account, Provider } from '../models/account'
 import { fatalError } from './fatal-error'
 import { getOAuthAuthorizationURL, requestOAuthToken, fetchUser } from './api'
 import { uuid } from './uuid'
 
 interface IOAuthState {
+  readonly provider: Provider
   readonly state: string
   readonly endpoint: string
   readonly clientId: string
@@ -25,6 +26,7 @@ let oauthState: IOAuthState | null = null
  * flow.
  */
 export function askUserToOAuth(
+  provider: Provider,
   endpoint: string,
   clientId: string,
   clientSecret: string
@@ -34,6 +36,7 @@ export function askUserToOAuth(
   // tslint:disable-next-line:promise-must-complete
   return new Promise<Account>((resolve, reject) => {
     oauthState = {
+      provider,
       state: uuid(),
       endpoint,
       clientId,
@@ -65,6 +68,7 @@ export async function requestAuthenticatedUser(
   }
 
   const token = await requestOAuthToken(
+    oauthState.provider,
     oauthState.endpoint,
     oauthState.clientId,
     oauthState.clientSecret,
@@ -72,7 +76,7 @@ export async function requestAuthenticatedUser(
     code
   )
   if (token) {
-    return fetchUser(oauthState.endpoint, token)
+    return fetchUser(oauthState.provider, oauthState.endpoint, token)
   } else {
     return null
   }

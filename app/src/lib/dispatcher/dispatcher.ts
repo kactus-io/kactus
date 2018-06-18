@@ -3,7 +3,7 @@ import * as Path from 'path'
 import { remote } from 'electron'
 import { Disposable } from 'event-kit'
 
-import { Account } from '../../models/account'
+import { Account, Provider } from '../../models/account'
 import { Repository } from '../../models/repository'
 import {
   WorkingDirectoryFileChange,
@@ -730,11 +730,17 @@ export class Dispatcher {
    * step.
    */
   public setSignInEndpoint(
+    provider: Provider,
     url: string,
     clientId: string,
     clientSecret: string
   ): Promise<void> {
-    return this.appStore._setSignInEndpoint(url, clientId, clientSecret)
+    return this.appStore._setSignInEndpoint(
+      provider,
+      url,
+      clientId,
+      clientSecret
+    )
   }
 
   /**

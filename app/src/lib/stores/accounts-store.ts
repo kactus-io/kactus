@@ -1,6 +1,6 @@
 import { IDataStore, ISecureStore } from './stores'
 import { getKeyForAccount } from '../auth'
-import { Account } from '../../models/account'
+import { Account, Provider } from '../../models/account'
 import { EmailVisibility, fetchUser } from '../api'
 import { fatalError } from '../fatal-error'
 import { BaseStore } from './base-store'
@@ -36,6 +36,7 @@ function isKeyChainError(e: any) {
 
 /** The data-only interface for storage. */
 interface IAccount {
+  readonly provider: Provider
   readonly token: string
   readonly login: string
   readonly endpoint: string
@@ -210,6 +211,7 @@ export class AccountsStore extends BaseStore {
     const accountsWithTokens = []
     for (const account of rawAccounts) {
       const accountWithoutToken = new Account(
+        account.provider || Provider.GitHub,
         account.login,
         account.endpoint,
         '',
@@ -270,5 +272,5 @@ async function updatedAccount(account: Account): Promise<Account> {
     )
   }
 
-  return fetchUser(account.endpoint, account.token)
+  return fetchUser(account.provider, account.endpoint, account.token)
 }

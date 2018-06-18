@@ -1,5 +1,5 @@
 import { Disposable } from 'event-kit'
-import { Account } from '../../models/account'
+import { Account, Provider } from '../../models/account'
 import { assertNever, fatalError } from '../fatal-error'
 import { askUserToOAuth } from '../../lib/oauth'
 import { RetryAction } from '../retry-actions'
@@ -114,6 +114,7 @@ export interface IAuthenticationState extends ISignInState {
    * signing in against GitHub.com or a user-specified
    * URL when signing in against a GitHub Enterprise instance.
    */
+  readonly provider: Provider
   readonly endpoint: string
   readonly clientId: string
   readonly clientSecret: string
@@ -148,6 +149,7 @@ export interface ITwoFactorAuthenticationState extends ISignInState {
    * signing in against GitHub.com or a user-specified
    * URL when signing in against a GitHub Enterprise instance.
    */
+  readonly provider: Provider
   readonly endpoint: string
   readonly clientId: string
   readonly clientSecret: string
@@ -218,8 +220,11 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
     this.emitUpdate(this.getState())
   }
 
-  private async endpointSupportsBasicAuth(endpoint: string): Promise<boolean> {
-    const response = await fetchMetadata(endpoint)
+  private async endpointSupportsBasicAuth(
+    provider: Provider,
+    endpoint: string
+  ): Promise<boolean> {
+    const response = await fetchMetadata(provider, endpoint)
 
     if (response) {
       if (response.verifiable_password_authentication === false) {
@@ -254,6 +259,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
     const endpoint = getDotComAPIEndpoint()
 
     this.setState({
+      provider: Provider.GitHub,
       kind: SignInStep.Authentication,
       endpoint,
       clientId: ClientID,
@@ -291,13 +297,14 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       )
     }
 
-    const { endpoint, clientId, clientSecret } = currentState
+    const { provider, endpoint, clientId, clientSecret } = currentState
 
     this.setState({ ...currentState, loading: true })
 
     let response: AuthorizationResponse
     try {
       response = await createAuthorization(
+        provider,
         endpoint,
         clientId,
         clientSecret,
@@ -317,7 +324,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
 
     if (response.kind === AuthorizationResponseKind.Authorized) {
       const token = response.token
-      const user = await fetchUser(endpoint, token)
+      const user = await fetchUser(Provider.GitHub, endpoint, token)
 
       if (!this.state || this.state.kind !== SignInStep.Authentication) {
         // Looks like the sign in flow has been aborted
@@ -331,6 +338,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       AuthorizationResponseKind.TwoFactorAuthenticationRequired
     ) {
       this.setState({
+        provider,
         kind: SignInStep.TwoFactorAuthentication,
         endpoint,
         clientId: ClientID,
@@ -415,6 +423,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
     try {
       log.info('[SignInStore] initializing OAuth flow')
       account = await askUserToOAuth(
+        currentState.provider,
         currentState.endpoint,
         currentState.clientId,
         currentState.clientSecret
@@ -463,6 +472,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
    * step.
    */
   public async setEndpoint(
+    provider: Provider,
     url: string,
     clientId: string,
     clientSecret: string
@@ -499,7 +509,10 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
 
     const endpoint = getEnterpriseAPIURL(validUrl)
     try {
-      const supportsBasicAuth = await this.endpointSupportsBasicAuth(endpoint)
+      const supportsBasicAuth = await this.endpointSupportsBasicAuth(
+        provider,
+        endpoint
+      )
 
       if (!this.state || this.state.kind !== SignInStep.EndpointEntry) {
         // Looks like the sign in flow has been aborted
@@ -507,6 +520,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       }
 
       this.setState({
+        provider,
         kind: SignInStep.Authentication,
         endpoint,
         clientId,
@@ -562,6 +576,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
 
     try {
       response = await createAuthorization(
+        currentState.provider,
         currentState.endpoint,
         currentState.clientId,
         currentState.clientSecret,
@@ -581,7 +596,11 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
 
     if (response.kind === AuthorizationResponseKind.Authorized) {
       const token = response.token
-      const user = await fetchUser(currentState.endpoint, token)
+      const user = await fetchUser(
+        Provider.GitHub,
+        currentState.endpoint,
+        token
+      )
 
       if (
         !this.state ||

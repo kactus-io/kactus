@@ -29,7 +29,7 @@ import {
   ICompareBranch,
   ICompareFormUpdate,
 } from '../app-state'
-import { Account } from '../../models/account'
+import { Account, Provider } from '../../models/account'
 import { Repository, ILocalRepositoryState } from '../../models/repository'
 import { GitHubRepository } from '../../models/github-repository'
 import {
@@ -3458,11 +3458,12 @@ export class AppStore extends TypedBaseStore<IAppState> {
   }
 
   public _setSignInEndpoint(
+    provider: Provider,
     url: string,
     clientId: string,
     clientSecret: string
   ): Promise<void> {
-    return this.signInStore.setEndpoint(url, clientId, clientSecret)
+    return this.signInStore.setEndpoint(provider, url, clientId, clientSecret)
   }
 
   public _setSignInCredentials(
