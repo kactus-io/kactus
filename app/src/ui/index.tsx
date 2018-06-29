@@ -49,7 +49,6 @@ import {
   enableSourceMaps,
   withSourceMappedStack,
 } from '../lib/source-map-support'
-import { enableCompareSidebar } from '../lib/feature-flag'
 
 if (__DEV__) {
   installDevGlobals()
@@ -137,9 +136,7 @@ dispatcher.registerErrorHandler(defaultErrorHandler)
 dispatcher.registerErrorHandler(upstreamAlreadyExistsHandler)
 dispatcher.registerErrorHandler(externalEditorErrorHandler)
 dispatcher.registerErrorHandler(openShellErrorHandler)
-if (enableCompareSidebar()) {
-  dispatcher.registerErrorHandler(mergeConflictHandler)
-}
+dispatcher.registerErrorHandler(mergeConflictHandler)
 dispatcher.registerErrorHandler(lfsAttributeMismatchHandler)
 dispatcher.registerErrorHandler(gitAuthenticationErrorHandler)
 dispatcher.registerErrorHandler(pushNeedsPullHandler)
@@ -147,10 +144,6 @@ dispatcher.registerErrorHandler(backgroundTaskHandler)
 dispatcher.registerErrorHandler(missingRepositoryHandler)
 
 document.body.classList.add(`platform-${process.platform}`)
-
-if (localStorage.getItem('theme') === 'dark') {
-  document.body.classList.add(`theme-dark`)
-}
 
 dispatcher.setAppFocusState(remote.getCurrentWindow().isFocused())
 

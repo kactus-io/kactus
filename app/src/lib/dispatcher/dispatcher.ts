@@ -59,6 +59,7 @@ import { PullRequest } from '../../models/pull-request'
 import { IAuthor } from '../../models/author'
 import { ITrailer } from '../git/interpret-trailers'
 import { isGitRepository } from '../git'
+import { ApplicationTheme } from '../../ui/lib/application-theme'
 
 /**
  * An error handler function.
@@ -120,11 +121,6 @@ export class Dispatcher {
     missing: boolean
   ): Promise<Repository> {
     return this.appStore._updateRepositoryMissing(repository, missing)
-  }
-
-  /** Load the history for the repository. */
-  public loadHistory(repository: Repository): Promise<void> {
-    return this.appStore._loadHistory(repository)
   }
 
   /** Load the next batch of history for the repository. */
@@ -510,6 +506,13 @@ export class Dispatcher {
    */
   public setUpdateBannerVisibility(isVisible: boolean) {
     return this.appStore._setUpdateBannerVisibility(isVisible)
+  }
+
+  /**
+   * Set the divering branch notification banner's visibility
+   */
+  public setDivergingBranchBannerVisibility(isVisible: boolean) {
+    return this.appStore._setDivergingBranchBannerVisibility(isVisible)
   }
 
   /**
@@ -1444,4 +1447,12 @@ export class Dispatcher {
   ) {
     return this.appStore._updateCompareForm(repository, newState)
   }
+
+  /**
+   * Set the application-wide theme
+   */
+  public setSelectedTheme(theme: ApplicationTheme) {
+    return this.appStore._setSelectedTheme(theme)
+  }
+
 }

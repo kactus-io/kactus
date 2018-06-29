@@ -77,7 +77,7 @@ The information we are interested in includes:
  - details about your environment - which build, which operating system
  - details about reproducing the issue - what steps to take, what happens, how
    often it happens
- - other relevant information - log files, screenshots, etc.
+ - other relevant information - log files, screenshots, etc
 
 ### Suggesting Enhancements
 
@@ -109,17 +109,16 @@ and fill out the provided issue template.
 
 Some additional advice:
 
-* **Use a clear and descriptive title** for the issue to identify the
-  suggestion.
-* **Provide a step-by-step description of the suggested enhancement** in as
-  much detail as possible. This additional context helps the maintainers to
-  understand the enhancement from your perspective
+* **Use a clear and descriptive title** for the feature request
+* **Provide a step-by-step description of the suggested enhancement**
+  This additional context helps the maintainers understand the enhancement from
+  your perspective
 * **Explain why this enhancement would be useful** to Kactus users.
 * **Include screenshots and animated GIFs** if relevent to help you demonstrate
   the steps or point out the part of Kactus which the suggestion is
   related to. You can use [this tool](http://www.cockos.com/licecap/) to record
-  GIFs on macOS and Windows.
-* **List some other applications where this enhancement exists, if applicable.**
+  GIFs on macOS and Windows
+* **List some other applications where this enhancement exists, if applicable**
 
 ### Help Wanted
 
@@ -164,4 +163,5 @@ pull requests.
 
 | Label name | :mag_right: | Description |
 | --- | --- | --- |
+| `infrastructure` | [search](https://github.com/kactus-io/kactus/labels/infrastructure) | Pull requests not related to the core application - documentation, dependencies, tooling, etc |
 | `ready-for-review` | [search](https://github.com/kactus-io/kactus/labels/ready-for-review)  | Pull Requests that are ready to be reviewed by the maintainers. |

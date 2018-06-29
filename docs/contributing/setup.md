@@ -6,7 +6,7 @@ You will need to install these tools on your machine:
 
 ### macOS
 
- - [Node.js v8.9.0](https://nodejs.org/dist/v8.9.0/)
+ - [Node.js v8.11.2](https://nodejs.org/dist/v8.11.2/)
  - [Python 2.7](https://www.python.org/downloads/mac-osx/)
  - Xcode and Xcode Command Line Tools (Xcode -> Preferences -> Downloads)
 
@@ -17,7 +17,7 @@ versions look similar to the below output:
 
 ```shellsession
 $ node -v
-v8.10.0
+v8.11.2
 
 $ python --version
 Python 2.7.13

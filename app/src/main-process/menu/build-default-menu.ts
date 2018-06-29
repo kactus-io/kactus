@@ -6,7 +6,6 @@ import { ensureDir } from 'fs-extra'
 
 import { log } from '../log'
 import { openDirectorySafe } from '../shell'
-import { enableCompareSidebar } from '../../lib/feature-flag'
 
 const defaultEditorLabel = 'Open in External Editor'
 const defaultShellLabel = 'Open in Terminal'
@@ -281,7 +280,6 @@ export function buildDefaultMenu(
         id: 'compare-to-branch',
         accelerator: 'CmdOrCtrl+Shift+B',
         click: emit('compare-to-branch'),
-        visible: enableCompareSidebar(),
       },
       {
         label: 'Merge Into Current Branch…',

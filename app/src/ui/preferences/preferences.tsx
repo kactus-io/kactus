@@ -22,6 +22,8 @@ import { PopupType } from '../../lib/app-state'
 import { Shell, getAvailableShells } from '../../lib/shells'
 import { getCachedAvailableEditors } from '../../lib/editors/lookup'
 import { disallowedCharacters } from './identifier-rules'
+import { Appearance } from './appearance'
+import { ApplicationTheme } from '../lib/application-theme'
 
 interface IPreferencesProps {
   readonly dispatcher: Dispatcher
@@ -33,6 +35,7 @@ interface IPreferencesProps {
   readonly confirmDiscardChanges: boolean
   readonly selectedExternalEditor?: ExternalEditor
   readonly selectedShell: Shell
+  readonly selectedTheme: ApplicationTheme
 }
 
 interface IPreferencesState {
@@ -133,6 +136,7 @@ export class Preferences extends React.Component<
         >
           <span>Accounts</span>
           <span>Git</span>
+          <span>Appearance</span>
           <span>Advanced</span>
         </TabBar>
 
@@ -219,6 +223,13 @@ export class Preferences extends React.Component<
           />
         )
       }
+      case PreferencesTab.Appearance:
+        return (
+          <Appearance
+            selectedTheme={this.props.selectedTheme}
+            onSelectedThemeChanged={this.onSelectedThemeChanged}
+          />
+        )
       case PreferencesTab.Advanced: {
         return (
           <Advanced
@@ -279,12 +290,17 @@ export class Preferences extends React.Component<
     this.setState({ selectedShell: shell })
   }
 
+  private onSelectedThemeChanged = (theme: ApplicationTheme) => {
+    this.props.dispatcher.setSelectedTheme(theme)
+  }
+
   private renderFooter() {
     const hasDisabledError = this.state.disallowedCharactersMessage != null
 
     const index = this.state.selectedIndex
     switch (index) {
       case PreferencesTab.Accounts:
+      case PreferencesTab.Appearance:
         return null
       case PreferencesTab.Advanced:
       case PreferencesTab.Git: {
