@@ -4405,7 +4405,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     return Promise.resolve()
   }
-
 }
 
 function forkPullRequestRemoteName(remoteName: string) {

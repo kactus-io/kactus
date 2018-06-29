@@ -1454,5 +1454,4 @@ export class Dispatcher {
   public setSelectedTheme(theme: ApplicationTheme) {
     return this.appStore._setSelectedTheme(theme)
   }
-
 }

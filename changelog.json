@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.10": [
+      "[Fixed] A case where fetching the diff for a conflict would fail"
+    ],
     "0.3.9": [
       "[Fixed] Handle Sketch files with pages with the same name"
     ],
