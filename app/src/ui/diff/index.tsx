@@ -216,6 +216,7 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
         repository={this.props.repository}
         readOnly={this.props.readOnly}
         file={this.props.file}
+        loading={this.props.loading}
       />
     )
   }

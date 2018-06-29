@@ -63,7 +63,7 @@ function createTestPr(head: PullRequestRef, base: PullRequestRef) {
 }
 
 function createTestRepo(ghRepo: GitHubRepository | null = null) {
-  return new Repository('', -1, ghRepo, false)
+  return new Repository('', -1, ghRepo, false, [])
 }
 
 function mockGetRemotes(repo: Repository): Promise<ReadonlyArray<IRemote>> {

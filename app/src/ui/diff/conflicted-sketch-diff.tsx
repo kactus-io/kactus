@@ -14,6 +14,7 @@ import { TextDiff, ITextDiffUtilsProps } from './text-diff'
 import { Loading } from '../lib/loading'
 
 interface IConflictedSketchDiffProps extends ITextDiffUtilsProps {
+  readonly loading: number | null
   readonly previous: Image | 'loading'
   readonly current: Image | 'loading'
   readonly text?: string
@@ -182,6 +183,7 @@ export class ConflictedSketchDiff extends React.Component<
 
   private renderCurrentDiffType() {
     if (
+      this.props.loading ||
       (typeof this.props.previous === 'string' &&
         this.props.previous === 'loading') ||
       (typeof this.props.current === 'string' &&
