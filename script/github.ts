@@ -91,7 +91,7 @@ export function updateAsset(
       encodeURIComponent(name),
     'POST'
   )
-  const stat = fs.statSync(asset)
+  const stat = fs.statSync(asset) // eslint-disable-line no-sync
   const rd = fs.createReadStream(asset)
   opts.headers['Content-Type'] = 'application/zip'
   opts.headers['Content-Length'] = stat.size

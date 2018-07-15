@@ -116,8 +116,8 @@ import {
   getMergeBase,
   getRemotes,
   ITrailer,
-  TOnSketchPreviews,
-  TSketchPreviews
+  IOnSketchPreviews,
+  ISketchPreviews,
 } from '../git'
 
 import { launchExternalEditor } from '../editors'
@@ -1877,9 +1877,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
     diffId: number,
     fromHistory?: boolean
   ) {
-    const callback: TOnSketchPreviews = (
+    const callback: IOnSketchPreviews = (
       err: Error | null,
-      diff: TSketchPreviews | undefined,
+      diff: ISketchPreviews | undefined
     ) => {
       if (err) {
         log.error('Error in sketch preview callback', err)
@@ -1890,23 +1890,26 @@ export class AppStore extends TypedBaseStore<IAppState> {
         return
       }
       const stateBeforeUpdate = this.getRepositoryState(repository)
-      if (!diffId || stateBeforeUpdate[fromHistory ? 'historyState' : 'changesState'].loadingDiff !== diffId) {
+      if (
+        !diffId ||
+        stateBeforeUpdate[fromHistory ? 'historyState' : 'changesState']
+          .loadingDiff !== diffId
+      ) {
         log.error('loading diff not matching, aborting')
         return
       }
 
-      if (!stateBeforeUpdate[fromHistory ? 'historyState' : 'changesState'].diff) {
-        setTimeout(
-          () => callback(err, diff),
-          100
-        )
+      if (
+        !stateBeforeUpdate[fromHistory ? 'historyState' : 'changesState'].diff
+      ) {
+        setTimeout(() => callback(err, diff), 100)
         return
       }
 
       if (fromHistory) {
         this.updateHistoryState(repository, state => {
           if (!diff || !state.diff || state.diff.kind !== DiffType.Sketch) {
-            return {loadingDiff: null, diff: null}
+            return { loadingDiff: null, diff: null }
           }
           return {
             diff: merge(state.diff, diff),
@@ -1916,7 +1919,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       } else {
         this.updateChangesState(repository, state => {
           if (!diff || !state.diff || state.diff.kind !== DiffType.Sketch) {
-            return {loadingDiff: null, diff: null}
+            return { loadingDiff: null, diff: null }
           }
           return {
             diff: merge(state.diff, diff),

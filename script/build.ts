@@ -112,15 +112,9 @@ interface IPackageAdditionalOptions {
 function packageApp(
   callback: (error: Error | null, appPaths: string | string[]) => void
 ) {
-  // not sure if this is needed anywhere, so I'm just going to inline it here
-  // for now and see what the future brings...
-  const toPackagePlatform = (platform: NodeJS.Platform) => {
-    return platform
-  }
-
   const options: packager.Options & IPackageAdditionalOptions = {
     name: getExecutableName(),
-    platform: toPackagePlatform(process.platform),
+    platform: 'darwin',
     arch: 'x64',
     asar: false, // TODO: Probably wanna enable this down the road.
     out: getDistRoot(),

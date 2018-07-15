@@ -43,14 +43,14 @@ import {
 import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
 import { assertNever } from '../fatal-error'
 
-export interface TSketchPreviews {
+export interface ISketchPreviews {
   current: Image | undefined
   previous: Image | undefined
 }
 
-export interface TOnSketchPreviews {
+export interface IOnSketchPreviews {
   (err: Error, previews?: undefined): void
-  (err: null, previews: TSketchPreviews): void
+  (err: null, previews: ISketchPreviews): void
 }
 
 /**
@@ -129,7 +129,7 @@ export async function getCommitDiff<K extends keyof IDiff>(
   file: FileChange,
   commitish: string,
   previousCommitish?: string,
-  onSketchPreviews?: TOnSketchPreviews
+  onSketchPreviews?: IOnSketchPreviews
 ): Promise<IDiff> {
   const args = [
     'log',
@@ -178,7 +178,7 @@ export async function getWorkingDirectoryDiff<K extends keyof IDiff>(
   kactusFiles: Array<IKactusFile>,
   file: WorkingDirectoryFileChange,
   previousCommitish?: string,
-  onSketchPreviews?: TOnSketchPreviews
+  onSketchPreviews?: IOnSketchPreviews
 ): Promise<IDiff> {
   let successExitCodes: Set<number> | undefined
   let args: Array<string>
@@ -268,7 +268,7 @@ export async function getWorkingDirectoryPartDiff<K extends keyof IDiff>(
     type: FileType.PageFile | FileType.LayerFile
   },
   previousCommitish?: string,
-  onSketchPreviews?: TOnSketchPreviews
+  onSketchPreviews?: IOnSketchPreviews
 ): Promise<IDiff> {
   const kactusFile = kactusFiles.find(
     f => sketchPart.id.indexOf(f.id + '/') === 0
@@ -356,7 +356,7 @@ async function getSketchDiff<K extends keyof IDiff>(
   file: FileChange,
   kactusFile: IKactusFile,
   commitish: string,
-  onSketchPreviews: TOnSketchPreviews,
+  onSketchPreviews: IOnSketchPreviews,
   previousCommitish?: string,
   diff?: IRawDiff,
   _type?: FileType.PageFile | FileType.LayerFile
@@ -515,7 +515,7 @@ export async function convertDiff<K extends keyof IDiff>(
   commitish: string,
   previousCommitish?: string,
   lineEndingsChange?: LineEndingsChange,
-  onSketchPreviews?: TOnSketchPreviews
+  onSketchPreviews?: IOnSketchPreviews
 ): Promise<IDiff> {
   const extension = Path.extname(file.path).toLowerCase()
 
@@ -653,7 +653,7 @@ function buildDiff<K extends keyof IDiff>(
   commitish: string,
   previousCommitish?: string,
   lineEndingsChange?: LineEndingsChange,
-  onSketchPreviews?: TOnSketchPreviews
+  onSketchPreviews?: IOnSketchPreviews
 ): Promise<IDiff> {
   if (!isValidBuffer(buffer)) {
     // the buffer's diff is too large to be renderable in the UI
