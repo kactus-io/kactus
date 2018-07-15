@@ -43,7 +43,7 @@
     "react-dom": "^16.3.2",
     "react-stripe-checkout": "^2.4.0",
     "react-transition-group": "^1.2.0",
-    "react-virtualized": "^9.18.5",
+    "react-virtualized": "^9.20.0",
     "registry-js": "^1.0.7",
     "rimraf": "^2.6.1",
     "runas": "^3.1.1",

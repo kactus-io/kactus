@@ -1,12 +1,7 @@
-#!/usr/bin/env node
-
-'use strict'
-
-const TEST_PUBLISH = false
 const PUBLISH_CHANNELS = ['production', 'test', 'beta']
-const distInfo = require('./dist-info')
-const gitInfo = require('../app/git-info')
-const packageInfo = require('../app/package-info')
+import * as distInfo from './dist-info'
+import * as gitInfo from '../app/git-info'
+import * as packageInfo from '../app/package-info'
 
 if (PUBLISH_CHANNELS.indexOf(distInfo.getReleaseChannel()) < 0) {
   console.log('Not a publishable build. Skipping publish.')
@@ -14,35 +9,29 @@ if (PUBLISH_CHANNELS.indexOf(distInfo.getReleaseChannel()) < 0) {
 }
 
 const releaseSHA = distInfo.getReleaseSHA()
-if (!releaseSHA) {
+if (releaseSHA == null) {
   console.log(`No release SHA found for build. Skipping publish.`)
   process.exit(0)
 }
 
 const currentTipSHA = gitInfo.getSHA()
-if (
-  !currentTipSHA ||
-  !currentTipSHA.toUpperCase().startsWith(releaseSHA.toUpperCase())
-) {
+if (!currentTipSHA.toUpperCase().startsWith(releaseSHA!.toUpperCase())) {
   console.log(
     `Current tip '${currentTipSHA}' does not match release SHA '${releaseSHA}'. Skipping publish.`
   )
   process.exit(0)
 }
 
-const fs = require('fs')
-const cp = require('child_process')
-const github = require('./github')
-const crypto = require('crypto')
-const request = require('request')
+import { execSync } from 'child_process'
+import * as github from './github'
 
-const token = process.env.KACTUSBOT_TOKEN
+const token = process.env.KACTUSBOT_TOKEN!
 const repo = 'kactus-io/kactus'
 
 console.log('Packaging…')
-cp.execSync('npm run package')
+execSync('npm run package')
 
-let releaseId
+let releaseId: string
 const tag = 'v' + packageInfo.getVersion()
 
 console.log('Uploading ' + tag + '…')
@@ -71,7 +60,7 @@ github
     process.exit(1)
   })
 
-function uploadOSXAssets(releaseId) {
+function uploadOSXAssets(releaseId: string) {
   const uploads = [
     github.updateAsset(token, repo, releaseId, distInfo.getOSXZipPath()),
   ]

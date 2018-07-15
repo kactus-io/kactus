@@ -9,25 +9,25 @@ import { Repository } from '../../models/repository'
 import { CommittedFileChange, FileChange } from '../../models/status'
 import { Commit } from '../../models/commit'
 import { Dispatcher } from '../../lib/dispatcher'
-import {
-  IHistoryState as IAppHistoryState,
-  ImageDiffType,
-} from '../../lib/app-state'
+import { ImageDiffType } from '../../lib/app-state'
 import { encodePathAsUrl } from '../../lib/path'
 import { ThrottledScheduler } from '../lib/throttled-scheduler'
 import { IGitHubUser } from '../../lib/databases'
 import { Resizable } from '../resizable'
 import { openFile } from '../../lib/open-file'
+import { IDiff } from '../../models/diff'
 
-interface IHistoryProps {
+interface ISelectedCommitProps {
   readonly repository: Repository
   readonly dispatcher: Dispatcher
-  readonly history: IAppHistoryState
   readonly emoji: Map<string, string>
-  readonly commits: Map<string, Commit>
+  readonly selectedCommit: Commit | null
+  readonly changedFiles: ReadonlyArray<CommittedFileChange>
+  readonly selectedFile: CommittedFileChange | null
+  readonly currentDiff: IDiff | null
   readonly commitSummaryWidth: number
   readonly gitHubUsers: Map<string, IGitHubUser>
-  readonly imageDiffType: ImageDiffType
+  readonly selectedDiffType: ImageDiffType
   readonly loadingDiff: number | null
   /** The name of the currently selected external editor */
   readonly externalEditorLabel?: string
@@ -39,15 +39,18 @@ interface IHistoryProps {
   readonly onOpenInExternalEditor: (path: string) => void
 }
 
-interface IHistoryState {
+interface ISelectedCommitState {
   readonly isExpanded: boolean
 }
 
 /** The History component. Contains the commit list, commit summary, and diff. */
-export class History extends React.Component<IHistoryProps, IHistoryState> {
+export class SelectedCommit extends React.Component<
+  ISelectedCommitProps,
+  ISelectedCommitState
+> {
   private readonly loadChangedFilesScheduler = new ThrottledScheduler(200)
 
-  public constructor(props: IHistoryProps) {
+  public constructor(props: ISelectedCommitProps) {
     super(props)
 
     this.state = {
@@ -62,9 +65,16 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
     )
   }
 
-  public componentWillUpdate(nextProps: IHistoryProps) {
-    // Reset isExpanded if we're switching commits.
-    if (nextProps.history.selection.sha !== this.props.history.selection.sha) {
+  public componentWillUpdate(nextProps: ISelectedCommitProps) {
+    // reset isExpanded if we're switching commits.
+    const currentValue = this.props.selectedCommit
+      ? this.props.selectedCommit.sha
+      : undefined
+    const nextValue = nextProps.selectedCommit
+      ? nextProps.selectedCommit.sha
+      : undefined
+
+    if ((currentValue || nextValue) && currentValue !== nextValue) {
       if (this.state.isExpanded) {
         this.setState({ isExpanded: false })
       }
@@ -75,14 +85,14 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
     this.loadChangedFilesScheduler.clear()
   }
 
-  private renderDiff(commit: Commit | null) {
-    const files = this.props.history.changedFiles
-    const file = this.props.history.selection.file
-    const diff = this.props.history.diff
+  private renderDiff() {
+    const file = this.props.selectedFile
+    const diff = this.props.currentDiff
 
-    if (!diff || !file) {
+    if (file == null || diff == null) {
       // don't show both 'empty' messages
-      const message = files.length === 0 ? '' : 'No file selected'
+      const message =
+        this.props.changedFiles.length === 0 ? '' : 'No file selected'
 
       return (
         <div className="panel blankslate" id="diff">
@@ -94,7 +104,7 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
     return (
       <Diff
         repository={this.props.repository}
-        imageDiffType={this.props.imageDiffType}
+        imageDiffType={this.props.selectedDiffType}
         file={file}
         diff={diff}
         readOnly={true}
@@ -109,7 +119,7 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
     return (
       <CommitSummary
         commit={commit}
-        files={this.props.history.changedFiles}
+        files={this.props.changedFiles}
         emoji={this.props.emoji}
         repository={this.props.repository}
         gitHubUsers={this.props.gitHubUsers}
@@ -120,15 +130,18 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
   }
 
   private onOpenSketchFile = () => {
-    const sha = this.props.history.selection.sha
+    if (!this.props.selectedCommit || !this.props.currentDiff) {
+      return
+    }
+    const sha = this.props.selectedCommit.sha
     if (
       !sha ||
-      !this.props.history.diff ||
-      this.props.history.diff.kind !== DiffType.Sketch
+      !this.props.currentDiff ||
+      this.props.currentDiff.kind !== DiffType.Sketch
     ) {
       return
     }
-    const sketchFile = this.props.history.diff.sketchFile
+    const sketchFile = this.props.currentDiff.sketchFile
     this.props.dispatcher.openOldSketchFile(
       sha,
       this.props.repository,
@@ -149,7 +162,7 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
   }
 
   private renderFileList() {
-    const files = this.props.history.changedFiles
+    const files = this.props.changedFiles
     if (files.length === 0) {
       return <div className="fill-window">No files in commit</div>
     }
@@ -161,7 +174,7 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
       <FileList
         files={files}
         onSelectedFileChanged={this.onFileSelected}
-        selectedFile={this.props.history.selection.file}
+        selectedFile={this.props.selectedFile}
         availableWidth={availableWidth}
         onOpenItem={this.onOpenItem}
         externalEditorLabel={this.props.externalEditorLabel}
@@ -181,10 +194,9 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
   }
 
   public render() {
-    const sha = this.props.history.selection.sha
-    const commit = sha ? this.props.commits.get(sha) || null : null
+    const commit = this.props.selectedCommit
 
-    if (!sha || !commit) {
+    if (commit == null) {
       return <NoCommitSelected />
     }
 
@@ -201,7 +213,7 @@ export class History extends React.Component<IHistoryProps, IHistoryState> {
           >
             {this.renderFileList()}
           </Resizable>
-          {this.renderDiff(commit)}
+          {this.renderDiff()}
         </div>
       </div>
     )

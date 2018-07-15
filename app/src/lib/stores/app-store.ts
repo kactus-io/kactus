@@ -162,6 +162,7 @@ import { IRemote, ForkedRemotePrefix } from '../../models/remote'
 import { IAuthor } from '../../models/author'
 import { ComparisonCache } from '../comparison-cache'
 import { AheadBehindUpdater } from './helpers/ahead-behind-updater'
+import { enableRepoInfoIndicators } from '../feature-flag'
 import { inferComparisonBranch } from './helpers/infer-comparison-branch'
 import {
   ApplicationTheme,
@@ -420,8 +421,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.accountsStore.onDidError(error => this.emitError(error))
 
     this.repositoriesStore.onDidUpdate(async () => {
-      const repositories = await this.repositoriesStore.getAll()
-      this.repositories = repositories
+      this.repositories = await this.repositoriesStore.getAll()
       this.updateRepositorySelectionAfterRepositoriesChanged()
       this.emitUpdate()
     })
@@ -978,6 +978,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
             aheadBehind,
           },
           commitSHAs: compare.commits.map(commit => commit.sha),
+          filterText: comparisonBranch.name,
         }))
 
         const tip = gitStore.tip
@@ -1502,6 +1503,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.emitUpdateNow()
 
     this.accountsStore.refresh()
+    this.refreshAllRepositories()
   }
 
   private async getSelectedExternalEditor(): Promise<ExternalEditor | null> {
@@ -2190,6 +2192,47 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this._updateCurrentPullRequest(repository)
     this.updateMenuItemLabels(repository)
     this._initializeCompare(repository)
+    this.refreshRepositoryState([repository])
+  }
+
+  public refreshAllRepositories() {
+    return this.refreshRepositoryState(this.repositories)
+  }
+
+  private async refreshRepositoryState(
+    repositories: ReadonlyArray<Repository>
+  ): Promise<void> {
+    if (!enableRepoInfoIndicators()) {
+      return
+    }
+
+    const promises = []
+
+    for (const repo of repositories) {
+      promises.push(
+        this.withAuthenticatingUser(repo, async (repo, account) => {
+          const gitStore = this.getGitStore(repo)
+          const lookup = this.localRepositoryStateLookup
+          if (this.shouldBackgroundFetch(repo)) {
+            await gitStore.fetch(account, true)
+          }
+
+          const sketchFiles = this.getRepositoryState(repo).kactus.files
+
+          const status = await gitStore.loadStatus(sketchFiles)
+          if (status !== null) {
+            lookup.set(repo.id, {
+              aheadBehind: gitStore.aheadBehind,
+              changedFilesCount: status.workingDirectory.files.length,
+            })
+          }
+        })
+      )
+    }
+
+    await Promise.all(promises)
+
+    this.emitUpdate()
   }
 
   /**
