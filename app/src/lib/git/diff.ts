@@ -43,6 +43,16 @@ import {
 import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
 import { assertNever } from '../fatal-error'
 
+export interface TSketchPreviews {
+  current: Image | undefined
+  previous: Image | undefined
+}
+
+export interface TOnSketchPreviews {
+  (err: Error, previews?: undefined): void
+  (err: null, previews: TSketchPreviews): void
+}
+
 /**
  * V8 has a limit on the size of string it can create (~256MB), and unless we want to
  * trigger an unhandled exception we need to do the encoding conversion by hand.
@@ -119,9 +129,7 @@ export async function getCommitDiff<K extends keyof IDiff>(
   file: FileChange,
   commitish: string,
   previousCommitish?: string,
-  onSketchPreviews?: (
-    previews: { current: Image | undefined; previous: Image | undefined }
-  ) => void
+  onSketchPreviews?: TOnSketchPreviews
 ): Promise<IDiff> {
   const args = [
     'log',
@@ -170,9 +178,7 @@ export async function getWorkingDirectoryDiff<K extends keyof IDiff>(
   kactusFiles: Array<IKactusFile>,
   file: WorkingDirectoryFileChange,
   previousCommitish?: string,
-  onSketchPreviews?: (
-    previews: { current: Image | undefined; previous: Image | undefined }
-  ) => void
+  onSketchPreviews?: TOnSketchPreviews
 ): Promise<IDiff> {
   let successExitCodes: Set<number> | undefined
   let args: Array<string>
@@ -262,9 +268,7 @@ export async function getWorkingDirectoryPartDiff<K extends keyof IDiff>(
     type: FileType.PageFile | FileType.LayerFile
   },
   previousCommitish?: string,
-  onSketchPreviews?: (
-    previews: { current: Image | undefined; previous: Image | undefined }
-  ) => void
+  onSketchPreviews?: TOnSketchPreviews
 ): Promise<IDiff> {
   const kactusFile = kactusFiles.find(
     f => sketchPart.id.indexOf(f.id + '/') === 0
@@ -304,7 +308,7 @@ async function getImageDiff(
     // Ideally we'd show all three versions and let the user pick but that's
     // a bit out of scope for now.
     if (file.status === AppFileStatus.Conflicted) {
-      return { kind: DiffType.Image }
+      return { kind: DiffType.Image, previous: undefined, current: undefined }
     }
 
     // Does it even exist in the working directory?
@@ -352,9 +356,7 @@ async function getSketchDiff<K extends keyof IDiff>(
   file: FileChange,
   kactusFile: IKactusFile,
   commitish: string,
-  onSketchPreviews: (
-    previews: { current: Image | undefined; previous: Image | undefined }
-  ) => void,
+  onSketchPreviews: TOnSketchPreviews,
   previousCommitish?: string,
   diff?: IRawDiff,
   _type?: FileType.PageFile | FileType.LayerFile
@@ -484,9 +486,11 @@ async function getSketchDiff<K extends keyof IDiff>(
     }
   }
 
-  Promise.all(promises).then(([current, previous]) => {
-    onSketchPreviews({ current, previous })
-  })
+  Promise.all(promises)
+    .then(([current, previous]) => {
+      onSketchPreviews(null, { current, previous })
+    })
+    .catch(err => onSketchPreviews(err))
 
   return {
     kind: DiffType.Sketch,
@@ -511,9 +515,7 @@ export async function convertDiff<K extends keyof IDiff>(
   commitish: string,
   previousCommitish?: string,
   lineEndingsChange?: LineEndingsChange,
-  onSketchPreviews?: (
-    previews: { current: Image | undefined; previous: Image | undefined }
-  ) => void
+  onSketchPreviews?: TOnSketchPreviews
 ): Promise<IDiff> {
   const extension = Path.extname(file.path).toLowerCase()
 
@@ -651,9 +653,7 @@ function buildDiff<K extends keyof IDiff>(
   commitish: string,
   previousCommitish?: string,
   lineEndingsChange?: LineEndingsChange,
-  onSketchPreviews?: (
-    previews: { current: Image | undefined; previous: Image | undefined }
-  ) => void
+  onSketchPreviews?: TOnSketchPreviews
 ): Promise<IDiff> {
   if (!isValidBuffer(buffer)) {
     // the buffer's diff is too large to be renderable in the UI

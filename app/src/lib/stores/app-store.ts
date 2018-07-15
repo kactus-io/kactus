@@ -116,6 +116,8 @@ import {
   getMergeBase,
   getRemotes,
   ITrailer,
+  TOnSketchPreviews,
+  TSketchPreviews
 } from '../git'
 
 import { launchExternalEditor } from '../editors'
@@ -1157,7 +1159,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       file,
       sha,
       previousSha,
-      this.updateDiffWithSketchPreview.bind(this, repository, diffId)
+      this.updateDiffWithSketchPreview(repository, diffId, true)
     )
 
     const stateAfterLoad = this.getRepositoryState(repository)
@@ -1870,29 +1872,63 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.updateChangesDiffForCurrentSelection(repository)
   }
 
-  private async updateDiffWithSketchPreview<K extends keyof IDiff>(
+  private updateDiffWithSketchPreview(
     repository: Repository,
     diffId: number,
-    diff: Pick<IDiff, K>
+    fromHistory?: boolean
   ) {
-    const stateBeforeUpdate = this.getRepositoryState(repository)
-    if (!diffId || stateBeforeUpdate.changesState.loadingDiff !== diffId) {
-      return
+    const callback: TOnSketchPreviews = (
+      err: Error | null,
+      diff: TSketchPreviews | undefined,
+    ) => {
+      if (err) {
+        log.error('Error in sketch preview callback', err)
+        return
+      }
+      if (!diff) {
+        log.error('Missing diff')
+        return
+      }
+      const stateBeforeUpdate = this.getRepositoryState(repository)
+      if (!diffId || stateBeforeUpdate[fromHistory ? 'historyState' : 'changesState'].loadingDiff !== diffId) {
+        log.error('loading diff not matching, aborting')
+        return
+      }
+
+      if (!stateBeforeUpdate[fromHistory ? 'historyState' : 'changesState'].diff) {
+        setTimeout(
+          () => callback(err, diff),
+          100
+        )
+        return
+      }
+
+      if (fromHistory) {
+        this.updateHistoryState(repository, state => {
+          if (!diff || !state.diff || state.diff.kind !== DiffType.Sketch) {
+            return {loadingDiff: null, diff: null}
+          }
+          return {
+            diff: merge(state.diff, diff),
+            loadingDiff: null,
+          }
+        })
+      } else {
+        this.updateChangesState(repository, state => {
+          if (!diff || !state.diff || state.diff.kind !== DiffType.Sketch) {
+            return {loadingDiff: null, diff: null}
+          }
+          return {
+            diff: merge(state.diff, diff),
+            loadingDiff: null,
+          }
+        })
+      }
+
+      this.emitUpdate()
     }
 
-    if (!stateBeforeUpdate.changesState.diff) {
-      setTimeout(
-        () => this.updateDiffWithSketchPreview(repository, diffId, diff),
-        100
-      )
-      return
-    }
-
-    this.updateChangesState(repository, state => ({
-      diff: merge(state.diff, diff),
-      loadingDiff: null,
-    }))
-    this.emitUpdate()
+    return callback
   }
 
   /**
@@ -1937,7 +1973,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         stateBeforeLoad.kactus.files,
         selectedFileBeforeLoad,
         stateBeforeLoad.historyState.history[0],
-        this.updateDiffWithSketchPreview.bind(this, repository, diffId)
+        this.updateDiffWithSketchPreview(repository, diffId)
       )
     } else if (selectedSketchPartBeforeLoad) {
       this.updateChangesState(repository, state => ({ loadingDiff: diffId }))
@@ -1948,7 +1984,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         stateBeforeLoad.kactus.files,
         selectedSketchPartBeforeLoad,
         stateBeforeLoad.historyState.history[0],
-        this.updateDiffWithSketchPreview.bind(this, repository, diffId)
+        this.updateDiffWithSketchPreview(repository, diffId)
       )
     } else {
       this.updateChangesState(repository, state => ({ diff: null }))
