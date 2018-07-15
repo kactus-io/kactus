@@ -66,7 +66,7 @@ export class ConfirmRemoveRepository extends React.Component<
             }"?
           </p>
           <p className="description">
-            The repository will be removed from GitHub Desktop.
+            The repository will be removed from Kactus.
           </p>
 
           <div>
