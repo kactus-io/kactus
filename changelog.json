@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.11": [
+      "[Fixed] Fetching the diff for a commit in the history tab"
+    ],
     "0.3.10": [
       "[Fixed] A case where fetching the diff for a conflict would fail"
     ],
