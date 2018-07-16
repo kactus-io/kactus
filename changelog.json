@@ -1,6 +1,10 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.12": [
+      "[Improved] Add some padding around image diffs so that it's easier to grab the slider",
+      "[Fixed] Closing a sketch file in the changes list would make it disappear"
+    ],
     "0.3.11": [
       "[Fixed] Fetching the diff for a commit in the history tab"
     ],
@@ -11,7 +15,7 @@
       "[Fixed] Handle Sketch files with pages with the same name"
     ],
     "0.3.8": [
-      "[Fixed] Bug which crash Kactus on startup."
+      "[Fixed] Bug which crash Kactus on startup"
     ],
     "0.3.7": [
       "[New] New history tab with possibility to compare to a branch",
@@ -21,7 +25,7 @@
     ],
     "0.3.6": [
       "[Fixed] Remove Bitcoin payment (removed by Stripe)",
-      "[Improved] Remove collection of usage data. We are not looking at them and we don't like collecting data for the sake of it.",
+      "[Improved] Remove collection of usage data. We are not looking at them and we don't like collecting data for the sake of it",
       "[Improved] Use update.electronjs.org as the update server",
       "[Improved] Add warning when renaming a branch",
       "[Improved] Getting the git status should a lot faster (up to 15 times)"
