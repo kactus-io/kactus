@@ -179,7 +179,7 @@ function getFileList(
         const partChange: TFakeSketchPartChange = {
           opened,
           shown:
-            opened || (parentPartChange && parentPartChange.opened) || false,
+            opened || !parentPartChange || parentPartChange.opened || false,
           type:
             i === 0
               ? FileType.SketchFile
@@ -207,7 +207,10 @@ function getFileList(
       } else if (f.parts.length <= 1) {
         parentPartChange = undefined
       }
-      f.shown = (parentPartChange && parentPartChange.opened) || false
+      f.shown =
+        (parentPartChange && parentPartChange.opened) ||
+        f.parts.length === 0 ||
+        false
     } else {
       f.shown = true
     }
