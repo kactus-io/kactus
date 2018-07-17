@@ -24,7 +24,7 @@ export function getExecutableName() {
 }
 
 export function getOSXZipName() {
-  return `${productName}.zip`
+  return `${productName}-macos.zip`
 }
 
 export function getOSXZipPath() {
