@@ -4,6 +4,7 @@ import { Form } from './form'
 import { TextBox } from './text-box'
 import { Button } from './button'
 import { Errors } from './errors'
+import { LinkButton } from './link-button'
 
 interface IEnterpriseServerEntryProps {
   /**
@@ -52,6 +53,39 @@ export class EnterpriseServerEntry extends React.Component<
     this.state = { serverAddress: '', clientId: '', clientSecret: '' }
   }
 
+  private renderInstructionForGE(endpoint: string) {
+    return (
+      <ol>
+        <li>
+          Login to your{' '}
+          {endpoint ? (
+            <LinkButton uri={endpoint}>GitHub Enterprise appliance</LinkButton>
+          ) : (
+            'GitHub Enterprise appliance'
+          )}
+        </li>
+        <li>Click on Settings, OAuth Applications</li>
+        <li>
+          If there is already a Kactus application, click on it and note Client
+          ID, and Client Secret. Otherwise click on Register a new OAuth
+          application.
+        </li>
+        <li>
+          <p>Fill in the requested information:</p>
+          <ul>
+            <li>Application Name: Kactus</li>
+            <li>Homepage URL: {'https://kactus.io'}</li>
+            <li>Authorization callback URL: {'x-kactus-auth://oauth'}</li>
+          </ul>
+        </li>
+        <li>
+          Create the application and take note of the values Client ID, and
+          Client Secret.
+        </li>
+      </ol>
+    )
+  }
+
   public render() {
     const disableEntry = this.props.loading
     const disableSubmission =
@@ -66,6 +100,8 @@ export class EnterpriseServerEntry extends React.Component<
           onValueChanged={this.onServerAddressChanged}
           placeholder="https://github.example.com"
         />
+
+        {this.renderInstructionForGE(this.state.serverAddress)}
 
         <TextBox
           label="Application Client Id"
