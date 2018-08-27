@@ -21,6 +21,7 @@
     "y": 10.24899999999999
   },
   "isClosed": false,
+  "isFixedToViewport": false,
   "isFlippedHorizontal": false,
   "isFlippedVertical": false,
   "isLocked": false,
@@ -28,33 +29,6 @@
   "layerListExpandedType": 0,
   "name": "Path",
   "nameIsFixed": false,
-  "path": {
-    "_class": "path",
-    "isClosed": false,
-    "pointRadiusBehaviour": 1,
-    "points": [
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.45242596093257847, 0.69432314410480334}",
-        "curveMode": 4,
-        "curveTo": "{0, 1}",
-        "hasCurveFrom": true,
-        "hasCurveTo": false,
-        "point": "{0, 1}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{1, 0}",
-        "curveMode": 4,
-        "curveTo": "{0.78449905482041715, 0.35618631732168832}",
-        "hasCurveFrom": false,
-        "hasCurveTo": true,
-        "point": "{1, 0}"
-      }
-    ]
-  },
   "pointRadiusBehaviour": 1,
   "points": [
     {

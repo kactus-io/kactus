@@ -21,11 +21,11 @@ import {
 } from '../../helpers/repositories'
 
 import {
-  getStatus,
   getWorkingDirectoryDiff,
   getWorkingDirectoryImage,
   getBlobImage,
 } from '../../../src/lib/git'
+import { getStatusOrThrow } from '../../helpers/status'
 
 import { GitProcess } from 'dugite'
 
@@ -252,7 +252,7 @@ describe('git/diff', () => {
       const repositoryPath = await setupFixtureRepository('diff-rendering-docx')
       const repo = new Repository(repositoryPath, -1, null, false, [])
 
-      const status = await getStatus(repo, [])
+      const status = await getStatusOrThrow(repo)
       const files = status.workingDirectory.files
 
       expect(files.length).to.equal(1)
@@ -276,7 +276,7 @@ describe('git/diff', () => {
       await GitProcess.exec(['commit', '-m', 'Initial commit'], repo.path)
       await GitProcess.exec(['mv', 'foo', 'bar'], repo.path)
 
-      const status = await getStatus(repo, [])
+      const status = await getStatusOrThrow(repo)
       const files = status.workingDirectory.files
 
       expect(files.length).to.equal(1)
@@ -301,7 +301,7 @@ describe('git/diff', () => {
 
       await FSE.writeFile(path.join(repo.path, 'bar'), 'bar\n')
 
-      const status = await getStatus(repo, [])
+      const status = await getStatusOrThrow(repo)
       const files = status.workingDirectory.files
 
       expect(files.length).to.equal(1)
@@ -328,7 +328,7 @@ describe('git/diff', () => {
 
       await FSE.writeFile(path.join(repo.path, 'foo'), 'WRITING OVER THE TOP\n')
 
-      const status = await getStatus(repo, [])
+      const status = await getStatusOrThrow(repo)
       const files = status.workingDirectory.files
 
       expect(files.length).to.equal(1)
@@ -369,7 +369,7 @@ describe('git/diff', () => {
         `WRITING MANY LINES ${lineEnding} USING THIS LINE ENDING ${lineEnding} TO SHOW THAT GIT${lineEnding} WILL INSERT IT WITHOUT CHANGING THING ${lineEnding} HA HA BUSINESS`
       )
 
-      const status = await getStatus(repo, [])
+      const status = await getStatusOrThrow(repo)
       const files = status.workingDirectory.files
 
       expect(files.length).to.equal(1)
@@ -390,7 +390,7 @@ describe('git/diff', () => {
       const testString = 'here are some cool characters: • é  漢字'
       await FSE.writeFile(filePath, testString)
 
-      const status = await getStatus(repo, [])
+      const status = await getStatusOrThrow(repo)
       const files = status.workingDirectory.files
       expect(files.length).to.equal(1)
 

@@ -167,6 +167,7 @@ export class RepositoryView extends React.Component<
       <CompareSidebar
         repository={this.props.repository}
         compareState={this.props.state.compareState}
+        selectedCommitSha={this.props.state.commitSelection.sha}
         currentBranch={currentBranch}
         gitHubUsers={this.props.state.gitHubUsers}
         emoji={this.props.emoji}
@@ -295,25 +296,27 @@ export class RepositoryView extends React.Component<
         )
       }
     } else if (selectedSection === RepositorySectionTab.History) {
-      const { historyState } = this.props.state
+      const { commitSelection } = this.props.state
 
-      const sha = historyState.selection.sha
+      const sha = commitSelection.sha
 
       const selectedCommit =
         sha != null ? this.props.state.commitLookup.get(sha) || null : null
+
+      const { changedFiles, file, diff } = commitSelection
 
       return (
         <SelectedCommit
           repository={this.props.repository}
           dispatcher={this.props.dispatcher}
           selectedCommit={selectedCommit}
-          changedFiles={historyState.changedFiles}
-          selectedFile={historyState.selection.file}
-          currentDiff={historyState.diff}
+          changedFiles={changedFiles}
+          selectedFile={file}
+          currentDiff={diff}
           emoji={this.props.emoji}
           commitSummaryWidth={this.props.commitSummaryWidth}
           gitHubUsers={this.props.state.gitHubUsers}
-          loadingDiff={this.props.state.historyState.loadingDiff}
+          loadingDiff={this.props.state.commitSelection.loadingDiff}
           selectedDiffType={this.props.imageDiffType}
           externalEditorLabel={this.props.externalEditorLabel}
           onOpenInExternalEditor={this.props.onOpenInExternalEditor}

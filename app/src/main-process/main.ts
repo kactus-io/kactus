@@ -1,7 +1,6 @@
 import '../lib/logging/main/install'
 
 import { app, Menu, ipcMain, BrowserWindow, shell } from 'electron'
-import * as Fs from 'fs'
 
 import { AppWindow } from './app-window'
 import { buildDefaultMenu, MenuEvent, findMenuItemByID } from './menu'
@@ -12,7 +11,6 @@ import { fatalError } from '../lib/fatal-error'
 import { IMenuItemState } from '../lib/menu-update'
 import { LogLevel } from '../lib/logging/log-level'
 import { log as writeLog } from './log'
-import { openDirectorySafe } from './shell'
 import { reportError } from './exception-reporting'
 import {
   enableSourceMaps,
@@ -221,7 +219,7 @@ app.on('ready', () => {
       )
 
       const window = BrowserWindow.fromWebContents(event.sender)
-      menu.popup(window, { async: true })
+      menu.popup({ window })
     }
   )
 
@@ -293,18 +291,7 @@ app.on('ready', () => {
   ipcMain.on(
     'show-item-in-folder',
     (event: Electron.IpcMessageEvent, { path }: { path: string }) => {
-      Fs.stat(path, (err, stats) => {
-        if (err) {
-          log.error(`Unable to find file at '${path}'`, err)
-          return
-        }
-
-        if (stats.isDirectory()) {
-          openDirectorySafe(path)
-        } else {
-          shell.showItemInFolder(path)
-        }
-      })
+      shell.showItemInFolder(path)
     }
   )
 })

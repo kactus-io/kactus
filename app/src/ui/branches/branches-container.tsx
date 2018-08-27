@@ -2,7 +2,7 @@ import * as React from 'react'
 import { CSSTransitionGroup } from 'react-transition-group'
 
 import { PullRequest } from '../../models/pull-request'
-import { Repository } from '../../models/repository'
+import { Repository, nameOf } from '../../models/repository'
 import { Branch } from '../../models/branch'
 import { BranchesTab } from '../../models/branches-tab'
 
@@ -151,9 +151,6 @@ export class BranchesContainer extends React.Component<
 
     const pullRequests = this.props.pullRequests
     const repo = this.props.repository
-    const name = repo.gitHubRepository
-      ? repo.gitHubRepository.fullName
-      : repo.name
     const isOnDefaultBranch =
       this.props.defaultBranch &&
       this.props.currentBranch &&
@@ -164,7 +161,7 @@ export class BranchesContainer extends React.Component<
         key="pr-list"
         pullRequests={pullRequests}
         selectedPullRequest={this.state.selectedPullRequest}
-        repositoryName={name}
+        repositoryName={nameOf(repo)}
         isOnDefaultBranch={!!isOnDefaultBranch}
         onSelectionChanged={this.onPullRequestSelectionChanged}
         onCreateBranch={this.onCreateBranch}

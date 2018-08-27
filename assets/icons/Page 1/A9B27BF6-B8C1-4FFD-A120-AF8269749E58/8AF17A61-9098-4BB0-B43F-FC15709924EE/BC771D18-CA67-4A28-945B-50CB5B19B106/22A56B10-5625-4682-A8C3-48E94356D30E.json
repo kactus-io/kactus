@@ -21,6 +21,7 @@
     "y": 80.75382975663062
   },
   "isClosed": true,
+  "isFixedToViewport": false,
   "isFlippedHorizontal": false,
   "isFlippedVertical": false,
   "isLocked": false,
@@ -28,63 +29,6 @@
   "layerListExpandedType": 0,
   "name": "Path",
   "nameIsFixed": false,
-  "path": {
-    "_class": "path",
-    "isClosed": true,
-    "pointRadiusBehaviour": 1,
-    "points": [
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.99999999999999878, 0.77322271080774296}",
-        "curveMode": 4,
-        "curveTo": "{1, 0.49347874769387151}",
-        "hasCurveFrom": true,
-        "hasCurveTo": false,
-        "point": "{1, 0.49347874769387151}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.2238576250846035, 1}",
-        "curveMode": 2,
-        "curveTo": "{0.77614237491539528, 1}",
-        "hasCurveFrom": true,
-        "hasCurveTo": true,
-        "point": "{0.5, 1}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.0069813040245509488, 0.2189063532279743}",
-        "curveMode": 4,
-        "curveTo": "{0, 0.77322271080774296}",
-        "hasCurveFrom": true,
-        "hasCurveTo": true,
-        "point": "{0, 0.49347874769387151}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.7709615019028323, 0}",
-        "curveMode": 2,
-        "curveTo": "{0.22870693311042758, 0}",
-        "hasCurveFrom": true,
-        "hasCurveTo": true,
-        "point": "{0.49983421750663048, 0}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.99966843501325986, 0.49347874769387151}",
-        "curveMode": 4,
-        "curveTo": "{0.99268713098870887, 0.2189063532279743}",
-        "hasCurveFrom": false,
-        "hasCurveTo": true,
-        "point": "{0.99966843501325986, 0.49347874769387151}"
-      }
-    ]
-  },
   "pointRadiusBehaviour": 1,
   "points": [
     {

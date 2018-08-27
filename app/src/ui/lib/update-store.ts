@@ -148,7 +148,7 @@ class UpdateStore {
     this.userInitiatedUpdate = !inBackground
 
     try {
-      autoUpdater.setFeedURL(__UPDATES_URL__)
+      autoUpdater.setFeedURL({ url: __UPDATES_URL__ })
       autoUpdater.checkForUpdates()
     } catch (e) {
       this.emitError(e)

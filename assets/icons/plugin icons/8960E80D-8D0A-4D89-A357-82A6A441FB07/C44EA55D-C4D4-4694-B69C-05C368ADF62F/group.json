@@ -1,5 +1,6 @@
 {
   "_class": "group",
+  "booleanOperation": 0,
   "do_objectID": "C44EA55D-C4D4-4694-B69C-05C368ADF62F",
   "exportOptions": {
     "_class": "exportOptions",
@@ -21,6 +22,7 @@
     "y": 150
   },
   "hasClickThrough": false,
+  "isFixedToViewport": false,
   "isFlippedHorizontal": false,
   "isFlippedVertical": true,
   "isLocked": false,
@@ -41,8 +43,9 @@
   "style": {
     "_class": "style",
     "do_objectID": "4693CFF2-5B41-4F27-8917-AD40475B314A",
-    "endDecorationType": 0,
+    "endMarkerType": 0,
     "miterLimit": 10,
-    "startDecorationType": 0
+    "startMarkerType": 0,
+    "windingRule": 1
   }
 }

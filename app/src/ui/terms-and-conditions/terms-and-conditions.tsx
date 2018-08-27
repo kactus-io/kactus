@@ -240,8 +240,9 @@ export class TermsAndConditions extends React.Component<
               under the{' '}
               <LinkButton uri={license}>
                 Creative Commons Attribution license
-              </LinkButton>. You may use it freely under the terms of the
-              Creative Commons license.
+              </LinkButton>
+              . You may use it freely under the terms of the Creative Commons
+              license.
             </li>
 
             <li>

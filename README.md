@@ -32,6 +32,8 @@ Download the installer for your operating system:
 
 ## :cactus: I have a problem with Kactus
 
+Note: The [Kactus Code of Conduct](https://github.com/kactus-io/kactus/blob/master/CODE_OF_CONDUCT.md) applies in all interactions relating to the GitHub Desktop project.
+
 First, please search the [open issues](https://github.com/kactus-io/kactus/issues?q=is%3Aopen)
 and [closed issues](https://github.com/kactus-io/kactus/issues?q=is%3Aclosed)
 to see if your issue hasn't already been reported (it may also be fixed).
@@ -42,6 +44,10 @@ that are being tracked against Kactus, and some of these issues have workarounds
 If you can't find an issue that matches what you're seeing, open a [new issue](https://github.com/kactus-io/kactus/issues/new)
 choose the right template and provide us with enough information to investigate
 further.
+
+## :cactus: The issue I reported isn't fixed yet. What can I do?
+
+If nobody has responded to your issue in a few days, you're welcome to respond to it with a friendly ping in the issue. Please do not respond more than a second time if nobody has responded. The Kactus maintainers are constrained in time and resources, and diagnosing individual configurations can be difficult and time consuming. While we'll try to at least get you pointed in the right direction, we can't guarantee we'll be able to dig too deeply into any one person's issue.
 
 ## :cactus: How can I contribute to Kactus?
 

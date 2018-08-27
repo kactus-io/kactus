@@ -21,6 +21,7 @@
     "y": 6.034314575050764
   },
   "isClosed": true,
+  "isFixedToViewport": false,
   "isFlippedHorizontal": false,
   "isFlippedVertical": false,
   "isLocked": false,
@@ -28,113 +29,6 @@
   "layerListExpandedType": 0,
   "name": "Shape_145_-path",
   "nameIsFixed": false,
-  "path": {
-    "_class": "path",
-    "isClosed": true,
-    "pointRadiusBehaviour": 1,
-    "points": [
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{-0.018737097979180918, 0.30888633232345558}",
-        "curveMode": 4,
-        "curveTo": "{0.090470712121699687, 0.25428242727301875}",
-        "hasCurveFrom": true,
-        "hasCurveTo": false,
-        "point": "{0.090470712121699687, 0.25428242727301875}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.03586680707126326, 0.52730195252521839}",
-        "curveMode": 4,
-        "curveTo": "{-0.018737097979180918, 0.41809414242433701}",
-        "hasCurveFrom": false,
-        "hasCurveTo": true,
-        "point": "{0.03586680707126326, 0.52730195252521839}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.30888633232346091, 1.018737097979181}",
-        "curveMode": 4,
-        "curveTo": "{0.25428242727302447, 0.90952928787829945}",
-        "hasCurveFrom": true,
-        "hasCurveTo": false,
-        "point": "{0.25428242727302447, 0.90952928787829945}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.52730195252522205, 0.96413319292873634}",
-        "curveMode": 4,
-        "curveTo": "{0.41809414242434151, 1.018737097979181}",
-        "hasCurveFrom": false,
-        "hasCurveTo": true,
-        "point": "{0.52730195252522205, 0.96413319292873634}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{1.018737097979181, 0.74571757272698125}",
-        "curveMode": 4,
-        "curveTo": "{0.90952928787830034, 0.80032147777741813}",
-        "hasCurveFrom": true,
-        "hasCurveTo": false,
-        "point": "{0.90952928787830034, 0.80032147777741813}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.96413319292873667, 0.52730195252521839}",
-        "curveMode": 4,
-        "curveTo": "{1.018737097979181, 0.63650976262609982}",
-        "hasCurveFrom": false,
-        "hasCurveTo": true,
-        "point": "{0.96413319292873667, 0.52730195252521839}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.6365097626261027, -0.018737097979180922}",
-        "curveMode": 4,
-        "curveTo": "{0.69111366767653915, 0.090470712121700492}",
-        "hasCurveFrom": true,
-        "hasCurveTo": false,
-        "point": "{0.69111366767653915, 0.090470712121700492}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.41809414242434151, 0.035866807071263669}",
-        "curveMode": 4,
-        "curveTo": "{0.52730195252522205, -0.018737097979180922}",
-        "hasCurveFrom": false,
-        "hasCurveTo": true,
-        "point": "{0.41809414242434151, 0.035866807071263669}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.090470712121707444, 0.25428242727302652}",
-        "curveMode": 1,
-        "curveTo": "{0.090470712121707444, 0.25428242727302652}",
-        "hasCurveFrom": false,
-        "hasCurveTo": false,
-        "point": "{0.090470712121707444, 0.25428242727302652}"
-      },
-      {
-        "_class": "curvePoint",
-        "cornerRadius": 0,
-        "curveFrom": "{0.090470712121707444, 0.25428242727302652}",
-        "curveMode": 1,
-        "curveTo": "{0.090470712121707444, 0.25428242727302652}",
-        "hasCurveFrom": false,
-        "hasCurveTo": false,
-        "point": "{0.090470712121707444, 0.25428242727302652}"
-      }
-    ]
-  },
   "pointRadiusBehaviour": 1,
   "points": [
     {

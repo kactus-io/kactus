@@ -17,7 +17,7 @@ versions look similar to the below output:
 
 ```shellsession
 $ node -v
-v8.11.2
+v8.11.3
 
 $ python --version
 Python 2.7.13

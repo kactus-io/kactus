@@ -287,6 +287,7 @@ export class ChangesList extends React.Component<
 
       return (
         <ChangedFile
+          id={file.id}
           path={file.path}
           status={file.status}
           parts={file.parts}
@@ -296,6 +297,7 @@ export class ChangesList extends React.Component<
           onIncludeChanged={this.props.onIncludeChanged}
           availableWidth={this.props.availableWidth}
           onContextMenu={this.onItemContextMenu}
+          disableSelection={this.props.isCommitting}
         />
       )
     } else {
@@ -422,6 +424,7 @@ export class ChangesList extends React.Component<
   }
 
   private onItemContextMenu = (
+    id: string,
     path: string,
     status: AppFileStatus,
     event: React.MouseEvent<HTMLDivElement>
@@ -437,7 +440,7 @@ export class ChangesList extends React.Component<
     const paths = new Array<string>()
     const extensions = new Set<string>()
 
-    this.props.selectedFileIDs.forEach(fileID => {
+    const addItemToArray = (fileID: string) => {
       const newFile = wd.findFileWithID(fileID)
       if (newFile) {
         selectedFiles.push(newFile)
@@ -448,7 +451,17 @@ export class ChangesList extends React.Component<
           extensions.add(extension)
         }
       }
-    })
+    }
+
+    if (this.props.selectedFileIDs.includes(id)) {
+      // user has selected a file inside an existing selection
+      // -> context menu entries should be applied to all selected files
+      this.props.selectedFileIDs.forEach(addItemToArray)
+    } else {
+      // this is outside their previous selection
+      // -> context menu entries should be applied to just this file
+      addItemToArray(id)
+    }
 
     const items: IMenuItem[] = [
       {
@@ -541,7 +554,7 @@ export class ChangesList extends React.Component<
             label={filesDescription}
             value={this.includeAllValue}
             onChange={this.onIncludeAllChanged}
-            disabled={fileCount === 0}
+            disabled={fileCount === 0 || this.props.isCommitting}
           />
         </div>
 

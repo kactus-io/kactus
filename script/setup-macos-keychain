@@ -15,7 +15,8 @@ security set-keychain-settings -t 3600 -u $KEY_CHAIN
 security import developerID_application.cer -k $KEY_CHAIN -T /usr/bin/codesign -T /usr/bin/security
 security import developer-id-cert.p12 -k $KEY_CHAIN -P $KEY_PASSWORD -T /usr/bin/codesign -T /usr/bin/security
 
-echo "Add keychain to keychain-list"
-security list-keychains -s $KEY_CHAIN
+security default-keychain -s $KEY_CHAIN
 
-security find-identity -p codesigning -v
+# set key partition list to avoid UI permission popup that causes hanging at CI
+security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k travis $KEY_CHAIN
+

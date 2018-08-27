@@ -11,7 +11,7 @@ const root = Path.dirname(__dirname)
 const prettierPath = Path.join(root, 'node_modules', '.bin', 'prettier')
 
 const args = [
-  '**/*.scss',
+  '**/*.{scss,y{,a}ml}',
   'app/**/*.{ts,tsx}',
   'script/**/*.ts',
   '--list-different',
