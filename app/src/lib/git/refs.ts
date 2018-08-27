@@ -40,19 +40,24 @@ export async function getSymbolicRef(
   repository: Repository,
   ref: string
 ): Promise<string | null> {
-  const result = await git(
-    ['symbolic-ref', '-q', ref],
-    repository.path,
-    'getSymbolicRef',
-    {
-      successExitCodes: new Set([0, 128]),
-    }
-  )
+  try {
+    const result = await git(
+      ['symbolic-ref', '-q', ref],
+      repository.path,
+      'getSymbolicRef',
+      {
+        successExitCodes: new Set([0, 128]),
+      }
+    )
 
-  if (result.exitCode === 128) {
-    // ref was not a symbolic ref or ref does not exist
+    if (result.exitCode === 128) {
+      // ref was not a symbolic ref or ref does not exist
+      return null
+    }
+
+    return result.stdout.trim()
+  } catch (err) {
+    log.error('Error while getting the symbolic ref', err)
     return null
   }
-
-  return result.stdout.trim()
 }
