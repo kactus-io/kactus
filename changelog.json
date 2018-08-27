@@ -1,6 +1,14 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.13": [
+      "[Improved] Add instructions to login to GH enterprise",
+      "[Improved] Repository indicator background work",
+      "[Fixed] Switch to history view for default branch when deleting current branch during a compare",
+      "[Fixed] Background Git operations on missing repositories are not handled as expected",
+      "[Fixed] A potential bug when getting the git symbolic ref",
+      "[Fixed] Do not show the unsubscribe button when part of an org (should be handled in the org admin)"
+    ],
     "0.3.12": [
       "[Improved] Add some padding around image diffs so that it's easier to grab the slider",
       "[Fixed] Closing a sketch file in the changes list would make it disappear"
