@@ -11,6 +11,13 @@ export enum Provider {
  * This contains a token that will be used for operations that require authentication.
  */
 export class Account {
+  public readonly unlockedKactus: boolean
+  public readonly unlockedEnterpriseKactus: boolean
+  public readonly unlockedKactusFromOrg: boolean
+  public readonly unlockedEnterpriseKactusFromOrg: boolean
+  public readonly unlockedKactusFromOrgAdmin: boolean
+  public readonly unlockedEnterpriseKactusFromOrgAdmin: boolean
+
   /** Create an account which can be used to perform unauthenticated API actions */
   public static anonymous(): Account {
     return new Account(
@@ -22,8 +29,7 @@ export class Account {
       '',
       -1,
       '',
-      false,
-      false
+      null
     )
   }
 
@@ -44,11 +50,34 @@ export class Account {
     public readonly id: number,
     /** The friendly name associated with this account */
     public readonly name: string,
-    /** Wether the user has full access to Kactus */
-    public readonly unlockedKactus: boolean,
-    /** Wether the user has enterprise access to Kactus */
-    public readonly unlockedEnterpriseKactus: boolean
-  ) {}
+    kactusStatus: {
+      /** Wether the user has full access to Kactus */
+      premium: boolean
+      /** Wether the user has enterprise access to Kactus */
+      enterprise: boolean
+      enterpriseFromOrg: boolean
+      enterpriseFromOrgAdmin: boolean
+      premiumFromOrg: boolean
+      premiumFromOrgAdmin: boolean
+    } | null
+  ) {
+    this.unlockedKactus = kactusStatus ? !!kactusStatus.premium : false
+    this.unlockedEnterpriseKactus = kactusStatus
+      ? !!kactusStatus.enterprise
+      : false
+    this.unlockedKactusFromOrg = kactusStatus
+      ? !!kactusStatus.premiumFromOrg
+      : false
+    this.unlockedEnterpriseKactusFromOrg = kactusStatus
+      ? !!kactusStatus.enterpriseFromOrg
+      : false
+    this.unlockedKactusFromOrgAdmin = kactusStatus
+      ? !!kactusStatus.premiumFromOrgAdmin
+      : false
+    this.unlockedEnterpriseKactusFromOrgAdmin = kactusStatus
+      ? !!kactusStatus.enterpriseFromOrgAdmin
+      : false
+  }
 
   public withToken(token: string): Account {
     return new Account(
@@ -60,8 +89,14 @@ export class Account {
       this.avatarURL,
       this.id,
       this.name,
-      this.unlockedKactus,
-      this.unlockedEnterpriseKactus
+      {
+        premium: this.unlockedKactus,
+        enterprise: this.unlockedEnterpriseKactus,
+        premiumFromOrg: this.unlockedKactusFromOrg,
+        enterpriseFromOrg: this.unlockedEnterpriseKactusFromOrg,
+        premiumFromOrgAdmin: this.unlockedKactusFromOrgAdmin,
+        enterpriseFromOrgAdmin: this.unlockedEnterpriseKactusFromOrgAdmin,
+      }
     )
   }
 
@@ -75,8 +110,22 @@ export class Account {
       this.avatarURL,
       this.id,
       this.name,
-      enterprise ? false : true,
-      enterprise ? true : false
+      {
+        premium: enterprise
+          ? this.unlockedKactusFromOrg
+            ? this.unlockedKactus
+            : false
+          : true,
+        enterprise: enterprise
+          ? true
+          : this.unlockedEnterpriseKactusFromOrg
+            ? this.unlockedEnterpriseKactus
+            : false,
+        premiumFromOrg: this.unlockedKactusFromOrg,
+        enterpriseFromOrg: this.unlockedEnterpriseKactusFromOrg,
+        premiumFromOrgAdmin: this.unlockedKactusFromOrgAdmin,
+        enterpriseFromOrgAdmin: this.unlockedEnterpriseKactusFromOrgAdmin,
+      }
     )
   }
 
@@ -90,8 +139,7 @@ export class Account {
       this.avatarURL,
       this.id,
       this.name,
-      false,
-      false
+      null
     )
   }
 }

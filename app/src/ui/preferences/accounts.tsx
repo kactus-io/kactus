@@ -32,18 +32,18 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
       <DialogContent className="accounts-tab">
         <h2>GitHub.com</h2>
         {this.props.dotComAccount
-          ? this.renderAccount(this.props.dotComAccount)
+          ? this.renderAccount(this.props.dotComAccount, 'premium')
           : this.renderSignIn(SignInType.DotCom)}
 
         <h2>Enterprise</h2>
         {this.props.enterpriseAccount
-          ? this.renderAccount(this.props.enterpriseAccount)
+          ? this.renderAccount(this.props.enterpriseAccount, 'enterprise')
           : this.renderSignIn(SignInType.Enterprise)}
       </DialogContent>
     )
   }
 
-  private renderAccount(account: Account) {
+  private renderAccount(account: Account, type: 'premium' | 'enterprise') {
     const found = lookupPreferredEmail(account.emails)
     const email = found ? found.email : ''
 
@@ -53,6 +53,16 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
       avatarURL: account.avatarURL,
     }
 
+    const isUnlocked =
+      type === 'premium'
+        ? account.unlockedKactus
+        : account.unlockedEnterpriseKactus
+
+    const isUnlockedOrg =
+      type === 'premium'
+        ? account.unlockedKactusFromOrg
+        : account.unlockedEnterpriseKactusFromOrg
+
     return (
       <Row className="account-info">
         <Avatar user={avatarUser} />
@@ -61,12 +71,14 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
           <div className="login">@{account.login}</div>
         </div>
         <div className="actions-wrapper">
-          {account.unlockedKactus || account.unlockedEnterpriseKactus ? (
+          {isUnlocked ? (
             <span className="kactus-unlocked">
               ✅ Kactus unlocked.{' '}
-              <LinkButton onClick={this.onCancelSubscription(account)}>
-                Unsubscribe
-              </LinkButton>
+              {isUnlockedOrg ? (
+                <LinkButton onClick={this.onCancelSubscription(account)}>
+                  Unsubscribe
+                </LinkButton>
+              ) : null}
             </span>
           ) : (
             <Button

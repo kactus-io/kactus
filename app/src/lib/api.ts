@@ -180,8 +180,12 @@ interface IAPIKactusNestedUser {
   readonly stripeId: string | null
 
   readonly valid?: boolean
+  readonly validFromOrg?: boolean
+  readonly validFromOrgAdmin?: boolean
 
   readonly validEnterprise?: boolean
+  readonly validEnterpriseFromOrg?: boolean
+  readonly validEnterpriseFromOrgAdmin?: boolean
 
   readonly createdAt?: Date
 }
@@ -780,8 +784,7 @@ export async function fetchUser(
       avatarURL,
       user.id,
       user.name || user.login,
-      unlockedKactusStatus === null ? false : unlockedKactusStatus.premium,
-      unlockedKactusStatus === null ? false : unlockedKactusStatus.enterprise
+      unlockedKactusStatus
     )
   } catch (e) {
     log.warn(`fetchUser: failed with endpoint ${endpoint}`, e)
@@ -956,7 +959,14 @@ export async function checkUnlockedKactus(
   user: IAPIUser,
   emails: ReadonlyArray<IAPIEmail>,
   endpoint: string
-): Promise<{ enterprise: boolean; premium: boolean } | null> {
+): Promise<{
+  enterprise: boolean
+  enterpriseFromOrg: boolean
+  enterpriseFromOrgAdmin: boolean
+  premium: boolean
+  premiumFromOrg: boolean
+  premiumFromOrgAdmin: boolean
+} | null> {
   try {
     const path = `${KactusAPIEndpoint}/checkUnlocked`
     const response = await fetch(path, {
@@ -974,12 +984,23 @@ export async function checkUnlockedKactus(
     })
     if (response.status === HttpStatusCode.NotFound) {
       log.warn(`checkUnlockedKactus: '${path}' returned a 404`)
-      return { enterprise: false, premium: false }
+      return {
+        enterprise: false,
+        enterpriseFromOrg: false,
+        enterpriseFromOrgAdmin: false,
+        premium: false,
+        premiumFromOrg: false,
+        premiumFromOrgAdmin: false,
+      }
     }
     const kactusUser = await parsedResponse<IAPIKactusUser>(response)
     return {
       enterprise: !!kactusUser.user.validEnterprise,
+      enterpriseFromOrg: !!kactusUser.user.validEnterpriseFromOrg,
+      enterpriseFromOrgAdmin: !!kactusUser.user.validEnterpriseFromOrgAdmin,
       premium: !!kactusUser.user.valid,
+      premiumFromOrg: !!kactusUser.user.validFromOrg,
+      premiumFromOrgAdmin: !!kactusUser.user.validFromOrgAdmin,
     }
   } catch (e) {
     log.warn(`checkUnlockedKactus: failed for ${user.login}`, e)

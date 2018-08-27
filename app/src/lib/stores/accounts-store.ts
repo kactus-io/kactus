@@ -46,6 +46,10 @@ interface IAccount {
   readonly name: string
   readonly unlockedKactus: boolean
   readonly unlockedEnterpriseKactus: boolean
+  readonly unlockedKactusFromOrg: boolean
+  readonly unlockedEnterpriseKactusFromOrg: boolean
+  readonly unlockedKactusFromOrgAdmin: boolean
+  readonly unlockedEnterpriseKactusFromOrgAdmin: boolean
 }
 
 /** The store for logged in accounts. */
@@ -219,8 +223,14 @@ export class AccountsStore extends BaseStore {
         account.avatarURL,
         account.id,
         account.name,
-        account.unlockedKactus,
-        account.unlockedEnterpriseKactus
+        {
+          premium: account.unlockedKactus,
+          enterprise: account.unlockedEnterpriseKactus,
+          premiumFromOrg: account.unlockedKactusFromOrg,
+          enterpriseFromOrg: account.unlockedEnterpriseKactusFromOrg,
+          premiumFromOrgAdmin: account.unlockedKactusFromOrgAdmin,
+          enterpriseFromOrgAdmin: account.unlockedEnterpriseKactusFromOrgAdmin,
+        }
       )
 
       const key = getKeyForAccount(accountWithoutToken)

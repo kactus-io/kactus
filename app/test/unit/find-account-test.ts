@@ -18,8 +18,7 @@ describe.skip('findAccountForRemoteURL', () => {
       '',
       1,
       'GitHub',
-      false,
-      false
+      null
     ),
     new Account(
       Provider.GitHub,
@@ -30,8 +29,7 @@ describe.skip('findAccountForRemoteURL', () => {
       '',
       2,
       'My Company',
-      false,
-      false
+      null
     ),
   ]
 
