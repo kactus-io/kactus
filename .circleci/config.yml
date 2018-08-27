@@ -11,9 +11,9 @@ machine:
 
 dependencies:
   cache_directories:
-    - ".eslintcache"
-    - "node_modules"
-    - "~/.electron"
+    - '.eslintcache'
+    - 'node_modules'
+    - '~/.electron'
 
   pre:
     - brew update

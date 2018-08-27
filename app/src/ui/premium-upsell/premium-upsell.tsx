@@ -310,7 +310,9 @@ export class PremiumUpsell extends React.Component<
                     (couponState !== null && !!couponState.error)
                   }
                 >
-                  Unlock (${price.toFixed(2)}/month)
+                  Unlock ($
+                  {price.toFixed(2)}
+                  /month)
                 </Button>
                 <Button onClick={this.props.onDismissed}>Not now</Button>
               </ButtonGroup>

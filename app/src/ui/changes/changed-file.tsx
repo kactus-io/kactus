@@ -62,7 +62,9 @@ export class ChangedFile extends React.Component<IChangedFileProps, {}> {
 
     return (
       <div className="file" onContextMenu={this.onContextMenu}>
-        {(this.props.parts || []).map((p, i) => <Space key={i} />)}
+        {(this.props.parts || []).map((p, i) => (
+          <Space key={i} />
+        ))}
         <Checkbox
           // The checkbox doesn't need to be tab reachable since we emulate
           // checkbox behavior on the list item itself, ie hitting space bar

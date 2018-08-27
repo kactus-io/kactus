@@ -787,13 +787,12 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   private clearSelectedCommit(repository: Repository) {
     this.updateCommitSelectionState(repository, () => ({
-        sha: null,
-        file: null,
-        changedFiles: [],
-        diff: null,
-        loadingDiff: null
-      }
-    ))
+      sha: null,
+      file: null,
+      changedFiles: [],
+      diff: null,
+      loadingDiff: null,
+    }))
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
@@ -807,8 +806,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         ? new Array<CommittedFileChange>()
         : state.changedFiles
       const file = commitChanged ? null : state.file
-      const commitSelection = { sha, file, diff: null, changedFiles, loadingDiff: null }
-      return commitSelection
+      return { sha, file, diff: null, changedFiles, loadingDiff: null }
     })
 
     this.emitUpdate()
@@ -1152,7 +1150,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       sha: commitSelection.sha,
       changedFiles,
       diff: null,
-      loadingDiff: null
+      loadingDiff: null,
     }
 
     this.updateCommitSelectionState(repository, () => selectionOrFirstFile)
@@ -1180,7 +1178,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.updateCommitSelectionState(repository, () => ({
       file,
       diff: null,
-      loadingDiff: diffId
+      loadingDiff: diffId,
     }))
     this.emitUpdate()
 
@@ -1189,7 +1187,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     if (!sha) {
       this.updateCommitSelectionState(repository, () => ({
-        loadingDiff: null
+        loadingDiff: null,
       }))
       this.emitUpdate()
       if (__DEV__) {
@@ -1232,7 +1230,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       this.updateCommitSelectionState(repository, () => ({
         file,
         diff,
-        loadingDiff: null
+        loadingDiff: null,
       }))
     } else {
       this.updateCommitSelectionState(repository, () => ({
@@ -1684,7 +1682,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
   public async _loadStatus(
     repository: Repository,
     options?: {
-      clearPartialState?: boolean,
+      clearPartialState?: boolean
       skipParsingModifiedSketchFiles?: boolean
     }
   ): Promise<boolean> {
@@ -1962,15 +1960,18 @@ export class AppStore extends TypedBaseStore<IAppState> {
       const stateBeforeUpdate = this.getRepositoryState(repository)
       if (
         !diffId ||
-        stateBeforeUpdate[fromFileSelection ? 'commitSelection' : 'changesState']
-          .loadingDiff !== diffId
+        stateBeforeUpdate[
+          fromFileSelection ? 'commitSelection' : 'changesState'
+        ].loadingDiff !== diffId
       ) {
         log.error('loading diff not matching, aborting')
         return
       }
 
       if (
-        !stateBeforeUpdate[fromFileSelection ? 'commitSelection' : 'changesState'].diff
+        !stateBeforeUpdate[
+          fromFileSelection ? 'commitSelection' : 'changesState'
+        ].diff
       ) {
         setTimeout(() => callback(err, diff), 100)
         return
@@ -1981,7 +1982,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
           if (!diff || !state.diff || state.diff.kind !== DiffType.Sketch) {
             return {
               diff: null,
-              loadingDiff: null
+              loadingDiff: null,
             }
           }
           return {

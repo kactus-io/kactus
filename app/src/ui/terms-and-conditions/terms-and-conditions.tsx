@@ -135,7 +135,8 @@ export class TermsAndConditions extends React.Component<
             Kactus will process that information in accordance with the
             <LinkButton uri={privacyStatement}>
               Kactus Privacy Statement
-            </LinkButton>.
+            </LinkButton>
+            .
           </p>
 
           <h2>Additional Services</h2>
