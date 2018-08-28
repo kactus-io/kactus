@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.14": [
+      "[Fixed] License not being recognized"
+    ],
     "0.3.13": [
       "[Improved] Add instructions to login to GH enterprise",
       "[Improved] Repository indicator background work",
