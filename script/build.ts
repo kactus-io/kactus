@@ -63,12 +63,9 @@ generateLicenseMetadata(outRoot)
 
 moveAnalysisFiles()
 
-const isFork = process.env.CIRCLE_PR_USERNAME
-if (
-  process.env.CIRCLE_BUILD_IMAGE &&
-  process.env.CIRCLE_BUILD_IMAGE === 'osx' &&
-  !isFork
-) {
+const isFork =
+  process.env.CIRCLE_REPOSITORY_URL !== 'git@github.com:kactus-io/kactus.git'
+if (process.env.CIRCLECI && !isFork) {
   console.log('Setting up keychain…')
   cp.execSync(path.join(__dirname, 'setup-macos-keychain'))
 }
