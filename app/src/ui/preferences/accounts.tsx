@@ -32,18 +32,18 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
       <DialogContent className="accounts-tab">
         <h2>GitHub.com</h2>
         {this.props.dotComAccount
-          ? this.renderAccount(this.props.dotComAccount, 'premium')
+          ? this.renderAccount(this.props.dotComAccount)
           : this.renderSignIn(SignInType.DotCom)}
 
         <h2>Enterprise</h2>
         {this.props.enterpriseAccount
-          ? this.renderAccount(this.props.enterpriseAccount, 'enterprise')
+          ? this.renderAccount(this.props.enterpriseAccount)
           : this.renderSignIn(SignInType.Enterprise)}
       </DialogContent>
     )
   }
 
-  private renderAccount(account: Account, type: 'premium' | 'enterprise') {
+  private renderAccount(account: Account) {
     const found = lookupPreferredEmail(account.emails)
     const email = found ? found.email : ''
 
@@ -54,14 +54,12 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
     }
 
     const isUnlocked =
-      type === 'premium'
-        ? account.unlockedKactus
-        : account.unlockedEnterpriseKactus
+      account.unlockedKactus || account.unlockedEnterpriseKactus
 
     const isUnlockedOrg =
-      type === 'premium'
-        ? account.unlockedKactusFromOrg
-        : account.unlockedEnterpriseKactusFromOrg
+      (account.unlockedKactus && account.unlockedKactusFromOrg) ||
+      (account.unlockedEnterpriseKactus &&
+        account.unlockedEnterpriseKactusFromOrg)
 
     return (
       <Row className="account-info">
@@ -74,7 +72,7 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
           {isUnlocked ? (
             <span className="kactus-unlocked">
               ✅ Kactus unlocked.{' '}
-              {isUnlockedOrg ? (
+              {!isUnlockedOrg ? (
                 <LinkButton onClick={this.onCancelSubscription(account)}>
                   Unsubscribe
                 </LinkButton>
