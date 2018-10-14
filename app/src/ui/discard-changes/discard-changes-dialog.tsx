@@ -10,6 +10,7 @@ import { PathText } from '../lib/path-text'
 import { Monospaced } from '../lib/monospaced'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { TrashNameLabel } from '../lib/context-menu'
+import { toPlatformCase } from '../../lib/platform-case'
 
 interface IDiscardChangesProps {
   readonly repository: Repository
@@ -21,6 +22,7 @@ interface IDiscardChangesProps {
    * to ask for confirmation when discarding
    * changes
    */
+  readonly discardingAllChanges: boolean
   readonly showDiscardChangesSetting: boolean
   readonly onDismissed: () => void
   readonly onConfirmDiscardChangesChanged: (optOut: boolean) => void
@@ -57,10 +59,16 @@ export class DiscardChanges extends React.Component<
   }
 
   public render() {
+    const discardingAllChanges = this.props.discardingAllChanges
+
     return (
       <Dialog
         id="discard-changes"
-        title="Confirm Discard Changes"
+        title={
+          discardingAllChanges
+            ? toPlatformCase('Confirm Discard All Changes')
+            : toPlatformCase('Confirm Discard Changes')
+        }
         onDismissed={this.props.onDismissed}
         type="warning"
       >
@@ -76,7 +84,11 @@ export class DiscardChanges extends React.Component<
         <DialogFooter>
           <ButtonGroup destructive={true}>
             <Button type="submit">Cancel</Button>
-            <Button onClick={this.discard}>Discard Changes</Button>
+            <Button onClick={this.discard}>
+              {discardingAllChanges
+                ? toPlatformCase('Discard All Changes')
+                : toPlatformCase('Discard Changes')}
+            </Button>
           </ButtonGroup>
         </DialogFooter>
       </Dialog>

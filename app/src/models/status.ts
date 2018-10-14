@@ -39,6 +39,7 @@ export enum AppFileStatus {
   Copied,
   Renamed,
   Conflicted,
+  Resolved,
 }
 
 /** The porcelain status for an ordinary changed entry */
@@ -102,6 +103,8 @@ export function mapStatus(status: AppFileStatus): string {
       return 'Renamed'
     case AppFileStatus.Conflicted:
       return 'Conflicted'
+    case AppFileStatus.Resolved:
+      return 'Resolved'
     case AppFileStatus.Copied:
       return 'Copied'
   }
@@ -127,6 +130,8 @@ export function iconForStatus(status: AppFileStatus): OcticonSymbol {
       return OcticonSymbol.diffRenamed
     case AppFileStatus.Conflicted:
       return OcticonSymbol.alert
+    case AppFileStatus.Resolved:
+      return OcticonSymbol.check
     case AppFileStatus.Copied:
       return OcticonSymbol.diffAdded
   }
@@ -199,8 +204,9 @@ export class WorkingDirectoryFileChange extends FileChange {
   /**
    * @param path The relative path to the file in the repository.
    * @param status The status of the change to the file.
-   * @param oldPath The original path in the case of a renamed file.
    * @param selection Contains the selection details for this file - all, nothing or partial.
+   * @param oldPath The original path in the case of a renamed file.
+   * @param conflictMarkers The number of conflict markers found in this file
    */
   public constructor(
     path: string,
@@ -208,6 +214,7 @@ export class WorkingDirectoryFileChange extends FileChange {
     public readonly selection: DiffSelection,
     sketchFile?: IKactusFile,
     oldPath?: string,
+    public readonly conflictMarkers: number = 0,
     parts?: Array<string>
   ) {
     super(path, status, sketchFile, oldPath, parts)
@@ -232,6 +239,7 @@ export class WorkingDirectoryFileChange extends FileChange {
       selection,
       this.sketchFile,
       this.oldPath,
+      this.conflictMarkers,
       this.parts
     )
   }

@@ -346,7 +346,10 @@ export class App extends React.Component<IAppProps, IAppState> {
       cancelable: true,
     })
 
-    if (document.activeElement && document.activeElement.dispatchEvent(event)) {
+    if (
+      document.activeElement != null &&
+      document.activeElement.dispatchEvent(event)
+    ) {
       remote.getCurrentWebContents().selectAll()
     }
   }
@@ -607,13 +610,12 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   public componentDidMount() {
     document.ondragover = e => {
-      if (!e.dataTransfer) {
-        return
-      }
-      if (this.isShowingModal) {
-        e.dataTransfer.dropEffect = 'none'
-      } else {
-        e.dataTransfer.dropEffect = 'copy'
+      if (e.dataTransfer != null) {
+        if (this.isShowingModal) {
+          e.dataTransfer.dropEffect = 'none'
+        } else {
+          e.dataTransfer.dropEffect = 'copy'
+        }
       }
 
       e.preventDefault()
@@ -627,8 +629,10 @@ export class App extends React.Component<IAppProps, IAppState> {
       if (this.isShowingModal || !e.dataTransfer) {
         return
       }
-      const files = e.dataTransfer.files
-      this.handleDragAndDrop(files)
+      if (e.dataTransfer != null) {
+        const files = e.dataTransfer.files
+        this.handleDragAndDrop(files)
+      }
       e.preventDefault()
     }
 
@@ -978,6 +982,10 @@ export class App extends React.Component<IAppProps, IAppState> {
           popup.showDiscardChangesSetting === undefined
             ? true
             : popup.showDiscardChangesSetting
+        const discardingAllChanges =
+          popup.discardingAllChanges === undefined
+            ? false
+            : popup.discardingAllChanges
 
         return (
           <DiscardChanges
@@ -989,6 +997,7 @@ export class App extends React.Component<IAppProps, IAppState> {
               this.state.askForConfirmationOnDiscardChanges
             }
             showDiscardChangesSetting={showSetting}
+            discardingAllChanges={discardingAllChanges}
             onDismissed={this.onPopupDismissed}
             onConfirmDiscardChangesChanged={this.onConfirmDiscardChangesChanged}
           />
@@ -1779,7 +1788,6 @@ export class App extends React.Component<IAppProps, IAppState> {
           accounts={state.accounts}
           externalEditorLabel={externalEditorLabel}
           onOpenInExternalEditor={this.openFileInExternalEditor}
-          isDivergingBranchBannerVisible={state.isDivergingBranchBannerVisible}
         />
       )
     } else if (selectedState.type === SelectionType.CloningRepository) {

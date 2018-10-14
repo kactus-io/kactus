@@ -200,8 +200,6 @@ export interface IAppState {
   /** The currently selected tab for the Branches foldout. */
   readonly selectedBranchesTab: BranchesTab
 
-  /** Show the diverging notification banner */
-  readonly isDivergingBranchBannerVisible: boolean
   /** The currently selected appearance (aka theme) */
   readonly selectedTheme: ApplicationTheme
 }
@@ -257,6 +255,7 @@ export type Popup =
       repository: Repository
       files: ReadonlyArray<WorkingDirectoryFileChange>
       showDiscardChangesSetting?: boolean
+      discardingAllChanges?: boolean
     }
   | { type: PopupType.Preferences; initialSelectedTab?: PreferencesTab }
   | {
@@ -711,6 +710,9 @@ export interface ICompareBranch {
 }
 
 export interface ICompareState {
+  /** Show the diverging notification banner */
+  readonly isDivergingBranchBannerVisible: boolean
+
   /** The current state of the compare form, based on user input */
   readonly formState: IDisplayHistory | ICompareBranch
 
@@ -722,6 +724,9 @@ export interface ICompareState {
 
   /** The text entered into the compare branch filter text box */
   readonly filterText: string
+
+  /** The SHA associated with the most recent history state */
+  readonly tip: string | null
 
   /** The SHAs of commits to render in the compare list */
   readonly commitSHAs: ReadonlyArray<string>

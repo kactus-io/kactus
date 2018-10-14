@@ -30,9 +30,11 @@ Download the installer for your operating system:
 
 - [macOS](https://github.com/kactus-io/kactus/releases)
 
-## :cactus: I have a problem with Kactus
+## Is Kactus right for me? What are the primary areas of focus?
 
-Note: The [Kactus Code of Conduct](https://github.com/kactus-io/kactus/blob/master/CODE_OF_CONDUCT.md) applies in all interactions relating to the GitHub Desktop project.
+[This document](https://github.com/kactus-io/kactus/blob/master/docs/process/what-is-kactus.md) describes the focus of Kactus and who the product is most useful for.
+
+## :cactus: I have a problem with Kactus
 
 First, please search the [open issues](https://github.com/kactus-io/kactus/issues?q=is%3Aopen)
 and [closed issues](https://github.com/kactus-io/kactus/issues?q=is%3Aclosed)

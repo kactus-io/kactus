@@ -207,6 +207,7 @@ export function buildDefaultMenu(
       {
         label: 'Remove',
         id: 'remove-repository',
+        accelerator: 'CmdOrCtrl+Delete',
         click: emit('remove-repository'),
       },
       separator,
@@ -267,6 +268,7 @@ export function buildDefaultMenu(
         label: 'Delete…',
         id: 'delete-branch',
         click: emit('delete-branch'),
+        accelerator: 'CmdOrCtrl+Shift+D',
       },
       separator,
       {
