@@ -160,61 +160,52 @@ export enum FileType {
 
 /** encapsulate changes to a file associated with a commit */
 export class FileChange {
-  /** the relative path to the file in the repository */
-  public readonly path: string
-
-  /** The original path in the case of a renamed file */
-  public readonly oldPath?: string
-
-  /** the status of the change to the file */
-  public readonly status: AppFileStatus
-
-  /** if the file is part of a sketch file, this is the sketch file */
-  public readonly sketchFile?: IKactusFile
-
-  public readonly parts?: Array<string>
-
   /** An ID for the file change. */
   public readonly id: string
 
   public readonly type: FileType
 
+  /**
+   * @param path The relative path to the file in the repository.
+   * @param status The status of the change to the file.
+   * @param sketchFile If the file is part of a sketch file, this is the sketch file
+   * @param oldPath The original path in the case of a renamed file.
+   */
   public constructor(
-    path: string,
-    status: AppFileStatus,
-    sketchFile?: IKactusFile,
-    oldPath?: string,
-    parts?: Array<string>
+    public readonly path: string,
+    public readonly status: AppFileStatus,
+    public readonly sketchFile?: IKactusFile,
+    public readonly oldPath?: string,
+    public readonly parts?: Array<string>
   ) {
-    this.path = path
-    this.status = status
-    this.oldPath = oldPath
-    this.sketchFile = sketchFile
+    this.id = `${this.status}+${this.path}`
+    this.type = FileType.NormalFile
     if (parts) {
       this.parts = parts
     } else if (sketchFile) {
       this.parts = getSketchFileParts(path, sketchFile)
     }
-    this.id = `${this.status}+${this.path}`
-    this.type = FileType.NormalFile
   }
 }
 
 /** encapsulate the changes to a file in the working directory */
 export class WorkingDirectoryFileChange extends FileChange {
-  /** contains the selection details for this file - all, nothing or partial */
-  public readonly selection: DiffSelection
-
   // for the change list
   public shown: boolean
   public index: number
   public opened = false
   public readonly fakePart = false
 
+  /**
+   * @param path The relative path to the file in the repository.
+   * @param status The status of the change to the file.
+   * @param oldPath The original path in the case of a renamed file.
+   * @param selection Contains the selection details for this file - all, nothing or partial.
+   */
   public constructor(
     path: string,
     status: AppFileStatus,
-    selection: DiffSelection,
+    public readonly selection: DiffSelection,
     sketchFile?: IKactusFile,
     oldPath?: string,
     parts?: Array<string>
@@ -222,7 +213,6 @@ export class WorkingDirectoryFileChange extends FileChange {
     super(path, status, sketchFile, oldPath, parts)
     this.shown = true
     this.index = -1
-    this.selection = selection
   }
 
   /** Create a new WorkingDirectoryFileChange with the given includedness. */
@@ -258,46 +248,29 @@ export type TSketchPartChange = {
 
 /**
  * An object encapsulating the changes to a committed file.
+ *
+ * @param status A commit SHA or some other identifier that ultimately
+ *               dereferences to a commit. This is the pointer to the
+ *               'after' version of this change. I.e. the parent of this
+ *               commit will contain the 'before' (or nothing, if the
+ *               file change represents a new file).
  */
 export class CommittedFileChange extends FileChange {
-  /**
-   * A commit SHA or some other identifier that ultimately
-   * dereferences to a commit. This is the pointer to the
-   * 'after' version of this change. I.e. the parent of this
-   * commit will contain the 'before' (or nothing, if the
-   * file change represents a new file).
-   */
-  public readonly commitish: string
-
   public constructor(
     path: string,
     status: AppFileStatus,
-    commitish: string,
+    public readonly commitish: string,
     sketchFile?: IKactusFile,
     oldPath?: string,
     parts?: Array<string>
   ) {
     super(path, status, sketchFile, oldPath, parts)
-
-    this.commitish = commitish
   }
 }
 
 /** the state of the working directory for a repository */
 export class WorkingDirectoryStatus {
-  /**
-   * The list of changes in the repository's working directory
-   */
-  public readonly files: ReadonlyArray<WorkingDirectoryFileChange> = []
-
   private readonly fileIxById = new Map<string, number>()
-
-  /**
-   * Update the include checkbox state of the form
-   * NOTE: we need to track this separately to the file list selection
-   *       and perform two-way binding manually when this changes
-   */
-  public readonly includeAll: boolean | null = true
 
   /** Create a new status with the given files. */
   public static fromFiles(
@@ -306,14 +279,17 @@ export class WorkingDirectoryStatus {
     return new WorkingDirectoryStatus(files, getIncludeAllState(files))
   }
 
+  /**
+   * @param files The list of changes in the repository's working directory.
+   * @param includeAll Update the include checkbox state of the form.
+   *                   NOTE: we need to track this separately to the file list selection
+   *                         and perform two-way binding manually when this changes.
+   */
   private constructor(
-    files: ReadonlyArray<WorkingDirectoryFileChange>,
-    includeAll: boolean | null
+    public readonly files: ReadonlyArray<WorkingDirectoryFileChange>,
+    public readonly includeAll: boolean | null = true
   ) {
-    this.files = files
     files.forEach((f, ix) => this.fileIxById.set(f.id, ix))
-
-    this.includeAll = includeAll
   }
 
   /**

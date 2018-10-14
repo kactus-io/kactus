@@ -1,6 +1,7 @@
 {
   "_class": "group",
   "booleanOperation": 0,
+  "clippingMaskMode": 0,
   "do_objectID": "29D117A0-C9A8-45C6-AD26-4C42F6F7A289",
   "exportOptions": {
     "_class": "exportOptions",
@@ -20,6 +21,7 @@
     "y": 0
   },
   "hasClickThrough": false,
+  "hasClippingMask": false,
   "isFixedToViewport": false,
   "isFlippedHorizontal": false,
   "isFlippedVertical": false,
@@ -28,7 +30,7 @@
   "layerListExpandedType": 2,
   "layers": [
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "20687977-608D-45F2-BD05-DD9C149385D0"
     },
     {
@@ -40,7 +42,7 @@
       "id": "F75EDE66-9330-49C4-A83A-0B2CF7338805"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "4807041C-501B-4178-91C9-7C4225F18782"
     },
     {
@@ -48,35 +50,35 @@
       "id": "2C68B87E-BA74-45B3-83E9-0794518AE8D0"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "1707116B-02B7-4CD8-B6D8-708A33662C51"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "2A844EEC-6067-4C98-A71E-A46013728327"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "C9A4812F-D8A2-4883-961A-32B29F529854"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "44A5B628-4844-489C-8397-DF657DA1E886"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "97045E80-891D-44F8-98E9-4DB3212DF230"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "5596A189-9475-4CD1-92DD-5B0A8CAA8FBC"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "05783713-4FF9-4029-9C37-F345E57137AB"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "F2279D46-BDD6-4271-B980-58FA5E3F0588"
     },
     {
@@ -96,7 +98,7 @@
       "id": "F44B119D-4CAF-441A-ABAB-30409EF991E5"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "7D827186-C223-4E12-B4DA-1B7EED46ACCD"
     },
     {

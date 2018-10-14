@@ -1,6 +1,7 @@
 {
   "_class": "group",
   "booleanOperation": 0,
+  "clippingMaskMode": 0,
   "do_objectID": "11283AAA-2A9B-4E56-BA1D-EA8CE59C9FD7",
   "exportOptions": {
     "_class": "exportOptions",
@@ -20,6 +21,7 @@
     "y": 0
   },
   "hasClickThrough": false,
+  "hasClippingMask": false,
   "isFixedToViewport": false,
   "isFlippedHorizontal": false,
   "isFlippedVertical": false,
@@ -28,19 +30,19 @@
   "layerListExpandedType": 2,
   "layers": [
     {
-      "class": "shapeGroup",
+      "class": "oval",
       "id": "2AF82E83-F5F1-4825-828A-D5E416CC87AE"
     },
     {
-      "class": "shapeGroup",
+      "class": "oval",
       "id": "9A4006E3-CCDC-4521-BFED-97C0AE3550A0"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "D877A954-6EE5-4C37-8C71-7F39D87BD385"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "93966D57-2D72-421F-89CF-D945514DFA60"
     },
     {
@@ -56,27 +58,27 @@
       "id": "0FB2757F-4561-4F92-AB4E-D9E58CD65344"
     },
     {
-      "class": "shapeGroup",
+      "class": "oval",
       "id": "7165961F-C50D-414E-960C-AB5384D5F9C8"
     },
     {
-      "class": "shapeGroup",
+      "class": "oval",
       "id": "BB92B0E2-314E-4B26-AAD9-32E68592D528"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "E4ECA432-2C0C-4FC2-9260-46A3054C7DB4"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "D5341F22-2AFE-4030-9B34-5737353231D9"
     },
     {
-      "class": "shapeGroup",
+      "class": "oval",
       "id": "8B022A11-75FB-46BD-B63C-D9E481B74931"
     },
     {
-      "class": "shapeGroup",
+      "class": "oval",
       "id": "BF5D120C-D2E5-4C3A-A9E9-5302486E21D4"
     },
     {
@@ -84,15 +86,15 @@
       "id": "D7829E8C-59C7-4C91-8C3A-7F614348BA67"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "CF0F7A38-34EF-4CE3-97DF-8BF44526AFBF"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "4D260CC6-6224-48AC-AFFE-1602BBDD8934"
     },
     {
-      "class": "shapeGroup",
+      "class": "shapePath",
       "id": "3C07B1A3-73C5-4391-A8D5-42B2FC4BDC38"
     }
   ],

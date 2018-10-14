@@ -33,27 +33,30 @@ export class Account {
     )
   }
 
+  /**
+   * Create an instance of an account
+   *
+   * @param provider The provider (for now only GH or Bitbucket)
+   * @param login The login name for this account
+   * @param endpoint The server for this account - GitHub or a GitHub Enterprise instance
+   * @param token The access token used to perform operations on behalf of this account
+   * @param emails The current list of email addresses associated with the account
+   * @param avatarURL The profile URL to render for this account
+   * @param id The database id for this account
+   * @param name The friendly name associated with this account
+   * @param kactusStatus
+   */
   public constructor(
-    /** The provider (for now only GH or Bitbucket)  */
     public readonly provider: Provider,
-    /** The login name for this account  */
     public readonly login: string,
-    /** The server for this account - GitHub or a GitHub Enterprise instance */
     public readonly endpoint: string,
-    /** The access token used to perform operations on behalf of this account */
     public readonly token: string,
-    /** The current list of email addresses associated with the account */
     public readonly emails: ReadonlyArray<IAPIEmail>,
-    /** The profile URL to render for this account */
     public readonly avatarURL: string,
-    /** The database id for this account */
     public readonly id: number,
-    /** The friendly name associated with this account */
     public readonly name: string,
     kactusStatus: {
-      /** Wether the user has full access to Kactus */
       premium: boolean
-      /** Wether the user has enterprise access to Kactus */
       enterprise: boolean
       enterpriseFromOrg: boolean
       enterpriseFromOrgAdmin: boolean

@@ -1,6 +1,6 @@
 import * as Path from 'path'
-import * as Fs from 'fs'
 import { git } from './core'
+import { readGitIgnoreAtRoot } from './gitignore'
 import { RepositoryDoesNotExistErrorCode } from 'dugite'
 
 /**
@@ -52,24 +52,28 @@ export async function getTopLevelWorkingDirectory(
   return Path.resolve(path, relativePath)
 }
 
-export async function readGitIgnore(
-  repositoryPath: string
-): Promise<string | null> {
-  const ignorePath = Path.join(repositoryPath, '.gitignore')
+/**
+ * Checks if the repository at a path is bare.
+ *
+ * @param path The path to the repository to check. An error will be thrown if the path does not exist on disk.
+ *
+ * @returns true if the path contains a bare Git repository. Returns false if it is not bare or is not a Git repository.
+ */
+export async function isBareRepository(path: string): Promise<boolean> {
+  try {
+    const result = await git(
+      ['rev-parse', '--is-bare-repository'],
+      path,
+      'isBareRepository'
+    )
+    return result.stdout.trim() === 'true'
+  } catch (e) {
+    if (e.message.includes('not a git repository')) {
+      return false
+    }
 
-  return new Promise<string | null>((resolve, reject) => {
-    Fs.readFile(ignorePath, 'utf8', (err, data) => {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          resolve(null)
-        } else {
-          reject(err)
-        }
-      } else {
-        resolve(data)
-      }
-    })
-  })
+    throw e
+  }
 }
 
 /** Is the path a git repository? */
@@ -84,7 +88,7 @@ export async function isGitRepository(
     }
   }
 
-  const gitignore = await readGitIgnore(topLevelDirectory)
+  const gitignore = await readGitIgnoreAtRoot({ path: topLevelDirectory })
 
   if (!gitignore) {
     return {

@@ -1,5 +1,8 @@
 {
-  "unreleased": [],
+  "unreleased": [
+    "[New] When an update is available for Kactus, release notes can be viewed in Kactus",
+    "[Fixed] Authenticating to GitHub Enterprise fails when user has no emails defined"
+  ],
   "releases": {
     "0.3.14": [
       "[Fixed] License not being recognized"

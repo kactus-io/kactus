@@ -10,7 +10,6 @@ import {
   AppStore,
   GitHubUserStore,
   CloningRepositoriesStore,
-  EmojiStore,
   IssuesStore,
   SignInStore,
   RepositoriesStore,
@@ -25,10 +24,14 @@ import {
   TestPullRequestDatabase,
 } from '../helpers/databases'
 import { InMemoryStore, AsyncInMemoryStore } from '../helpers/stores'
+import { RepositoryStateCache } from '../../src/lib/stores/repository-state-cache'
 
 describe('App', () => {
   let appStore: AppStore | null = null
   let dispatcher: Dispatcher | null = null
+  let repositoryStateManager: RepositoryStateCache | null = null
+  let githubUserStore: GitHubUserStore | null = null
+  let issuesStore: IssuesStore | null = null
 
   beforeEach(async () => {
     const db = new TestGitHubUserDatabase()
@@ -51,23 +54,37 @@ describe('App', () => {
       repositoriesStore
     )
 
+    githubUserStore = new GitHubUserStore(db)
+    issuesStore = new IssuesStore(issuesDb)
+
+    repositoryStateManager = new RepositoryStateCache(repo =>
+      githubUserStore!.getUsersForRepository(repo)
+    )
+
     appStore = new AppStore(
-      new GitHubUserStore(db),
+      githubUserStore,
       new CloningRepositoriesStore(),
-      new EmojiStore(),
-      new IssuesStore(issuesDb),
+      issuesStore,
       new SignInStore(),
       accountsStore,
       repositoriesStore,
-      pullRequestStore
+      pullRequestStore,
+      repositoryStateManager
     )
 
-    dispatcher = new InMemoryDispatcher(appStore)
+    dispatcher = new InMemoryDispatcher(appStore, repositoryStateManager)
   })
 
   it('renders', async () => {
     const app = TestUtils.renderIntoDocument(
-      <App dispatcher={dispatcher!} appStore={appStore!} startTime={0} />
+      <App
+        dispatcher={dispatcher!}
+        appStore={appStore!}
+        repositoryStateManager={repositoryStateManager!}
+        issuesStore={issuesStore!}
+        gitHubUserStore={githubUserStore!}
+        startTime={0}
+      />
     ) as React.Component<any, any>
     // Give any promises a tick to resolve.
     await wait(0)

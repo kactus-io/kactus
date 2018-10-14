@@ -8,7 +8,8 @@
     "red": 1
   },
   "booleanOperation": 0,
-  "changeIdentifier": 6,
+  "changeIdentifier": 102,
+  "clippingMaskMode": 0,
   "do_objectID": "5FDB56C7-C458-4D2C-87CC-4C4DCA5AC1BA",
   "exportOptions": {
     "_class": "exportOptions",
@@ -28,7 +29,8 @@
     "y": 156
   },
   "hasBackgroundColor": false,
-  "hasClickThrough": false,
+  "hasClickThrough": true,
+  "hasClippingMask": false,
   "horizontalRulerData": {
     "_class": "rulerData",
     "base": 0,
@@ -53,6 +55,14 @@
     {
       "class": "shapeGroup",
       "id": "2F99015D-1260-4325-9506-6F54BBD4394F"
+    },
+    {
+      "class": "oval",
+      "id": "9A2A1A5E-23D2-43FC-9699-9A2F493AF443"
+    },
+    {
+      "class": "text",
+      "id": "8D1EFFC3-429A-4840-83F3-3445BB7EA188"
     }
   ],
   "name": "icon",

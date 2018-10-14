@@ -27,9 +27,11 @@ import { Shell } from './shells'
 import { CloneRepositoryTab } from '../models/clone-repository-tab'
 import { BranchesTab } from '../models/branches-tab'
 import { PullRequest } from '../models/pull-request'
+import { ReleaseSummary } from '../models/release-notes'
 import { IAuthor } from '../models/author'
 import { ComparisonCache } from './comparison-cache'
 import { ApplicationTheme } from '../ui/lib/application-theme'
+import { MergeResultKind } from '../models/merge'
 
 export { ICommitMessage }
 
@@ -235,6 +237,7 @@ export enum PopupType {
   InitializeLFS,
   LFSAttributeMismatch,
   UpstreamAlreadyExists,
+  ReleaseNotes,
   DeletePullRequest,
   MergeConflicts,
 }
@@ -322,6 +325,10 @@ export type Popup =
       type: PopupType.UpstreamAlreadyExists
       repository: Repository
       existingRemote: IRemote
+    }
+  | {
+      type: PopupType.ReleaseNotes
+      newRelease: ReleaseSummary
     }
   | {
       type: PopupType.DeletePullRequest
@@ -707,6 +714,9 @@ export interface ICompareState {
   /** The current state of the compare form, based on user input */
   readonly formState: IDisplayHistory | ICompareBranch
 
+  /** The result of merging the compare branch into the current branch, if a branch selected */
+  readonly mergeStatus: MergeResultStatus | null
+
   /** Whether the branch list should be expanded or hidden */
   readonly showBranchList: boolean
 
@@ -757,6 +767,17 @@ export interface ICompareFormUpdate {
   /** Thew new state of the branches list */
   readonly showBranchList: boolean
 }
+
+export type MergeResultStatus =
+  | {
+      kind: MergeResultKind.Loading
+    }
+  | {
+      kind: MergeResultKind.Conflicts
+      conflictedFiles: number
+    }
+  | { kind: MergeResultKind.Clean }
+  | { kind: MergeResultKind.Invalid }
 
 export enum CompareActionKind {
   History = 'History',

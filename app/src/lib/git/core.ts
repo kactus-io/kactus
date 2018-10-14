@@ -253,6 +253,8 @@ function getDescriptionForError(error: DugiteError): string {
       return 'This path is not a valid path inside the repository.'
     case DugiteError.LockFileAlreadyExists:
       return 'A lock file already exists in the repository, which blocks this operation from completing.'
+    case DugiteError.NoMergeToAbort:
+      return 'No Merge To Abort.'
     default:
       return assertNever(error, `Unknown error: ${error}`)
   }

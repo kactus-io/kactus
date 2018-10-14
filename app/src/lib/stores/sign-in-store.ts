@@ -183,14 +183,41 @@ export interface ISuccessState {
 }
 
 /**
+ * The method used to authenticate a user.
+ */
+export enum SignInMethod {
+  /**
+   * In-app sign-in with username, password, and possibly a
+   * two-factor code.
+   */
+  Basic = 'basic',
+  /**
+   * Sign-in through a web browser with a redirect back to
+   * the application.
+   */
+  Web = 'web',
+}
+
+interface IAuthenticationEvent {
+  readonly account: Account
+  readonly method: SignInMethod
+  readonly retryAction?: RetryAction
+}
+
+/**
  * A store encapsulating all logic related to signing in a user
  * to GitHub.com, or a GitHub Enterprise instance.
  */
 export class SignInStore extends TypedBaseStore<SignInState | null> {
   private state: SignInState | null = null
 
-  private emitAuthenticate(account: Account, retryAction?: RetryAction) {
-    this.emitter.emit('did-authenticate', { account, retryAction })
+  private emitAuthenticate(
+    account: Account,
+    method: SignInMethod,
+    retryAction?: RetryAction
+  ) {
+    const event: IAuthenticationEvent = { account, method, retryAction }
+    this.emitter.emit('did-authenticate', event)
   }
 
   /**
@@ -198,9 +225,18 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
    * a user has successfully completed a sign-in process.
    */
   public onDidAuthenticate(
-    fn: (args: { account: Account; retryAction?: RetryAction }) => void
+    fn: (
+      account: Account,
+      method: SignInMethod,
+      retryAction?: RetryAction
+    ) => void
   ): Disposable {
-    return this.emitter.on('did-authenticate', fn)
+    return this.emitter.on(
+      'did-authenticate',
+      ({ account, method, retryAction }: IAuthenticationEvent) => {
+        fn(account, method, retryAction)
+      }
+    )
   }
 
   /**
@@ -331,7 +367,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
         return
       }
 
-      this.emitAuthenticate(user, currentState.retryAction)
+      this.emitAuthenticate(user, SignInMethod.Basic, currentState.retryAction)
       this.setState({ kind: SignInStep.Success })
     } else if (
       response.kind ===
@@ -440,7 +476,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       return
     }
 
-    this.emitAuthenticate(account, currentState.retryAction)
+    this.emitAuthenticate(account, SignInMethod.Web, currentState.retryAction)
     this.setState({ kind: SignInStep.Success })
   }
 
@@ -610,7 +646,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
         return
       }
 
-      this.emitAuthenticate(user, currentState.retryAction)
+      this.emitAuthenticate(user, SignInMethod.Basic, currentState.retryAction)
       this.setState({ kind: SignInStep.Success })
     } else {
       switch (response.kind) {

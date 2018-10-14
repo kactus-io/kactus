@@ -10,6 +10,9 @@ import { Emitter, Disposable } from 'event-kit'
 import { sendWillQuitSync } from '../main-process-proxy'
 import { ErrorWithMetadata } from '../../lib/error-with-metadata'
 
+import { ReleaseSummary } from '../../models/release-notes'
+import { generateReleaseSummary } from '../../lib/release-notes'
+
 /** The states the auto updater can be in. */
 export enum UpdateStatus {
   /** The auto updater is checking for updates. */
@@ -28,6 +31,7 @@ export enum UpdateStatus {
 export interface IUpdateState {
   status: UpdateStatus
   lastSuccessfulCheck: Date | null
+  newRelease: ReleaseSummary | null
 }
 
 /** A store which contains the current state of the auto updater. */
@@ -35,6 +39,7 @@ class UpdateStore {
   private emitter = new Emitter()
   private status = UpdateStatus.UpdateNotAvailable
   private lastSuccessfulCheck: Date | null = null
+  private newRelease: ReleaseSummary | null = null
 
   /** Is the most recent update check user initiated? */
   private userInitiatedUpdate = true
@@ -104,8 +109,11 @@ class UpdateStore {
     this.emitDidChange()
   }
 
-  private onUpdateDownloaded = () => {
+  private onUpdateDownloaded = async () => {
+    this.newRelease = await generateReleaseSummary()
+
     this.status = UpdateStatus.UpdateReady
+
     this.emitDidChange()
   }
 
@@ -135,6 +143,7 @@ class UpdateStore {
     return {
       status: this.status,
       lastSuccessfulCheck: this.lastSuccessfulCheck,
+      newRelease: this.newRelease,
     }
   }
 

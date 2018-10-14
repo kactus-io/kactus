@@ -13,7 +13,7 @@ import {
   CompareActionKind,
 } from '../lib/app-state'
 import { Dispatcher } from '../lib/dispatcher'
-import { AppStore } from '../lib/stores'
+import { AppStore, GitHubUserStore, IssuesStore } from '../lib/stores'
 import { assertNever } from '../lib/fatal-error'
 import { shell } from '../lib/app-shell'
 import { updateStore, UpdateStatus } from './lib/update-store'
@@ -87,10 +87,12 @@ import { GenericGitAuthentication } from './generic-git-auth'
 import { ShellError } from './shell'
 import { InitializeLFS, AttributeMismatch } from './lfs'
 import { UpstreamAlreadyExists } from './upstream-already-exists'
+import { ReleaseNotes } from './release-notes'
 import { DeletePullRequest } from './delete-branch/delete-pull-request-dialog'
 import { MergeConflictsWarning } from './merge-conflicts'
 import { AppTheme } from './app-theme'
 import { ApplicationTheme } from './lib/application-theme'
+import { RepositoryStateCache } from '../lib/stores/repository-state-cache'
 
 const MinuteInMilliseconds = 1000 * 60
 
@@ -104,7 +106,10 @@ const UpdateRepositoryIndicatorInterval = 15 * MinuteInMilliseconds
 
 interface IAppProps {
   readonly dispatcher: Dispatcher
+  readonly repositoryStateManager: RepositoryStateCache
   readonly appStore: AppStore
+  readonly issuesStore: IssuesStore
+  readonly gitHubUserStore: GitHubUserStore
   readonly startTime: number
 }
 
@@ -341,7 +346,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       cancelable: true,
     })
 
-    if (document.activeElement.dispatchEvent(event)) {
+    if (document.activeElement && document.activeElement.dispatchEvent(event)) {
       remote.getCurrentWebContents().selectAll()
     }
   }
@@ -382,17 +387,26 @@ export class App extends React.Component<IAppProps, IAppState> {
   }
 
   private updateBranch() {
-    const state = this.state.selectedState
-    if (state == null || state.type !== SelectionType.Repository) {
+    const { selectedState } = this.state
+    if (
+      selectedState == null ||
+      selectedState.type !== SelectionType.Repository
+    ) {
       return
     }
 
-    const defaultBranch = state.state.branchesState.defaultBranch
+    const { state } = selectedState
+    const defaultBranch = state.branchesState.defaultBranch
     if (!defaultBranch) {
       return
     }
 
-    this.props.dispatcher.mergeBranch(state.repository, defaultBranch.name)
+    const { mergeStatus } = state.compareState
+    this.props.dispatcher.mergeBranch(
+      selectedState.repository,
+      defaultBranch.name,
+      mergeStatus
+    )
   }
 
   private mergeBranch() {
@@ -593,6 +607,9 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   public componentDidMount() {
     document.ondragover = e => {
+      if (!e.dataTransfer) {
+        return
+      }
       if (this.isShowingModal) {
         e.dataTransfer.dropEffect = 'none'
       } else {
@@ -607,7 +624,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
 
     document.body.ondrop = e => {
-      if (this.isShowingModal) {
+      if (this.isShowingModal || !e.dataTransfer) {
         return
       }
       const files = e.dataTransfer.files
@@ -737,7 +754,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     // But if they just dragged one, use the dialog so that they can initialize
     // it if needed.
     if (paths.length > 1) {
-      this.addRepositories(paths)
+      await this.addRepositories(paths)
     } else {
       // user may accidentally provide a folder within the repository
       // this ensures we use the repository root, if it is actually a repository
@@ -807,6 +824,8 @@ export class App extends React.Component<IAppProps, IAppState> {
     if (repositories.length) {
       this.props.dispatcher.selectRepository(repositories[0])
     }
+
+    return repositories
   }
 
   private showRepositorySettings() {
@@ -996,7 +1015,7 @@ export class App extends React.Component<IAppProps, IAppState> {
         )
       case PopupType.MergeBranch: {
         const { repository, branch } = popup
-        const state = this.props.appStore.getRepositoryState(repository)
+        const state = this.props.repositoryStateManager.get(repository)
 
         const tip = state.branchesState.tip
         const currentBranch = tip.kind === TipState.Valid ? tip.branch : null
@@ -1017,7 +1036,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       }
       case PopupType.RepositorySettings: {
         const repository = popup.repository
-        const state = this.props.appStore.getRepositoryState(repository)
+        const state = this.props.repositoryStateManager.get(repository)
 
         return (
           <RepositorySettings
@@ -1031,7 +1050,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       }
       case PopupType.KactusSettings: {
         const repository = popup.repository
-        const state = this.props.appStore.getRepositoryState(repository)
+        const state = this.props.repositoryStateManager.get(repository)
 
         return (
           <KactusSettings
@@ -1084,7 +1103,7 @@ export class App extends React.Component<IAppProps, IAppState> {
           />
         )
       case PopupType.CreateBranch: {
-        const state = this.props.appStore.getRepositoryState(popup.repository)
+        const state = this.props.repositoryStateManager.get(popup.repository)
         const branchesState = state.branchesState
         const repository = popup.repository
 
@@ -1107,7 +1126,7 @@ export class App extends React.Component<IAppProps, IAppState> {
         )
       }
       case PopupType.CreateSketchFile: {
-        const state = this.props.appStore.getRepositoryState(popup.repository)
+        const state = this.props.repositoryStateManager.get(popup.repository)
         const repository = popup.repository
 
         return (
@@ -1271,7 +1290,14 @@ export class App extends React.Component<IAppProps, IAppState> {
             onIgnore={this.onIgnoreExistingUpstreamRemote}
           />
         )
-
+      case PopupType.ReleaseNotes:
+        return (
+          <ReleaseNotes
+            emoji={this.state.emoji}
+            newRelease={popup.newRelease}
+            onDismissed={this.onPopupDismissed}
+          />
+        )
       case PopupType.DeletePullRequest:
         return (
           <DeletePullRequest
@@ -1666,10 +1692,12 @@ export class App extends React.Component<IAppProps, IAppState> {
       return null
     }
 
-    const releaseNotesUri = 'http://kactus.io/release-notes/'
+    const releaseNotesUri = 'https://kactus.io/release-notes/'
 
     return (
       <UpdateAvailable
+        dispatcher={this.props.dispatcher}
+        newRelease={updateStore.state.newRelease}
         releaseNotesLink={releaseNotesUri}
         onDismissed={this.onUpdateAvailableDismissed}
       />
@@ -1742,8 +1770,8 @@ export class App extends React.Component<IAppProps, IAppState> {
           emoji={state.emoji}
           sidebarWidth={state.sidebarWidth}
           commitSummaryWidth={state.commitSummaryWidth}
-          issuesStore={this.props.appStore.issuesStore}
-          gitHubUserStore={this.props.appStore.gitHubUserStore}
+          issuesStore={this.props.issuesStore}
+          gitHubUserStore={this.props.gitHubUserStore}
           onViewCommitOnGitHub={this.onViewCommitOnGitHub}
           askForConfirmationOnDiscardChanges={
             state.askForConfirmationOnDiscardChanges

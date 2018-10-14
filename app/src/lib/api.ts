@@ -13,6 +13,7 @@ import {
 import { AuthenticationMode } from './2fa'
 import { uuid } from './uuid'
 import { getAvatarWithEnterpriseFallback } from './gravatar'
+import { getDefaultEmail } from './email'
 
 const username: () => Promise<string> = require('username')
 
@@ -36,6 +37,7 @@ const KactusAPIEndpoint = `https://api.kactus.io/${
  */
 export interface IAPIRepository {
   readonly clone_url: string
+  readonly ssh_url: string
   readonly html_url: string
   readonly name: string
   readonly owner: IAPIUser
@@ -412,6 +414,13 @@ export class API {
       return await parsedResponse<IAPIRepository>(response)
     } catch (e) {
       if (e instanceof APIError) {
+        if (org !== null) {
+          throw new Error(
+            `Unable to create repository for organization '${
+              org.login
+            }'. Verify it exists and that you have permission to create a repository there.`
+          )
+        }
         throw e
       }
 
@@ -764,7 +773,7 @@ export async function fetchUser(
   try {
     const user = await api.fetchAccount()
     const emails = await api.fetchEmails()
-    const defaultEmail = emails[0].email || ''
+    const defaultEmail = getDefaultEmail(emails)
     const unlockedKactusStatus = await checkUnlockedKactus(
       user,
       emails,
@@ -928,7 +937,6 @@ export async function requestOAuthToken(
   endpoint: string,
   client_id: string,
   client_secret: string,
-  state: string,
   code: string
 ): Promise<string | null> {
   try {
@@ -943,7 +951,6 @@ export async function requestOAuthToken(
         client_id,
         client_secret,
         code: code,
-        state: state,
       }
     )
     const result = await parsedResponse<IAPIAccessToken>(response)

@@ -43,6 +43,9 @@ jobs:
             npm run test:setup
             # npm run test
       - run:
+          name: Report to codecov
+          command: yarn test:report
+      - run:
           name: Teardown
           command:
             find $HOME/Library/Developer/Xcode/DerivedData -name
