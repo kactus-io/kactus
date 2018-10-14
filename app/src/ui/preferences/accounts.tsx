@@ -26,6 +26,8 @@ enum SignInType {
   Enterprise,
 }
 
+const manageOrgUri = 'http://kactus.io/org/'
+
 export class Accounts extends React.Component<IAccountsProps, {}> {
   public render() {
     return (
@@ -76,7 +78,9 @@ export class Accounts extends React.Component<IAccountsProps, {}> {
                 <LinkButton onClick={this.onCancelSubscription(account)}>
                   Unsubscribe
                 </LinkButton>
-              ) : null}
+              ) : (
+                <LinkButton uri={manageOrgUri}>Manage</LinkButton>
+              )}
             </span>
           ) : (
             <Button
