@@ -18,7 +18,7 @@ import { getDefaultEmail } from './email'
 const username: () => Promise<string> = require('username')
 
 /** The OAuth scopes we need. */
-const Scopes = ['repo', 'user']
+const Scopes = ['repo', 'read:user', 'user:email']
 
 enum HttpStatusCode {
   NotModified = 304,
