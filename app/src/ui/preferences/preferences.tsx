@@ -18,7 +18,7 @@ import {
   IMergeTool,
 } from '../../lib/git/config'
 import { lookupPreferredEmail } from '../../lib/email'
-import { PopupType } from '../../lib/app-state'
+import { PopupType } from '../../models/popup'
 import { Shell, getAvailableShells } from '../../lib/shells'
 import { getCachedAvailableEditors } from '../../lib/editors/lookup'
 import { disallowedCharacters } from './identifier-rules'

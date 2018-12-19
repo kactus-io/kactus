@@ -13,7 +13,7 @@ import { Repository } from '../../models/repository'
 import {
   WorkingDirectoryFileChange,
   FileChange,
-  AppFileStatus,
+  AppFileStatusKind,
   FileType,
 } from '../../models/status'
 import {
@@ -42,6 +42,7 @@ import {
 } from '../kactus'
 import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
 import { assertNever } from '../fatal-error'
+import { getOldPathOrDefault } from '../get-old-path'
 
 export interface ISketchPreviews {
   current: Image | undefined
@@ -144,8 +145,11 @@ export async function getCommitDiff<K extends keyof IDiff>(
     file.path,
   ]
 
-  if (file.oldPath != null) {
-    args.push(file.oldPath)
+  if (
+    file.status.kind === AppFileStatusKind.Renamed ||
+    file.status.kind === AppFileStatusKind.Copied
+  ) {
+    args.push(file.status.oldPath)
   }
 
   const { output } = await spawnAndComplete(
@@ -186,7 +190,7 @@ export async function getWorkingDirectoryDiff<K extends keyof IDiff>(
   // `--no-ext-diff` should be provided wherever we invoke `git diff` so that any
   // diff.external program configured by the user is ignored
 
-  if (file.status === AppFileStatus.New) {
+  if (file.status.kind === AppFileStatusKind.New) {
     // `git diff --no-index` seems to emulate the exit codes from `diff` irrespective of
     // whether you set --exit-code
     //
@@ -209,7 +213,7 @@ export async function getWorkingDirectoryDiff<K extends keyof IDiff>(
       '/dev/null',
       file.path,
     ]
-  } else if (file.status === AppFileStatus.Renamed) {
+  } else if (file.status.kind === AppFileStatusKind.Renamed) {
     // NB: Technically this is incorrect, the best kind of incorrect.
     // In order to show exactly what will end up in the commit we should
     // perform a diff between the new file and the old file as it appears
@@ -280,7 +284,9 @@ export async function getWorkingDirectoryPartDiff<K extends keyof IDiff>(
     {
       path: sketchPart.id,
       id: sketchPart.id,
-      status: AppFileStatus.Modified,
+      status: {
+        kind: AppFileStatusKind.Modified,
+      },
       type: FileType.NormalFile,
     },
     kactusFile!,
@@ -307,35 +313,30 @@ async function getImageDiff(
     // No idea what to do about this, a conflicted binary (presumably) file.
     // Ideally we'd show all three versions and let the user pick but that's
     // a bit out of scope for now.
-    if (file.status === AppFileStatus.Conflicted) {
+    if (file.status.kind === AppFileStatusKind.Conflicted) {
       return { kind: DiffType.Image, previous: undefined, current: undefined }
     }
 
     // Does it even exist in the working directory?
-    if (file.status !== AppFileStatus.Deleted) {
+    if (file.status.kind !== AppFileStatusKind.Deleted) {
       promises[0] = getWorkingDirectoryImage(repository, file)
     }
 
-    if (file.status !== AppFileStatus.New) {
-      // If we have file.oldPath that means it's a rename so we'll
-      // look for that file.
-      promises[1] = getBlobImage(repository, file.oldPath || file.path, 'HEAD')
+    if (file.status.kind !== AppFileStatusKind.New) {
+      promises[1] = getBlobImage(repository, getOldPathOrDefault(file), 'HEAD')
     }
   } else {
     // File status can't be conflicted for a file in a commit
-    if (file.status !== AppFileStatus.Deleted) {
+    if (file.status.kind !== AppFileStatusKind.Deleted) {
       promises[0] = getBlobImage(repository, file.path, commitish)
     }
 
     // File status can't be conflicted for a file in a commit
-    if (file.status !== AppFileStatus.New) {
+    if (file.status.kind !== AppFileStatusKind.New) {
       // TODO: commitish^ won't work for the first commit
-      //
-      // If we have file.oldPath that means it's a rename so we'll
-      // look for that file.
       promises[1] = getBlobImage(
         repository,
-        file.oldPath || file.path,
+        getOldPathOrDefault(file),
         `${commitish}^`
       )
     }
@@ -398,7 +399,7 @@ async function getSketchDiff<K extends keyof IDiff>(
     // No idea what to do about this, a conflicted binary (presumably) file.
     // Ideally we'd show all three versions and let the user pick but that's
     // a bit out of scope for now.
-    if (file.status === AppFileStatus.Conflicted) {
+    if (file.status.kind === AppFileStatusKind.Conflicted) {
       promises[0] = getHEADsha(repository, 'MERGE_HEAD').then(sha => {
         return getOldSketchPreview(
           sketchPath,
@@ -425,8 +426,8 @@ async function getSketchDiff<K extends keyof IDiff>(
 
     // Does it even exist in the working directory?
     if (
-      file.status !== AppFileStatus.Conflicted &&
-      file.status !== AppFileStatus.Deleted
+      file.status.kind !== AppFileStatusKind.Conflicted &&
+      file.status.kind !== AppFileStatusKind.Deleted
     ) {
       promises[0] = getWorkingDirectorySketchPreview(
         sketchPath,
@@ -439,8 +440,8 @@ async function getSketchDiff<K extends keyof IDiff>(
     }
 
     if (
-      file.status !== AppFileStatus.Conflicted &&
-      file.status !== AppFileStatus.New
+      file.status.kind !== AppFileStatusKind.Conflicted &&
+      file.status.kind !== AppFileStatusKind.New
     ) {
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
@@ -448,7 +449,7 @@ async function getSketchDiff<K extends keyof IDiff>(
         sketchPath,
         kactusFile,
         repository,
-        file.oldPath || file.path,
+        getOldPathOrDefault(file),
         'HEAD',
         type,
         _type ? Path.basename(file.id) : undefined
@@ -456,7 +457,7 @@ async function getSketchDiff<K extends keyof IDiff>(
     }
   } else {
     // File status can't be conflicted for a file in a commit
-    if (file.status !== AppFileStatus.Deleted) {
+    if (file.status.kind !== AppFileStatusKind.Deleted) {
       promises[0] = getOldSketchPreview(
         sketchPath,
         kactusFile,
@@ -469,7 +470,7 @@ async function getSketchDiff<K extends keyof IDiff>(
     }
 
     // File status can't be conflicted for a file in a commit
-    if (file.status !== AppFileStatus.New) {
+    if (file.status.kind !== AppFileStatusKind.New) {
       // TODO: commitish^ won't work for the first commit
       //
       // If we have file.oldPath that means it's a rename so we'll
@@ -478,7 +479,7 @@ async function getSketchDiff<K extends keyof IDiff>(
         sketchPath,
         kactusFile,
         repository,
-        file.oldPath || file.path,
+        getOldPathOrDefault(file),
         previousCommitish || `${commitish}`,
         type,
         _type ? Path.basename(file.id) : undefined

@@ -1,15 +1,17 @@
 import * as React from 'react'
 
-import { AppFileStatus, mapStatus, iconForStatus } from '../../models/status'
+import { AppFileStatus } from '../../models/status'
+import { AppFileStatusKind } from '../../models/status'
 import { PathText } from '../lib/path-text'
-import { Octicon } from '../octicons'
+import { Octicon, iconForStatus } from '../octicons'
+import { mapStatus } from '../../lib/status'
 
 interface IChangedSketchPartProps {
   readonly name: string
   readonly id: string
   readonly opened: boolean
   readonly parts: Array<string>
-  readonly conflicted: boolean
+  readonly status?: AppFileStatus
   readonly onOpenChanged: (id: string, opened: boolean) => void
 
   readonly availableWidth: number
@@ -74,16 +76,17 @@ export class ChangedSketchPart extends React.Component<
           />
         </label>
 
-        {this.props.conflicted && (
-          <Octicon
-            symbol={iconForStatus(AppFileStatus.Conflicted)}
-            className={
-              'status status-' +
-              mapStatus(AppFileStatus.Conflicted).toLowerCase()
-            }
-            title={'Contains a conflict'}
-          />
-        )}
+        {this.props.status &&
+          this.props.status.kind === AppFileStatusKind.Conflicted && (
+            <Octicon
+              symbol={iconForStatus(this.props.status)}
+              className={
+                'status status-' +
+                mapStatus(AppFileStatusKind.Conflicted).toLowerCase()
+              }
+              title={'Contains a conflict'}
+            />
+          )}
       </div>
     )
   }

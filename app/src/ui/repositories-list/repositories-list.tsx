@@ -11,6 +11,12 @@ import { FilterList } from '../lib/filter-list'
 import { IMatches } from '../../lib/fuzzy-find'
 import { assertNever } from '../../lib/fatal-error'
 import { ILocalRepositoryState } from '../../models/repository'
+import { Dispatcher } from '../../lib/dispatcher'
+import { Button } from '../lib/button'
+import { Octicon, OcticonSymbol } from '../octicons'
+import { showContextualMenu } from '../main-process-proxy'
+import { IMenuItem } from '../../lib/menu-item'
+import { PopupType } from '../../models/popup'
 
 interface IRepositoriesListProps {
   readonly selectedRepository: Repositoryish | null
@@ -48,6 +54,8 @@ interface IRepositoriesListProps {
 
   /** The text entered by the user to filter their repository list */
   readonly filterText: string
+
+  readonly dispatcher: Dispatcher
 }
 
 const RowHeight = 29
@@ -142,6 +150,7 @@ export class RepositoriesList extends React.Component<
           renderItem={this.renderItem}
           renderGroupHeader={this.renderGroupHeader}
           onItemClick={this.onItemClick}
+          renderPostFilter={this.renderPostFilter}
           groups={groups}
           invalidationProps={{
             repositories: this.props.repositories,
@@ -150,6 +159,52 @@ export class RepositoriesList extends React.Component<
         />
       </div>
     )
+  }
+
+  private renderPostFilter = () => {
+    return (
+      <Button
+        className="new-repository-button"
+        onClick={this.onNewRepositoryButtonClick}
+      >
+        Add
+        <Octicon symbol={OcticonSymbol.triangleDown} />
+      </Button>
+    )
+  }
+
+  private onNewRepositoryButtonClick = () => {
+    const items: IMenuItem[] = [
+      {
+        label: 'Clone Repository…',
+        action: this.onCloneRepository,
+      },
+      {
+        label: 'Create New Repository…',
+        action: this.onCreateNewRepository,
+      },
+      {
+        label: 'Add Existing Repository…',
+        action: this.onAddExistingRepository,
+      },
+    ]
+
+    showContextualMenu(items)
+  }
+
+  private onCloneRepository = () => {
+    this.props.dispatcher.showPopup({
+      type: PopupType.CloneRepository,
+      initialURL: null,
+    })
+  }
+
+  private onAddExistingRepository = () => {
+    this.props.dispatcher.showPopup({ type: PopupType.AddRepository })
+  }
+
+  private onCreateNewRepository = () => {
+    this.props.dispatcher.showPopup({ type: PopupType.CreateRepository })
   }
 
   private noRepositories() {

@@ -12,17 +12,16 @@ change over time as we learn and refine how we work with the community.
 
 #### Table Of Contents
 
-[What should I know before I get started?](#what-should-i-know-before-i-get-started)
+- [What should I know before I get started?](#what-should-i-know-before-i-get-started)
   * [Code of Conduct](#code-of-conduct)
   * [The Roadmap](#the-roadmap)
 
-[How Can I Contribute?](#how-can-i-contribute)
+- [How Can I Contribute?](#how-can-i-contribute)
   * [Reporting Bugs](#reporting-bugs)
   * [Suggesting Enhancements](#suggesting-enhancements)
   * [Help Wanted](#help-wanted)
 
-[Additional Notes](#additional-notes)
-  * [Issue and Pull Request Labels](#issue-and-pull-request-labels)
+- [Process Documentation](#process-documentation)
 
 ## What should I know before I get started?
 
@@ -139,12 +138,10 @@ interested in the issue.
 
 Start [here](https://github.com/desktop/desktop/blob/master/docs/contributing/setup.md).
 
-## Additional Notes
 
-### Issue and Pull Request Labels
+## Process Documentation
 
-This section lists the labels we use to help us track and manage issues and
-pull requests.
+These documents are useful resources for contributors  to learn more about the project and how it is run:
 
 #### Type of Issue and Issue State
 

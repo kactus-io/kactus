@@ -1,3 +1,5 @@
+export const CopyFilePathLabel = 'Copy File Path'
+
 export const DefaultEditorLabel = 'Open in External Editor'
 
 export const RevealInFileManagerLabel = 'Reveal in Finder'

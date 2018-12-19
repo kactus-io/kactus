@@ -111,6 +111,8 @@ const allMenuIds: ReadonlyArray<MenuIDs> = [
   'pull',
   'branch',
   'repository',
+  'show-kactus-settings',
+  'go-to-commit-message',
   'create-branch',
   'show-changes',
   'show-history',
@@ -200,6 +202,7 @@ function getRepositoryMenuBuilder(state: IAppState): MenuStateBuilder {
     'open-working-directory',
     'show-repository-settings',
     'show-kactus-settings',
+    'go-to-commit-message',
     'show-changes',
     'show-history',
     'show-branches-list',
@@ -289,6 +292,7 @@ function getRepositoryMenuBuilder(state: IAppState): MenuStateBuilder {
     menuStateBuilder.disable('push')
     menuStateBuilder.disable('pull')
     menuStateBuilder.disable('compare-to-branch')
+    menuStateBuilder.disable('compare-on-github')
   }
   return menuStateBuilder
 }

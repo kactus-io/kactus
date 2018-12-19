@@ -2,7 +2,8 @@
 
 You will need to install these tools on your machine:
 
- - Node.js v8.11.4
+ - Node.js v8.12.0
+ - Yarn
  - Python 2.7
  - Xcode and Xcode Command Line Tools (Xcode -> Preferences -> Downloads)
 
@@ -14,11 +15,11 @@ Let's see if you have the right version of `node` installed. Open a terminal and
 $ node -v
 ```
 
-If you see an error about being unable to find `node`, that probably means you don't have any Node tools installed. You can install Node LTS (the version we need) from the [Node.js website](https://nodejs.org/en/download/) and restart your shell.
+If you see an error about being unable to find `node`, that probably means you don't have any Node tools installed. You can install Node 8 from the [Node.js website](https://nodejs.org/download/release/v8.12.0/) and restart your shell.
 
-If you see the output `v8.11.x` (where `x` is any number), you're good to go.
+If you see the output `v8.12.0`, you're good to go.
 
-If you see the output `v10.x.y` you're ahead of what we currently support. We have an outstanding issue building GitHub Desktop with Node 10, and hopefully can resolve this soon. If you don't care about the version you are running, you can install the version from the [Node.js website](https://nodejs.org/en/download/) over the top of your current install.
+If you see the output `v10.x.y` you're ahead of what we currently support. See [#5876](https://github.com/desktop/desktop/issues/5876) for details about building GitHub Desktop with Node 10, which we can hopefully resolve soon. If you don't care about the version you are running, you can install the version from the [Node.js website](https://nodejs.org/download/release/v8.12.0/) over the top of your current install.
 
 ### I need to use different versions of Node.js in different projects!
 
@@ -46,11 +47,25 @@ $ nvm use
 $ node -v
 ```
 
-If you see `v8.11.4`, you're good to go.
+If you see `v8.12.0`, you're good to go.
 
 #### Configuring `asdf-nodejs`
 
 `asdf` is a little more involved to install. Check out the instructions [here](https://github.com/asdf-vm/asdf) and [here](https://github.com/asdf-vm/asdf-nodejs) for more information.
+
+## Yarn
+
+Follow [this guide](https://yarnpkg.com/en/docs/install#mac-stable) to install
+a system-level `yarn`. GitHub Desktop uses a local version of `yarn`, but it
+needs a version on your `PATH` to bootstrap itself.
+
+This is important because `yarn` uses lock files to pin dependencies. If you
+find yourself changing packages, this will prevent mismatches in versions
+between machines.
+
+If you're not familiar with `yarn`, please read [this document](./working-with-packages.md)
+to help familiarize yourself with how to do the common package tasks that are
+relevant to Desktop.
 
 ## Python
 

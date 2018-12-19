@@ -13,3 +13,4 @@ app/node_modules/
 .eslintcache
 *.iml
 .envrc
+junit.xml

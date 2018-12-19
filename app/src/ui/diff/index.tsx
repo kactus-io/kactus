@@ -3,14 +3,14 @@ import { Editor } from 'codemirror'
 
 import { assertNever } from '../../lib/fatal-error'
 import { encodePathAsUrl } from '../../lib/path'
-import { ImageDiffType } from '../../lib/app-state'
+
 import { Dispatcher } from '../../lib/dispatcher/dispatcher'
 
 import { Repository } from '../../models/repository'
 import {
   CommittedFileChange,
   WorkingDirectoryFileChange,
-  AppFileStatus,
+  AppFileStatusKind,
 } from '../../models/status'
 import {
   DiffSelection,
@@ -22,6 +22,7 @@ import {
   IVisualTextDiffData,
   ITextDiff,
   ILargeTextDiff,
+  ImageDiffType,
 } from '../../models/diff'
 
 import { Button } from '../lib/button'
@@ -303,40 +304,37 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
     )
   }
 
-  private renderEmpty(diff: ISketchDiff | ITextDiff) {
-    if (diff.isDirectory) {
+  private renderEmpty(file: ChangedFile | null, diff: ISketchDiff | ITextDiff) {
+    if (file && file.status.kind === AppFileStatusKind.New) {
+      if (diff.isDirectory) {
+        return (
+          <div className="panel empty">
+            This is a new directory that contains too many files to show them
+            all. This is probably a new Sketch file. Commit it, the diff will
+            show nicely afterwards.
+          </div>
+        )
+      }
+
+      return <div className="panel empty">The file is empty</div>
+    }
+
+    if (file && file.status.kind === AppFileStatusKind.Renamed) {
       return (
-        <div className="panel empty">
-          This is a new directory that contains too many files to show them all.
-          This is probably a new Sketch file. Commit it, the diff will show
-          nicely afterwards.
+        <div className="panel renamed">
+          The file was renamed but not changed
         </div>
       )
     }
 
-    return <div className="panel empty">The file is empty</div>
+    return <div className="panel empty">No content changes found</div>
   }
 
   private renderDiff(diff: IDiff): JSX.Element | null {
     switch (diff.kind) {
       case DiffType.Text: {
         if (diff.hunks.length === 0) {
-          if (this.props.file && this.props.file.status === AppFileStatus.New) {
-            return this.renderEmpty(diff)
-          }
-
-          if (
-            this.props.file &&
-            this.props.file.status === AppFileStatus.Renamed
-          ) {
-            return (
-              <div className="panel renamed">
-                The file was renamed but not changed
-              </div>
-            )
-          }
-
-          return <div className="panel empty">No content changes found</div>
+          return this.renderEmpty(this.props.file, diff)
         }
         return this.renderTextDiff(diff)
       }
@@ -347,20 +345,7 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
         return this.renderImage(diff)
       case DiffType.Sketch: {
         if (diff.hunks.length === 0) {
-          if (this.props.file && this.props.file.status === AppFileStatus.New) {
-            return this.renderEmpty(diff)
-          }
-
-          if (
-            this.props.file &&
-            this.props.file.status === AppFileStatus.Renamed
-          ) {
-            return (
-              <div className="panel renamed">
-                The file was renamed but not changed
-              </div>
-            )
-          }
+          return this.renderEmpty(this.props.file, diff)
         }
 
         if (diff.type === IKactusFileType.Style) {
@@ -370,7 +355,7 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
         let content
         if (
           this.props.file &&
-          this.props.file.status === AppFileStatus.Conflicted
+          this.props.file.status.kind === AppFileStatusKind.Conflicted
         ) {
           content = this.renderSketchConflictedDiff(diff)
         } else {

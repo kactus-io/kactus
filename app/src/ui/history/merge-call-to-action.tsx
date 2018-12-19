@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { CompareActionKind, ICompareBranch } from '../../lib/app-state'
+import { ICompareBranch, HistoryTabMode } from '../../lib/app-state'
 import { Repository } from '../../models/repository'
 import { Branch } from '../../models/branch'
 import { Dispatcher } from '../../lib/dispatcher'
@@ -78,7 +78,7 @@ export class MergeCallToAction extends React.Component<
     )
 
     this.props.dispatcher.executeCompare(this.props.repository, {
-      kind: CompareActionKind.History,
+      kind: HistoryTabMode.History,
     })
 
     this.props.dispatcher.updateCompareForm(this.props.repository, {

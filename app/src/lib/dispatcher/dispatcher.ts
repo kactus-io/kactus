@@ -10,30 +10,32 @@ import {
   CommittedFileChange,
   TSketchPartChange,
 } from '../../models/status'
-import { DiffSelection } from '../../models/diff'
+import { DiffSelection, ImageDiffType } from '../../models/diff'
 import {
   RepositorySectionTab,
-  Popup,
-  PopupType,
   Foldout,
   FoldoutType,
-  ImageDiffType,
   IAppState,
   CompareAction,
   ICompareFormUpdate,
   MergeResultStatus,
+  SuccessfulMergeBannerState,
+  MergeConflictsBannerState,
 } from '../app-state'
 import { AppStore } from '../stores/app-store'
 import { CloningRepository } from '../../models/cloning-repository'
 import { Branch } from '../../models/branch'
-import { Commit } from '../../models/commit'
+import { Commit, ICommitContext } from '../../models/commit'
 import { ExternalEditor } from '../../lib/editors'
 import { IAPIUser } from '../../lib/api'
 import { GitHubRepository } from '../../models/github-repository'
-import { ICommitMessage } from '../stores/git-store'
+import { ICommitMessage } from '../../models/commit-message'
 import { executeMenuItem } from '../../ui/main-process-proxy'
 import { AppMenu, ExecutableMenuItem } from '../../models/app-menu'
-import { matchExistingRepository } from '../../lib/repository-matching'
+import {
+  matchExistingRepository,
+  urlMatchesCloneURL,
+} from '../../lib/repository-matching'
 import { fatalError, assertNever } from '../fatal-error'
 import { shell } from '../app-shell'
 import {
@@ -50,7 +52,7 @@ import { saveKactusConfig, IFullKactusConfig, IKactusFile } from '../kactus'
 import { openSketch } from '../sketch'
 import { installCLI } from '../../ui/lib/install-cli'
 import { setGenericUsername, setGenericPassword } from '../generic-git-auth'
-import { RetryAction, RetryActionType } from '../retry-actions'
+import { RetryAction, RetryActionType } from '../../models/retry-actions'
 import { Shell } from '../shells'
 import { CloneRepositoryTab } from '../../models/clone-repository-tab'
 import { validatedRepositoryPath } from '../../lib/stores/helpers/validated-repository-path'
@@ -58,11 +60,11 @@ import { BranchesTab } from '../../models/branches-tab'
 import { FetchType } from '../../models/fetch'
 import { PullRequest } from '../../models/pull-request'
 import { IAuthor } from '../../models/author'
-import { ITrailer } from '../git/interpret-trailers'
 import { isGitRepository } from '../git'
 import { ApplicationTheme } from '../../ui/lib/application-theme'
 import { TipState } from '../../models/tip'
 import { RepositoryStateCache } from '../stores/repository-state-cache'
+import { Popup, PopupType } from '../../models/popup'
 
 /**
  * An error handler function.
@@ -180,6 +182,22 @@ export class Dispatcher {
     return this.appStore._setRepositoryFilterText(text)
   }
 
+  /** Set the branch filter text. */
+  public setBranchFilterText(
+    repository: Repository,
+    text: string
+  ): Promise<void> {
+    return this.appStore._setBranchFilterText(repository, text)
+  }
+
+  /** Set the branch filter text. */
+  public setPullRequestFilterText(
+    repository: Repository,
+    text: string
+  ): Promise<void> {
+    return this.appStore._setPullRequestFilterText(repository, text)
+  }
+
   /** Select the repository. */
   public selectRepository(
     repository: Repository | CloningRepository
@@ -255,16 +273,9 @@ export class Dispatcher {
    */
   public async commitIncludedChanges(
     repository: Repository,
-    summary: string,
-    description: string | null,
-    trailers?: ReadonlyArray<ITrailer>
+    context: ICommitContext
   ): Promise<boolean> {
-    return this.appStore._commitIncludedChanges(
-      repository,
-      summary,
-      description,
-      trailers
-    )
+    return this.appStore._commitIncludedChanges(repository, context)
   }
 
   /** Change the file's includedness. */
@@ -518,6 +529,27 @@ export class Dispatcher {
   }
 
   /**
+   * Set the successful merge banner's state
+   */
+  public setSuccessfulMergeBannerState(state: SuccessfulMergeBannerState) {
+    return this.appStore._setSuccessfulMergeBannerState(state)
+  }
+
+  /**
+   * Set the successful merge banner's state
+   */
+  public setMergeConflictsBannerState(state: MergeConflictsBannerState) {
+    return this.appStore._setMergeConflictsBannerState(state)
+  }
+
+  /**
+   * Clear (close) the successful merge banner
+   */
+  public clearMergeConflictsBanner() {
+    return this.appStore._setMergeConflictsBannerState(null)
+  }
+
+  /**
    * Set the divering branch notification banner's visibility
    */
   public setDivergingBranchBannerVisibility(
@@ -565,6 +597,11 @@ export class Dispatcher {
   /** End the Welcome flow. */
   public endWelcomeFlow(): Promise<void> {
     return this.appStore._endWelcomeFlow()
+  }
+
+  /** Set the commit message input's focus. */
+  public setCommitMessageFocus(focus: boolean) {
+    this.appStore._setCommitMessageFocus(focus)
   }
 
   /**
@@ -633,6 +670,30 @@ export class Dispatcher {
     mergeStatus: MergeResultStatus | null
   ): Promise<void> {
     return this.appStore._mergeBranch(repository, branch, mergeStatus)
+  }
+
+  /** aborts an in-flight merge and refreshes the repository's status */
+  public async abortMerge(repository: Repository) {
+    await this.appStore._abortMerge(repository)
+    await this.appStore._loadStatus(repository)
+  }
+
+  /**
+   * commits an in-flight merge and shows a banner if successful
+   *
+   * @param repository
+   * @param files files to commit. should be all of them in the repository
+   * @param successfulMergeBannerState information for banner to be displayed if merge is successful
+   */
+  public async createMergeCommit(
+    repository: Repository,
+    files: ReadonlyArray<WorkingDirectoryFileChange>,
+    successfulMergeBannerState: SuccessfulMergeBannerState
+  ) {
+    const result = await this.appStore._createMergeCommit(repository, files)
+    if (result !== undefined) {
+      this.appStore._setSuccessfulMergeBannerState(successfulMergeBannerState)
+    }
   }
 
   /** Changes the URL for the remote that matches the given name  */
@@ -905,12 +966,12 @@ export class Dispatcher {
 
       case 'open-repository-from-url':
         const { url } = action
-        const repository = await this.openRepository(url)
+        const repository = await this.openOrCloneRepository(url)
         if (repository) {
           await this.handleCloneInKactusOptions(repository, action)
         } else {
           log.warn(
-            `Open Repository from URL failed, did not find repository: ${url} - payload: ${JSON.stringify(
+            `Open Repository from URL failed, did not find or clone repository: ${url} - payload: ${JSON.stringify(
               action
             )}`
           )
@@ -1105,6 +1166,10 @@ export class Dispatcher {
       await this.fetchRefspec(repository, `pull/${pr}/head:${branch}`)
     }
 
+    // ensure a fresh clone repository has it's in-memory state
+    // up-to-date before performing the "Clone in Desktop" steps
+    await this.appStore._refreshRepository(repository)
+
     const state = this.repositoryStateManager.get(repository)
 
     if (pr == null && branch != null) {
@@ -1144,7 +1209,7 @@ export class Dispatcher {
     }
   }
 
-  private async openRepository(url: string): Promise<Repository | null> {
+  private async openOrCloneRepository(url: string): Promise<Repository | null> {
     const state = this.appStore.getState()
     const repositories = state.repositories
     const existingRepository = repositories.find(r => {
@@ -1153,7 +1218,7 @@ export class Dispatcher {
         if (!gitHubRepository) {
           return false
         }
-        return gitHubRepository.cloneURL === url
+        return urlMatchesCloneURL(url, gitHubRepository)
       } else {
         return false
       }
@@ -1325,6 +1390,15 @@ export class Dispatcher {
     return this.appStore._changeCloneRepositoriesTab(tab)
   }
 
+  /**
+   * Request a refresh of the list of repositories that
+   * the provided account has explicit permissions to access.
+   * See ApiRepositoriesStore for more details.
+   */
+  public refreshApiRepositories(account: Account) {
+    return this.appStore._refreshApiRepositories(account)
+  }
+
   /** Open the merge tool for the given file. */
   public openMergeTool(repository: Repository, path: string): Promise<void> {
     return this.appStore._openMergeTool(repository, path)
@@ -1452,6 +1526,10 @@ export class Dispatcher {
     newState: Pick<ICompareFormUpdate, K>
   ) {
     return this.appStore._updateCompareForm(repository, newState)
+  }
+
+  public resolveCurrentEditor() {
+    return this.appStore._resolveCurrentEditor()
   }
 
   /**

@@ -122,8 +122,8 @@ export class Account {
         enterprise: enterprise
           ? true
           : this.unlockedEnterpriseKactusFromOrg
-            ? this.unlockedEnterpriseKactus
-            : false,
+          ? this.unlockedEnterpriseKactus
+          : false,
         premiumFromOrg: this.unlockedKactusFromOrg,
         enterpriseFromOrg: this.unlockedEnterpriseKactusFromOrg,
         premiumFromOrgAdmin: this.unlockedKactusFromOrgAdmin,

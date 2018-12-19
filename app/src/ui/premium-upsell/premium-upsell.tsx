@@ -7,12 +7,12 @@ import { Checkout } from './stripe-checkout'
 import { Account } from '../../models/account'
 import { ThrottledScheduler } from '../lib/throttled-scheduler'
 import { fetchCoupon, IAPICoupon } from '../../lib/api'
-import { RetryAction } from '../../lib/retry-actions'
+import { RetryAction } from '../../models/retry-actions'
 import { shell } from '../../lib/app-shell'
 import { CouponInput } from './coupon-input'
 import { LinkButton } from '../lib/link-button'
 import { CallToAction } from '../lib/call-to-action'
-import { PremiumType } from '../../lib/app-state'
+import { PremiumType } from '../../models/popup'
 
 interface IPremiumUpsellProps {
   /** A function called when the dialog is dismissed. */

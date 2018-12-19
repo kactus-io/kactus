@@ -2,6 +2,7 @@ const PUBLISH_CHANNELS = ['production', 'test', 'beta']
 import * as distInfo from './dist-info'
 import * as gitInfo from '../app/git-info'
 import * as packageInfo from '../app/package-info'
+import * as platforms from './build-platforms'
 
 if (PUBLISH_CHANNELS.indexOf(distInfo.getReleaseChannel()) < 0) {
   console.log('Not a publishable build. Skipping publish.')
@@ -41,7 +42,7 @@ github
     token,
     repo,
     tag,
-    distInfo.getReleaseBranchName(),
+    platforms.getReleaseBranchName(),
     require('../changelog.json').releases[packageInfo.getVersion()] || []
   )
   .then(function(res) {

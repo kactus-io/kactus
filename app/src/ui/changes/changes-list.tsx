@@ -1,10 +1,8 @@
 import * as React from 'react'
 import * as Path from 'path'
 
-import { ICommitMessage } from '../../lib/app-state'
 import { IGitHubUser } from '../../lib/databases'
 import { Dispatcher } from '../../lib/dispatcher'
-import { ITrailer } from '../../lib/git/interpret-trailers'
 import { IMenuItem } from '../../lib/menu-item'
 import { revealInFileManager } from '../../lib/app-shell'
 import {
@@ -14,15 +12,18 @@ import {
   FileType,
   SketchFileType,
   TSketchPartChange,
+  AppFileStatusKind,
 } from '../../models/status'
 import { DiffSelectionType } from '../../models/diff'
 import { CommitIdentity } from '../../models/commit-identity'
+import { ICommitMessage } from '../../models/commit-message'
 import { Repository } from '../../models/repository'
 import { IAuthor } from '../../models/author'
 import { List, ClickSource } from '../lib/list'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import {
   DefaultEditorLabel,
+  CopyFilePathLabel,
   RevealInFileManagerLabel,
   OpenWithDefaultProgramLabel,
 } from '../lib/context-menu'
@@ -33,6 +34,9 @@ import { IKactusFile } from '../../lib/kactus'
 import { IAutocompletionProvider } from '../autocompletion'
 import { showContextualMenu } from '../main-process-proxy'
 import { arrayEquals } from '../../lib/equality'
+import { clipboard } from 'electron'
+import { basename } from 'path'
+import { ICommitContext } from '../../models/commit'
 
 const RowHeight = 29
 const GitIgnoreFileName = '.gitignore'
@@ -65,13 +69,10 @@ interface IChangesListProps {
   readonly onSketchFileSelectionChanged: (file: IKactusFile) => void
   readonly onIncludeChanged: (path: string, include: boolean) => void
   readonly onSelectAll: (selectAll: boolean) => void
-  readonly onCreateCommit: (
-    summary: string,
-    description: string | null,
-    trailers?: ReadonlyArray<ITrailer>
-  ) => Promise<boolean>
+  readonly onCreateCommit: (context: ICommitContext) => Promise<boolean>
   readonly onDiscardChanges: (file: WorkingDirectoryFileChange) => void
   readonly askForConfirmationOnDiscardChanges: boolean
+  readonly focusCommitMessage: boolean
   readonly onDiscardAllChanges: (
     files: ReadonlyArray<WorkingDirectoryFileChange>,
     isDiscardingAllChanges?: boolean
@@ -95,7 +96,6 @@ interface IChangesListProps {
    */
   readonly onRowClick?: (row: number, source: ClickSource) => void
   readonly commitMessage: ICommitMessage | null
-  readonly contextualCommitMessage: ICommitMessage | null
 
   /** The autocompletion providers available to the repository. */
   readonly autocompletionProviders: ReadonlyArray<IAutocompletionProvider<any>>
@@ -143,7 +143,7 @@ function getFileList(
     if (f.parts && f.sketchFile) {
       const previousFile = files[i - 1] || {}
 
-      const conflicted = f.status === AppFileStatus.Conflicted
+      const conflicted = f.status.kind === AppFileStatusKind.Conflicted
 
       f.parts.forEach((part, i, arr) => {
         if (i <= 1) {
@@ -160,7 +160,7 @@ function getFileList(
               !correspondingPart.status &&
               correspondingPart.fakePart
             ) {
-              correspondingPart.status = AppFileStatus.Conflicted
+              correspondingPart.status = f.status
             }
           }
           return
@@ -185,12 +185,12 @@ function getFileList(
             i === 0
               ? FileType.SketchFile
               : i === 1
-                ? FileType.PageFile
-                : FileType.LayerFile,
+              ? FileType.PageFile
+              : FileType.LayerFile,
           id,
           name: part,
           parts,
-          status: conflicted ? AppFileStatus.Conflicted : undefined,
+          status: conflicted ? f.status : undefined,
           index,
           fakePart: true,
         }
@@ -283,8 +283,8 @@ export class ChangesList extends React.Component<
         selection === DiffSelectionType.All
           ? true
           : selection === DiffSelectionType.None
-            ? false
-            : null
+          ? false
+          : null
 
       return (
         <ChangedFile
@@ -292,7 +292,6 @@ export class ChangesList extends React.Component<
           path={file.path}
           status={file.status}
           parts={file.parts}
-          oldPath={file.oldPath}
           include={includeAll}
           key={file.id}
           onIncludeChanged={this.props.onIncludeChanged}
@@ -311,7 +310,7 @@ export class ChangesList extends React.Component<
           opened={file.opened}
           availableWidth={this.props.availableWidth}
           onOpenChanged={this.onOpenChanged}
-          conflicted={file.status === AppFileStatus.Conflicted}
+          status={file.status}
         />
       )
     }
@@ -516,9 +515,16 @@ export class ChangesList extends React.Component<
     items.push(
       { type: 'separator' },
       {
+        label: CopyFilePathLabel,
+        action: () => {
+          const fullPath = Path.join(this.props.repository.path, path)
+          clipboard.writeText(fullPath)
+        },
+      },
+      {
         label: RevealInFileManagerLabel,
         action: () => revealInFileManager(this.props.repository, path),
-        enabled: status !== AppFileStatus.Deleted,
+        enabled: status.kind !== AppFileStatusKind.Deleted,
       },
       {
         label: openInExternalEditor,
@@ -526,16 +532,41 @@ export class ChangesList extends React.Component<
           const fullPath = Path.join(this.props.repository.path, path)
           this.props.onOpenInExternalEditor(fullPath)
         },
-        enabled: status !== AppFileStatus.Deleted,
+        enabled: status.kind !== AppFileStatusKind.Deleted,
       },
       {
         label: OpenWithDefaultProgramLabel,
         action: () => this.props.onOpenItem(path),
-        enabled: status !== AppFileStatus.Deleted,
+        enabled: status.kind !== AppFileStatusKind.Deleted,
       }
     )
 
     showContextualMenu(items)
+  }
+
+  private getPlaceholderMessage(
+    files: ReadonlyArray<WorkingDirectoryFileChange>,
+    singleFileCommit: boolean
+  ) {
+    if (!singleFileCommit) {
+      return 'Summary (required)'
+    }
+
+    const firstFile = files[0]
+    const fileName = basename(firstFile.path)
+
+    switch (firstFile.status.kind) {
+      case AppFileStatusKind.New:
+        return `Create ${fileName}`
+      case AppFileStatusKind.Deleted:
+        return `Delete ${fileName}`
+      default:
+        // TODO:
+        // this doesn't feel like a great message for AppFileStatus.Copied or
+        // AppFileStatus.Renamed but without more insight (and whether this
+        // affects other parts of the flow) we can just default to this for now
+        return `Update ${fileName}`
+    }
   }
 
   public render() {
@@ -590,17 +621,17 @@ export class ChangesList extends React.Component<
           repository={this.props.repository}
           dispatcher={this.props.dispatcher}
           commitMessage={this.props.commitMessage}
-          contextualCommitMessage={this.props.contextualCommitMessage}
+          focusCommitMessage={this.props.focusCommitMessage}
           autocompletionProviders={this.props.autocompletionProviders}
           isCommitting={this.props.isCommitting}
           showCoAuthoredBy={this.props.showCoAuthoredBy}
           coAuthors={this.props.coAuthors}
-          placeholder={
+          placeholder={this.getPlaceholderMessage(
+            filesSelected,
             singleFileCommit
-              ? `Update ${filesSelected[0].path}`
-              : 'Summary (required)'
-          }
+          )}
           singleFileCommit={singleFileCommit}
+          key={this.props.repository.id}
         />
       </div>
     )

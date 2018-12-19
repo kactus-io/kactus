@@ -17,17 +17,17 @@ body.theme-dark {
   --background-color: #{$gray-900};
 
   --button-background: #{$green};
-  --button-hover-background: lighten(#{$green}, 5%);
+  --button-hover-background: #{lighten($green, 5%)};
   --button-text-color: #{$white};
   --button-focus-border-color: #{$green-600};
 
-  --link-button-color: lighten(#{$green-400}, 3%);
+  --link-button-color: #{lighten($green-400, 3%)};
   --link-button-hover-color: #{$green-400};
 
   --secondary-button-background: #{$gray-800};
   --secondary-button-hover-background: var(--secondary-button-background);
   --secondary-button-text-color: var(--text-color);
-  --secondary-button-focus-shadow-color: rgba(#{$gray-200}, 0.75);
+  --secondary-button-focus-shadow-color: #{rgba($gray-200, 0.75)};
   --secondary-button-focus-border-color: #{$gray-300};
 
   /**
@@ -53,7 +53,7 @@ body.theme-dark {
   // or an item in a tab control header. It's up to each implementation
   // to decide what states to support (active selection, selection, etc).
 
-  --box-background-color: darken(#{$gray-900}, 3%);
+  --box-background-color: #{darken($gray-900, 3%)};
   --box-alt-background-color: #{$gray-800};
 
   /**
@@ -118,7 +118,7 @@ body.theme-dark {
    * for use when content can be expanded through other means than
    * scrolling.
    */
-  --box-overflow-shadow-background: linear-gradient(180deg, rgba(#{$gray-900}, 0) 0%, rgba(#{$gray-900}, 1) 90%, rgba(#{$gray-900}, 1) 100%);
+  --box-overflow-shadow-background: linear-gradient(180deg, #{rgba($gray-900, 0)} 0%, #{rgba($gray-900, 1)} 90%, #{rgba($gray-900, 1)} 100%);
 
   /**
    * Author input (co-authors)
@@ -131,7 +131,7 @@ body.theme-dark {
   --shadow-color: rgba(black, 0.5);
   --base-box-shadow: 0 2px 7px var(--shadow-color);
 
-  --toolbar-background-color: darken(#{$gray-900}, 3%);
+  --toolbar-background-color: #{darken($gray-900, 3%)};
   --toolbar-border-color: var(--box-border-color);
   --toolbar-text-color: var(--text-color);
   --toolbar-text-secondary-color: var(--text-secondary-color);
@@ -180,6 +180,7 @@ body.theme-dark {
 
   --tab-bar-active-color: #{$green};
   --tab-bar-background-color: var(--box-background-color);
+  --tab-bar-hover-background-color: $gray-800;
 
   /** Count bubble colors when used inside of a tab bar item */
   --tab-bar-count-color: var(--text-color);
@@ -196,6 +197,7 @@ body.theme-dark {
   --list-item-selected-badge-background-color: $gray-500;
   --list-item-selected-active-badge-color: $gray-900;
   --list-item-selected-active-badge-background-color: $white;
+  --list-item-hover-background-color: $gray-800;
 
   /**
    * Toast notifications are shown temporarily for things like the zoom
@@ -211,7 +213,7 @@ body.theme-dark {
   /**
    * Variables for form elements
    */
-  --text-field-focus-shadow-color: rgba(#{$green}, 0.25);
+  --text-field-focus-shadow-color: #{rgba($green, 0.25)};
 
   /**
    * Diff view
@@ -220,7 +222,7 @@ body.theme-dark {
   --diff-text-color: var(--text-color);
   --diff-border-color: #{$gray-800};
   --diff-gutter-color: #{$gray-800};
-  --diff-gutter-background-color: darken(#{$gray-900}, 3%);
+  --diff-gutter-background-color: #{darken($gray-900, 3%)};
 
   --diff-line-number-color: var(--text-secondary-color);
   --diff-line-number-column-width: 50px;
@@ -230,24 +232,24 @@ body.theme-dark {
   --diff-selected-gutter-color: #{$green-600};
   --diff-selected-text-color: var(--text-color);
 
-  --diff-add-background-color: darken(#{$green-900}, 3%);
-  --diff-add-border-color: darken(#{$green-900}, 2%);
-  --diff-add-gutter-color: darken(#{$green-900}, 2%);
-  --diff-add-gutter-background-color: darken(#{$green-900}, 8%);
+  --diff-add-background-color: #{darken($green-900, 3%)};
+  --diff-add-border-color: #{darken($green-900, 2%)};
+  --diff-add-gutter-color: #{darken($green-900, 2%)};
+  --diff-add-gutter-background-color: #{darken($green-900, 8%)};
   --diff-add-inner-background-color: #{$green-600};
   --diff-add-text-color: var(--diff-text-color);
 
-  --diff-delete-background-color: darken(#{$red-900}, 15%);
-  --diff-delete-border-color: darken(#{$red-900}, 10%);
-  --diff-delete-gutter-color: darken(#{$red-900}, 10%);
-  --diff-delete-gutter-background-color: darken(#{$red-900}, 20%);
+  --diff-delete-background-color: #{darken($red-900, 15%)};
+  --diff-delete-border-color: #{darken($red-900, 10%)};
+  --diff-delete-gutter-color: #{darken($red-900, 10%)};
+  --diff-delete-gutter-background-color: #{darken($red-900, 20%)};
   --diff-delete-inner-background-color: #{$red-700};
   --diff-delete-text-color: #{$red-100};
 
-  --diff-hunk-background-color: darken(#{$gray-900}, 3%);
-  --diff-hunk-border-color: lighten(#{$gray-900}, 3%);
-  --diff-hunk-gutter-color: lighten(#{$gray-900}, 3%);
-  --diff-hunk-gutter-background-color: darken(#{$gray-900}, 6%);
+  --diff-hunk-background-color: #{darken($gray-900, 3%)};
+  --diff-hunk-border-color: #{lighten($gray-900, 3%)};
+  --diff-hunk-gutter-color: #{lighten($gray-900, 3%)};
+  --diff-hunk-gutter-background-color: #{darken($gray-900, 6%)};
   --diff-hunk-text-color: var(--text-secondary-color);
 
   --diff-hover-background-color: #{$green-500};
@@ -281,7 +283,7 @@ body.theme-dark {
 
   // Colors for form errors
   --error-color: #{$red};
-  --form-error-background: darken(#{$red-900}, 3%);
+  --form-error-background: #{darken($red-900, 3%)};
   --form-error-border-color: #{$red-900};
   --form-error-text-color: var(--text-color);
 

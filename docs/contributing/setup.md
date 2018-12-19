@@ -2,20 +2,20 @@
 
 ## Setup
 
-You will need to install these tools on your machine:
+Refer to the specific instructions for each platform:
 
-### macOS
-
-See [mac-deps-setup.md](./setup-macos.md).
+ - [macOS](./setup-macos.md)
+ - [Windows](./setup-windows.md)
+ - [Linux](./setup-linux.md)
 
 ## Verification
 
-Then verify you have these commands available in your shell and that the found
+Verify you have these commands available in your shell and that the found
 versions look similar to the below output:
 
 ```shellsession
 $ node -v
-v8.11.4
+v8.12.0
 
 $ python --version
 Python 2.7.13

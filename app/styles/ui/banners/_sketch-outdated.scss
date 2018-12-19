@@ -1,0 +1,11 @@
+#sketch-outdated {
+  .button-component {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+  }
+
+  .button-component + .button-component {
+    right: 126px;
+  }
+}

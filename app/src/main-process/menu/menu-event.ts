@@ -23,6 +23,7 @@ export type MenuEvent =
   | 'view-repository-on-github'
   | 'clone-repository'
   | 'show-about'
+  | 'go-to-commit-message'
   | 'boomtown'
   | 'create-sketch-file'
   | 'open-sketch'

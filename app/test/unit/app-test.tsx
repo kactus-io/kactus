@@ -25,6 +25,7 @@ import {
 } from '../helpers/databases'
 import { InMemoryStore, AsyncInMemoryStore } from '../helpers/stores'
 import { RepositoryStateCache } from '../../src/lib/stores/repository-state-cache'
+import { ApiRepositoriesStore } from '../../src/lib/stores/api-repositories-store'
 
 describe('App', () => {
   let appStore: AppStore | null = null
@@ -61,6 +62,8 @@ describe('App', () => {
       githubUserStore!.getUsersForRepository(repo)
     )
 
+    const apiRepositoriesStore = new ApiRepositoriesStore(accountsStore)
+
     appStore = new AppStore(
       githubUserStore,
       new CloningRepositoriesStore(),
@@ -69,7 +72,8 @@ describe('App', () => {
       accountsStore,
       repositoriesStore,
       pullRequestStore,
-      repositoryStateManager
+      repositoryStateManager,
+      apiRepositoriesStore
     )
 
     dispatcher = new InMemoryDispatcher(appStore, repositoryStateManager)

@@ -2,7 +2,7 @@ import { Disposable } from 'event-kit'
 import { Account, Provider } from '../../models/account'
 import { assertNever, fatalError } from '../fatal-error'
 import { askUserToOAuth } from '../../lib/oauth'
-import { RetryAction } from '../retry-actions'
+import { RetryAction } from '../../models/retry-actions'
 import {
   validateURL,
   InvalidURLErrorName,

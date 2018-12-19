@@ -2,8 +2,10 @@ import { git } from './core'
 import { Repository } from '../../models/repository'
 import { DiffSelectionType } from '../../models/diff'
 import { applyPatchToIndex } from './apply'
-import { IKactusFile } from '../kactus'
-import { AppFileStatus, WorkingDirectoryFileChange } from '../../models/status'
+import {
+  WorkingDirectoryFileChange,
+  AppFileStatusKind,
+} from '../../models/status'
 
 interface IUpdateIndexOptions {
   /**
@@ -116,7 +118,6 @@ async function addDirectory(repository: Repository, path: string) {
  */
 export async function stageFiles(
   repository: Repository,
-  kactusFiles: Array<IKactusFile>,
   files: ReadonlyArray<WorkingDirectoryFileChange>
 ): Promise<void> {
   const normal = []
@@ -128,8 +129,8 @@ export async function stageFiles(
       await addDirectory(repository, file.path)
     } else if (file.selection.getSelectionType() === DiffSelectionType.All) {
       normal.push(file.path)
-      if (file.status === AppFileStatus.Renamed && file.oldPath) {
-        oldRenamed.push(file.oldPath)
+      if (file.status.kind === AppFileStatusKind.Renamed) {
+        oldRenamed.push(file.status.oldPath)
       }
     } else {
       partial.push(file)

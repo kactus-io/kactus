@@ -9,7 +9,7 @@ import {
 } from '../../models/status'
 import { TipState } from '../../models/tip'
 import {
-  ComparisonView,
+  HistoryTabMode,
   IBranchesState,
   IChangesState,
   ICompareState,
@@ -65,18 +65,6 @@ export class RepositoryStateCache {
     })
   }
 
-  public updateCommitSelection<K extends keyof ICommitSelection>(
-    repository: Repository,
-    fn: (state: ICommitSelection) => Pick<ICommitSelection, K>
-  ) {
-    this.update(repository, state => {
-      const commitSelection = state.commitSelection
-      const newValues = fn(commitSelection)
-
-      return { commitSelection: merge(commitSelection, newValues) }
-    })
-  }
-
   public updateKactusState<K extends keyof IKactusState>(
     repository: Repository,
     fn: (state: IKactusState) => Pick<IKactusState, K>
@@ -97,6 +85,17 @@ export class RepositoryStateCache {
       const changesState = state.changesState
       const newState = merge(changesState, fn(changesState))
       return { changesState: newState }
+    })
+  }
+
+  public updateCommitSelection<K extends keyof ICommitSelection>(
+    repository: Repository,
+    fn: (state: ICommitSelection) => Pick<ICommitSelection, K>
+  ) {
+    this.update(repository, state => {
+      const { commitSelection } = state
+      const newState = merge(commitSelection, fn(commitSelection))
+      return { commitSelection: newState }
     })
   }
 
@@ -134,12 +133,12 @@ function getInitialRepositoryState(): IRepositoryState {
       ),
       selectedFileIDs: [],
       diff: null,
-      contextualCommitMessage: null,
       commitMessage: null,
       coAuthors: [],
       showCoAuthoredBy: false,
       loadingDiff: null,
       selectedSketchPart: null,
+      conflictState: null,
     },
     selectedSection: RepositorySectionTab.Changes,
     branchesState: {
@@ -153,7 +152,9 @@ function getInitialRepositoryState(): IRepositoryState {
     },
     compareState: {
       isDivergingBranchBannerVisible: false,
-      formState: { kind: ComparisonView.None },
+      formState: {
+        kind: HistoryTabMode.History,
+      },
       tip: null,
       mergeStatus: null,
       showBranchList: false,
@@ -177,5 +178,7 @@ function getInitialRepositoryState(): IRepositoryState {
     checkoutProgress: null,
     pushPullFetchProgress: null,
     revertProgress: null,
+    branchFilterText: '',
+    pullRequestFilterText: '',
   }
 }

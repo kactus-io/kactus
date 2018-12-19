@@ -1,14 +1,14 @@
 import * as React from 'react'
 import { PathLabel } from '../lib/path-label'
-import { AppFileStatus, mapStatus, iconForStatus } from '../../models/status'
+import { AppFileStatus, AppFileStatusKind } from '../../models/status'
 import { IDiff, DiffType } from '../../models/diff'
-import { Octicon, OcticonSymbol } from '../octicons'
+import { Octicon, OcticonSymbol, iconForStatus } from '../octicons'
 import { Button } from '../lib/button'
 import { enableMergeTool } from '../../lib/feature-flag'
+import { mapStatus } from '../../lib/status'
 
 interface IChangedFileDetailsProps {
   readonly path: string
-  readonly oldPath?: string
   readonly status: AppFileStatus
   readonly diff: IDiff
 
@@ -34,7 +34,7 @@ export class ChangedFileDetails extends React.Component<
 > {
   public render() {
     const status = this.props.status
-    const fileStatus = mapStatus(status)
+    const fileStatus = mapStatus(status.kind)
 
     const diff = this.props.diff
     let type: string | undefined
@@ -47,7 +47,6 @@ export class ChangedFileDetails extends React.Component<
         <PathLabel
           type={type}
           path={this.props.path}
-          oldPath={this.props.oldPath}
           status={this.props.status}
         />
         {this.renderDecorator()}
@@ -64,7 +63,7 @@ export class ChangedFileDetails extends React.Component<
   private renderDecorator() {
     const status = this.props.status
     const diff = this.props.diff
-    if (status === AppFileStatus.Conflicted && enableMergeTool()) {
+    if (status.kind === AppFileStatusKind.Conflicted && enableMergeTool()) {
       return (
         <Button className="open-merge-tool" onClick={this.onOpenMergeTool}>
           Open Merge Tool

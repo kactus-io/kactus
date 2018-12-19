@@ -3,8 +3,7 @@ import { ModifiedImageDiff } from './modified-image-diff'
 import { NewImageDiff } from './new-image-diff'
 import { DeletedImageDiff } from './deleted-image-diff'
 
-import { ImageDiffType } from '../../../lib/app-state'
-import { Image, DiffHunk } from '../../../models/diff'
+import { Image, DiffHunk, ImageDiffType } from '../../../models/diff'
 import { TextDiff, ITextDiffUtilsProps } from '../text-diff'
 import { TabBar, TabBarType } from '../../tab-bar'
 import { Loading } from '../../lib/loading'
@@ -115,8 +114,8 @@ export class ImageDiff extends React.Component<IDiffProps, {}> {
               isModified
                 ? this.props.imageDiffType
                 : this.props.imageDiffType === ImageDiffType.Text
-                  ? 1
-                  : 0
+                ? 1
+                : 0
             }
             onTabClicked={this.onChangeDiffType}
             type={TabBarType.Switch}

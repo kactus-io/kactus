@@ -55,7 +55,6 @@ Place any additional information, configuration, or data that might be necessary
 If you have screen shots or gifs that demonstrate the issue, please include them.
 
 If the issue involves a specific public repository, including the information about it will make it easier to recreate the issue.
-
 -->
 
 ### Logs

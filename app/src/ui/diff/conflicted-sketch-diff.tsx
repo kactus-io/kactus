@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { ImageDiffType } from '../../lib/app-state'
+import { ImageDiffType } from '../../models/diff'
 import { Image, DiffHunk } from '../../models/diff'
 import { TabBar, TabBarType } from '../tab-bar'
 import { TwoUp } from './image-diffs/two-up'

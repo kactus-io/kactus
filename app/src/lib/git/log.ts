@@ -1,5 +1,10 @@
 import { git } from './core'
-import { AppFileStatus, CommittedFileChange } from '../../models/status'
+import {
+  CommittedFileChange,
+  AppFileStatusKind,
+  PlainFileStatus,
+  CopiedOrRenamedFileStatus,
+} from '../../models/status'
 import { Repository } from '../../models/repository'
 import { Commit } from '../../models/commit'
 import { CommitIdentity } from '../../models/commit-identity'
@@ -13,36 +18,39 @@ import {
  * Map the raw status text from Git to an app-friendly value
  * shamelessly borrowed from GitHub Desktop (Windows)
  */
-function mapStatus(rawStatus: string): AppFileStatus {
+function mapStatus(
+  rawStatus: string,
+  oldPath?: string
+): PlainFileStatus | CopiedOrRenamedFileStatus {
   const status = rawStatus.trim()
 
   if (status === 'M') {
-    return AppFileStatus.Modified
+    return { kind: AppFileStatusKind.Modified }
   } // modified
   if (status === 'A') {
-    return AppFileStatus.New
+    return { kind: AppFileStatusKind.New }
   } // added
   if (status === 'D') {
-    return AppFileStatus.Deleted
+    return { kind: AppFileStatusKind.Deleted }
   } // deleted
-  if (status === 'R') {
-    return AppFileStatus.Renamed
+  if (status === 'R' && oldPath != null) {
+    return { kind: AppFileStatusKind.Renamed, oldPath }
   } // renamed
-  if (status === 'C') {
-    return AppFileStatus.Copied
+  if (status === 'C' && oldPath != null) {
+    return { kind: AppFileStatusKind.Copied, oldPath }
   } // copied
 
   // git log -M --name-status will return a RXXX - where XXX is a percentage
-  if (status.match(/R[0-9]+/)) {
-    return AppFileStatus.Renamed
+  if (status.match(/R[0-9]+/) && oldPath != null) {
+    return { kind: AppFileStatusKind.Renamed, oldPath }
   }
 
   // git log -C --name-status will return a CXXX - where XXX is a percentage
-  if (status.match(/C[0-9]+/)) {
-    return AppFileStatus.Copied
+  if (status.match(/C[0-9]+/) && oldPath != null) {
+    return { kind: AppFileStatusKind.Copied, oldPath }
   }
 
-  return AppFileStatus.Modified
+  return { kind: AppFileStatusKind.Modified }
 }
 
 /**
@@ -175,19 +183,22 @@ export async function getChangedFiles(
   for (let i = 0; i < lines.length; i++) {
     const statusText = lines[i]
 
-    const status = mapStatus(statusText)
-
     let oldPath: string | undefined = undefined
 
-    if (status === AppFileStatus.Renamed || status === AppFileStatus.Copied) {
+    if (
+      statusText.length > 0 &&
+      (statusText[0] === 'R' || statusText[0] === 'C')
+    ) {
       oldPath = lines[++i]
     }
+
+    const status = mapStatus(statusText, oldPath)
 
     const path = lines[++i]
 
     const sketchFile = sketchFiles.find(f => path.indexOf(f.id) === 0)
 
-    files.push(new CommittedFileChange(path, status, sha, sketchFile, oldPath))
+    files.push(new CommittedFileChange(path, status, sha, sketchFile))
   }
 
   return files

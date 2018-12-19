@@ -49,4 +49,8 @@
   &:focus {
     outline: none;
   }
+
+  &:not(.not-selectable):hover {
+    background: var(--list-item-hover-background-color);
+  }
 }
