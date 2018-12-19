@@ -48,6 +48,7 @@ export class ChangedSketchPart extends React.Component<
   }
 
   public render() {
+    const { availableWidth, parts, opened, status, name } = this.props
     const listItemPadding = 10 * 2
     const checkboxWidth = 20
     const filePadding = 5
@@ -55,38 +56,31 @@ export class ChangedSketchPart extends React.Component<
     const statusWidth = 16
 
     const availablePathWidth =
-      this.props.availableWidth -
+      availableWidth -
       listItemPadding -
       checkboxWidth -
       filePadding -
       statusWidth -
-      this.props.parts.length * partPadding
+      parts.length * partPadding
 
     return (
       <div className="file">
-        {this.props.parts.map((p, i) => (
+        {parts.map((p, i) => (
           <Space key={i} />
         ))}
-        <Arrow opened={this.props.opened} onClick={this.handleOpenChanged} />
+        <Arrow opened={opened} onClick={this.handleOpenChanged} />
 
         <label className="path">
-          <PathText
-            path={this.props.name}
-            availableWidth={availablePathWidth}
-          />
+          <PathText path={name} availableWidth={availablePathWidth} />
         </label>
 
-        {this.props.status &&
-          this.props.status.kind === AppFileStatusKind.Conflicted && (
-            <Octicon
-              symbol={iconForStatus(this.props.status)}
-              className={
-                'status status-' +
-                mapStatus(AppFileStatusKind.Conflicted).toLowerCase()
-              }
-              title={'Contains a conflict'}
-            />
-          )}
+        {status && status.kind === AppFileStatusKind.Conflicted && (
+          <Octicon
+            symbol={iconForStatus(status)}
+            className={'status status-' + mapStatus(status).toLowerCase()}
+            title={'Contains a conflict'}
+          />
+        )}
       </div>
     )
   }

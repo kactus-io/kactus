@@ -34,7 +34,7 @@ export class ChangedFileDetails extends React.Component<
 > {
   public render() {
     const status = this.props.status
-    const fileStatus = mapStatus(status.kind)
+    const fileStatus = mapStatus(status)
 
     const diff = this.props.diff
     let type: string | undefined

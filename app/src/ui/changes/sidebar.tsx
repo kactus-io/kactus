@@ -21,6 +21,7 @@ import { ClickSource } from '../lib/list'
 import {
   WorkingDirectoryFileChange,
   TSketchPartChange,
+  ConflictedFileStatus,
 } from '../../models/status'
 import { CSSTransitionGroup } from 'react-transition-group'
 import { SketchFilesList } from './sketch-files-list'
@@ -166,6 +167,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     const conflictedFilesSelected = this.props.changes.workingDirectory.files.filter(
       f =>
         isConflictedFile(f.status) &&
+        hasUnresolvedConflicts(f.status) &&
         f.selection.getSelectionType() !== DiffSelectionType.None
     )
 
@@ -426,4 +428,18 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
       </div>
     )
   }
+}
+
+/**
+ * Determine if we have a `ManualConflict` type
+ * or conflict markers
+ */
+function hasUnresolvedConflicts(status: ConflictedFileStatus) {
+  if (!status.lookForConflictMarkers) {
+    // binary file doesn't contain markers
+    return true
+  }
+
+  // text file will have conflict markers removed
+  return status.conflictMarkerCount > 0
 }
