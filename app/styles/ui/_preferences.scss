@@ -54,6 +54,10 @@
       color: var(--text-secondary-color);
     }
   }
+
+  .label-for-button {
+    line-height: 25px;
+  }
 }
 
 #external-editor-error {

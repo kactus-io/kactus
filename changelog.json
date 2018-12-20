@@ -4,8 +4,9 @@
     "[Fixed] Authenticating to GitHub Enterprise fails when user has no emails defined",
     "[New] Clone, create, or add repositories right from the repository dropdown",
     "[New] Drag-and-drop to add local repositories from macOS tray icon",
-    "[Added] Resolve merge conflicts through a guided flow",
-    "[Added] Allow merging branches directly from branch dropdown"
+    "[New] Resolve merge conflicts through a guided flow",
+    "[New] Allow merging branches directly from branch dropdown",
+    "[New] Clear the preview cache periodically"
   ],
   "releases": {
     "0.3.14": [

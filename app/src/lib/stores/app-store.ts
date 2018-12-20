@@ -113,6 +113,7 @@ import {
   shouldShowPremiumUpsell,
   getKactusStoragePaths,
   IKactusFile,
+  clearKactusCache,
 } from '../kactus'
 
 import { formatCommitMessage } from '../format-commit-message'
@@ -238,6 +239,7 @@ const imageDiffTypeDefault = ImageDiffType.TwoUp
 const imageDiffTypeKey = 'image-diff-type'
 
 const shellKey = 'shell'
+const kactusClearCacheIntervalKey = 'kactusClearCacheInterval'
 
 // background fetching should occur hourly when Desktop is active, but this
 // lower interval ensures user interactions like switching repositories and
@@ -312,6 +314,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   /** The user's preferred shell. */
   private selectedShell = DefaultShell
+
+  private kactusClearCacheInterval = 7 * 3600 * 24
 
   /** The current repository filter text */
   private repositoryFilterText: string = ''
@@ -559,6 +563,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       isCancellingKactusFullAccess: this.isCancellingKactusFullAccess,
       sketchVersion: this.sketchVersion,
       selectedShell: this.selectedShell,
+      kactusClearCacheInterval: this.kactusClearCacheInterval,
       repositoryFilterText: this.repositoryFilterText,
       resolvedExternalEditor: this.resolvedExternalEditor,
       selectedCloneRepositoryTab: this.selectedCloneRepositoryTab,
@@ -1448,6 +1453,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     const shellValue = localStorage.getItem(shellKey)
     this.selectedShell = shellValue ? parseShell(shellValue) : DefaultShell
+
+    const kactusClearCacheIntervalValue = localStorage.getItem(kactusClearCacheIntervalKey)
+    this.kactusClearCacheInterval = kactusClearCacheIntervalValue ? parseInt(kactusClearCacheIntervalValue) : this.kactusClearCacheInterval
 
     this.updateMenuItemLabels()
 
@@ -3649,6 +3657,14 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return Promise.resolve()
   }
 
+  public _setKactusClearCacheInterval(seconds: number): Promise<void> {
+    this.kactusClearCacheInterval = seconds
+    localStorage.setItem(kactusClearCacheIntervalKey, '' + seconds)
+    this.emitUpdate()
+
+    return Promise.resolve()
+  }
+
   public _changeImageDiffType(type: ImageDiffType): Promise<void> {
     this.imageDiffType = type
     localStorage.setItem(imageDiffTypeKey, JSON.stringify(this.imageDiffType))
@@ -4076,6 +4092,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.emitUpdate()
 
     return Promise.resolve()
+  }
+
+  public async _clearKactusCache(): Promise<void> {
+    return clearKactusCache(new Date(Date.now() - this.kactusClearCacheInterval))
   }
 
   public async _refreshAccounts() {

@@ -105,7 +105,9 @@ const HourInMilliseconds = MinuteInMilliseconds * 60
  */
 const UpdateCheckInterval = 4 * HourInMilliseconds
 
-const CkeckKactusInterval = 1000 * 60 * 60 * 30
+const CkeckKactusInterval = 30 * MinuteInMilliseconds
+
+const ClearKactusCacheInterval = 6 * HourInMilliseconds
 
 /**
  * Wait 2 minutes before refreshing repository indicators
@@ -257,12 +259,17 @@ export class App extends React.Component<IAppProps, IAppState> {
     setInterval(() => this.checkForUpdates(true), UpdateCheckInterval)
     this.checkForUpdates(true)
 
-    this.props.dispatcher.checkKactusUnlockStatus()
-
     setInterval(
       () => this.props.dispatcher.checkKactusUnlockStatus(),
       CkeckKactusInterval
     )
+    this.props.dispatcher.checkKactusUnlockStatus()
+
+    setInterval(
+      () => this.props.dispatcher.clearKactusCache(),
+      ClearKactusCacheInterval
+    )
+    this.props.dispatcher.clearKactusCache()
 
     log.info(`launching: ${getVersion()} (${getOS()})`)
     log.info(`execPath: '${process.execPath}'`)
@@ -1046,6 +1053,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             onDismissed={this.onPopupDismissed}
             selectedShell={this.state.selectedShell}
             selectedTheme={this.state.selectedTheme}
+            kactusClearCacheInterval={this.state.kactusClearCacheInterval}
           />
         )
       case PopupType.MergeBranch: {

@@ -1,14 +1,17 @@
 import * as React from 'react'
+import * as prettyBytes from 'pretty-bytes'
 import { DialogContent } from '../dialog'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { LinkButton } from '../lib/link-button'
 import { Row } from '../../ui/lib/row'
+import { Button } from '../lib/button'
 import { Select } from '../lib/select'
 import { ExternalEditor, parse as parseEditor } from '../../lib/editors'
 import { Shell, parse as parseShell } from '../../lib/shells'
 import { TextBox } from '../lib/text-box'
 import { enableMergeTool } from '../../lib/feature-flag'
 import { IMergeTool } from '../../lib/git/config'
+import { getKactusCacheSize, clearKactusCache } from '../../lib/kactus'
 
 interface IAdvancedPreferencesProps {
   readonly confirmRepositoryRemoval: boolean
@@ -17,10 +20,12 @@ interface IAdvancedPreferencesProps {
   readonly selectedExternalEditor?: ExternalEditor
   readonly availableShells: ReadonlyArray<Shell>
   readonly selectedShell: Shell
+  readonly kactusClearCacheInterval: number
   readonly onConfirmDiscardChangesChanged: (checked: boolean) => void
   readonly onConfirmRepositoryRemovalChanged: (checked: boolean) => void
   readonly onSelectedEditorChanged: (editor: ExternalEditor) => void
   readonly onSelectedShellChanged: (shell: Shell) => void
+  readonly onKactusClearCacheInterval: (seconds: number) => void
 
   readonly mergeTool: IMergeTool | null
   readonly onMergeToolNameChanged: (name: string) => void
@@ -32,6 +37,8 @@ interface IAdvancedPreferencesState {
   readonly selectedShell: Shell
   readonly confirmRepositoryRemoval: boolean
   readonly confirmDiscardChanges: boolean
+  readonly kactusCacheSize: number | null
+  readonly kactusClearCacheInterval: string
 }
 
 export class Advanced extends React.Component<
@@ -46,7 +53,17 @@ export class Advanced extends React.Component<
       confirmDiscardChanges: this.props.confirmDiscardChanges,
       selectedExternalEditor: this.props.selectedExternalEditor,
       selectedShell: this.props.selectedShell,
+      kactusCacheSize: null,
+      kactusClearCacheInterval: '' + this.props.kactusClearCacheInterval,
     }
+
+    getKactusCacheSize()
+      .then(kactusCacheSize => {
+        this.setState({
+          kactusCacheSize,
+        })
+      })
+      .catch(log.error)
   }
 
   public async componentWillReceiveProps(nextProps: IAdvancedPreferencesProps) {
@@ -114,6 +131,58 @@ export class Advanced extends React.Component<
     this.props.onSelectedShellChanged(value)
   }
 
+  private onKactusClearCacheIntervalChanged = (
+    event: React.FormEvent<HTMLSelectElement>
+  ) => {
+    const value = parseInt(event.currentTarget.value, 10)
+    this.setState({ kactusClearCacheInterval: '' + value })
+    this.props.onKactusClearCacheInterval(value)
+  }
+
+  private onClearKactusCache = () => {
+    this.setState({ kactusCacheSize: null })
+    clearKactusCache().then(() =>
+      getKactusCacheSize()
+        .then(kactusCacheSize => {
+          this.setState({
+            kactusCacheSize,
+          })
+        })
+        .catch(log.error)
+    )
+  }
+
+  private renderKactusCache() {
+    const options = [1, 3, 7, 16, 30, 360]
+
+    return (
+      <>
+        <Row>
+          <Select
+            label="Automatically clear the Kactus cache older than"
+            value={this.state.kactusClearCacheInterval}
+            onChange={this.onKactusClearCacheIntervalChanged}
+          >
+            {options.map(n => (
+              <option key={n} value={'' + n * 3600 * 24}>
+                {n} {n > 1 ? 'days' : 'day'}
+              </option>
+            ))}
+          </Select>
+        </Row>
+        <Row>
+          <span className="label-for-button">
+            Size of the cache:{' '}
+            {this.state.kactusCacheSize
+              ? prettyBytes(this.state.kactusCacheSize)
+              : 'loading...'}
+          </span>
+          <Button onClick={this.onClearKactusCache}>Clear cache now</Button>
+        </Row>
+      </>
+    )
+  }
+
   private renderExternalEditor() {
     const options = this.props.availableEditors
     const label = 'External Editor'
@@ -173,6 +242,10 @@ export class Advanced extends React.Component<
       return null
     }
 
+    if (enableMergeTool()) {
+      return true
+    }
+
     const mergeTool = this.props.mergeTool
 
     return (
@@ -226,6 +299,12 @@ export class Advanced extends React.Component<
             onChange={this.onConfirmDiscardChangesChanged}
           />
         </Row>
+        <h2>Kactus Cache</h2>
+        <p>
+          Kactus keeps the previews in a cache so that it doesn't have to
+          generate them every time.
+        </p>
+        {this.renderKactusCache()}
       </DialogContent>
     )
   }

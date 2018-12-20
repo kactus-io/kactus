@@ -1155,6 +1155,10 @@ export class Dispatcher {
     return this.appStore._setShell(shell)
   }
 
+  public setKactusClearCacheInterval(seconds: number): Promise<void> {
+    return this.appStore._setKactusClearCacheInterval(seconds)
+  }
+
   private async handleCloneInKactusOptions(
     repository: Repository,
     action: IOpenRepositoryFromURLAction
@@ -1248,6 +1252,10 @@ export class Dispatcher {
   /** Check the unlocked kactus status */
   public async checkKactusUnlockStatus(): Promise<void> {
     return this.appStore._refreshAccounts()
+  }
+
+  public async clearKactusCache(): Promise<void> {
+    return this.appStore._clearKactusCache()
   }
 
   public async unlockKactus(

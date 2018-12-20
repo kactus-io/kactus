@@ -36,6 +36,7 @@ interface IPreferencesProps {
   readonly selectedExternalEditor?: ExternalEditor
   readonly selectedShell: Shell
   readonly selectedTheme: ApplicationTheme
+  readonly kactusClearCacheInterval: number
 }
 
 interface IPreferencesState {
@@ -51,6 +52,7 @@ interface IPreferencesState {
   readonly availableShells: ReadonlyArray<Shell>
   readonly selectedShell: Shell
   readonly mergeTool: IMergeTool | null
+  readonly kactusClearCacheInterval: number
 }
 
 /** The app-level preferences component. */
@@ -74,6 +76,7 @@ export class Preferences extends React.Component<
       availableShells: [],
       selectedShell: this.props.selectedShell,
       mergeTool: null,
+      kactusClearCacheInterval: this.props.kactusClearCacheInterval,
     }
   }
 
@@ -245,6 +248,8 @@ export class Preferences extends React.Component<
             availableShells={this.state.availableShells}
             selectedShell={this.state.selectedShell}
             onSelectedShellChanged={this.onSelectedShellChanged}
+            kactusClearCacheInterval={this.state.kactusClearCacheInterval}
+            onKactusClearCacheInterval={this.onKactusClearCacheInterval}
             mergeTool={this.state.mergeTool}
             onMergeToolCommandChanged={this.onMergeToolCommandChanged}
             onMergeToolNameChanged={this.onMergeToolNameChanged}
@@ -288,6 +293,10 @@ export class Preferences extends React.Component<
 
   private onSelectedShellChanged = (shell: Shell) => {
     this.setState({ selectedShell: shell })
+  }
+
+  private onKactusClearCacheInterval = (seconds: number) => {
+    this.setState({ kactusClearCacheInterval: seconds })
   }
 
   private onSelectedThemeChanged = (theme: ApplicationTheme) => {
@@ -335,6 +344,10 @@ export class Preferences extends React.Component<
     await this.props.dispatcher.setShell(this.state.selectedShell)
     await this.props.dispatcher.setConfirmDiscardChangesSetting(
       this.state.confirmDiscardChanges
+    )
+
+    await this.props.dispatcher.setKactusClearCacheInterval(
+      this.state.kactusClearCacheInterval
     )
 
     const mergeTool = this.state.mergeTool

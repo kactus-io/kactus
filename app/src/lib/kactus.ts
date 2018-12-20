@@ -1,5 +1,6 @@
 import { ensureDir, writeFile, remove } from 'fs-extra'
 import * as Path from 'path'
+import * as Fs from 'fs-extra'
 import { exec } from 'child_process'
 import {
   find,
@@ -315,14 +316,15 @@ export async function importSketchFile(
   })
 }
 
+const storageRootPath = Path.join(getUserDataPath(), 'previews')
+
 export function getKactusStoragePaths(
   repository: Repository,
   commitish: string,
   sketchFile: IKactusFile
 ) {
   const storagePath = Path.join(
-    getUserDataPath(),
-    'previews',
+    storageRootPath,
     String(repository.id),
     commitish
   )
@@ -331,5 +333,58 @@ export function getKactusStoragePaths(
   return {
     storagePath,
     sketchStoragePath,
+  }
+}
+
+export const getKactusCacheSize = async () => {
+  const getSize = async (path: string) => {
+    const stats = await Fs.stat(path)
+
+    let total = stats.size
+
+    if (!stats.isDirectory()) {
+      return total
+    }
+
+    const names = await Fs.readdir(path)
+
+    for (let name of names) {
+      total += await getSize(Path.join(path, name))
+    }
+
+    return total
+  }
+
+  return await getSize(storageRootPath)
+}
+
+export const clearKactusCache = async (olderThan?: Date) => {
+  if (!(await Fs.pathExists(storageRootPath))) {
+    return
+  }
+
+  if (!olderThan) {
+    await Fs.remove(storageRootPath)
+    return
+  }
+
+  const repos = await Fs.readdir(storageRootPath)
+
+  for (let repo of repos) {
+    const repoCachePath = Path.join(storageRootPath, repo)
+    if ((await Fs.stat(repoCachePath)).isDirectory()) {
+      const commitishes = await Fs.readdir(repoCachePath)
+
+      for (let commitish of commitishes) {
+        const commitishCachePath = Path.join(repoCachePath, commitish)
+        const { ctime } = await Fs.stat(commitishCachePath)
+
+        // if the commitish hasn't been access for a long time, remove it
+        if (ctime < olderThan) {
+          console.log(`removed ${commitishCachePath}`)
+          await Fs.remove(commitishCachePath)
+        }
+      }
+    }
   }
 }
