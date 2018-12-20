@@ -175,8 +175,9 @@ app.on('ready', () => {
     }
   )
 
+  type MenuEvenArg = { name: MenuEvent }
   ipcMain.on('menu-event', (event: Electron.IpcMessageEvent, args: any[]) => {
-    const { name }: { name: MenuEvent } = event as any
+    const { name }: MenuEvenArg = event as any
     if (mainWindow) {
       mainWindow.sendMenuEvent(name)
     }
@@ -186,9 +187,10 @@ app.on('ready', () => {
    * An event sent by the renderer asking that the menu item with the given id
    * is executed (ie clicked).
    */
+  type ExecuteMenuItemArg = { id: string }
   ipcMain.on(
     'execute-menu-item',
-    (event: Electron.IpcMessageEvent, { id }: { id: string }) => {
+    (event: Electron.IpcMessageEvent, { id }: ExecuteMenuItemArg) => {
       const menuItem = findMenuItemByID(menu, id)
       if (menuItem) {
         const window = BrowserWindow.fromWebContents(event.sender)
@@ -254,14 +256,15 @@ app.on('ready', () => {
     }
   })
 
+  type ShowCertificateTrustDialogArg = {
+    certificate: Electron.Certificate
+    message: string
+  }
   ipcMain.on(
     'show-certificate-trust-dialog',
     (
       event: Electron.IpcMessageEvent,
-      {
-        certificate,
-        message,
-      }: { certificate: Electron.Certificate; message: string }
+      { certificate, message }: ShowCertificateTrustDialogArg
     ) => {
       onDidLoad(window => {
         window.showCertificateTrustDialog(certificate, message)
@@ -283,19 +286,18 @@ app.on('ready', () => {
     }
   )
 
+  type SendErrorReportArg = { error: Error; extra: { [key: string]: string } }
   ipcMain.on(
     'send-error-report',
-    (
-      event: Electron.IpcMessageEvent,
-      { error, extra }: { error: Error; extra: { [key: string]: string } }
-    ) => {
+    (event: Electron.IpcMessageEvent, { error, extra }: SendErrorReportArg) => {
       reportError(error, extra)
     }
   )
 
+  type OpenExternalArg = { path: string }
   ipcMain.on(
     'open-external',
-    (event: Electron.IpcMessageEvent, { path }: { path: string }) => {
+    (event: Electron.IpcMessageEvent, { path }: OpenExternalArg) => {
       const pathLowerCase = path.toLowerCase()
       if (
         pathLowerCase.startsWith('http://') ||
@@ -311,7 +313,7 @@ app.on('ready', () => {
 
   ipcMain.on(
     'show-item-in-folder',
-    (event: Electron.IpcMessageEvent, { path }: { path: string }) => {
+    (event: Electron.IpcMessageEvent, { path }: OpenExternalArg) => {
       shell.showItemInFolder(path)
     }
   )

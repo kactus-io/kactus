@@ -2,15 +2,17 @@ import * as React from 'react'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { Banner } from './banner'
 
+type ISuccessfulMergeProps = {
+  readonly ourBranch: string
+  readonly theirBranch?: string
+  readonly onDismissed: () => void
+}
+
 export function SuccessfulMerge({
   ourBranch,
   theirBranch,
   onDismissed,
-}: {
-  readonly ourBranch: string
-  readonly theirBranch?: string
-  readonly onDismissed: () => void
-}) {
+}: ISuccessfulMergeProps) {
   const message =
     theirBranch !== undefined ? (
       <span>

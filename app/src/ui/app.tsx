@@ -199,9 +199,10 @@ export class App extends React.Component<IAppProps, IAppState> {
       props.dispatcher.postError(error)
     })
 
+    type MenuEventArg = { name: MenuEvent }
     ipcRenderer.on(
       'menu-event',
-      (event: Electron.IpcMessageEvent, { name }: { name: MenuEvent }) => {
+      (event: Electron.IpcMessageEvent, { name }: MenuEventArg) => {
         this.onMenuEvent(name)
       }
     )
@@ -226,15 +227,16 @@ export class App extends React.Component<IAppProps, IAppState> {
       this.props.dispatcher.postError(error)
     })
 
+    type CertificateErrorArg = {
+      certificate: Electron.Certificate
+      error: string
+      url: string
+    }
     ipcRenderer.on(
       'certificate-error',
       (
         event: Electron.IpcMessageEvent,
-        {
-          certificate,
-          error,
-          url,
-        }: { certificate: Electron.Certificate; error: string; url: string }
+        { certificate, error, url }: CertificateErrorArg
       ) => {
         this.props.dispatcher.showPopup({
           type: PopupType.UntrustedCertificate,

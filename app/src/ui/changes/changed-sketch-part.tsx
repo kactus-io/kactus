@@ -19,13 +19,11 @@ interface IChangedSketchPartProps {
 
 const Space = () => <span style={{ marginLeft: 20 }} />
 
-const Arrow = ({
-  opened,
-  onClick,
-}: {
+type ArrowProps = {
   opened: boolean
   onClick: (event: React.MouseEvent<HTMLDivElement>) => void
-}) => {
+}
+const Arrow = ({ opened, onClick }: ArrowProps) => {
   return (
     <span
       style={{

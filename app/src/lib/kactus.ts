@@ -348,7 +348,7 @@ export const getKactusCacheSize = async () => {
 
     const names = await Fs.readdir(path)
 
-    for (let name of names) {
+    for (const name of names) {
       total += await getSize(Path.join(path, name))
     }
 
@@ -370,12 +370,12 @@ export const clearKactusCache = async (olderThan?: Date) => {
 
   const repos = await Fs.readdir(storageRootPath)
 
-  for (let repo of repos) {
+  for (const repo of repos) {
     const repoCachePath = Path.join(storageRootPath, repo)
     if ((await Fs.stat(repoCachePath)).isDirectory()) {
       const commitishes = await Fs.readdir(repoCachePath)
 
-      for (let commitish of commitishes) {
+      for (const commitish of commitishes) {
         const commitishCachePath = Path.join(repoCachePath, commitish)
         const { ctime } = await Fs.stat(commitishCachePath)
 

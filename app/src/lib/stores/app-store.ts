@@ -384,9 +384,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
       this.onWindowZoomFactorChanged(zoomFactor)
     })
 
+    type AppMenuArg = { menu: IMenu }
     ipcRenderer.on(
       'app-menu',
-      (event: Electron.IpcMessageEvent, { menu }: { menu: IMenu }) => {
+      (event: Electron.IpcMessageEvent, { menu }: AppMenuArg) => {
         this.setAppMenu(menu)
       }
     )
@@ -623,7 +624,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
       sha,
       file: null,
       changedFiles: [],
-      diff: null, loadingDiff: null
+      diff: null,
+      loadingDiff: null,
     }))
 
     this.emitUpdate()
@@ -1454,8 +1456,12 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const shellValue = localStorage.getItem(shellKey)
     this.selectedShell = shellValue ? parseShell(shellValue) : DefaultShell
 
-    const kactusClearCacheIntervalValue = localStorage.getItem(kactusClearCacheIntervalKey)
-    this.kactusClearCacheInterval = kactusClearCacheIntervalValue ? parseInt(kactusClearCacheIntervalValue) : this.kactusClearCacheInterval
+    const kactusClearCacheIntervalValue = localStorage.getItem(
+      kactusClearCacheIntervalKey
+    )
+    this.kactusClearCacheInterval = kactusClearCacheIntervalValue
+      ? parseInt(kactusClearCacheIntervalValue)
+      : this.kactusClearCacheInterval
 
     this.updateMenuItemLabels()
 
@@ -1660,7 +1666,11 @@ export class AppStore extends TypedBaseStore<IAppState> {
     }
 
     this.repositoryStateCache.updateChangesState(repository, state =>
-      updateChangedFiles(state, status, options ? options.clearPartialState || false : false)
+      updateChangedFiles(
+        state,
+        status,
+        options ? options.clearPartialState || false : false
+      )
     )
 
     this.repositoryStateCache.updateChangesState(repository, state => ({
@@ -2030,8 +2040,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
         selectableLines
       )
       const selectedFile = currentlySelectedFile.withSelection(newSelection)
-      const updatedFiles = changesState.workingDirectory.files.map(
-        f => (f.id === selectedFile.id ? selectedFile : f)
+      const updatedFiles = changesState.workingDirectory.files.map(f =>
+        f.id === selectedFile.id ? selectedFile : f
       )
       const workingDirectory = WorkingDirectoryStatus.fromFiles(updatedFiles)
 
@@ -4095,7 +4105,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
   }
 
   public async _clearKactusCache(): Promise<void> {
-    return clearKactusCache(new Date(Date.now() - this.kactusClearCacheInterval))
+    return clearKactusCache(
+      new Date(Date.now() - this.kactusClearCacheInterval)
+    )
   }
 
   public async _refreshAccounts() {
@@ -4450,30 +4462,28 @@ export class AppStore extends TypedBaseStore<IAppState> {
     if (image) {
       this.repositoryStateCache.updateKactusState(repository, state => {
         return {
-          files: state.files.map(
-            f =>
-              f.id === sketchFile.id
-                ? {
-                    ...f,
-                    preview: image,
-                    previewError: undefined,
-                  }
-                : f
+          files: state.files.map(f =>
+            f.id === sketchFile.id
+              ? {
+                  ...f,
+                  preview: image,
+                  previewError: undefined,
+                }
+              : f
           ),
         }
       })
     } else {
       this.repositoryStateCache.updateKactusState(repository, state => {
         return {
-          files: state.files.map(
-            f =>
-              f.id === sketchFile.id
-                ? {
-                    ...f,
-                    preview: undefined,
-                    previewError: true,
-                  }
-                : f
+          files: state.files.map(f =>
+            f.id === sketchFile.id
+              ? {
+                  ...f,
+                  preview: undefined,
+                  previewError: true,
+                }
+              : f
           ),
         }
       })

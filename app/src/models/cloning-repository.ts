@@ -1,5 +1,6 @@
 import * as Path from 'path'
 
+// eslint-disable-next-line prefer-const
 let CloningRepositoryID = 1
 
 /** A repository which is currently being cloned. */
