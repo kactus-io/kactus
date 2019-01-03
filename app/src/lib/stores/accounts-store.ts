@@ -282,5 +282,10 @@ async function updatedAccount(account: Account): Promise<Account> {
     )
   }
 
-  return fetchUser(account.provider, account.endpoint, account.token)
+  return fetchUser(
+    account.provider,
+    account.endpoint,
+    account.token,
+    account.getKactusStatus()
+  )
 }

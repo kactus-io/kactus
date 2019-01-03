@@ -763,11 +763,21 @@ export async function createAuthorization(
   return { kind: AuthorizationResponseKind.Error, response }
 }
 
+type KactusState = {
+  enterprise: boolean
+  enterpriseFromOrg: boolean
+  enterpriseFromOrgAdmin: boolean
+  premium: boolean
+  premiumFromOrg: boolean
+  premiumFromOrgAdmin: boolean
+}
+
 /** Fetch the user authenticated by the token. */
 export async function fetchUser(
   provider: Provider,
   endpoint: string,
-  token: string
+  token: string,
+  kactusState?: KactusState
 ): Promise<Account> {
   const api = new API(provider, endpoint, token)
   try {
@@ -793,7 +803,7 @@ export async function fetchUser(
       avatarURL,
       user.id,
       user.name || user.login,
-      unlockedKactusStatus
+      unlockedKactusStatus || kactusState || null
     )
   } catch (e) {
     log.warn(`fetchUser: failed with endpoint ${endpoint}`, e)
@@ -966,14 +976,7 @@ export async function checkUnlockedKactus(
   user: IAPIUser,
   emails: ReadonlyArray<IAPIEmail>,
   endpoint: string
-): Promise<{
-  enterprise: boolean
-  enterpriseFromOrg: boolean
-  enterpriseFromOrgAdmin: boolean
-  premium: boolean
-  premiumFromOrg: boolean
-  premiumFromOrgAdmin: boolean
-} | null> {
+): Promise<KactusState | null> {
   try {
     const path = `${KactusAPIEndpoint}/checkUnlocked`
     const response = await fetch(path, {

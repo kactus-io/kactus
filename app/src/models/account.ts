@@ -82,6 +82,17 @@ export class Account {
       : false
   }
 
+  public getKactusStatus() {
+    return {
+      premium: this.unlockedKactus,
+      enterprise: this.unlockedEnterpriseKactus,
+      premiumFromOrg: this.unlockedKactusFromOrg,
+      enterpriseFromOrg: this.unlockedEnterpriseKactusFromOrg,
+      premiumFromOrgAdmin: this.unlockedKactusFromOrgAdmin,
+      enterpriseFromOrgAdmin: this.unlockedEnterpriseKactusFromOrgAdmin,
+    }
+  }
+
   public withToken(token: string): Account {
     return new Account(
       this.provider,
@@ -92,14 +103,7 @@ export class Account {
       this.avatarURL,
       this.id,
       this.name,
-      {
-        premium: this.unlockedKactus,
-        enterprise: this.unlockedEnterpriseKactus,
-        premiumFromOrg: this.unlockedKactusFromOrg,
-        enterpriseFromOrg: this.unlockedEnterpriseKactusFromOrg,
-        premiumFromOrgAdmin: this.unlockedKactusFromOrgAdmin,
-        enterpriseFromOrgAdmin: this.unlockedEnterpriseKactusFromOrgAdmin,
-      }
+      this.getKactusStatus()
     )
   }
 
@@ -114,6 +118,7 @@ export class Account {
       this.id,
       this.name,
       {
+        ...this.getKactusStatus(),
         premium: enterprise
           ? this.unlockedKactusFromOrg
             ? this.unlockedKactus
@@ -124,10 +129,6 @@ export class Account {
           : this.unlockedEnterpriseKactusFromOrg
           ? this.unlockedEnterpriseKactus
           : false,
-        premiumFromOrg: this.unlockedKactusFromOrg,
-        enterpriseFromOrg: this.unlockedEnterpriseKactusFromOrg,
-        premiumFromOrgAdmin: this.unlockedKactusFromOrgAdmin,
-        enterpriseFromOrgAdmin: this.unlockedEnterpriseKactusFromOrgAdmin,
       }
     )
   }

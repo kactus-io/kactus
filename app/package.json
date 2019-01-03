@@ -3,7 +3,7 @@
   "productName": "Kactus",
   "bundleID": "io.kactus.KactusClient",
   "companyName": "Kactus.io",
-  "version": "0.3.15",
+  "version": "0.3.16",
   "main": "./main.js",
   "repository": {
     "type": "git",
