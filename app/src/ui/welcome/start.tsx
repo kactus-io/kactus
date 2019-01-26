@@ -2,7 +2,12 @@ import * as React from 'react'
 import { WelcomeStep } from './welcome'
 import { LinkButton } from '../lib/link-button'
 
-const CreateAccountURL = 'https://github.com/join?source=kactus'
+/**
+ * The URL to the sign-up page on GitHub.com. Used in conjunction
+ * with account actions in the app where the user might want to
+ * consider signing up.
+ */
+export const CreateAccountURL = 'https://github.com/join?source=kactus'
 
 interface IStartProps {
   readonly advance: (step: WelcomeStep) => void

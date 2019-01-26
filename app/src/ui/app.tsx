@@ -543,10 +543,19 @@ export class App extends React.Component<IAppProps, IAppState> {
     })
   }
 
-  private showCloneRepo = () => {
+  private showCloneRepo = (cloneUrl?: string) => {
+    let initialURL: string | null = null
+
+    if (cloneUrl !== undefined) {
+      this.props.dispatcher.changeCloneRepositoriesTab(
+        CloneRepositoryTab.Generic
+      )
+      initialURL = cloneUrl
+    }
+
     return this.props.dispatcher.showPopup({
       type: PopupType.CloneRepository,
-      initialURL: null,
+      initialURL,
     })
   }
 
@@ -1819,6 +1828,14 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   // we currently only render one banner at a time
   private renderBanner(): JSX.Element | null {
+    // The inset light title bar style without the toolbar
+    // can't support banners at the moment. So for the
+    // no-repositories blank slate we'll have to live without
+    // them.
+    if (this.state.repositories.length === 0) {
+      return null
+    }
+
     let banner = null
     if (this.state.successfulMergeBannerState !== null) {
       banner = this.renderSuccessfulMergeBanner(
@@ -1909,6 +1926,13 @@ export class App extends React.Component<IAppProps, IAppState> {
   }
 
   private renderToolbar() {
+    /**
+     * No toolbar if we're in the blank slate view.
+     */
+    if (this.state.repositories.length === 0) {
+      return null
+    }
+
     return (
       <Toolbar id="kactus-app-toolbar">
         <div
@@ -1928,9 +1952,13 @@ export class App extends React.Component<IAppProps, IAppState> {
     if (state.repositories.length < 1) {
       return (
         <BlankSlateView
+          dotComAccount={this.getDotComAccount()}
+          enterpriseAccount={this.getEnterpriseAccount()}
           onCreate={this.showCreateRepository}
           onClone={this.showCloneRepo}
           onAdd={this.showAddLocalRepo}
+          apiRepositories={this.state.apiRepositories}
+          onRefreshRepositories={this.onRefreshRepositories}
         />
       )
     }
