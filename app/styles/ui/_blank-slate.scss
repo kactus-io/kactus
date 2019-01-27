@@ -59,6 +59,11 @@
     flex-shrink: 0;
 
     width: 33%;
+
+    &.fourth {
+      width: 25%;
+    }
+
     max-width: 300px;
     align-items: center;
 
