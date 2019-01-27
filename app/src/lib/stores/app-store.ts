@@ -1,5 +1,5 @@
 import * as Path from 'path'
-import {rimraf} from '../file-system'
+import { rimraf } from '../file-system'
 import { Disposable } from 'event-kit'
 import { ipcRenderer, remote } from 'electron'
 import { pathExists } from 'fs-extra'
@@ -2512,32 +2512,48 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
         const { kactus } = this.repositoryStateCache.get(repository)
         await Promise.all(
-          kactus.files
-            .map(f => {
-              const previousSketchFile = previousKactusState.files.find(file => f.id === file.id)
-              if (previousSketchFile && previousSketchFile.parsed && !f.parsed) {
-                return rimraf(f.path + '.sketch').then(() => {
-                  this.repositoryStateCache.updateKactusState(repository, (state) => ({
-                    files: state.files.filter(file => file.id !== f.id)
-                  }))
-                })
-              }
-              if (f.parsed) {
-                return importSketchFile(repository, this.sketchPath, f, kactus.config).then(() => {
-                  this.repositoryStateCache.updateKactusState(repository, (state) => ({
-                    files: state.files.map(file => file.id !== f.id ? {...file, imported: true} : file)
-                  }))
-                })
-              }
-              return Promise.resolve()
-            })
+          kactus.files.map(f => {
+            const previousSketchFile = previousKactusState.files.find(
+              file => f.id === file.id
+            )
+            if (previousSketchFile && previousSketchFile.parsed && !f.parsed) {
+              return rimraf(f.path + '.sketch').then(() => {
+                this.repositoryStateCache.updateKactusState(
+                  repository,
+                  state => ({
+                    files: state.files.filter(file => file.id !== f.id),
+                  })
+                )
+              })
+            }
+            if (f.parsed) {
+              return importSketchFile(
+                repository,
+                this.sketchPath,
+                f,
+                kactus.config
+              ).then(() => {
+                this.repositoryStateCache.updateKactusState(
+                  repository,
+                  state => ({
+                    files: state.files.map(file =>
+                      file.id !== f.id ? { ...file, imported: true } : file
+                    ),
+                  })
+                )
+              })
+            }
+            return Promise.resolve()
+          })
         )
-        await Promise.all(previousKactusState.files.map(f => {
-          if (!kactus.files.find(file => f.id === file.id)) {
-            return rimraf(f.path + '.sketch')
-          }
-          return Promise.resolve()
-        }))
+        await Promise.all(
+          previousKactusState.files.map(f => {
+            if (!kactus.files.find(file => f.id === file.id)) {
+              return rimraf(f.path + '.sketch')
+            }
+            return Promise.resolve()
+          })
+        )
       }
     } finally {
       this.updateCheckoutProgress(repository, null)
@@ -3622,10 +3638,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return shell.openItem(file.path + '.sketch')
   }
 
-  public async _deleteSketchFile(
-    repository: Repository,
-    file: IKactusFile,
-  ) {
+  public async _deleteSketchFile(repository: Repository, file: IKactusFile) {
     await rimraf(file.path + '.sketch')
     await rimraf(file.path)
     return this._refreshRepository(repository)
