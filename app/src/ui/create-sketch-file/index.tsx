@@ -65,6 +65,7 @@ export class CreateSketchFile extends React.Component<
             <TextBox
               label="Name"
               autoFocus={true}
+              value={proposedName}
               onValueChanged={this.onFileNameChange}
             />
           </Row>
