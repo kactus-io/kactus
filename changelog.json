@@ -1,11 +1,12 @@
 {
-  "unreleased": [
-    "[Fixed] When some files starts with the same name, pick the right one",
-    "[New] Add button to remove a Sketch file",
-    "[Fixed] Showing the right file when adding a new Sketch file",
-    "[Fixed] Checking a branch where a sketch file has been deleted"
-  ],
+  "unreleased": [],
   "releases": {
+    "0.3.17": [
+      "[Fixed] When some files starts with the same name, pick the right one",
+      "[New] Add button to remove a Sketch file",
+      "[Fixed] Showing the right file when adding a new Sketch file",
+      "[Fixed] Checking a branch where a sketch file has been deleted"
+    ],
     "0.3.16": [
       "[Fixed] When the network is unavailable, fall back to the previous account status"
     ],
