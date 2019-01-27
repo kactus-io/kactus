@@ -715,6 +715,10 @@ export class Dispatcher {
     return this.appStore._openSketchFile(file)
   }
 
+  public deleteSketchFile(repository: Repository, file: IKactusFile) {
+    return this.appStore._deleteSketchFile(repository, file)
+  }
+
   /** Add the pattern to the repository's gitignore. */
   public appendIgnoreRule(
     repository: Repository,

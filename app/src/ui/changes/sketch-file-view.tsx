@@ -10,6 +10,7 @@ interface ISketchFileViewProps {
   readonly onExport: (file: IKactusFile) => void
   readonly onImport: (file: IKactusFile) => void
   readonly onOpenSketchFile: (file: IKactusFile) => void
+  readonly onDelete: (file: IKactusFile) => void
 
   readonly sketchFile: IKactusFile
 }
@@ -47,6 +48,10 @@ export class SketchFileView extends React.Component<
     this.props.onExport(this.props.sketchFile)
   }
 
+  private handleDelete = () => {
+    this.props.onDelete(this.props.sketchFile)
+  }
+
   public render() {
     const { preview, previewError } = this.props.sketchFile
 
@@ -70,7 +75,7 @@ export class SketchFileView extends React.Component<
         <div className="content">
           <div className="title">{this.props.sketchFile.id}</div>
           <div className="callouts">
-            <div className="callout">
+            <div className="callout fourth">
               <Octicon symbol={OcticonSymbol.ruby} />
               <div>Open the file in Sketch</div>
               <Button
@@ -81,7 +86,7 @@ export class SketchFileView extends React.Component<
               </Button>
             </div>
 
-            <div className="callout">
+            <div className="callout fourth">
               <Octicon symbol={OcticonSymbol.fold} />
               <div>Regenerate Sketch file from JSON</div>
               <Button
@@ -93,7 +98,7 @@ export class SketchFileView extends React.Component<
               </Button>
             </div>
 
-            <div className="callout">
+            <div className="callout fourth">
               <Octicon symbol={OcticonSymbol.unfold} />
               <div>Export Sketch file to JSON</div>
               <Button
@@ -103,6 +108,12 @@ export class SketchFileView extends React.Component<
                 {this.props.sketchFile.isParsing ? <Loading /> : null} Export
                 Sketch File
               </Button>
+            </div>
+
+            <div className="callout fourth">
+              <Octicon symbol={OcticonSymbol.trashcan} />
+              <div>Delete Sketch file from the repository</div>
+              <Button onClick={this.handleDelete}>Delete Sketch File</Button>
             </div>
           </div>
         </div>

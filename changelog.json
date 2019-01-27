@@ -1,6 +1,7 @@
 {
   "unreleased": [
-    "[Fixed] When some files starts with the same name, pick the right one"
+    "[Fixed] When some files starts with the same name, pick the right one",
+    "[New] Add button to remove a Sketch file"
   ],
   "releases": {
     "0.3.16": [

@@ -41,6 +41,10 @@ export class Changes extends React.Component<IChangesProps, {}> {
     this.props.dispatcher.openSketchFile(file)
   }
 
+  private onDeleteSketchFile = (file: IKactusFile) => {
+    this.props.dispatcher.deleteSketchFile(this.props.repository, file)
+  }
+
   private onGetPreview = (file: IKactusFile) => {
     this.props.dispatcher.getSketchFilePreview(this.props.repository, file)
   }
@@ -59,6 +63,7 @@ export class Changes extends React.Component<IChangesProps, {}> {
           onExport={this.onSketchParse}
           onImport={this.onSketchImport}
           onOpenSketchFile={this.onOpenSketchFile}
+          onDelete={this.onDeleteSketchFile}
         />
       )
     }
