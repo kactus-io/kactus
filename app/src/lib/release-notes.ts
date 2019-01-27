@@ -83,6 +83,7 @@ export function getReleaseSummary(
 async function getChangeLog(): Promise<ReleaseMetadata[]> {
   const changelogURL =
     'https://raw.githubusercontent.com/kactus-io/kactus/master/changelog.json'
+  const releasesURL = 'https://api.github.com/repos/Kactus-io/kactus/releases'
   const query = __RELEASE_CHANNEL__ === 'beta' ? '?env=beta' : ''
 
   const response = await fetch(`${changelogURL}${query}`)
@@ -91,12 +92,20 @@ async function getChangeLog(): Promise<ReleaseMetadata[]> {
       unreleased: string[]
       releases: { [version: string]: string[] }
     } = await response.json()
+    let githubReleases: Array<{ published_at: string; name: string }> = []
+    try {
+      githubReleases = await (await fetch(releasesURL)).json()
+    } catch (err) {}
+
     return Object.keys(changelog.releases).map(version => {
+      const name = `v${version}`
       return {
         version,
         notes: changelog.releases[version],
-        name: `v${version}`,
-        pub_date: '', // TODO: find pub_date
+        name,
+        pub_date: (
+          githubReleases.find(r => r.name === name) || { published_at: '' }
+        ).published_at,
       }
     })
   } else {
