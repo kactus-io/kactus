@@ -141,6 +141,15 @@ function getFileList(
   let index = 0
   return files.reduce((prev, f, i) => {
     if (f.parts && f.sketchFile) {
+      if (f.parts.length === 1 && `${f.parts[0]}/` === f.path) {
+        // if we add a new sketch file
+        f.shown = true
+        f.index = index
+        prev[f.id] = f
+        index += 1
+        return prev
+      }
+
       const previousFile = files[i - 1] || {}
 
       const conflicted = f.status.kind === AppFileStatusKind.Conflicted

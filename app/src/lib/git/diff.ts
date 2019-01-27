@@ -371,7 +371,7 @@ async function getSketchDiff<K extends keyof IDiff>(
   let type: IKactusFileType
   if (/layerTextStyles/.test(file.path) || /layerStyles/.test(file.path)) {
     type = IKactusFileType.Style
-  } else if (name === 'document.json') {
+  } else if (name === 'document.json' || name === kactusFile.id) {
     type = IKactusFileType.Document
   } else if (_type === FileType.PageFile || name === 'page.json') {
     type = IKactusFileType.Page
@@ -558,14 +558,19 @@ export async function convertDiff<K extends keyof IDiff>(
     )
   }
 
+  let isDirectory = false
+  try {
+    isDirectory = (await stat(
+      Path.join(repository.path, file.path)
+    )).isDirectory()
+  } catch (err) {}
+
   return {
     kind: DiffType.Text,
     text: diff.contents,
     hunks: diff.hunks,
     lineEndingsChange,
-    isDirectory: (await stat(
-      Path.join(repository.path, file.path)
-    )).isDirectory(),
+    isDirectory,
   }
 }
 
