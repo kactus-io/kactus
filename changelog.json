@@ -1,5 +1,7 @@
 {
-  "unreleased": [],
+  "unreleased": [
+    "[Fixed] When some files starts with the same name, pick the right one"
+  ],
   "releases": {
     "0.3.16": [
       "[Fixed] When the network is unavailable, fall back to the previous account status"

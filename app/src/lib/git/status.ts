@@ -264,7 +264,7 @@ function buildStatusMap(
 
   const selection = DiffSelection.fromInitialSelection(DiffSelectionType.All)
 
-  const sketchFile = sketchFiles.find(f => entry.path.indexOf(f.id) === 0)
+  const sketchFile = sketchFiles.find(f => entry.path.indexOf(`${f.id}/`) === 0)
 
   files.set(
     entry.path,
