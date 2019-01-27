@@ -2,7 +2,8 @@
   "unreleased": [
     "[Fixed] When some files starts with the same name, pick the right one",
     "[New] Add button to remove a Sketch file",
-    "[Fixed] Showing the right file when adding a new Sketch file"
+    "[Fixed] Showing the right file when adding a new Sketch file",
+    "[Fixed] Checking a branch where a sketch file has been deleted"
   ],
   "releases": {
     "0.3.16": [

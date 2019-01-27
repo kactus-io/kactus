@@ -1,5 +1,5 @@
 import * as Path from 'path'
-import * as rimraf from 'rimraf'
+import {rimraf} from '../file-system'
 import { Disposable } from 'event-kit'
 import { ipcRenderer, remote } from 'electron'
 import { pathExists } from 'fs-extra'
@@ -61,7 +61,7 @@ import {
 } from '../../models/progress'
 import { Popup, PopupType } from '../../models/popup'
 import { IGitAccount } from '../../models/git-account'
-import { getAppPath, getUserDataPath } from '../../ui/lib/app-proxy'
+import { getAppPath } from '../../ui/lib/app-proxy'
 import {
   ApplicationTheme,
   getPersistedTheme,
@@ -2481,6 +2481,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
       return repository
     }
 
+    const previousKactusState = this.repositoryStateCache.get(repository).kactus
+
     await this.withAuthenticatingUser(repository, (repository, account) =>
       gitStore.performFailableOperation(() =>
         checkoutBranch(repository, account, foundBranch, progress => {
@@ -2511,11 +2513,31 @@ export class AppStore extends TypedBaseStore<IAppState> {
         const { kactus } = this.repositoryStateCache.get(repository)
         await Promise.all(
           kactus.files
-            .filter(f => f.parsed)
-            .map(f =>
-              importSketchFile(repository, this.sketchPath, f, kactus.config)
-            )
+            .map(f => {
+              const previousSketchFile = previousKactusState.files.find(file => f.id === file.id)
+              if (previousSketchFile && previousSketchFile.parsed && !f.parsed) {
+                return rimraf(f.path + '.sketch').then(() => {
+                  this.repositoryStateCache.updateKactusState(repository, (state) => ({
+                    files: state.files.filter(file => file.id !== f.id)
+                  }))
+                })
+              }
+              if (f.parsed) {
+                return importSketchFile(repository, this.sketchPath, f, kactus.config).then(() => {
+                  this.repositoryStateCache.updateKactusState(repository, (state) => ({
+                    files: state.files.map(file => file.id !== f.id ? {...file, imported: true} : file)
+                  }))
+                })
+              }
+              return Promise.resolve()
+            })
         )
+        await Promise.all(previousKactusState.files.map(f => {
+          if (!kactus.files.find(file => f.id === file.id)) {
+            return rimraf(f.path + '.sketch')
+          }
+          return Promise.resolve()
+        }))
       }
     } finally {
       this.updateCheckoutProgress(repository, null)
@@ -3600,6 +3622,15 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return shell.openItem(file.path + '.sketch')
   }
 
+  public async _deleteSketchFile(
+    repository: Repository,
+    file: IKactusFile,
+  ) {
+    await rimraf(file.path + '.sketch')
+    await rimraf(file.path)
+    return this._refreshRepository(repository)
+  }
+
   /** Takes a repository path and opens it using the user's configured editor */
   public async _openInExternalEditor(fullPath: string): Promise<void> {
     const { selectedExternalEditor } = this.getState()
@@ -4002,14 +4033,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
       this._removeCloningRepository(r)
     })
 
-    const storagePath = Path.join(getUserDataPath(), 'previews')
-
     const repositoryIDs = localRepositories.map(r => r.id)
     for (const id of repositoryIDs) {
       // remove kactus previews cache
-      await new Promise(resolve => {
-        rimraf(Path.join(storagePath, String(id)), () => resolve())
-      })
+      await clearKactusCache(undefined, String(id))
       await this.repositoriesStore.removeRepository(id)
     }
 

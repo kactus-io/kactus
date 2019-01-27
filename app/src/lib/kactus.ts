@@ -358,31 +358,37 @@ export const getKactusCacheSize = async () => {
   return await getSize(storageRootPath)
 }
 
-export const clearKactusCache = async (olderThan?: Date) => {
+export const clearKactusCache = async (olderThan?: Date, repoName?: string) => {
   if (!(await Fs.pathExists(storageRootPath))) {
     return
   }
 
   if (!olderThan) {
-    await Fs.remove(storageRootPath)
+    if (!repoName) {
+      await Fs.remove(storageRootPath)
+    } else {
+      await Fs.remove(Path.join(storageRootPath, repoName))
+    }
     return
   }
 
   const repos = await Fs.readdir(storageRootPath)
 
   for (const repo of repos) {
-    const repoCachePath = Path.join(storageRootPath, repo)
-    if ((await Fs.stat(repoCachePath)).isDirectory()) {
-      const commitishes = await Fs.readdir(repoCachePath)
+    if (!repoName || repo === repoName) {
+      const repoCachePath = Path.join(storageRootPath, repo)
+      if ((await Fs.stat(repoCachePath)).isDirectory()) {
+        const commitishes = await Fs.readdir(repoCachePath)
 
-      for (const commitish of commitishes) {
-        const commitishCachePath = Path.join(repoCachePath, commitish)
-        const { ctime } = await Fs.stat(commitishCachePath)
+        for (const commitish of commitishes) {
+          const commitishCachePath = Path.join(repoCachePath, commitish)
+          const { ctime } = await Fs.stat(commitishCachePath)
 
-        // if the commitish hasn't been access for a long time, remove it
-        if (ctime < olderThan) {
-          console.log(`removed ${commitishCachePath}`)
-          await Fs.remove(commitishCachePath)
+          // if the commitish hasn't been access for a long time, remove it
+          if (ctime < olderThan) {
+            console.log(`removed ${commitishCachePath}`)
+            await Fs.remove(commitishCachePath)
+          }
         }
       }
     }

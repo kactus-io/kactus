@@ -1,6 +1,7 @@
 import * as FSE from 'fs-extra'
 import * as Os from 'os'
 import * as Path from 'path'
+import * as _rimraf from 'rimraf'
 import { Disposable } from 'event-kit'
 import { Tailer } from './tailer'
 
@@ -110,5 +111,11 @@ export async function readPartialFile(
       })
       .on('error', reject)
       .on('end', () => resolve(Buffer.concat(chunks, total)))
+  })
+}
+
+export async function rimraf(path: string): Promise<void> {
+  return new Promise<void>(resolve => {
+    _rimraf(path, () => resolve())
   })
 }
