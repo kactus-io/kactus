@@ -1,6 +1,7 @@
 {
   "unreleased": [
-    "[Improved] Show an actionnable dialog when files would be overwritten"
+    "[Improved] Show an actionnable dialog when files would be overwritten",
+    "[Fixed] Generate Document and Library previews when rebuilding a sketch file"
   ],
   "releases": {
     "0.3.17": [

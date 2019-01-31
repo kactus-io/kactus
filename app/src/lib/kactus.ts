@@ -307,7 +307,7 @@ export async function importSketchFile(
       f.id
     )
     await remove(storagePath)
-    await importFolder(f.path, config)
+    await importFolder(f.path, { ...config, sketchPath })
     return runPluginCommand(
       sketchPath,
       Path.resolve(__dirname, './plugin.sketchplugin'),

@@ -933,7 +933,10 @@ async function getOldSketchPreview(
     let config
     try {
       config = remote.require(Path.join(storagePath, 'kactus.json')) // get the config in the commitish
-    } catch (err) {}
+    } catch (err) {
+      config = {}
+    }
+    config.sketchApp = sketchPath
     await importFolder(sketchStoragePath, config)
   }
 
