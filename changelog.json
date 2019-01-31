@@ -1,8 +1,9 @@
 {
-  "unreleased": [
-    "[Fixed] Pulling or checking out a branch would sometimes keep the state of the old branch"
-  ],
+  "unreleased": [],
   "releases": {
+    "0.3.19": [
+      "[Fixed] Pulling or checking out a branch would sometimes keep the state of the old branch"
+    ],
     "0.3.18": [
       "[Improved] Show an actionnable dialog when files would be overwritten",
       "[Fixed] Generate Document and Library previews when rebuilding a sketch file"
