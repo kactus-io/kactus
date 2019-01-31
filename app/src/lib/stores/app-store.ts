@@ -97,6 +97,7 @@ import {
   ComparisonMode,
   SuccessfulMergeBannerState,
   MergeConflictsBannerState,
+  IKactusState
 } from '../app-state'
 import { IGitHubUser } from '../databases/github-user-database'
 import {
@@ -2179,7 +2180,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
-  public async _refreshRepository(repository: Repository): Promise<void> {
+  public async _refreshRepository(repository: Repository, options?: {
+    clearPartialState?: boolean
+    skipParsingModifiedSketchFiles?: boolean
+  }): Promise<void> {
     if (repository.missing) {
       return
     }
@@ -2198,7 +2202,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     // if we cannot get a valid status it's a good indicator that the repository
     // is in a bad state - let's mark it as missing here and give up on the
     // further work
-    const status = await this._loadStatus(repository)
+    const status = await this._loadStatus(repository, options)
     if (!status) {
       await this._updateRepositoryMissing(repository, true)
       return
@@ -2462,6 +2466,55 @@ export class AppStore extends TypedBaseStore<IAppState> {
     )
   }
 
+  private async _updateKactusFilesAfterCheckout(repository: Repository, previousKactusState: IKactusState) {
+    const { kactus } = this.repositoryStateCache.get(repository)
+    await Promise.all(
+      kactus.files.map(async (f) => {
+        const previousSketchFile = previousKactusState.files.find(
+          file => f.id === file.id
+        )
+        if (previousSketchFile && previousSketchFile.parsed && !f.parsed) {
+          await rimraf(f.path + '.sketch').catch(() => {})
+          this.repositoryStateCache.updateKactusState(
+            repository,
+            state => ({
+              files: state.files.filter(file => file.id !== f.id),
+            })
+          )
+        }
+        if (f.parsed) {
+          try {
+            await importSketchFile(
+              repository,
+              this.sketchPath,
+              f,
+              kactus.config
+            )
+            this.repositoryStateCache.updateKactusState(
+              repository,
+              state => ({
+                files: state.files.map(file =>
+                  file.id !== f.id ? { ...file, imported: true } : file
+                ),
+              })
+            )
+          } catch (err) {
+            // probably a merge conflict
+            log.error(`Could not import the sketch file ${f.path}`, err)
+          }
+        }
+      })
+    )
+    await Promise.all(
+      previousKactusState.files.map(f => {
+        if (!kactus.files.find(file => f.id === file.id)) {
+          return rimraf(f.path + '.sketch').catch(() => {})
+        }
+        return Promise.resolve()
+      })
+    )
+  }
+
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _checkoutBranch(
     repository: Repository,
@@ -2508,7 +2561,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         targetBranch: foundBranch.name,
       })
 
-      await this._refreshRepository(repository)
+      await this._refreshRepository(repository, {skipParsingModifiedSketchFiles: true})
 
       if (refreshKactus) {
         this.updateCheckoutProgress(repository, {
@@ -2519,50 +2572,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
           value: 1,
         })
 
-        const { kactus } = this.repositoryStateCache.get(repository)
-        await Promise.all(
-          kactus.files.map(f => {
-            const previousSketchFile = previousKactusState.files.find(
-              file => f.id === file.id
-            )
-            if (previousSketchFile && previousSketchFile.parsed && !f.parsed) {
-              return rimraf(f.path + '.sketch').then(() => {
-                this.repositoryStateCache.updateKactusState(
-                  repository,
-                  state => ({
-                    files: state.files.filter(file => file.id !== f.id),
-                  })
-                )
-              })
-            }
-            if (f.parsed) {
-              return importSketchFile(
-                repository,
-                this.sketchPath,
-                f,
-                kactus.config
-              ).then(() => {
-                this.repositoryStateCache.updateKactusState(
-                  repository,
-                  state => ({
-                    files: state.files.map(file =>
-                      file.id !== f.id ? { ...file, imported: true } : file
-                    ),
-                  })
-                )
-              })
-            }
-            return Promise.resolve()
-          })
-        )
-        await Promise.all(
-          previousKactusState.files.map(f => {
-            if (!kactus.files.find(file => f.id === file.id)) {
-              return rimraf(f.path + '.sketch')
-            }
-            return Promise.resolve()
-          })
-        )
+        await this._updateKactusFilesAfterCheckout(repository, previousKactusState)
       }
     } finally {
       this.updateCheckoutProgress(repository, null)
@@ -3025,6 +3035,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       }
 
       const state = this.repositoryStateCache.get(repository)
+      const previousKactusState = state.kactus
       const tip = state.branchesState.tip
 
       if (tip.kind === TipState.Unborn) {
@@ -3105,7 +3116,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
             await gitStore.reconcileHistory(mergeBase)
           }
 
-          await this._refreshRepository(repository)
+          await this._refreshRepository(repository, {skipParsingModifiedSketchFiles: true})
 
           this.updatePushPullFetchProgress(repository, {
             kind: 'generic',
@@ -3114,24 +3125,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
             value: refreshStartProgress + refreshWeight * 0.2,
           })
 
-          const { kactus } = this.repositoryStateCache.get(repository)
-          try {
-            await Promise.all(
-              kactus.files
-                .filter(f => f.parsed)
-                .map(f =>
-                  importSketchFile(
-                    repository,
-                    this.sketchPath,
-                    f,
-                    kactus.config
-                  )
-                )
-            )
-          } catch (err) {
-            // probably some merge conflicts
-            log.error('Could not import sketch files during pull', err)
-          }
+          await this._updateKactusFilesAfterCheckout(repository, previousKactusState)
 
           this.updatePushPullFetchProgress(repository, {
             kind: 'generic',

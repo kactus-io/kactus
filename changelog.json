@@ -1,5 +1,7 @@
 {
-  "unreleased": [],
+  "unreleased": [
+    "[Fixed] Pulling or checking out a branch would sometimes keep the state of the old branch"
+  ],
   "releases": {
     "0.3.18": [
       "[Improved] Show an actionnable dialog when files would be overwritten",
