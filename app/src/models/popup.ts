@@ -48,6 +48,7 @@ export enum PopupType {
   AbortMerge,
   OversizedFiles,
   CommitConflictsWarning,
+  LocalChangesOverwritten,
 }
 
 export type Popup =
@@ -169,4 +170,11 @@ export type Popup =
       repository: Repository
       /** information for completing the commit */
       context: ICommitContext
+    }
+  | {
+      type: PopupType.LocalChangesOverwritten
+      /** repository user is committing in */
+      repository: Repository
+      retryAction: RetryAction
+      overwrittenFiles: ReadonlyArray<string>
     }

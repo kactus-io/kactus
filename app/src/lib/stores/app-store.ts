@@ -2484,10 +2484,19 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const previousKactusState = this.repositoryStateCache.get(repository).kactus
 
     await this.withAuthenticatingUser(repository, (repository, account) =>
-      gitStore.performFailableOperation(() =>
-        checkoutBranch(repository, account, foundBranch, progress => {
-          this.updateCheckoutProgress(repository, progress)
-        })
+      gitStore.performFailableOperation(
+        () =>
+          checkoutBranch(repository, account, foundBranch, progress => {
+            this.updateCheckoutProgress(repository, progress)
+          }),
+        {
+          repository,
+          retryAction: {
+            type: RetryActionType.Checkout,
+            repository,
+            branch,
+          },
+        }
       )
     )
 

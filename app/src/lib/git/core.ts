@@ -264,6 +264,8 @@ function getDescriptionForError(error: DugiteError): string {
       return 'There is no merge in progress, so there is nothing to abort.'
     case DugiteError.NoExistingRemoteBranch:
       return 'There is no branch matching on the remote.'
+    case DugiteError.LocalChangesOverwritten:
+      return 'Some of your changes would be overwritten.'
     default:
       return assertNever(error, `Unknown error: ${error}`)
   }

@@ -1375,6 +1375,10 @@ export class Dispatcher {
         })
         break
 
+      case RetryActionType.Checkout:
+        await this.checkoutBranch(retryAction.repository, retryAction.branch)
+        break
+
       default:
         return assertNever(retryAction, `Unknown retry action: ${retryAction}`)
     }

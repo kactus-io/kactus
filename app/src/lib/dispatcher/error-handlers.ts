@@ -329,6 +329,70 @@ export async function lfsAttributeMismatchHandler(
 }
 
 /**
+ * Handler for when we attempt to install the global LFS filters and LFS throws
+ * an error.
+ */
+export async function localChangesOverwrittenHandler(
+  error: Error,
+  dispatcher: Dispatcher
+): Promise<Error | null> {
+  const e = asErrorWithMetadata(error)
+  if (!e) {
+    return error
+  }
+
+  const gitError = asGitError(e.underlyingError)
+  if (!gitError) {
+    return error
+  }
+
+  const dugiteError = gitError.result.gitError
+  if (!dugiteError) {
+    return error
+  }
+
+  if (dugiteError !== DugiteError.LocalChangesOverwritten) {
+    return error
+  }
+
+  const { repository, retryAction } = e.metadata
+  if (repository == null) {
+    return error
+  }
+
+  if (!(repository instanceof Repository)) {
+    return error
+  }
+
+  if (!retryAction) {
+    log.error(`No retry action provided for a git checkout error.`, e)
+    return error
+  }
+
+  // find the overwritten files from the error
+  const overwrittenFiles = []
+
+  const pathRegex = /^\t(.*)/gm
+  const { stderr } = gitError.result
+
+  let match = pathRegex.exec(stderr)
+
+  while (match) {
+    overwrittenFiles.push(match[1])
+    match = pathRegex.exec(stderr)
+  }
+
+  dispatcher.showPopup({
+    type: PopupType.LocalChangesOverwritten,
+    repository,
+    retryAction,
+    overwrittenFiles: overwrittenFiles,
+  })
+
+  return null
+}
+
+/**
  * Handler for when an upstream remote already exists but doesn't actually match
  * the upstream repository.
  */

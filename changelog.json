@@ -1,5 +1,7 @@
 {
-  "unreleased": [],
+  "unreleased": [
+    "[Improved] Show an actionnable dialog when files would be overwritten"
+  ],
   "releases": {
     "0.3.17": [
       "[Fixed] When some files starts with the same name, pick the right one",
