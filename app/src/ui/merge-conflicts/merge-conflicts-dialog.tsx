@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { join } from 'path'
 import { Button } from '../lib/button'
 import { ButtonGroup } from '../lib/button-group'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
@@ -24,8 +23,6 @@ interface IMergeConflictsDialogProps {
   readonly repository: Repository
   readonly workingDirectory: WorkingDirectoryStatus
   readonly onDismissed: () => void
-  readonly openFileInExternalEditor: (path: string) => void
-  readonly resolvedExternalEditor: string | null
   readonly openRepositoryInShell: (repository: Repository) => void
   readonly ourBranch: string
   /* `undefined` when we didn't know the branch at the beginning of this flow */
@@ -66,20 +63,6 @@ function getConflictedFiles(status: WorkingDirectoryStatus) {
         f.status.lookForConflictMarkers &&
         f.status.conflictMarkerCount > 0)
   )
-}
-
-function editorButtonString(editorName: string | null): string {
-  const defaultEditorString = 'editor'
-  return `Open in ${editorName || defaultEditorString}`
-}
-
-function editorButtonTooltip(editorName: string | null): string | undefined {
-  if (editorName !== null) {
-    // no need to render a tooltip if we have a known editor
-    return
-  }
-
-  return `No editor configured in Preferences > Advanced`
 }
 
 const submitButtonString = 'Commit merge'
@@ -171,6 +154,10 @@ export class MergeConflictsDialog extends React.Component<
   private openThisRepositoryInShell = () =>
     this.props.openRepositoryInShell(this.props.repository)
 
+  private viewFileInKactus = (file: WorkingDirectoryFileChange) => {
+    this.props.dispatcher.changeChangesSelection(this.props.repository, [file])
+  }
+
   private renderShellLink(openThisRepositoryInShell: () => void): JSX.Element {
     return (
       <div className="cli-link">
@@ -200,7 +187,7 @@ export class MergeConflictsDialog extends React.Component<
   private renderConflictedFile(
     path: string,
     status: ConflictedFileStatus,
-    onOpenEditorClick: () => void
+    onViewInKactusClick: () => void
   ): JSX.Element | null {
     let content = null
     if (status.lookForConflictMarkers) {
@@ -212,23 +199,14 @@ export class MergeConflictsDialog extends React.Component<
           ? `1 conflict`
           : `${humanReadableConflicts} conflicts`
 
-      const disabled = this.props.resolvedExternalEditor === null
-
-      const tooltip = editorButtonTooltip(this.props.resolvedExternalEditor)
-
       content = (
         <>
           <div className="column-left">
             <PathText path={path} availableWidth={200} />
             <div className="file-conflicts-status">{message}</div>
           </div>
-          <Button
-            onClick={onOpenEditorClick}
-            disabled={disabled}
-            tooltip={tooltip}
-            className="small-button"
-          >
-            {editorButtonString(this.props.resolvedExternalEditor)}
+          <Button onClick={onViewInKactusClick} className="small-button">
+            View in Kactus
           </Button>
         </>
       )
@@ -265,11 +243,10 @@ export class MergeConflictsDialog extends React.Component<
           return this.renderResolvedFile(file.path)
         }
 
-        return this.renderConflictedFile(file.path, status, () =>
-          this.props.openFileInExternalEditor(
-            join(this.props.repository.path, file.path)
-          )
-        )
+        return this.renderConflictedFile(file.path, status, () => {
+          this.onDismissed()
+          this.viewFileInKactus(file)
+        })
       default:
         return null
     }

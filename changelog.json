@@ -1,5 +1,7 @@
 {
-  "unreleased": [],
+  "unreleased": [
+    "[Improved] Prompt to see in kactus instead of opening editor when there are conflicts"
+  ],
   "releases": {
     "0.3.19": [
       "[Fixed] Pulling or checking out a branch would sometimes keep the state of the old branch"

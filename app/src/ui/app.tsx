@@ -1396,8 +1396,6 @@ export class App extends React.Component<IAppProps, IAppState> {
             repository={popup.repository}
             workingDirectory={workingDirectory}
             onDismissed={this.onPopupDismissed}
-            openFileInExternalEditor={this.openFileInExternalEditor}
-            resolvedExternalEditor={this.state.resolvedExternalEditor}
             openRepositoryInShell={this.openInShell}
             ourBranch={popup.ourBranch}
             theirBranch={popup.theirBranch}

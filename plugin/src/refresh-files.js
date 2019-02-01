@@ -1,4 +1,5 @@
-export default function(context) {
+// eslint-disable-next-line no-restricted-syntax
+export default function() {
   const documents = NSApplication.sharedApplication().orderedDocuments()
 
   for (let i = 0; i < documents.length; i++) {
