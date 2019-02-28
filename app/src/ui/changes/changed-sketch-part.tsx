@@ -68,7 +68,7 @@ export class ChangedSketchPart extends React.Component<
         ))}
         <Arrow opened={opened} onClick={this.handleOpenChanged} />
 
-        <label className="path">
+        <label className="path-label-component">
           <PathText path={name} availableWidth={availablePathWidth} />
         </label>
 

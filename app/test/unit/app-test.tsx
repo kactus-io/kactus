@@ -1,11 +1,9 @@
-import { expect } from 'chai'
-
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as TestUtils from 'react-dom/test-utils'
 
 import { App } from '../../src/ui/app'
-import { Dispatcher } from '../../src/lib/dispatcher'
+import { Dispatcher } from '../../src/ui/dispatcher'
 import {
   AppStore,
   GitHubUserStore,
@@ -80,7 +78,7 @@ describe('App', () => {
   })
 
   it('renders', async () => {
-    const app = TestUtils.renderIntoDocument(
+    const app = TestUtils.renderIntoDocument<any>(
       <App
         dispatcher={dispatcher!}
         appStore={appStore!}
@@ -89,12 +87,13 @@ describe('App', () => {
         gitHubUserStore={githubUserStore!}
         startTime={0}
       />
-    ) as React.Component<any, any>
+    )
     // Give any promises a tick to resolve.
     await wait(0)
 
+    // @ts-ignore
     const node = ReactDOM.findDOMNode(app)
-    expect(node).not.to.equal(null)
+    expect(node).not.toBeNull()
   })
 })
 

@@ -5,7 +5,7 @@ import { SketchFileView } from './sketch-file-view'
 import { DiffSelection, IDiff, ImageDiffType } from '../../models/diff'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { Repository } from '../../models/repository'
-import { Dispatcher } from '../../lib/dispatcher'
+import { Dispatcher } from '../dispatcher'
 import { IKactusFile } from '../../lib/kactus'
 
 interface IChangesProps {

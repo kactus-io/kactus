@@ -127,6 +127,7 @@ const allMenuIds: ReadonlyArray<MenuIDs> = [
   'clone-repository',
   'about',
   'create-pull-request',
+  'create-sketch-file',
 ]
 
 function getAllMenusDisabledBuilder(): MenuStateBuilder {
@@ -154,8 +155,6 @@ function getRepositoryMenuBuilder(state: IAppState): MenuStateBuilder {
   let networkActionInProgress = false
   let tipStateIsUnknown = false
   let branchIsUnborn = false
-
-  let hasRemote = false
 
   if (selectedState && selectedState.type === SelectionType.Repository) {
     repositorySelected = true
@@ -186,8 +185,6 @@ function getRepositoryMenuBuilder(state: IAppState): MenuStateBuilder {
       onNonDefaultBranch = true
     }
 
-    hasRemote = !!selectedState.state.remote
-
     networkActionInProgress = selectedState.state.isPushPullFetchInProgress
   }
 
@@ -208,6 +205,7 @@ function getRepositoryMenuBuilder(state: IAppState): MenuStateBuilder {
     'show-branches-list',
     'open-external-editor',
     'compare-to-branch',
+    'create-sketch-file',
   ]
 
   const menuStateBuilder = new MenuStateBuilder()
@@ -246,7 +244,7 @@ function getRepositoryMenuBuilder(state: IAppState): MenuStateBuilder {
     )
     menuStateBuilder.setEnabled(
       'push',
-      hasRemote && !branchIsUnborn && !networkActionInProgress
+      !branchIsUnborn && !networkActionInProgress
     )
     menuStateBuilder.setEnabled(
       'pull',

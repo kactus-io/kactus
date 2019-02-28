@@ -13,6 +13,12 @@ const defaultShellLabel = 'Open in Terminal'
 const defaultPullRequestLabel = 'Create Pull Request'
 const defaultBranchNameDefaultValue = 'Default Branch'
 
+enum ZoomDirection {
+  Reset,
+  In,
+  Out,
+}
+
 export type MenuLabels = {
   editorLabel?: string
   shellLabel?: string
@@ -302,7 +308,7 @@ export function buildDefaultMenu({
         click: emit('compare-to-branch'),
       },
       {
-        label: 'Merge Into Current Branch…',
+        label: 'Merge into Current Branch…',
         id: 'merge-branch',
         accelerator: 'CmdOrCtrl+Shift+M',
         click: emit('merge-branch'),
@@ -393,6 +399,15 @@ export function buildDefaultMenu({
       {
         label: 'Crash renderer process…',
         click: emit('boomtown'),
+      },
+      {
+        label: 'Show popup',
+        submenu: [
+          {
+            label: 'Release notes',
+            click: emit('show-release-notes-popup'),
+          },
+        ],
       }
     )
   }
@@ -425,12 +440,6 @@ function emit(name: MenuEvent): ClickHandler {
       ipcMain.emit('menu-event', { name })
     }
   }
-}
-
-enum ZoomDirection {
-  Reset,
-  In,
-  Out,
 }
 
 /** The zoom steps that we support, these factors must sorted */

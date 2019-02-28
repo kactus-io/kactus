@@ -9,7 +9,9 @@ export type WindowState =
   | 'hidden'
 
 export function getWindowState(window: Electron.BrowserWindow): WindowState {
-  if (window.isFullScreen()) {
+  if (!window) {
+    return 'normal'
+  } else if (window.isFullScreen()) {
     return 'full-screen'
   } else if (window.isMaximized()) {
     return 'maximized'

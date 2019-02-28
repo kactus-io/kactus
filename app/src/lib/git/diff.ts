@@ -43,6 +43,7 @@ import {
 import { getUserDataPath, getTempPath } from '../../ui/lib/app-proxy'
 import { assertNever } from '../fatal-error'
 import { getOldPathOrDefault } from '../get-old-path'
+import { getCaptures } from '../helpers/regex'
 
 export interface ISketchPreviews {
   current: Image | undefined
@@ -190,7 +191,10 @@ export async function getWorkingDirectoryDiff<K extends keyof IDiff>(
   // `--no-ext-diff` should be provided wherever we invoke `git diff` so that any
   // diff.external program configured by the user is ignored
 
-  if (file.status.kind === AppFileStatusKind.New) {
+  if (
+    file.status.kind === AppFileStatusKind.New ||
+    file.status.kind === AppFileStatusKind.Untracked
+  ) {
     // `git diff --no-index` seems to emulate the exit codes from `diff` irrespective of
     // whether you set --exit-code
     //
@@ -322,7 +326,10 @@ async function getImageDiff(
       promises[0] = getWorkingDirectoryImage(repository, file)
     }
 
-    if (file.status.kind !== AppFileStatusKind.New) {
+    if (
+      file.status.kind !== AppFileStatusKind.New &&
+      file.status.kind !== AppFileStatusKind.Untracked
+    ) {
       promises[1] = getBlobImage(repository, getOldPathOrDefault(file), 'HEAD')
     }
   } else {
@@ -351,7 +358,7 @@ async function getImageDiff(
   }
 }
 
-async function getSketchDiff<K extends keyof IDiff>(
+async function getSketchDiff(
   sketchPath: string,
   repository: Repository,
   file: FileChange,
@@ -441,7 +448,8 @@ async function getSketchDiff<K extends keyof IDiff>(
 
     if (
       file.status.kind !== AppFileStatusKind.Conflicted &&
-      file.status.kind !== AppFileStatusKind.New
+      file.status.kind !== AppFileStatusKind.New &&
+      file.status.kind !== AppFileStatusKind.Untracked
     ) {
       // If we have file.oldPath that means it's a rename so we'll
       // look for that file.
@@ -470,7 +478,10 @@ async function getSketchDiff<K extends keyof IDiff>(
     }
 
     // File status can't be conflicted for a file in a commit
-    if (file.status.kind !== AppFileStatusKind.New) {
+    if (
+      file.status.kind !== AppFileStatusKind.New &&
+      file.status.kind !== AppFileStatusKind.Untracked
+    ) {
       // TODO: commitish^ won't work for the first commit
       //
       // If we have file.oldPath that means it's a rename so we'll
@@ -955,3 +966,31 @@ async function getOldSketchPreview(
     name
   )
 }
+
+/**
+ * list the modified binary files' paths in the given repository
+ * @param repository to run git operation in
+ * @param ref ref (sha, branch, etc) to compare the working index against
+ *
+ * if you're mid-merge pass `'MERGE_HEAD'` to ref to get a diff of `HEAD` vs `MERGE_HEAD`,
+ * otherwise you should probably pass `'HEAD'` to get a diff of the working tree vs `HEAD`
+ */
+export async function getBinaryPaths(
+  repository: Repository,
+  ref: string
+): Promise<ReadonlyArray<string>> {
+  const { output } = await spawnAndComplete(
+    ['diff', '--numstat', '-z', ref],
+    repository.path,
+    'getBinaryPaths'
+  )
+  const captures = getCaptures(output.toString('utf8'), binaryListRegex)
+  if (captures.length === 0) {
+    return []
+  }
+  // flatten the list (only does one level deep)
+  const flatCaptures = captures.reduce((acc, val) => acc.concat(val))
+  return flatCaptures
+}
+
+const binaryListRegex = /-\t-\t(?:\0.+\0)?([^\0]*)/gi

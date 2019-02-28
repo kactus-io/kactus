@@ -263,7 +263,7 @@ function getDescriptionForError(error: DugiteError): string {
     case DugiteError.NoMergeToAbort:
       return 'There is no merge in progress, so there is nothing to abort.'
     case DugiteError.NoExistingRemoteBranch:
-      return 'There is no branch matching on the remote.'
+      return 'The remote branch does not exist.'
     case DugiteError.LocalChangesOverwritten:
       return 'Some of your changes would be overwritten.'
     default:
@@ -321,7 +321,7 @@ export async function gitNetworkArguments(
   const protocolVersion =
     repository != null
       ? await getConfigValue(repository, name)
-      : getGlobalConfigValue(name)
+      : await getGlobalConfigValue(name)
 
   if (protocolVersion !== null) {
     // protocol.version is already set, we should not override it with our own

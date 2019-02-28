@@ -19,3 +19,44 @@ export interface IMenuItem {
    */
   readonly role?: string
 }
+
+/**
+ * Converts Electron accelerator modifiers to their platform specific
+ * name or symbol.
+ *
+ * Example: CommandOrControl becomes either '⌘' or 'Ctrl' depending on platform.
+ *
+ * See https://github.com/electron/electron/blob/fb74f55/docs/api/accelerator.md
+ */
+export function getPlatformSpecificNameOrSymbolForModifier(
+  modifier: string
+): string {
+  switch (modifier.toLowerCase()) {
+    case 'cmdorctrl':
+    case 'commandorcontrol':
+      return '⌘'
+
+    case 'ctrl':
+    case 'control':
+      return '⌃'
+
+    case 'shift':
+      return '⇧'
+    case 'alt':
+      return '⌥'
+
+    // Mac only
+    case 'cmd':
+    case 'command':
+      return '⌘'
+    case 'option':
+      return '⌥'
+
+    // Special case space because no one would be able to see it
+    case ' ':
+      return 'Space'
+  }
+
+  // Not a known modifier, likely a normal key
+  return modifier
+}

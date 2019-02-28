@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Dispatcher } from '../../lib/dispatcher'
+import { Dispatcher } from '../dispatcher'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { Row } from '../../ui/lib/row'

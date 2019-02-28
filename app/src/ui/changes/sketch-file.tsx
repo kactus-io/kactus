@@ -34,7 +34,7 @@ export class SketchFile extends React.Component<
 
     return (
       <div className="file" onContextMenu={this.onContextMenu}>
-        <label className="path">
+        <label className="path-label-component">
           <PathText
             path={this.props.file.id}
             availableWidth={availablePathWidth}

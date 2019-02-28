@@ -50,6 +50,7 @@ import {
   WorkingDirectoryFileChange,
   TSketchPartChange,
   WorkingDirectoryStatus,
+  AppFileStatusKind,
 } from '../../models/status'
 import { TipState } from '../../models/tip'
 import { ICommitMessage } from '../../models/commit-message'
@@ -61,11 +62,14 @@ import {
 } from '../../models/progress'
 import { Popup, PopupType } from '../../models/popup'
 import { IGitAccount } from '../../models/git-account'
+import { themeChangeMonitor } from '../../ui/lib/theme-change-monitor'
 import { getAppPath } from '../../ui/lib/app-proxy'
 import {
   ApplicationTheme,
   getPersistedTheme,
   setPersistedTheme,
+  getAutoSwitchPersistedTheme,
+  setAutoSwitchPersistedTheme,
 } from '../../ui/lib/application-theme'
 import {
   getAppMenu,
@@ -95,8 +99,8 @@ import {
   SelectionType,
   MergeResultStatus,
   ComparisonMode,
-  SuccessfulMergeBannerState,
-  MergeConflictsBannerState,
+  MergeConflictState,
+  isMergeConflictState,
   IKactusState,
 } from '../app-state'
 import { IGitHubUser } from '../databases/github-user-database'
@@ -149,6 +153,9 @@ import {
   getWorkingDirectorySketchPreview,
   createMergeCommit,
   getBranchesPointedAt,
+  isGitRepository,
+  abortRebase,
+  continueRebase,
 } from '../git'
 import { getSketchVersion, SKETCH_PATH } from '../sketch'
 import {
@@ -193,6 +200,13 @@ import {
   updateChangedFiles,
   updateConflictState,
 } from './updates/changes-state'
+import {
+  ManualConflictResolution,
+  ManualConflictResolutionKind,
+} from '../../models/manual-conflict-resolution'
+import { BranchPruner } from './helpers/branch-pruner'
+import { enableBranchPruning, enableNewRebaseFlow } from '../feature-flag'
+import { Banner, BannerType } from '../../models/banner'
 
 function findNext(
   array: ReadonlyArray<string>,
@@ -264,10 +278,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
   /** The ahead/behind updater or the currently selected repository */
   private currentAheadBehindUpdater: AheadBehindUpdater | null = null
 
+  private currentBranchPruner: BranchPruner | null = null
+
   private showWelcomeFlow = false
   private focusCommitMessage = false
   private currentPopup: Popup | null = null
   private currentFoldout: Foldout | null = null
+  private currentBanner: Banner | null = null
   private errors: ReadonlyArray<Error> = new Array<Error>()
   private emitQueued = false
 
@@ -303,8 +320,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private windowState: WindowState
   private windowZoomFactor: number = 1
   private isUpdateAvailableBannerVisible: boolean = false
-  private successfulMergeBannerState: SuccessfulMergeBannerState = null
-  private mergeConflictsBannerState: MergeConflictsBannerState = null
+
   private confirmRepoRemoval: boolean = confirmRepoRemovalDefault
   private confirmDiscardChanges: boolean = confirmDiscardChangesDefault
   private imageDiffType: ImageDiffType = imageDiffTypeDefault
@@ -337,6 +353,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   private selectedBranchesTab = BranchesTab.Branches
   private selectedTheme = ApplicationTheme.Light
+  private automaticallySwitchTheme = false
 
   public constructor(
     private readonly gitHubUserStore: GitHubUserStore,
@@ -516,7 +533,11 @@ export class AppStore extends TypedBaseStore<IAppState> {
         return null
       }
 
-      return { type: SelectionType.CloningRepository, repository, progress }
+      return {
+        type: SelectionType.CloningRepository,
+        repository,
+        progress,
+      }
     }
 
     if (repository.missing) {
@@ -558,8 +579,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         this.showWelcomeFlow || repositories.length === 0 ? 'light' : 'dark',
       highlightAccessKeys: this.highlightAccessKeys,
       isUpdateAvailableBannerVisible: this.isUpdateAvailableBannerVisible,
-      successfulMergeBannerState: this.successfulMergeBannerState,
-      mergeConflictsBannerState: this.mergeConflictsBannerState,
+      currentBanner: this.currentBanner,
       askForConfirmationOnRepositoryRemoval: this.confirmRepoRemoval,
       askForConfirmationOnDiscardChanges: this.confirmDiscardChanges,
       selectedExternalEditor: this.selectedExternalEditor,
@@ -574,6 +594,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       selectedCloneRepositoryTab: this.selectedCloneRepositoryTab,
       selectedBranchesTab: this.selectedBranchesTab,
       selectedTheme: this.selectedTheme,
+      automaticallySwitchTheme: this.automaticallySwitchTheme,
       apiRepositories: this.apiRepositoriesStore.getState(),
     }
   }
@@ -820,11 +841,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
         return
       }
 
+      const newState: IDisplayHistory = {
+        kind: HistoryTabMode.History,
+      }
+
       this.repositoryStateCache.updateCompareState(repository, () => ({
         tip: currentSha,
-        formState: {
-          kind: HistoryTabMode.History,
-        },
+        formState: newState,
         commitSHAs: commits,
         filterText: '',
         showBranchList: false,
@@ -862,13 +885,15 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     const commitSHAs = compare.commits.map(commit => commit.sha)
 
+    const newState: ICompareBranch = {
+      kind: HistoryTabMode.Compare,
+      comparisonBranch,
+      comparisonMode: action.comparisonMode,
+      aheadBehind,
+    }
+
     this.repositoryStateCache.updateCompareState(repository, s => ({
-      formState: {
-        kind: HistoryTabMode.Compare,
-        comparisonBranch,
-        comparisonMode: action.comparisonMode,
-        aheadBehind,
-      },
+      formState: newState,
       filterText: comparisonBranch.name,
       commitSHAs,
     }))
@@ -896,8 +921,12 @@ export class AppStore extends TypedBaseStore<IAppState> {
       this.currentAheadBehindUpdater.insert(from, to, aheadBehind)
     }
 
+    const loadingMerge: MergeResultStatus = {
+      kind: MergeResultKind.Loading,
+    }
+
     this.repositoryStateCache.updateCompareState(repository, () => ({
-      mergeStatus: { kind: MergeResultKind.Loading },
+      mergeStatus: loadingMerge,
     }))
 
     this.emitUpdate()
@@ -1164,7 +1193,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.emitUpdate()
     this.stopBackgroundFetching()
     this.stopPullRequestUpdater()
-    this._setMergeConflictsBannerState(null)
+    this._clearBanner()
+    this.stopBackgroundPruner()
 
     if (repository == null) {
       return Promise.resolve(null)
@@ -1176,7 +1206,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     setNumber(LastSelectedRepositoryIDKey, repository.id)
 
-    if (repository.missing) {
+    // if repository might be marked missing, try checking if it has been restored
+    const refreshedRepository = await this.recoverMissingRepository(repository)
+    if (refreshedRepository.missing) {
       // as the repository is no longer found on disk, cleaning this up
       // ensures we don't accidentally run any Git operations against the
       // wrong location if the user then relocates the `.git` folder elsewhere
@@ -1184,11 +1216,22 @@ export class AppStore extends TypedBaseStore<IAppState> {
       return Promise.resolve(null)
     }
 
+    return this._selectRepositoryRefreshTasks(
+      refreshedRepository,
+      previouslySelectedRepository
+    )
+  }
+
+  // finish `_selectRepository`s refresh tasks
+  private async _selectRepositoryRefreshTasks(
+    repository: Repository,
+    previouslySelectedRepository: Repository | CloningRepository | null
+  ): Promise<Repository | null> {
     this._refreshRepository(repository)
 
     const gitHubRepository = repository.gitHubRepository
 
-    if (gitHubRepository != null) {
+    if (gitHubRepository !== null) {
       this._refreshIssues(gitHubRepository)
       this.loadPullRequests(repository, async () => {
         const promiseForPRs = this.pullRequestStore.fetchPullRequestsFromCache(
@@ -1227,16 +1270,51 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.stopBackgroundFetching()
     this.stopPullRequestUpdater()
     this.stopAheadBehindUpdate()
+    this.stopBackgroundPruner()
 
     this.startBackgroundFetching(repository, !previouslySelectedRepository)
     this.startPullRequestUpdater(repository)
 
     this.startAheadBehindUpdater(repository)
     this.refreshMentionables(repository)
+    this.startBackgroundPruner(repository)
 
     this.addUpstreamRemoteIfNeeded(repository)
 
     return this.repositoryWithRefreshedGitHubRepository(repository)
+  }
+
+  private stopBackgroundPruner() {
+    const pruner = this.currentBranchPruner
+
+    if (pruner !== null) {
+      pruner.stop()
+      this.currentBranchPruner = null
+    }
+  }
+
+  private startBackgroundPruner(repository: Repository) {
+    if (this.currentBranchPruner !== null) {
+      fatalError(
+        `A branch pruner is already active and cannot start updating on ${
+          repository.name
+        }`
+      )
+
+      return
+    }
+
+    if (enableBranchPruning()) {
+      const pruner = new BranchPruner(
+        repository,
+        this.gitStoreCache,
+        this.repositoriesStore,
+        this.repositoryStateCache,
+        repository => this._refreshRepository(repository)
+      )
+      this.currentBranchPruner = pruner
+      this.currentBranchPruner.start()
+    }
   }
 
   public async _refreshIssues(repository: GitHubRepository) {
@@ -1477,6 +1555,14 @@ export class AppStore extends TypedBaseStore<IAppState> {
         : parseInt(imageDiffTypeValue)
 
     this.selectedTheme = getPersistedTheme()
+    this.automaticallySwitchTheme = getAutoSwitchPersistedTheme()
+
+    themeChangeMonitor.onThemeChanged(theme => {
+      if (this.automaticallySwitchTheme) {
+        this.selectedTheme = theme
+        this.emitUpdate()
+      }
+    })
 
     this.emitUpdateNow()
 
@@ -1681,7 +1767,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       conflictState: updateConflictState(state, status),
     }))
 
-    this._triggerMergeConflictsFlow(repository)
+    this._triggerConflictsFlow(repository)
 
     this.repositoryStateCache.update(repository, () => ({
       isLoadingStatus: false,
@@ -1694,6 +1780,76 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return true
   }
 
+  private async _triggerConflictsFlow(repository: Repository) {
+    if (enableNewRebaseFlow()) {
+      const repoState = this.repositoryStateCache.get(repository)
+      const { conflictState } = repoState.changesState
+
+      if (conflictState === null) {
+        return
+      }
+
+      if (conflictState.kind === 'merge') {
+        await this.showMergeConflictsDialog(repository, conflictState)
+      } else if (conflictState.kind === 'rebase') {
+        await this.showRebaseConflictsDialog(repository)
+      } else {
+        assertNever(conflictState, `Unsupported conflict kind`)
+      }
+    } else {
+      this._triggerMergeConflictsFlow(repository)
+    }
+  }
+
+  /** display the rebase flow, if not already in this flow */
+  private async showRebaseConflictsDialog(repository: Repository) {
+    // TODO: check the current popup is a rebase conflicts dialog
+    // TODO: if already in flow, exit
+    // TODO: otherwise show the popup
+  }
+
+  /** starts the conflict resolution flow, if appropriate */
+  private async showMergeConflictsDialog(
+    repository: Repository,
+    conflictState: MergeConflictState
+  ) {
+    // are we already in the merge conflicts flow?
+    const alreadyInFlow =
+      this.currentPopup !== null &&
+      (this.currentPopup.type === PopupType.MergeConflicts ||
+        this.currentPopup.type === PopupType.AbortMerge)
+
+    // have we already been shown the merge conflicts flow *and closed it*?
+    const alreadyExitedFlow =
+      this.currentBanner !== null &&
+      this.currentBanner.type === BannerType.MergeConflictsFound
+
+    if (alreadyInFlow || alreadyExitedFlow) {
+      return
+    }
+
+    const possibleTheirsBranches = await getBranchesPointedAt(
+      repository,
+      'MERGE_HEAD'
+    )
+    // null means we encountered an error
+    if (possibleTheirsBranches === null) {
+      return
+    }
+    const theirBranch =
+      possibleTheirsBranches.length === 1
+        ? possibleTheirsBranches[0]
+        : undefined
+
+    const ourBranch = conflictState.currentBranch
+    this._showPopup({
+      type: PopupType.MergeConflicts,
+      repository,
+      ourBranch,
+      theirBranch,
+    })
+  }
+
   /** starts the conflict resolution flow, if appropriate */
   private async _triggerMergeConflictsFlow(repository: Repository) {
     // are we already in the merge conflicts flow?
@@ -1703,7 +1859,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
         this.currentPopup.type === PopupType.AbortMerge)
 
     // have we already been shown the merge conflicts flow *and closed it*?
-    const alreadyExitedFlow = this.mergeConflictsBannerState !== null
+    const alreadyExitedFlow =
+      this.currentBanner !== null &&
+      this.currentBanner.type === BannerType.MergeConflictsFound
 
     if (alreadyInFlow || alreadyExitedFlow) {
       return
@@ -1711,7 +1869,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     const repoState = this.repositoryStateCache.get(repository)
     const { conflictState } = repoState.changesState
-    if (conflictState === null) {
+    if (conflictState === null || !isMergeConflictState(conflictState)) {
       return
     }
 
@@ -2180,6 +2338,43 @@ export class AppStore extends TypedBaseStore<IAppState> {
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _refreshOrRecoverRepository(
+    repository: Repository,
+    options?: {
+      clearPartialState?: boolean
+      skipParsingModifiedSketchFiles?: boolean
+    }
+  ): Promise<void> {
+    // if repository is missing, try checking if it has been restored
+    if (repository.missing) {
+      const updatedRepository = await this.recoverMissingRepository(repository)
+      if (!updatedRepository.missing) {
+        // repository has been restored, attempt to refresh it now.
+        return this._refreshRepository(updatedRepository, options)
+      }
+    } else {
+      return this._refreshRepository(repository, options)
+    }
+  }
+
+  private async recoverMissingRepository(
+    repository: Repository
+  ): Promise<Repository> {
+    if (!repository.missing) {
+      return repository
+    }
+
+    const foundRepository =
+      (await pathExists(repository.path)) &&
+      (await isGitRepository(repository.path))
+
+    if (foundRepository) {
+      this._updateRepositoryMissing(repository, false)
+    }
+    return repository
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
   public async _refreshRepository(
     repository: Repository,
     options?: {
@@ -2237,20 +2432,27 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this._updateCurrentPullRequest(repository)
     this.updateMenuItemLabels(repository)
     this._initializeCompare(repository)
-    this.refreshIndicatorsForRepositories([repository])
+    this.refreshIndicatorsForRepositories([repository], false)
   }
 
   public refreshAllIndicators() {
-    return this.refreshIndicatorsForRepositories(this.repositories)
+    return this.refreshIndicatorsForRepositories(this.repositories, true)
   }
 
+  /**
+   * Refresh in-memory indicators for a set of repositories
+   *
+   * @param repositories the set of repositories to update
+   * @param tryBackgroundFetch whether the action should also try and fetch new changes from the remote
+   */
   private async refreshIndicatorsForRepositories(
-    repositories: ReadonlyArray<Repository>
+    repositories: ReadonlyArray<Repository>,
+    tryBackgroundFetch: boolean
   ): Promise<void> {
     const startTime = performance && performance.now ? performance.now() : null
 
     for (const repo of repositories) {
-      await this.refreshIndicatorForRepository(repo)
+      await this.refreshIndicatorForRepository(repo, tryBackgroundFetch)
     }
 
     if (startTime && repositories.length > 1) {
@@ -2266,7 +2468,16 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.emitUpdate()
   }
 
-  private async refreshIndicatorForRepository(repository: Repository) {
+  /**
+   * Refresh in-memory indicators for a repository
+   *
+   * @param repository the repository to check and update
+   * @param tryBackgroundFetch whether the action should also try and fetch new changes from the remote
+   */
+  private async refreshIndicatorForRepository(
+    repository: Repository,
+    tryBackgroundFetch: boolean
+  ) {
     const lookup = this.localRepositoryStateLookup
 
     if (repository.missing) {
@@ -2288,18 +2499,16 @@ export class AppStore extends TypedBaseStore<IAppState> {
       return
     }
 
-    const lastPush = await inferLastPushForRepository(
-      this.accounts,
-      gitStore,
-      repository
-    )
+    if (tryBackgroundFetch) {
+      const lastPush = await inferLastPushForRepository(
+        this.accounts,
+        gitStore,
+        repository
+      )
 
-    if (this.shouldBackgroundFetch(repository, lastPush)) {
-      await this.withAuthenticatingUser(repository, (repo, account) => {
-        return gitStore.performFailableOperation(() => {
-          return gitStore.fetch(account, true)
-        })
-      })
+      if (this.shouldBackgroundFetch(repository, lastPush)) {
+        await this._fetch(repository, FetchType.BackgroundTask)
+      }
     }
 
     lookup.set(repository.id, {
@@ -2315,7 +2524,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
    */
   private async refreshChangesSection(
     repository: Repository,
-    options: { includingStatus: boolean; clearPartialState: boolean }
+    options: {
+      includingStatus: boolean
+      clearPartialState: boolean
+    }
   ): Promise<void> {
     if (options.includingStatus) {
       await this._loadStatus(repository, {
@@ -2787,7 +2999,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       return
     }
 
-    return this.withPushPull(repository, async () => {
+    return this.withPushPullFetch(repository, async () => {
       const { tip } = state.branchesState
 
       if (tip.kind === TipState.Unborn) {
@@ -2987,7 +3199,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return this.isParsingOrImporting(repository, file, 'isImporting', fn)
   }
 
-  private async withPushPull(
+  private async withPushPullFetch(
     repository: Repository,
     fn: () => Promise<void>
   ): Promise<void> {
@@ -3031,7 +3243,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     repository: Repository,
     account: IGitAccount | null
   ): Promise<void> {
-    return this.withPushPull(repository, async () => {
+    return this.withPushPullFetch(repository, async () => {
       const gitStore = this.gitStoreCache.get(repository)
       const remote = gitStore.currentRemote
 
@@ -3062,7 +3274,11 @@ export class AppStore extends TypedBaseStore<IAppState> {
             tip.branch.upstream
           )
 
-          gitContext = { kind: 'pull', tip, theirBranch: tip.branch.upstream }
+          gitContext = {
+            kind: 'pull',
+            tip,
+            theirBranch: tip.branch.upstream,
+          }
         }
 
         const title = `Pulling ${remote.name}`
@@ -3277,7 +3493,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
     url: string,
     path: string,
     options?: { branch?: string }
-  ): { promise: Promise<boolean>; repository: CloningRepository } {
+  ): {
+    promise: Promise<boolean>
+    repository: CloningRepository
+  } {
     const account = this.getAccountForRemoteURL(url)
     const promise = this.cloningRepositoriesStore.clone(url, path, {
       ...options,
@@ -3407,7 +3626,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     fetchType: FetchType,
     remotes?: IRemote[]
   ): Promise<void> {
-    await this.withPushPull(repository, async () => {
+    await this.withPushPullFetch(repository, async () => {
       const gitStore = this.gitStoreCache.get(repository)
 
       try {
@@ -3514,7 +3733,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   public _setCommitMessage(
     repository: Repository,
-    message: ICommitMessage | null
+    message: ICommitMessage
   ): Promise<void> {
     const gitStore = this.gitStoreCache.get(repository)
     return gitStore.setCommitMessage(message)
@@ -3572,7 +3791,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const { tip } = gitStore
 
     if (mergeSuccessful && tip.kind === TipState.Valid) {
-      this._setSuccessfulMergeBannerState({
+      this._setBanner({
+        type: BannerType.SuccessfulMerge,
         ourBranch: tip.branch.name,
         theirBranch: branch,
       })
@@ -3597,19 +3817,67 @@ export class AppStore extends TypedBaseStore<IAppState> {
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _abortRebase(repository: Repository): Promise<void> {
+    const gitStore = this.gitStoreCache.get(repository)
+    return await gitStore.performFailableOperation(() =>
+      abortRebase(repository)
+    )
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _continueRebase(
+    repository: Repository,
+    workingDirectory: WorkingDirectoryStatus
+  ) {
+    const gitStore = this.gitStoreCache.get(repository)
+
+    const trackedFiles = workingDirectory.files.filter(f => {
+      return f.status.kind !== AppFileStatusKind.Untracked
+    })
+
+    const kactusStatus = await getKactusStatus(this.sketchPath, repository)
+
+    return await gitStore.performFailableOperation(() =>
+      continueRebase(repository, trackedFiles, kactusStatus.files)
+    )
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
   public async _abortMerge(repository: Repository): Promise<void> {
     const gitStore = this.gitStoreCache.get(repository)
     return await gitStore.performFailableOperation(() => abortMerge(repository))
   }
 
-  /** This shouldn't be called directly. See `Dispatcher`. */
-  public async _createMergeCommit(
+  /** This shouldn't be called directly. See `Dispatcher`.
+   *  This method only used in the Merge Conflicts dialog flow,
+   *  not committing a conflicted merge via the "Changes" pane.
+   */
+  public async _finishConflictedMerge(
     repository: Repository,
-    files: ReadonlyArray<WorkingDirectoryFileChange>
+    workingDirectory: WorkingDirectoryStatus,
+    manualResolutions: Map<string, ManualConflictResolutionKind>
   ): Promise<string | undefined> {
+    /**
+     *  The assumption made here is that all other files that were part of this merge
+     *  have already been staged by git automatically (or manually by the user via CLI).
+     *  When the user executes a merge and there are conflicts,
+     *  git stages all files that are part of the merge that _don't_ have conflicts
+     *  This means that we only need to stage the conflicted files
+     *  (whether they are manual or markered) to get all changes related to
+     *  this merge staged. This also means that any uncommitted changes in the index
+     *  that were in place before the merge was started will _not_ be included, unless
+     *  the user stages them manually via CLI.
+     *
+     *  Its also worth noting this method only used in the Merge Conflicts dialog flow, not committing a conflicted merge via the "Changes" pane.
+     *
+     *  *TLDR we only stage conflicts here because git will have already staged the rest of the changes related to this merge.*
+     */
+    const conflictedFiles = workingDirectory.files.filter(f => {
+      return f.status.kind === AppFileStatusKind.Conflicted
+    })
     const gitStore = this.gitStoreCache.get(repository)
     return await gitStore.performFailableOperation(() =>
-      createMergeCommit(repository, files)
+      createMergeCommit(repository, conflictedFiles, manualResolutions)
     )
   }
 
@@ -3749,16 +4017,16 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.emitUpdate()
   }
 
-  public _setSuccessfulMergeBannerState(state: SuccessfulMergeBannerState) {
-    this.successfulMergeBannerState = state
-
+  public _setBanner(state: Banner) {
+    this.currentBanner = state
     this.emitUpdate()
   }
 
-  public _setMergeConflictsBannerState(state: MergeConflictsBannerState) {
-    this.mergeConflictsBannerState = state
-
-    this.emitUpdate()
+  public _clearBanner() {
+    if (this.currentBanner !== null) {
+      this.currentBanner = null
+      this.emitUpdate()
+    }
   }
 
   public _setDivergingBranchBannerVisibility(
@@ -4684,6 +4952,17 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return Promise.resolve()
   }
 
+  /**
+   * Set the application-wide theme
+   */
+  public _setAutomaticallySwitchTheme(automaticallySwitchTheme: boolean) {
+    setAutoSwitchPersistedTheme(automaticallySwitchTheme)
+    this.automaticallySwitchTheme = automaticallySwitchTheme
+    this.emitUpdate()
+
+    return Promise.resolve()
+  }
+
   public async _resolveCurrentEditor() {
     const match = await findEditorOrDefault(this.selectedExternalEditor)
     const resolvedExternalEditor = match != null ? match.editor : null
@@ -4692,8 +4971,40 @@ export class AppStore extends TypedBaseStore<IAppState> {
       this.emitUpdate()
     }
   }
-}
 
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public _updateManualConflictResolution(
+    repository: Repository,
+    path: string,
+    manualResolution: ManualConflictResolution | null
+  ) {
+    this.repositoryStateCache.updateChangesState(repository, state => {
+      const { conflictState } = state
+
+      if (conflictState === null) {
+        // not currently in a conflict, whatever
+        return { conflictState }
+      }
+
+      const updatedManualResolutions = new Map(conflictState.manualResolutions)
+
+      if (manualResolution !== null) {
+        updatedManualResolutions.set(path, manualResolution)
+      } else {
+        updatedManualResolutions.delete(path)
+      }
+
+      return {
+        conflictState: {
+          ...conflictState,
+          manualResolutions: updatedManualResolutions,
+        },
+      }
+    })
+
+    this.emitUpdate()
+  }
+}
 /**
  * Map the cached state of the compare view to an action
  * to perform which is then used to compute the compare

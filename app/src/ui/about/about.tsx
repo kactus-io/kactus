@@ -11,6 +11,7 @@ import { Disposable } from 'event-kit'
 import { Loading } from '../lib/loading'
 import { RelativeTime } from '../relative-time'
 import { assertNever } from '../../lib/fatal-error'
+import { ReleaseNotesUri } from '../lib/releases'
 
 interface IAboutProps {
   /**
@@ -41,8 +42,6 @@ interface IAboutProps {
 interface IAboutState {
   readonly updateState: IUpdateState
 }
-
-const releaseNotesUri = 'http://kactus.io/release-notes/'
 
 /**
  * A dialog that presents information about the
@@ -237,8 +236,10 @@ export class About extends React.Component<IAboutProps, IAboutState> {
     const name = this.props.applicationName
     const version = this.props.applicationVersion
     const releaseNotesLink = (
-      <LinkButton uri={releaseNotesUri}>release notes</LinkButton>
+      <LinkButton uri={ReleaseNotesUri}>release notes</LinkButton>
     )
+
+    const versionText = __DEV__ ? `Build ${version}` : `Version ${version}`
 
     return (
       <Dialog
@@ -263,7 +264,7 @@ export class About extends React.Component<IAboutProps, IAboutState> {
               className="version-text"
               onClick={this.onClickVersion}
             >
-              Version {version}
+              {versionText}
             </LinkButton>{' '}
             ({releaseNotesLink})
           </p>

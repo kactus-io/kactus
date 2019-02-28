@@ -2,7 +2,7 @@ import { remote } from 'electron'
 import * as React from 'react'
 import { Button } from '../lib/button'
 import { Octicon, OcticonSymbol } from '../octicons'
-import { Dispatcher } from '../../lib/dispatcher'
+import { Dispatcher } from '../dispatcher'
 import { Banner } from './banner'
 
 interface ISketchVersionOutdatedProps {

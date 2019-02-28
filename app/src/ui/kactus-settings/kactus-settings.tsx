@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { IFullKactusConfig } from '../../lib/kactus'
 import { KactusConfig } from './kactus-config'
-import { Dispatcher } from '../../lib/dispatcher'
+import { Dispatcher } from '../dispatcher'
 import { Repository } from '../../models/repository'
 import { Button } from '../lib/button'
 import { ButtonGroup } from '../lib/button-group'

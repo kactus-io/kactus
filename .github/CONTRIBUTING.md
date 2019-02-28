@@ -136,7 +136,7 @@ interested in the issue.
 
 ### Set Up Your Machine
 
-Start [here](https://github.com/desktop/desktop/blob/master/docs/contributing/setup.md).
+Start [here](https://github.com/desktop/desktop/blob/development/docs/contributing/setup.md).
 
 
 ## Process Documentation

@@ -11,14 +11,14 @@ import { SelectedCommit, CompareSidebar } from './history'
 import { Resizable } from './resizable'
 import { TabBar } from './tab-bar'
 import { IRepositoryState, RepositorySectionTab } from '../lib/app-state'
-import { Dispatcher } from '../lib/dispatcher'
+import { Dispatcher } from './dispatcher'
 import { IssuesStore, GitHubUserStore } from '../lib/stores'
 import { assertNever } from '../lib/fatal-error'
 import { Account } from '../models/account'
 import { FocusContainer } from './lib/focus-container'
 import { OcticonSymbol, Octicon } from './octicons'
 import { ImageDiffType } from '../models/diff'
-import { PopupType } from '../models/popup'
+import { IMenu } from '../models/app-menu'
 
 /** The widest the sidebar can be with the minimum window size. */
 const MaxSidebarWidth = 495
@@ -47,10 +47,17 @@ interface IRepositoryViewProps {
    * @param fullPath The full path to the file on disk
    */
   readonly onOpenInExternalEditor: (fullPath: string) => void
+
+  /**
+   * The top-level application menu item.
+   */
+  readonly appMenu: IMenu | undefined
 }
 
 interface IRepositoryViewState {
   readonly sidebarHasFocusWithin: boolean
+  readonly changesListScrollTop: number
+  readonly compareListScrollTop: number
 }
 
 const enum Tab {
@@ -67,7 +74,17 @@ export class RepositoryView extends React.Component<
 
     this.state = {
       sidebarHasFocusWithin: false,
+      changesListScrollTop: 0,
+      compareListScrollTop: 0,
     }
+  }
+
+  private onChangesListScrolled = (scrollTop: number) => {
+    this.setState({ changesListScrollTop: scrollTop })
+  }
+
+  private onCompareListScrolled = (scrollTop: number) => {
+    this.setState({ compareListScrollTop: scrollTop })
   }
 
   private renderChangesBadge(): JSX.Element | null {
@@ -146,6 +163,8 @@ export class RepositoryView extends React.Component<
         accounts={this.props.accounts}
         externalEditorLabel={this.props.externalEditorLabel}
         onOpenInExternalEditor={this.props.onOpenInExternalEditor}
+        onChangesListScrolled={this.onChangesListScrolled}
+        changesListScrollTop={this.state.changesListScrollTop}
       />
     )
   }
@@ -167,6 +186,8 @@ export class RepositoryView extends React.Component<
         dispatcher={this.props.dispatcher}
         onRevertCommit={this.onRevertCommit}
         onViewCommitOnGitHub={this.props.onViewCommitOnGitHub}
+        onCompareListScrolled={this.onCompareListScrolled}
+        compareListScrollTop={this.state.compareListScrollTop}
       />
     )
   }
@@ -189,13 +210,6 @@ export class RepositoryView extends React.Component<
 
   private handleSidebarResize = (width: number) => {
     this.props.dispatcher.setSidebarWidth(width)
-  }
-
-  private handleCreateSketchFile = () => {
-    return this.props.dispatcher.showPopup({
-      type: PopupType.CreateSketchFile,
-      repository: this.props.repository,
-    })
   }
 
   private renderSidebar(): JSX.Element {
@@ -233,10 +247,15 @@ export class RepositoryView extends React.Component<
     const selectedSection = this.props.state.selectedSection
 
     if (selectedSection === RepositorySectionTab.Changes) {
-      const changesState = this.props.state.changesState
-      const selectedFileIDs = changesState.selectedFileIDs
-      const selectedSketchPartID = changesState.selectedSketchPart
-        ? changesState.selectedSketchPart.id
+      const { changesState } = this.props.state
+      const {
+        workingDirectory,
+        selectedFileIDs,
+        diff,
+        selectedSketchPart,
+      } = changesState
+      const selectedSketchPartID = selectedSketchPart
+        ? selectedSketchPart.id
         : null
       const kactusState = this.props.state.kactus
       const selectedSketchFileID = kactusState.selectedFileID
@@ -250,23 +269,24 @@ export class RepositoryView extends React.Component<
 
       if (
         !selectedSketchFile &&
-        (changesState.workingDirectory.files.length === 0 ||
+        (workingDirectory.files.length === 0 ||
           selectedFileIDs.length === 0 ||
-          changesState.diff === null) &&
-        (!selectedSketchPartID || !changesState.diff === null)
+          diff === null) &&
+        (!selectedSketchPartID || diff === null)
       ) {
         return (
           <NoChanges
+            key={this.props.repository.id}
+            appMenu={this.props.appMenu}
             repository={this.props.repository}
-            onCreateSketchFile={this.handleCreateSketchFile}
+            repositoryState={this.props.state}
             loadingDiff={changesState.loadingDiff}
           />
         )
       } else {
-        const workingDirectory = changesState.workingDirectory
         const selectedFile = workingDirectory.findFileWithID(selectedFileIDs[0])
 
-        if (selectedFileIDs[0] && !selectedFile) {
+        if (selectedFileIDs[0] && selectedFile === null) {
           return null
         }
 

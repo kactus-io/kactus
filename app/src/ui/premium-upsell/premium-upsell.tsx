@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Dispatcher } from '../../lib/dispatcher'
+import { Dispatcher } from '../dispatcher'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
 import { ButtonGroup } from '../lib/button-group'
 import { Button } from '../lib/button'

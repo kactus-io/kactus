@@ -1,9 +1,8 @@
 import * as React from 'react'
-import { UiView } from '../ui-view'
-import { Button } from '../lib/button'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { IKactusFile } from '../../lib/kactus'
 import { Loading } from '../lib/loading'
+import { BlankslateAction } from './blankslate-action'
 
 interface ISketchFileViewProps {
   readonly onGetPreview: (file: IKactusFile) => void
@@ -53,71 +52,82 @@ export class SketchFileView extends React.Component<
   }
 
   public render() {
-    const { preview, previewError } = this.props.sketchFile
-
+    const {
+      preview,
+      previewError,
+      id,
+      imported,
+      isImporting,
+      parsed,
+      isParsing,
+    } = this.props.sketchFile
     return (
-      <UiView className="panel blankslate" id="blank-slate">
-        <div className="preview">
-          {preview && (
-            <img src={`data:${preview.mediaType};base64,${preview.contents}`} />
-          )}
-          {previewError && (
-            <div>
-              <Octicon symbol={OcticonSymbol.alert} />
-              <div>
-                Couldn't generate the preview for the file. Be careful, this
-                could indicate that the file cannot be opened by Sketch.
-              </div>
-            </div>
-          )}
-        </div>
-
+      <div id="no-changes">
         <div className="content">
-          <div className="title">{this.props.sketchFile.id}</div>
-          <div className="callouts">
-            <div className="callout fourth">
-              <Octicon symbol={OcticonSymbol.ruby} />
-              <div>Open the file in Sketch</div>
-              <Button
-                onClick={this.handleOpen}
-                disabled={!this.props.sketchFile.imported}
-              >
-                Open File
-              </Button>
+          <div className="header">
+            <div className="text">
+              <h1>{id}</h1>
             </div>
-
-            <div className="callout fourth">
-              <Octicon symbol={OcticonSymbol.fold} />
-              <div>Regenerate Sketch file from JSON</div>
-              <Button
-                onClick={this.handleImport}
-                disabled={!this.props.sketchFile.parsed}
-              >
-                {this.props.sketchFile.isImporting ? <Loading /> : null}{' '}
-                Regenerate Sketch File
-              </Button>
-            </div>
-
-            <div className="callout fourth">
-              <Octicon symbol={OcticonSymbol.unfold} />
-              <div>Export Sketch file to JSON</div>
-              <Button
-                onClick={this.handleExport}
-                disabled={!this.props.sketchFile.imported}
-              >
-                {this.props.sketchFile.isParsing ? <Loading /> : null} Export
-                Sketch File
-              </Button>
-            </div>
-
-            <div className="callout fourth">
-              <Octicon symbol={OcticonSymbol.trashcan} />
-              <div>Delete Sketch file from the repository</div>
-              <Button onClick={this.handleDelete}>Delete Sketch File</Button>
-            </div>
+            {preview && (
+              <img
+                src={`data:${preview.mediaType};base64,${preview.contents}`}
+                className="blankslate-image"
+              />
+            )}
+            {previewError && (
+              <div>
+                <Octicon symbol={OcticonSymbol.alert} />
+                <div>
+                  Couldn't generate the preview for the file. Be careful, this
+                  could indicate that the file cannot be opened by Sketch.
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="actions primary">
+            <BlankslateAction
+              onClick={this.handleOpen}
+              title="Open the file in Sketch"
+              description={''}
+              discoverabilityContent={''}
+              buttonText={'Open File'}
+              disabled={!imported}
+              type={'primary'}
+            />
+          </div>
+          <div className="actions">
+            <BlankslateAction
+              onClick={this.handleImport}
+              title="Regenerate Sketch file from JSON"
+              description={''}
+              discoverabilityContent={''}
+              buttonText={
+                <span>
+                  {isImporting ? <Loading /> : null} Regenerate Sketch File
+                </span>
+              }
+              disabled={!parsed}
+            />
+            <BlankslateAction
+              onClick={this.handleExport}
+              title="Export Sketch file to JSON"
+              description={''}
+              discoverabilityContent={''}
+              buttonText={
+                <span>{isParsing ? <Loading /> : null} Export Sketch File</span>
+              }
+              disabled={!imported}
+            />
+            <BlankslateAction
+              onClick={this.handleDelete}
+              title="Delete Sketch file from the repository"
+              description={''}
+              discoverabilityContent={''}
+              buttonText={'Delete Sketch File'}
+            />
           </div>
         </div>
-      </UiView>
+      </div>
     )
   }
 }

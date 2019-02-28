@@ -6,11 +6,7 @@ import * as cp from 'child_process'
 import * as fs from 'fs-extra'
 import * as packager from 'electron-packager'
 
-import { licenseOverrides } from './license-overrides'
-
 import { externals } from '../app/webpack.common'
-
-import * as legalEagle from 'legal-eagle'
 
 interface IFrontMatterResult<T> {
   readonly attributes: T
@@ -35,10 +31,13 @@ const frontMatter: <T>(
   path: string
 ) => IFrontMatterResult<T> = require('front-matter')
 
-import { getBundleID, getProductName, getVersion } from '../app/package-info'
+import { getBundleID, getProductName } from '../app/package-info'
 
 import { getReleaseChannel, getDistRoot, getExecutableName } from './dist-info'
 import { isRunningOnFork, isCircleCI } from './build-platforms'
+
+import { updateLicenseDump } from './licenses/update-license-dump'
+import { verifyInjectedSassVariables } from './validate-sass/validate-all'
 
 const projectRoot = path.join(__dirname, '..')
 const outRoot = path.join(projectRoot, 'out')
@@ -69,28 +68,40 @@ if (isCircleCI() && !isRunningOnFork()) {
   cp.execSync(path.join(__dirname, 'setup-macos-keychain'))
 }
 
-console.log('Updating our licenses dump…')
-updateLicenseDump(async err => {
-  if (err) {
+verifyInjectedSassVariables(outRoot)
+  .catch(err => {
     console.error(
-      'Error updating the license dump. This is fatal for a published build.'
+      'Error verifying the Sass variables in the rendered app. This is fatal for a published build.'
     )
-    console.error(err)
 
     if (isPublishableBuild) {
       process.exit(1)
     }
-  }
+  })
+  .then(() => {
+    console.log('Updating our licenses dump…')
+    return updateLicenseDump(projectRoot, outRoot).catch(err => {
+      console.error(
+        'Error updating the license dump. This is fatal for a published build.'
+      )
+      console.error(err)
 
-  console.log('Packaging…')
-  try {
-    const appPaths = await packageApp()
-    console.log(`Built to ${appPaths}`)
-  } catch (err) {
+      if (isPublishableBuild) {
+        process.exit(1)
+      }
+    })
+  })
+  .then(() => {
+    console.log('Packaging…')
+    return packageApp()
+  })
+  .catch(err => {
     console.error(err)
     process.exit(1)
-  }
-})
+  })
+  .then(appPaths => {
+    console.log(`Built to ${appPaths}`)
+  })
 
 /**
  * The additional packager options not included in the existing typing.
@@ -271,93 +282,6 @@ function copyDependencies() {
   fs.copySync(
     path.resolve(projectRoot, 'app/node_modules/app-path/main'),
     appPathMain
-  )
-}
-
-function updateLicenseDump(callback: (err: Error | null) => void) {
-  const appRoot = path.join(projectRoot, 'app')
-  const outPath = path.join(outRoot, 'static', 'licenses.json')
-
-  legalEagle(
-    { path: appRoot, overrides: licenseOverrides, omitPermissive: true },
-    (err, summary) => {
-      if (err) {
-        callback(err)
-        return
-      }
-
-      if (Object.keys(summary).length > 0) {
-        const overridesPath = path.join(__dirname, 'license-overrides.js')
-        let licensesMessage = ''
-        for (const key in summary) {
-          const license = summary[key]
-          licensesMessage += `${key} (${license.repository}): ${
-            license.license
-          }\n`
-        }
-
-        const message = `The following dependencies have unknown or non-permissive licenses. Check it out and update ${overridesPath} if appropriate:\n${licensesMessage}`
-        callback(new Error(message))
-      } else {
-        legalEagle(
-          { path: appRoot, overrides: licenseOverrides },
-          (err, summary) => {
-            if (err) {
-              callback(err)
-              return
-            }
-
-            // legal-eagle still chooses to ignore the LICENSE at the root
-            // this injects the current license and pins the source URL before we
-            // dump the JSON file to disk
-            const licenseSource = path.join(projectRoot, 'LICENSE')
-            const licenseText = fs.readFileSync(licenseSource, {
-              encoding: 'utf-8',
-            })
-            const appVersion = getVersion()
-
-            summary[`kactus@${appVersion}`] = {
-              repository: 'https://github.com/kactus-io/kactus',
-              license: 'MIT',
-              source: `https://github.com/kactus-io/kactus/blob/release-${appVersion}/LICENSE`,
-              sourceText: licenseText,
-            }
-
-            // inject the desktop/desktop LICENSE from which we forked
-            summary[`desktop@0.6.5`] = {
-              repository: 'https://github.com/desktop/desktop',
-              license: 'MIT',
-              source: `https://github.com/desktop/desktop/blob/master/LICENSE`,
-              sourceText: `Copyright (c) GitHub, Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-`,
-            }
-
-            fs.writeFileSync(outPath, JSON.stringify(summary), {
-              encoding: 'utf8',
-            })
-            callback(null)
-          }
-        )
-      }
-    }
   )
 }
 

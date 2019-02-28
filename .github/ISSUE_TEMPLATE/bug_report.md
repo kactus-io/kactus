@@ -8,9 +8,9 @@ about: Report a problem encountered while using Kactus
 First and foremost, we’d like to thank you for taking the time to contribute to our project. Before submitting your issue, please follow these steps:
 
 1. Familiarize yourself with our contributing guide:
-	* https://github.com/kactus-io/kactus/blob/master/.github/CONTRIBUTING.md#contributing-to-github-desktop
+	* https://github.com/kactus-io/kactus/blob/development/.github/CONTRIBUTING.md#contributing-to-github-desktop
 2. Check if your issue (and sometimes workaround) is in the known-issues doc:
-	* https://github.com/kactus-io/kactusp/blob/master/docs/known-issues.md
+	* https://github.com/kactus-io/kactusp/blob/development/docs/known-issues.md
 3. Make sure your issue isn’t a duplicate of another issue
 4. If you have made it to this step, go ahead and fill out the template below
 -->

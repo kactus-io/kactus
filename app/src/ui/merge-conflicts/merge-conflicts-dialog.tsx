@@ -2,67 +2,40 @@ import * as React from 'react'
 import { Button } from '../lib/button'
 import { ButtonGroup } from '../lib/button-group'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
-import { Dispatcher } from '../../lib/dispatcher'
+import { Dispatcher } from '../dispatcher'
 import { PopupType } from '../../models/popup'
 import { RepositorySectionTab } from '../../lib/app-state'
 import { Repository } from '../../models/repository'
 import {
   WorkingDirectoryStatus,
   WorkingDirectoryFileChange,
-  AppFileStatusKind,
-  ConflictedFileStatus,
 } from '../../models/status'
 import { Octicon, OcticonSymbol } from '../octicons'
-import { PathText } from '../lib/path-text'
 import { DialogHeader } from '../dialog/header'
 import { LinkButton } from '../lib/link-button'
-import { isConflictedFile } from '../../lib/status'
+import {
+  isConflictedFile,
+  getResolvedFiles,
+  getConflictedFiles,
+  getUnmergedFiles,
+} from '../../lib/status'
+import { DefaultCommitMessage } from '../../models/commit-message'
+import { renderUnmergedFile } from './unmerged-file'
+import { ManualConflictResolution } from '../../models/manual-conflict-resolution'
+import { BannerType } from '../../models/banner'
 
 interface IMergeConflictsDialogProps {
   readonly dispatcher: Dispatcher
   readonly repository: Repository
   readonly workingDirectory: WorkingDirectoryStatus
   readonly onDismissed: () => void
+  readonly openFileInExternalEditor: (path: string) => void
+  readonly resolvedExternalEditor: string | null
   readonly openRepositoryInShell: (repository: Repository) => void
   readonly ourBranch: string
   /* `undefined` when we didn't know the branch at the beginning of this flow */
   readonly theirBranch?: string
-}
-
-/**
- * Calculates the number of merge conclicts in a file from the number of markers
- * divides by three and rounds up since each conflict is indicated by three separate markers
- * (`<<<<<`, `>>>>>`, and `=====`)
- * @param conflictMarkers number of conflict markers in a file
- */
-function calculateConflicts(conflictMarkers: number) {
-  return Math.ceil(conflictMarkers / 3)
-}
-
-/** Filter working directory changes for conflicted or resolved files  */
-function getUnmergedFiles(status: WorkingDirectoryStatus) {
-  return status.files.filter(f => isConflictedFile(f.status))
-}
-
-/** Filter working directory changes for resolved files  */
-function getResolvedFiles(status: WorkingDirectoryStatus) {
-  return status.files.filter(
-    f =>
-      isConflictedFile(f.status) &&
-      f.status.lookForConflictMarkers &&
-      f.status.conflictMarkerCount === 0
-  )
-}
-
-/** Filter working directory changes for conflicted files  */
-function getConflictedFiles(status: WorkingDirectoryStatus) {
-  return status.files.filter(
-    f =>
-      (isConflictedFile(f.status) && !f.status.lookForConflictMarkers) ||
-      (isConflictedFile(f.status) &&
-        f.status.lookForConflictMarkers &&
-        f.status.conflictMarkerCount > 0)
-  )
+  readonly manualResolutions: Map<string, ManualConflictResolution>
 }
 
 const submitButtonString = 'Commit merge'
@@ -83,15 +56,19 @@ export class MergeConflictsDialog extends React.Component<
    *  commits the merge displays the repository changes tab and dismisses the modal
    */
   private onSubmit = async () => {
-    await this.props.dispatcher.createMergeCommit(
+    await this.props.dispatcher.finishConflictedMerge(
       this.props.repository,
-      this.props.workingDirectory.files,
+      this.props.workingDirectory,
       {
+        type: BannerType.SuccessfulMerge,
         ourBranch: this.props.ourBranch,
         theirBranch: this.props.theirBranch,
       }
     )
-    this.props.dispatcher.setCommitMessage(this.props.repository, null)
+    this.props.dispatcher.setCommitMessage(
+      this.props.repository,
+      DefaultCommitMessage
+    )
     this.props.dispatcher.changeRepositorySection(
       this.props.repository,
       RepositorySectionTab.Changes
@@ -104,7 +81,10 @@ export class MergeConflictsDialog extends React.Component<
    */
   private onCancel = async () => {
     const anyResolvedFiles =
-      getResolvedFiles(this.props.workingDirectory).length > 0
+      getResolvedFiles(
+        this.props.workingDirectory,
+        this.props.manualResolutions
+      ).length > 0
     if (!anyResolvedFiles) {
       await this.props.dispatcher.abortMerge(this.props.repository)
       this.props.onDismissed()
@@ -121,7 +101,8 @@ export class MergeConflictsDialog extends React.Component<
 
   private onDismissed = async () => {
     this.props.onDismissed()
-    this.props.dispatcher.setMergeConflictsBannerState({
+    this.props.dispatcher.setBanner({
+      type: BannerType.MergeConflictsFound,
       ourBranch: this.props.ourBranch,
       popup: {
         type: PopupType.MergeConflicts,
@@ -154,13 +135,9 @@ export class MergeConflictsDialog extends React.Component<
   private openThisRepositoryInShell = () =>
     this.props.openRepositoryInShell(this.props.repository)
 
-  private viewFileInKactus = (file: WorkingDirectoryFileChange) => {
-    this.props.dispatcher.changeChangesSelection(this.props.repository, [file])
-  }
-
   private renderShellLink(openThisRepositoryInShell: () => void): JSX.Element {
     return (
-      <div className="cli-link">
+      <div>
         <LinkButton onClick={openThisRepositoryInShell}>
           Open in command line,
         </LinkButton>{' '}
@@ -169,95 +146,28 @@ export class MergeConflictsDialog extends React.Component<
     )
   }
 
-  private renderResolvedFile(path: string): JSX.Element {
-    return (
-      <li className="unmerged-file-status-resolved">
-        <Octicon symbol={OcticonSymbol.fileCode} className="file-octicon" />
-        <div className="column-left">
-          <PathText path={path} availableWidth={200} />
-          <div className="file-conflicts-status">No conflicts remaining</div>
-        </div>
-        <div className="green-circle">
-          <Octicon symbol={OcticonSymbol.check} />
-        </div>
-      </li>
-    )
-  }
-
-  private renderConflictedFile(
-    path: string,
-    status: ConflictedFileStatus,
-    onViewInKactusClick: () => void
-  ): JSX.Element | null {
-    let content = null
-    if (status.lookForConflictMarkers) {
-      const humanReadableConflicts = calculateConflicts(
-        status.conflictMarkerCount
-      )
-      const message =
-        humanReadableConflicts === 1
-          ? `1 conflict`
-          : `${humanReadableConflicts} conflicts`
-
-      content = (
-        <>
-          <div className="column-left">
-            <PathText path={path} availableWidth={200} />
-            <div className="file-conflicts-status">{message}</div>
-          </div>
-          <Button onClick={onViewInKactusClick} className="small-button">
-            View in Kactus
-          </Button>
-        </>
-      )
-    } else {
-      content = (
-        <div>
-          <PathText path={path} availableWidth={400} />
-          <div className="command-line-hint">
-            Use command line to resolve this file
-          </div>
-        </div>
-      )
-    }
-
-    return content !== null ? (
-      <li key={path} className="unmerged-file-status-conflicts">
-        <Octicon symbol={OcticonSymbol.fileCode} className="file-octicon" />
-        {content}
-      </li>
-    ) : null
-  }
-
-  private renderUnmergedFile(
-    file: WorkingDirectoryFileChange
-  ): JSX.Element | null {
-    const { status } = file
-    switch (status.kind) {
-      case AppFileStatusKind.Conflicted:
-        const isResolved = status.lookForConflictMarkers
-          ? status.conflictMarkerCount === 0
-          : false
-
-        if (isResolved) {
-          return this.renderResolvedFile(file.path)
-        }
-
-        return this.renderConflictedFile(file.path, status, () => {
-          this.onDismissed()
-          this.viewFileInKactus(file)
-        })
-      default:
-        return null
-    }
-  }
-
   private renderUnmergedFiles(
     files: ReadonlyArray<WorkingDirectoryFileChange>
   ) {
     return (
       <ul className="unmerged-file-statuses">
-        {files.map(f => this.renderUnmergedFile(f))}
+        {files.map(f =>
+          isConflictedFile(f.status)
+            ? renderUnmergedFile({
+                onDismissed: this.onDismissed,
+                file: f,
+                path: f.path,
+                status: f.status,
+                resolvedExternalEditor: this.props.resolvedExternalEditor,
+                openFileInExternalEditor: this.props.openFileInExternalEditor,
+                repository: this.props.repository,
+                dispatcher: this.props.dispatcher,
+                manualResolution: this.props.manualResolutions.get(f.path),
+                ourBranch: this.props.ourBranch,
+                theirBranch: this.props.theirBranch,
+              })
+            : null
+        )}
       </ul>
     )
   }
@@ -301,8 +211,10 @@ export class MergeConflictsDialog extends React.Component<
 
   public render() {
     const unmergedFiles = getUnmergedFiles(this.props.workingDirectory)
-    const conflictedFilesCount = getConflictedFiles(this.props.workingDirectory)
-      .length
+    const conflictedFilesCount = getConflictedFiles(
+      this.props.workingDirectory,
+      this.props.manualResolutions
+    ).length
 
     const headerTitle = this.renderHeaderTitle(
       this.props.ourBranch,

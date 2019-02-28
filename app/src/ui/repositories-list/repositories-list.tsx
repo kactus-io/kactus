@@ -11,13 +11,16 @@ import { FilterList, IFilterListGroup } from '../lib/filter-list'
 import { IMatches } from '../../lib/fuzzy-find'
 import { assertNever } from '../../lib/fatal-error'
 import { ILocalRepositoryState } from '../../models/repository'
-import { Dispatcher } from '../../lib/dispatcher'
+import { Dispatcher } from '../dispatcher'
 import { Button } from '../lib/button'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { showContextualMenu } from '../main-process-proxy'
 import { IMenuItem } from '../../lib/menu-item'
 import { PopupType } from '../../models/popup'
+import { encodePathAsUrl } from '../../lib/path'
 import memoizeOne from 'memoize-one'
+
+const BlankSlateImage = encodePathAsUrl(__dirname, 'static/empty-no-repo.svg')
 
 interface IRepositoriesListProps {
   readonly selectedRepository: Repositoryish | null
@@ -167,10 +170,6 @@ export class RepositoriesList extends React.Component<
   }
 
   public render() {
-    if (this.props.repositories.length < 1) {
-      return this.noRepositories()
-    }
-
     const groups = this.getRepositoryGroups(
       this.props.repositories,
       this.props.localRepositoryStateLookup
@@ -192,6 +191,7 @@ export class RepositoriesList extends React.Component<
           renderGroupHeader={this.renderGroupHeader}
           onItemClick={this.onItemClick}
           renderPostFilter={this.renderPostFilter}
+          renderNoItems={this.renderNoItems}
           groups={groups}
           invalidationProps={{
             repositories: this.props.repositories,
@@ -211,6 +211,40 @@ export class RepositoriesList extends React.Component<
         Add
         <Octicon symbol={OcticonSymbol.triangleDown} />
       </Button>
+    )
+  }
+
+  private renderNoItems = () => {
+    return (
+      <div className="no-items no-results-found">
+        <img src={BlankSlateImage} className="blankslate-image" />
+        <div className="title">Sorry, I can't find that repository</div>
+
+        <div className="protip">
+          ProTip! Press {this.renderAddLocalShortcut()} to quickly add a local
+          repository, and {this.renderCloneRepositoryShortcut()} to clone from
+          anywhere within the app
+        </div>
+      </div>
+    )
+  }
+
+  private renderAddLocalShortcut() {
+    return (
+      <div className="kbd-shortcut">
+        <kbd>⌘</kbd>
+        <kbd>O</kbd>
+      </div>
+    )
+  }
+
+  private renderCloneRepositoryShortcut() {
+    return (
+      <div className="kbd-shortcut">
+        <kbd>⇧</kbd>
+        <kbd>⌘</kbd>
+        <kbd>O</kbd>
+      </div>
     )
   }
 
@@ -246,15 +280,5 @@ export class RepositoriesList extends React.Component<
 
   private onCreateNewRepository = () => {
     this.props.dispatcher.showPopup({ type: PopupType.CreateRepository })
-  }
-
-  private noRepositories() {
-    return (
-      <div className="repository-list">
-        <div className="filter-list">
-          <div className="sidebar-message">No repositories</div>
-        </div>
-      </div>
-    )
   }
 }

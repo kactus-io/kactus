@@ -4,7 +4,7 @@ import { ButtonGroup } from '../lib/button-group'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
 import { Monospaced } from '../lib/monospaced'
 import { PathText } from '../lib/path-text'
-import { Dispatcher } from '../../lib/dispatcher'
+import { Dispatcher } from '../../ui/dispatcher'
 import { Repository } from '../../models/repository'
 import { RetryAction } from '../../models/retry-actions'
 import { WorkingDirectoryStatus } from '../../models/status'
@@ -18,7 +18,7 @@ interface ILocalChangesOverwrittenWarningProps {
   readonly workingDirectory: WorkingDirectoryStatus
 }
 
-/** A dialog to display a list of files that are too large to commit. */
+/** A dialog to display a list of files that would be overwritten by a checkout. */
 export class LocalChangesOverwrittenWarning extends React.Component<
   ILocalChangesOverwrittenWarningProps
 > {
@@ -33,7 +33,7 @@ export class LocalChangesOverwrittenWarning extends React.Component<
   }
 
   public componentDidMount() {
-    // Since focus is given to the Git LFS link by default, we will instead set focus onto the cancel button.
+    // Since focus is given to the overwritten files by default, we will instead set focus onto the cancel button.
     if (this.closeButton != null) {
       this.closeButton.focus()
     }

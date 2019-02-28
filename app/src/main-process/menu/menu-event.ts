@@ -31,3 +31,4 @@ export type MenuEvent =
   | 'install-cli'
   | 'open-external-editor'
   | 'select-all'
+  | 'show-release-notes-popup'
