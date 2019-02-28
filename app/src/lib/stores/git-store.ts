@@ -63,6 +63,7 @@ import {
   revRange,
   revSymmetricDifference,
   getSymbolicRef,
+  getConfigValue,
 } from '../git'
 import { RetryAction, RetryActionType } from '../../models/retry-actions'
 import { UpstreamAlreadyExistsError } from './upstream-already-exists-error'
@@ -92,6 +93,8 @@ export class GitStore extends BaseStore {
 
   /** The commits keyed by their SHA. */
   public readonly commitLookup = new Map<string, Commit>()
+
+  public pullWithRebase?: boolean
 
   private _history: ReadonlyArray<string> = new Array()
 
@@ -267,6 +270,7 @@ export class GitStore extends BaseStore {
 
     this.refreshDefaultBranch()
     this.refreshRecentBranches(recentBranchNames)
+    this.checkPullWithRebase()
 
     const commits = this._allBranches.map(b => b.tip)
 
@@ -319,6 +323,22 @@ export class GitStore extends BaseStore {
     }
 
     return allBranchesWithUpstream
+  }
+
+  private async checkPullWithRebase() {
+    const result = await getConfigValue(this.repository, 'pull.rebase')
+
+    if (result === null || result === '') {
+      this.pullWithRebase = undefined
+    } else if (result === 'true') {
+      this.pullWithRebase = true
+    } else if (result === 'false') {
+      this.pullWithRebase = false
+    } else {
+      log.warn(`Unexpected value found for pull.rebase in config: '${result}'`)
+      // ensure any previous value is purged from app state
+      this.pullWithRebase = undefined
+    }
   }
 
   private async refreshDefaultBranch() {
@@ -1117,10 +1137,20 @@ export class GitStore extends BaseStore {
 
   /** Merge the named branch into the current branch. */
   public merge(branch: string): Promise<boolean | undefined> {
+    if (this.tip.kind !== TipState.Valid) {
+      throw new Error(
+        `unable to merge as tip state is '${
+          this.tip.kind
+        }' and the application expects the repository to be on a branch currently`
+      )
+    }
+
+    const currentBranch = this.tip.branch.name
+
     return this.performFailableOperation(() => merge(this.repository, branch), {
       gitContext: {
         kind: 'merge',
-        tip: this.tip,
+        currentBranch,
         theirBranch: branch,
       },
     })

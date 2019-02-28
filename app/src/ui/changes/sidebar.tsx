@@ -3,7 +3,12 @@ import * as React from 'react'
 
 import { ChangesList } from './changes-list'
 import { DiffSelectionType } from '../../models/diff'
-import { IChangesState, IKactusState } from '../../lib/app-state'
+import {
+  IChangesState,
+  IKactusState,
+  RebaseConflictState,
+  isRebaseConflictState,
+} from '../../lib/app-state'
 import { Repository } from '../../models/repository'
 import { Dispatcher } from '../dispatcher'
 import { IGitHubUser } from '../../lib/databases'
@@ -31,6 +36,7 @@ import { PopupType } from '../../models/popup'
 import { filesNotTrackedByLFS } from '../../lib/git/lfs'
 import { getLargeFilePaths } from '../../lib/large-files'
 import { isConflictedFile, hasUnresolvedConflicts } from '../../lib/status'
+import { enablePullWithRebase } from '../../lib/feature-flag'
 
 /**
  * The timeout for the animation of the enter/leave animation for Undo.
@@ -359,6 +365,16 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     )
   }
 
+  private renderUndoCommit = (
+    rebaseConflictState: RebaseConflictState | null
+  ): JSX.Element | null => {
+    if (rebaseConflictState !== null && enablePullWithRebase()) {
+      return null
+    }
+
+    return this.renderMostRecentLocalCommit()
+  }
+
   public render() {
     const {
       selectedFileIDs,
@@ -367,6 +383,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
       commitMessage,
       showCoAuthoredBy,
       coAuthors,
+      conflictState,
     } = this.props.changes
     const selectedSketchPartID = selectedSketchPart && selectedSketchPart.id
     const selectedSketchFileID = this.props.kactus.selectedFileID
@@ -379,6 +396,13 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     let user: IGitHubUser | null = null
     if (email) {
       user = this.props.gitHubUsers.get(email.toLowerCase()) || null
+    }
+
+    let rebaseConflictState: RebaseConflictState | null = null
+    if (conflictState !== null) {
+      rebaseConflictState = isRebaseConflictState(conflictState)
+        ? conflictState
+        : null
     }
 
     return (
@@ -399,6 +423,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           repository={this.props.repository}
           sketchFiles={this.props.kactus.files}
           workingDirectory={workingDirectory}
+          rebaseConflictState={rebaseConflictState}
           selectedFileIDs={selectedFileIDs}
           selectedSketchFileID={selectedSketchFileID}
           selectedSketchPartID={selectedSketchPartID}
@@ -431,7 +456,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           onChangesListScrolled={this.props.onChangesListScrolled}
           changesListScrollTop={this.props.changesListScrollTop}
         />
-        {this.renderMostRecentLocalCommit()}
+        {this.renderUndoCommit(rebaseConflictState)}
       </div>
     )
   }

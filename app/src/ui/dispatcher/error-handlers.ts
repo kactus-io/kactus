@@ -13,7 +13,6 @@ import { UpstreamAlreadyExistsError } from '../../lib/stores/upstream-already-ex
 
 import { PopupType } from '../../models/popup'
 import { Repository } from '../../models/repository'
-import { TipState } from '../../models/tip'
 
 /** An error which also has a code property. */
 interface IErrorWithCode extends Error {
@@ -286,15 +285,12 @@ export async function mergeConflictHandler(
     return error
   }
 
-  const { tip, theirBranch } = gitContext
-  if (tip == null || tip.kind !== TipState.Valid) {
-    return error
-  }
+  const { currentBranch, theirBranch } = gitContext
 
   dispatcher.showPopup({
     type: PopupType.MergeConflicts,
     repository,
-    ourBranch: tip.branch.name,
+    ourBranch: currentBranch,
     theirBranch,
   })
 
@@ -408,6 +404,59 @@ export async function localChangesOverwrittenHandler(
     repository,
     retryAction,
     overwrittenFiles,
+  })
+
+  return null
+}
+
+/*
+ * Handler for detecting when a merge conflict is reported to direct the user
+ * to a different dialog than the generic Git error dialog.
+ */
+export async function rebaseConflictsHandler(
+  error: Error,
+  dispatcher: Dispatcher
+): Promise<Error | null> {
+  const e = asErrorWithMetadata(error)
+  if (!e) {
+    return error
+  }
+
+  const gitError = asGitError(e.underlyingError)
+  if (!gitError) {
+    return error
+  }
+
+  const dugiteError = gitError.result.gitError
+  if (!dugiteError) {
+    return error
+  }
+
+  if (dugiteError !== DugiteError.RebaseConflicts) {
+    return error
+  }
+
+  const { repository, gitContext } = e.metadata
+  if (repository == null) {
+    return error
+  }
+
+  if (!(repository instanceof Repository)) {
+    return error
+  }
+
+  if (gitContext == null) {
+    return error
+  }
+
+  // TODO: metrics - https://github.com/desktop/desktop/issues/6550
+
+  const { currentBranch } = gitContext
+
+  dispatcher.showPopup({
+    type: PopupType.RebaseConflicts,
+    repository,
+    targetBranch: currentBranch,
   })
 
   return null

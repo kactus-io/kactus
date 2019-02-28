@@ -152,6 +152,7 @@ describe('updateConflictState', () => {
           currentTip: 'old-sha',
           manualResolutions,
           targetBranch: 'my-feature-branch',
+          baseBranchTip: 'another-sha',
           originalBranchTip: 'some-other-sha',
         },
       })
@@ -167,6 +168,7 @@ describe('updateConflictState', () => {
       const status = createStatus({
         rebaseContext: {
           targetBranch: 'my-feature-branch',
+          baseBranchTip: 'another-sha',
           originalBranchTip: 'some-other-sha',
         },
         currentBranch: 'master',
@@ -179,6 +181,7 @@ describe('updateConflictState', () => {
         kind: 'rebase',
         currentTip: 'first-sha',
         manualResolutions: new Map<string, ManualConflictResolution>(),
+        baseBranchTip: 'another-sha',
         targetBranch: 'my-feature-branch',
         originalBranchTip: 'some-other-sha',
       })
@@ -191,12 +194,14 @@ describe('updateConflictState', () => {
           currentTip: 'old-sha',
           manualResolutions,
           targetBranch: 'my-feature-branch',
+          baseBranchTip: 'another-sha',
           originalBranchTip: 'some-other-sha',
         },
       })
       const status = createStatus({
         rebaseContext: {
           targetBranch: 'my-feature-branch',
+          baseBranchTip: 'another-sha',
           originalBranchTip: 'some-other-sha',
         },
         currentBranch: 'master',
@@ -210,8 +215,72 @@ describe('updateConflictState', () => {
         currentTip: 'first-sha',
         manualResolutions,
         targetBranch: 'my-feature-branch',
+        baseBranchTip: 'another-sha',
         originalBranchTip: 'some-other-sha',
       })
+    })
+
+    it('increments abort counter when conflict remains but branch has changed', () => {
+      const prevState = createState({
+        conflictState: {
+          kind: 'rebase',
+          currentTip: 'current-sha',
+          manualResolutions,
+          targetBranch: 'my-feature-branch',
+          baseBranchTip: 'another-sha',
+          originalBranchTip: 'old-sha',
+        },
+      })
+      const status = createStatus({
+        rebaseContext: {
+          targetBranch: 'a-different-feature-branch',
+          originalBranchTip: 'some-old-sha',
+          baseBranchTip: 'an-even-older-sha',
+        },
+        currentTip: 'current-sha',
+      })
+
+      updateConflictState(prevState, status)
+    })
+
+    it('increments abort counter when conflict resolved but tip has not changed', () => {
+      const prevState = createState({
+        conflictState: {
+          kind: 'rebase',
+          currentTip: 'current-sha',
+          manualResolutions,
+          targetBranch: 'my-feature-branch',
+          baseBranchTip: 'another-sha',
+          originalBranchTip: 'old-sha',
+        },
+      })
+      const status = createStatus({
+        rebaseContext: null,
+        currentBranch: 'my-feature-branch',
+        currentTip: 'old-sha',
+      })
+
+      updateConflictState(prevState, status)
+    })
+
+    it('increments success counter when conflict resolved and tip has changed', () => {
+      const prevState = createState({
+        conflictState: {
+          kind: 'rebase',
+          currentTip: 'current-sha',
+          manualResolutions,
+          targetBranch: 'my-feature-branch',
+          baseBranchTip: 'even-older-sha',
+          originalBranchTip: 'old-sha',
+        },
+      })
+      const status = createStatus({
+        rebaseContext: null,
+        currentBranch: 'my-feature-branch',
+        currentTip: 'new-sha',
+      })
+
+      updateConflictState(prevState, status)
     })
   })
 })

@@ -95,6 +95,7 @@ import { PopupType, Popup } from '../models/popup'
 import { OversizedFiles } from './changes/oversized-files-warning'
 import { PushNeedsPullWarning } from './push-needs-pull'
 import { LocalChangesOverwrittenWarning } from './local-changes-overwritten'
+import { RebaseConflictsDialog } from './rebase'
 
 const MinuteInMilliseconds = 1000 * 60
 const HourInMilliseconds = MinuteInMilliseconds * 60
@@ -1438,7 +1439,7 @@ export class App extends React.Component<IAppProps, IAppState> {
           conflictState,
         } = selectedState.state.changesState
 
-        if (conflictState === null) {
+        if (conflictState === null || conflictState.kind === 'rebase') {
           return null
         }
 
@@ -1512,7 +1513,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             onDismissed={this.onPopupDismissed}
           />
         )
-      case PopupType.LocalChangesOverwritten:
+      case PopupType.LocalChangesOverwritten: {
         const { selectedState } = this.state
         if (
           selectedState === null ||
@@ -1532,6 +1533,41 @@ export class App extends React.Component<IAppProps, IAppState> {
             onDismissed={this.onPopupDismissed}
           />
         )
+      }
+      case PopupType.RebaseConflicts: {
+        const { selectedState } = this.state
+
+        if (
+          selectedState === null ||
+          selectedState.type !== SelectionType.Repository
+        ) {
+          return null
+        }
+
+        const {
+          workingDirectory,
+          conflictState,
+        } = selectedState.state.changesState
+
+        if (conflictState === null || conflictState.kind === 'merge') {
+          return null
+        }
+
+        return (
+          <RebaseConflictsDialog
+            dispatcher={this.props.dispatcher}
+            repository={popup.repository}
+            targetBranch={popup.targetBranch}
+            baseBranch={popup.baseBranch}
+            workingDirectory={workingDirectory}
+            manualResolutions={conflictState.manualResolutions}
+            onDismissed={this.onPopupDismissed}
+            openFileInExternalEditor={this.openFileInExternalEditor}
+            resolvedExternalEditor={this.state.resolvedExternalEditor}
+            openRepositoryInShell={this.openInShell}
+          />
+        )
+      }
       default:
         return assertNever(popup, `Unknown popup type: ${popup}`)
     }
@@ -1787,6 +1823,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     const progress = state.pushPullFetchProgress
 
     const tipState = state.branchesState.tip.kind
+    const { pullWithRebase } = state.branchesState
 
     return (
       <PushPullButton
@@ -1798,6 +1835,7 @@ export class App extends React.Component<IAppProps, IAppState> {
         networkActionInProgress={state.isPushPullFetchInProgress}
         progress={progress}
         tipState={tipState}
+        pullWithRebase={pullWithRebase}
       />
     )
   }

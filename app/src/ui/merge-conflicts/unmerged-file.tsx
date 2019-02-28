@@ -199,7 +199,7 @@ const renderConflictedFileWithConflictMarkers: React.SFC<{
       : `${humanReadableConflicts} conflicts`
 
   const onDropdownClick = makeMarkerConflictDropdownClickHandler(
-    props.file,
+    props.file.path,
     props.repository,
     props.dispatcher,
     props.resolvedExternalEditor,
@@ -286,14 +286,14 @@ const makeUndoManualResolutionClickHandler = (
 
 /** makes a click handling function for marker conflict actions */
 const makeMarkerConflictDropdownClickHandler = (
-  file: WorkingDirectoryFileChange,
+  path: string,
   repository: Repository,
   dispatcher: Dispatcher,
   resolvedExternalEditor: string | null,
   onOpenEditorClick: () => void
 ) => {
   return () => {
-    const absoluteFilePath = join(repository.path, file.path)
+    const absoluteFilePath = join(repository.path, path)
     const items: IMenuItem[] = [
       {
         label: OpenWithDefaultProgramLabel,
