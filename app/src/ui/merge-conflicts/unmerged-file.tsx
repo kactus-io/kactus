@@ -37,7 +37,7 @@ import {
  * Renders an unmerged file status and associated buttons for the merge conflicts modal
  * (An "unmerged file" can be conflicted _and_ resolved or _just_ conflicted)
  */
-export const renderUnmergedFile: React.SFC<{
+export const renderUnmergedFile: React.FunctionComponent<{
   readonly onDismissed: () => void
   readonly file: WorkingDirectoryFileChange
   /** repository this file is in (for pathing and git operations) */
@@ -100,7 +100,7 @@ export const renderUnmergedFile: React.SFC<{
 }
 
 /** renders the status of a resolved file (of a manual or markered conflict) and associated buttons for the merge conflicts modal */
-const renderResolvedFile: React.SFC<{
+const renderResolvedFile: React.FunctionComponent<{
   readonly repository: Repository
   readonly path: string
   readonly status: ConflictedFileStatus
@@ -130,7 +130,7 @@ const renderResolvedFile: React.SFC<{
 }
 
 /** renders the status of a manually conflicted file and associated buttons for the merge conflicts modal */
-const renderManualConflictedFile: React.SFC<{
+const renderManualConflictedFile: React.FunctionComponent<{
   readonly path: string
   readonly status: ManualConflict
   readonly repository: Repository
@@ -180,7 +180,7 @@ function renderConflictedFileWrapper(
   )
 }
 
-const renderConflictedFileWithConflictMarkers: React.SFC<{
+const renderConflictedFileWithConflictMarkers: React.FunctionComponent<{
   readonly onDismissed: () => void
   readonly file: WorkingDirectoryFileChange
   readonly path: string
@@ -329,7 +329,7 @@ function resolvedFileStatusString(
   return 'No conflicts remaining'
 }
 
-const renderResolvedFileStatusSummary: React.SFC<{
+const renderResolvedFileStatusSummary: React.FunctionComponent<{
   path: string
   status: ConflictedFileStatus
   repository: Repository
