@@ -1,8 +1,11 @@
 {
-  "unreleased": [
-    "[Improved] Prompt to see in kactus instead of opening editor when there are conflicts"
-  ],
+  "unreleased": [],
   "releases": {
+    "0.3.20": [
+      "[Improved] Prompt to see in kactus instead of opening editor when there are conflicts",
+      "[Improved] Actionable blank states",
+      "[Fixed] Showing the right change screen when a file is untracked"
+    ],
     "0.3.19": [
       "[Fixed] Pulling or checking out a branch would sometimes keep the state of the old branch"
     ],
