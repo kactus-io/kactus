@@ -4,7 +4,7 @@ import { IDiff, ImageDiffType } from '../models/diff'
 import { Repository, ILocalRepositoryState } from '../models/repository'
 import { Branch, IAheadBehind } from '../models/branch'
 import { Tip } from '../models/tip'
-import { Commit } from '../models/commit'
+import { Commit, CommitOneLine } from '../models/commit'
 import {
   CommittedFileChange,
   WorkingDirectoryStatus,
@@ -17,7 +17,7 @@ import { CloneRepositoryTab } from '../models/clone-repository-tab'
 import { BranchesTab } from '../models/branches-tab'
 import { PullRequest } from '../models/pull-request'
 import { IAuthor } from '../models/author'
-import { MergeResultKind } from '../models/merge'
+import { MergeResult } from '../models/merge'
 import { ICommitMessage } from '../models/commit-message'
 import {
   IRevertProgress,
@@ -40,6 +40,9 @@ import { ApplicationTheme } from '../ui/lib/application-theme'
 import { IAccountRepositories } from './stores/api-repositories-store'
 import { ManualConflictResolution } from '../models/manual-conflict-resolution'
 import { Banner } from '../models/banner'
+import { GitRebaseProgress } from '../models/rebase'
+import { RebaseFlowStep } from '../models/rebase-flow-step'
+import { IStashEntry } from '../models/stash-entry'
 
 export enum SelectionType {
   Repository,
@@ -67,6 +70,11 @@ export interface IAppState {
    * The current list of repositories tracked in the application
    */
   readonly repositories: ReadonlyArray<Repository | CloningRepository>
+
+  /**
+   * List of IDs of the most recently opened repositories (most recent first)
+   */
+  readonly recentRepositories: ReadonlyArray<number>
 
   /**
    * A cache of the latest repository state values, keyed by the repository id
@@ -149,6 +157,9 @@ export interface IAppState {
   /** The width of the commit summary column in the history view */
   readonly commitSummaryWidth: number
 
+  /** The width of the files list in the stash view */
+  readonly stashedFilesWidth: number
+
   /** Whether we should hide the toolbar (and show inverted window controls) */
   readonly titleBarStyle: 'light' | 'dark'
 
@@ -166,6 +177,9 @@ export interface IAppState {
 
   /** Whether we should show a confirmation dialog */
   readonly askForConfirmationOnDiscardChanges: boolean
+
+  /** Should the app prompt the user to confirm a force push? */
+  readonly askForConfirmationOnForcePush: boolean
 
   /** The external editor to use when opening repositories */
   readonly selectedExternalEditor?: ExternalEditor
@@ -294,6 +308,11 @@ export type RebaseConflictState = {
    */
   readonly targetBranch: string
   /**
+   * The branch chosen as the baseline for the rebase
+   */
+  readonly baseBranch?: string
+
+  /**
    * The commit ID of the target branch before the rebase was initiated
    */
   readonly originalBranchTip: string
@@ -340,6 +359,8 @@ export interface IRepositoryState {
   readonly commitAuthor: CommitIdentity | null
 
   readonly branchesState: IBranchesState
+
+  readonly rebaseState: IRebaseState
 
   /**
    * Mapping from lowercased email addresses to the associated GitHub user. Note
@@ -398,12 +419,6 @@ export interface IRepositoryState {
    * null if no such operation is in flight.
    */
   readonly revertProgress: IRevertProgress | null
-
-  /** The current branch filter text. */
-  readonly branchFilterText: string
-
-  /** The current pull request filter text. */
-  readonly pullRequestFilterText: string
 }
 
 export interface IBranchesState {
@@ -452,6 +467,42 @@ export interface IBranchesState {
    * that the default Git behaviour will occur.
    */
   readonly pullWithRebase?: boolean
+
+  /** Tracking branches that have been rebased within Desktop */
+  readonly rebasedBranches: ReadonlyMap<string, string>
+}
+
+/** State associated with a rebase being performed on a repository */
+export interface IRebaseState {
+  /**
+   * The current step of the flow the user should see.
+   *
+   * `null` indicates that there is no rebase underway.
+   */
+  readonly step: RebaseFlowStep | null
+
+  /**
+   * The underlying Git information associated with the current rebase
+   *
+   * This will be set to `null` when no base branch has been selected to
+   * initiate the rebase.
+   */
+  readonly progress: GitRebaseProgress | null
+
+  /**
+   * The known range of commits that will be applied to the repository
+   *
+   * This will be set to `null` when no base branch has been selected to
+   * initiate the rebase.
+   */
+  readonly commits: ReadonlyArray<CommitOneLine> | null
+
+  /**
+   * Whether the user has done work to resolve any conflicts as part of this
+   * rebase, as the rebase flow should confirm the user wishes to abort the
+   * rebase and lose that work.
+   */
+  readonly userHasResolvedConflicts: boolean
 }
 
 export interface ICommitSelection {
@@ -483,26 +534,55 @@ export interface IKactusState {
   readonly lastChecked: number | null
 }
 
-export interface IChangesState {
-  readonly workingDirectory: WorkingDirectoryStatus
+export enum ChangesSelectionKind {
+  WorkingDirectory = 'WorkingDirectory',
+  Stash = 'Stash',
+}
+
+export type ChangesWorkingDirectorySelection = {
+  readonly kind: ChangesSelectionKind.WorkingDirectory
 
   /**
    * The ID of the selected files. The files themselves can be looked up in
-   * `workingDirectory`.
+   * the `workingDirectory` property in `IChangesState`.
    */
   readonly selectedFileIDs: string[]
-
   readonly diff: IDiff | null
-
-  /** The commit message for a work-in-progress commit in the changes view. */
-  readonly commitMessage: ICommitMessage
-
-  readonly loadingDiff: number | null
 
   readonly selectedSketchPart: {
     id: string
     type: FileType.LayerFile | FileType.PageFile
   } | null
+
+  readonly loadingDiff: number | null
+}
+
+export type ChangesStashSelection = {
+  readonly kind: ChangesSelectionKind.Stash
+
+  /** Currently selected file in the stash diff viewer UI (aka the file we want to show the diff for) */
+  readonly selectedStashedFile: CommittedFileChange | null
+
+  /** Currently selected file's diff */
+  readonly selectedStashedFileDiff: IDiff | null
+
+  readonly selectedSketchPart: {
+    id: string
+    type: FileType.LayerFile | FileType.PageFile
+  } | null
+
+  readonly loadingDiff: number | null
+}
+
+export type ChangesSelection =
+  | ChangesWorkingDirectorySelection
+  | ChangesStashSelection
+
+export interface IChangesState {
+  readonly workingDirectory: WorkingDirectoryStatus
+
+  /** The commit message for a work-in-progress commit in the changes view. */
+  readonly commitMessage: ICommitMessage
 
   /**
    * Whether or not to show a field for adding co-authors to
@@ -525,6 +605,20 @@ export interface IChangesState {
    * The absence of a value means there is no merge or rebase conflict underway
    */
   readonly conflictState: ConflictState | null
+
+  /**
+   * The latest GitHub Desktop stash entry for the current branch, or `null`
+   * if no stash exists for the current branch.
+   */
+  readonly stashEntry: IStashEntry | null
+
+  /**
+   * The current selection state in the Changes view. Can be either
+   * working directory or a stash. In the case of a working directory
+   * selection multiple files may be selected. See `ChangesSelection`
+   * for more information about the differences between the two.
+   */
+  readonly selection: ChangesSelection
 }
 
 /**
@@ -580,7 +674,7 @@ export interface ICompareState {
   readonly formState: IDisplayHistory | ICompareBranch
 
   /** The result of merging the compare branch into the current branch, if a branch selected */
-  readonly mergeStatus: MergeResultStatus | null
+  readonly mergeStatus: MergeResult | null
 
   /** Whether the branch list should be expanded or hidden */
   readonly showBranchList: boolean
@@ -635,17 +729,6 @@ export interface ICompareFormUpdate {
   /** Thew new state of the branches list */
   readonly showBranchList: boolean
 }
-
-export type MergeResultStatus =
-  | {
-      kind: MergeResultKind.Loading
-    }
-  | {
-      kind: MergeResultKind.Conflicts
-      conflictedFiles: number
-    }
-  | { kind: MergeResultKind.Clean }
-  | { kind: MergeResultKind.Invalid }
 
 export interface IViewHistory {
   readonly kind: HistoryTabMode.History

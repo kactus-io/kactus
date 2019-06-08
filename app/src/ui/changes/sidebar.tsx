@@ -8,6 +8,7 @@ import {
   IKactusState,
   RebaseConflictState,
   isRebaseConflictState,
+  ChangesSelectionKind,
 } from '../../lib/app-state'
 import { Repository } from '../../models/repository'
 import { Dispatcher } from '../dispatcher'
@@ -194,7 +195,9 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
   }
 
   private onFileSelectionChanged = (file: WorkingDirectoryFileChange) => {
-    this.props.dispatcher.changeChangesSelection(this.props.repository, [file])
+    this.props.dispatcher.selectWorkingDirectoryFiles(this.props.repository, [
+      file,
+    ])
   }
 
   private onIncludeChanged = (path: string, include: boolean) => {
@@ -234,9 +237,9 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
     }
   }
 
-  private onDiscardAllChanges = (
+  private onDiscardChangesFromFiles = (
     files: ReadonlyArray<WorkingDirectoryFileChange>,
-    isDiscardingAllChanges: boolean = true
+    isDiscardingAllChanges: boolean
   ) => {
     this.props.dispatcher.showPopup({
       type: PopupType.ConfirmDiscardChanges,
@@ -377,15 +380,15 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
 
   public render() {
     const {
-      selectedFileIDs,
       workingDirectory,
-      selectedSketchPart,
       commitMessage,
       showCoAuthoredBy,
       coAuthors,
       conflictState,
+      selection,
     } = this.props.changes
-    const selectedSketchPartID = selectedSketchPart && selectedSketchPart.id
+    const selectedSketchPartID =
+      selection.selectedSketchPart && selection.selectedSketchPart.id
     const selectedSketchFileID = this.props.kactus.selectedFileID
 
     // TODO: I think user will expect the avatar to match that which
@@ -404,6 +407,13 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
         ? conflictState
         : null
     }
+
+    const selectedFileIDs =
+      selection.kind === ChangesSelectionKind.WorkingDirectory
+        ? selection.selectedFileIDs
+        : []
+
+    const isShowingStashEntry = selection.kind === ChangesSelectionKind.Stash
 
     return (
       <div id="changes-sidebar-contents">
@@ -437,7 +447,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           askForConfirmationOnDiscardChanges={
             this.props.askForConfirmationOnDiscardChanges
           }
-          onDiscardAllChanges={this.onDiscardAllChanges}
+          onDiscardChangesFromFiles={this.onDiscardChangesFromFiles}
           onOpenItem={this.onOpenItem}
           onRowClick={this.onChangedItemClick}
           commitAuthor={this.props.commitAuthor}
@@ -455,6 +465,8 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           onOpenInExternalEditor={this.props.onOpenInExternalEditor}
           onChangesListScrolled={this.props.onChangesListScrolled}
           changesListScrollTop={this.props.changesListScrollTop}
+          stashEntry={this.props.changes.stashEntry}
+          isShowingStashEntry={isShowingStashEntry}
         />
         {this.renderUndoCommit(rebaseConflictState)}
       </div>

@@ -3,7 +3,7 @@ import { TestRepositoriesDatabase } from '../helpers/databases'
 import { IAPIRepository } from '../../src/lib/api'
 
 describe('RepositoriesStore', () => {
-  let repositoriesStore: RepositoriesStore | null = null
+  let repositoriesStore: RepositoriesStore
 
   beforeEach(async () => {
     const db = new TestRepositoriesDatabase()
@@ -15,19 +15,19 @@ describe('RepositoriesStore', () => {
   describe('adding a new repository', () => {
     it('contains the added repository', async () => {
       const repoPath = '/some/cool/path'
-      await repositoriesStore!.addRepository(repoPath)
+      await repositoriesStore.addRepository(repoPath)
 
-      const repositories = await repositoriesStore!.getAll()
+      const repositories = await repositoriesStore.getAll()
       expect(repositories[0].path).toBe(repoPath)
     })
   })
 
   describe('getting all repositories', () => {
     it('returns multiple repositories', async () => {
-      await repositoriesStore!.addRepository('/some/cool/path')
-      await repositoriesStore!.addRepository('/some/other/path')
+      await repositoriesStore.addRepository('/some/cool/path')
+      await repositoriesStore.addRepository('/some/other/path')
 
-      const repositories = await repositoriesStore!.getAll()
+      const repositories = await repositoriesStore.getAll()
       expect(repositories).toHaveLength(2)
     })
   })
@@ -43,8 +43,6 @@ describe('RepositoriesStore', () => {
         url: 'https://github.com/my-user',
         login: 'my-user',
         avatar_url: 'https://github.com/my-user.png',
-        email: 'my-user@users.noreply.github.com',
-        name: 'My User',
         type: 'User',
       },
       private: true,
@@ -62,7 +60,8 @@ describe('RepositoriesStore', () => {
       await repositoriesStore!.updateGitHubRepository(
         addedRepo,
         'https://api.github.com',
-        gitHubRepo
+        gitHubRepo,
+        []
       )
 
       const repositories = await repositoriesStore!.getAll()
@@ -81,7 +80,8 @@ describe('RepositoriesStore', () => {
       const updatedFirstRepo = await repositoriesStore!.updateGitHubRepository(
         firstRepo,
         'https://api.github.com',
-        gitHubRepo
+        gitHubRepo,
+        []
       )
 
       const secondRepo = await repositoriesStore!.addRepository(
@@ -90,7 +90,8 @@ describe('RepositoriesStore', () => {
       const updatedSecondRepo = await repositoriesStore!.updateGitHubRepository(
         secondRepo,
         'https://api.github.com',
-        gitHubRepo
+        gitHubRepo,
+        []
       )
 
       expect(updatedFirstRepo.gitHubRepository!.dbID).toBe(

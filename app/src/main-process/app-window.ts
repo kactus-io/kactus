@@ -6,8 +6,7 @@ import { MenuEvent } from './menu'
 import { URLActionType } from '../lib/parse-app-url'
 import { menuFromElectronMenu } from '../models/app-menu'
 import { now } from './now'
-
-let windowStateKeeper: any | null = null
+import * as windowStateKeeper from 'electron-window-state'
 
 export class AppWindow {
   private window: Electron.BrowserWindow
@@ -20,13 +19,6 @@ export class AppWindow {
   private minHeight = 660
 
   public constructor() {
-    if (!windowStateKeeper) {
-      // `electron-window-state` requires Electron's `screen` module, which can
-      // only be required after the app has emitted `ready`. So require it
-      // lazily.
-      windowStateKeeper = require('electron-window-state')
-    }
-
     const savedWindowState = windowStateKeeper({
       defaultWidth: this.minWidth,
       defaultHeight: this.minHeight,

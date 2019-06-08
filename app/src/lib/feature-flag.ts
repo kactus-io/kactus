@@ -60,12 +60,12 @@ export function enableBranchPruning(): boolean {
  * just yet.
  */
 export function enableNoChangesCreatePRBlankslateAction(): boolean {
-  return enableBetaFeatures()
+  return true
 }
 
 /** Should the app detect and handle rebase conflicts when `pull.rebase` is set? */
 export function enablePullWithRebase(): boolean {
-  return enableBetaFeatures()
+  return true
 }
 
 /**
@@ -73,5 +73,23 @@ export function enablePullWithRebase(): boolean {
  *  grouping and filtering (GitHub) repositories by owner/organization.
  */
 export function enableGroupRepositoriesByOwner(): boolean {
-  return enableBetaFeatures()
+  return true
+}
+
+/** Should the app show the "rebase current branch" dialog? */
+export function enableRebaseDialog(): boolean {
+  return true
+}
+
+/** Should the app show the "stash changes" dialog? */
+export function enableStashing(): boolean {
+  return true
+}
+
+/**
+ * Should the app warn the user when they are committing that they are using a
+ * protected branch?
+ */
+export function enableBranchProtectionWarning(): boolean {
+  return true
 }

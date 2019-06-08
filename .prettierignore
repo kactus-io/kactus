@@ -12,5 +12,5 @@ app/coverage
 app/static/common
 app/test/fixtures
 gemoji
-*.json
+assets/icons/
 *.md

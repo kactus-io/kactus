@@ -40,7 +40,7 @@ async function getTextDiff(
 }
 
 describe('git/diff', () => {
-  let repository: Repository | null = null
+  let repository: Repository
 
   beforeEach(async () => {
     const testRepoPath = await setupFixtureRepository('repo-with-image-changes')
@@ -57,7 +57,7 @@ describe('git/diff', () => {
         { kind: AppFileStatusKind.New },
         diffSelection
       )
-      const current = await getWorkingDirectoryImage(repository!, file)
+      const current = await getWorkingDirectoryImage(repository, file)
 
       expect(current.mediaType).toBe('image/png')
       expect(current.contents).toMatch(/A2HkbLsBYSgAAAABJRU5ErkJggg==$/)
@@ -72,7 +72,7 @@ describe('git/diff', () => {
         { kind: AppFileStatusKind.Modified },
         diffSelection
       )
-      const current = await getWorkingDirectoryImage(repository!, file)
+      const current = await getWorkingDirectoryImage(repository, file)
       expect(current.mediaType).toBe('image/jpg')
       expect(current.contents).toMatch(/gdTTb6MClWJ3BU8T8PTtXoB88kFL\/9k=$/)
     })
@@ -88,7 +88,7 @@ describe('git/diff', () => {
         { kind: AppFileStatusKind.Modified },
         diffSelection
       )
-      const current = await getBlobImage(repository!, file.path, 'HEAD')
+      const current = await getBlobImage(repository, file.path, 'HEAD')
 
       expect(current.mediaType).toBe('image/jpg')
       expect(current.contents).toMatch(
@@ -105,7 +105,7 @@ describe('git/diff', () => {
         { kind: AppFileStatusKind.Deleted },
         diffSelection
       )
-      const previous = await getBlobImage(repository!, file.path, 'HEAD')
+      const previous = await getBlobImage(repository, file.path, 'HEAD')
 
       expect(previous.mediaType).toBe('image/gif')
       expect(previous.contents).toMatch(
@@ -126,7 +126,7 @@ describe('git/diff', () => {
       )
       const diff = await getWorkingDirectoryDiff(
         dummySketchPath,
-        repository!,
+        repository,
         [],
         file
       )
@@ -150,7 +150,7 @@ describe('git/diff', () => {
         { kind: AppFileStatusKind.New },
         diffSelection
       )
-      const diff = await getTextDiff(repository!, file)
+      const diff = await getTextDiff(repository, file)
 
       expect(diff.hunks.length).toBeGreaterThan(0)
     })
@@ -171,7 +171,7 @@ describe('git/diff', () => {
         { kind: AppFileStatusKind.New },
         diffSelection
       )
-      const diff = await getTextDiff(repository!, file)
+      const diff = await getTextDiff(repository, file)
 
       const hunk = diff.hunks[0]
 
@@ -196,7 +196,7 @@ describe('git/diff', () => {
         { kind: AppFileStatusKind.Modified },
         diffSelection
       )
-      const diff = await getTextDiff(repository!, file)
+      const diff = await getTextDiff(repository, file)
 
       const first = diff.hunks[0]
       expect(first.lines[0].text).toContain('@@ -4,10 +4,6 @@')
@@ -224,7 +224,7 @@ describe('git/diff', () => {
         { kind: AppFileStatusKind.Modified },
         diffSelection
       )
-      const diff = await getTextDiff(repository!, file)
+      const diff = await getTextDiff(repository, file)
 
       const first = diff.hunks[0]
       expect(first.lines[0].text).toContain('@@ -2,7 +2,7 @@ ')
@@ -360,6 +360,7 @@ describe('git/diff', () => {
         repo.path
       )
 
+      // change config on-the-fly to trigger the line endings change warning
       await GitProcess.exec(['config', 'core.autocrlf', 'true'], repo.path)
       lineEnding = '\n\n'
 

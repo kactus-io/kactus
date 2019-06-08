@@ -12,6 +12,9 @@ import { Loading } from '../lib/loading'
 import { RelativeTime } from '../relative-time'
 import { assertNever } from '../../lib/fatal-error'
 import { ReleaseNotesUri } from '../lib/releases'
+import { encodePathAsUrl } from '../../lib/path'
+
+const KactusLogo = encodePathAsUrl(__dirname, 'static/default-avatar.png')
 
 interface IAboutProps {
   /**
@@ -251,10 +254,11 @@ export class About extends React.Component<IAboutProps, IAboutState> {
         <DialogContent>
           <Row className="logo">
             <img
-              className="logo"
               title="Kactus"
-              src={`file:///${__dirname}/static/default-avatar.png`}
+              src={KactusLogo}
               alt="Kactus logo"
+              width="64"
+              height="64"
             />
           </Row>
           <h2>{name}</h2>

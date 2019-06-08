@@ -44,7 +44,7 @@ export interface IGitExecutionOptions extends DugiteExecutionOptions {
  */
 export interface IGitResult extends DugiteResult {
   /**
-   * The parsed git error. This will be null when the exit code is include in
+   * The parsed git error. This will be null when the exit code is included in
    * the `successExitCodes`, or when dugite was unable to parse the
    * error.
    */
@@ -149,16 +149,18 @@ export async function git(
   }
 
   // The caller should either handle this error, or expect that exit code.
-  const errorMessage = []
+  const errorMessage = new Array<string>()
   errorMessage.push(
     `\`git ${args.join(' ')}\` exited with an unexpected code: ${exitCode}.`
   )
 
   if (result.stdout) {
+    errorMessage.push('stdout:')
     errorMessage.push(result.stdout)
   }
 
   if (result.stderr) {
+    errorMessage.push('stderr:')
     errorMessage.push(result.stderr)
   }
 
@@ -180,7 +182,13 @@ function getDescriptionForError(error: DugiteError): string {
     case DugiteError.SSHAuthenticationFailed:
     case DugiteError.SSHPermissionDenied:
     case DugiteError.HTTPSAuthenticationFailed:
-      return `Authentication failed. You may not have permission to access the repository or the repository may have been archived. Open preferences and verify that you're signed in with an account that has permission to access this repository.`
+      return `Authentication failed. Some common reasons include:
+
+- You are not logged in to your account: see Kactus > Preferences.
+- You may need to log out and log back in to refresh your token.
+- You do not have permission to access this repository.
+- The repository is archived on GitHub. Check the repository settings to confirm you are still permitted to push commits.
+- If you use SSH authentication, check that your key is added to the ssh-agent and associated with your account.`
     case DugiteError.RemoteDisconnection:
       return 'The remote disconnected. Check your Internet connection and try again.'
     case DugiteError.HostDown:
@@ -265,7 +273,9 @@ function getDescriptionForError(error: DugiteError): string {
     case DugiteError.NoExistingRemoteBranch:
       return 'The remote branch does not exist.'
     case DugiteError.LocalChangesOverwritten:
-      return 'Some of your changes would be overwritten.'
+      return 'Unable to switch branches as there are working directory changes which would be overwritten. Please commit or stash your changes.'
+    case DugiteError.UnresolvedConflicts:
+      return 'There are unresolved conflicts in the working directory.'
     default:
       return assertNever(error, `Unknown error: ${error}`)
   }

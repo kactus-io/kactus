@@ -7,11 +7,16 @@ import { ensureDir } from 'fs-extra'
 
 import { log } from '../log'
 import { openDirectorySafe } from '../shell'
+import { enableRebaseDialog, enableStashing } from '../../lib/feature-flag'
+import { MenuLabelsEvent } from '../../models/menu-labels'
+import { DefaultEditorLabel } from '../../ui/lib/context-menu'
 
-const defaultEditorLabel = 'Open in External Editor'
 const defaultShellLabel = 'Open in Terminal'
-const defaultPullRequestLabel = 'Create Pull Request'
-const defaultBranchNameDefaultValue = 'Default Branch'
+const createPullRequestLabel = 'Create Pull Request'
+const showPullRequestLabel = 'Show Pull Request'
+const defaultBranchNameValue = 'Default Branch'
+const confirmRepositoryRemovalLabel = 'Remove…'
+const repositoryRemovalLabel = 'Remove'
 
 enum ZoomDirection {
   Reset,
@@ -19,20 +24,33 @@ enum ZoomDirection {
   Out,
 }
 
-export type MenuLabels = {
-  editorLabel?: string
-  shellLabel?: string
-  pullRequestLabel?: string
-  defaultBranchName?: string
-}
-
 export function buildDefaultMenu({
-  editorLabel = defaultEditorLabel,
-  shellLabel = defaultShellLabel,
-  pullRequestLabel = defaultPullRequestLabel,
-  defaultBranchName = defaultBranchNameDefaultValue,
-}: MenuLabels): Electron.Menu {
+  selectedExternalEditor,
+  selectedShell,
+  askForConfirmationOnForcePush,
+  askForConfirmationOnRepositoryRemoval,
+  hasCurrentPullRequest = false,
+  defaultBranchName = defaultBranchNameValue,
+  isForcePushForCurrentRepository = false,
+  isStashedChangesVisible = false,
+}: MenuLabelsEvent): Electron.Menu {
   defaultBranchName = truncateWithEllipsis(defaultBranchName, 25)
+
+  const removeRepoLabel = askForConfirmationOnRepositoryRemoval
+    ? confirmRepositoryRemovalLabel
+    : repositoryRemovalLabel
+
+  const pullRequestLabel = hasCurrentPullRequest
+    ? showPullRequestLabel
+    : createPullRequestLabel
+
+  const shellLabel =
+    selectedShell === null ? defaultShellLabel : `Open in ${selectedShell}`
+
+  const editorLabel =
+    selectedExternalEditor === null
+      ? DefaultEditorLabel
+      : `Open in ${selectedExternalEditor}`
 
   const template = new Array<Electron.MenuItemConstructorOptions>()
   const separator: Electron.MenuItemConstructorOptions = { type: 'separator' }
@@ -156,6 +174,15 @@ export function buildDefaultMenu({
         click: emit('go-to-commit-message'),
       },
       {
+        label: getStashedChangesLabel(isStashedChangesVisible),
+        id: 'toggle-stashed-changes',
+        accelerator: 'Ctrl+H',
+        click: isStashedChangesVisible
+          ? emit('hide-stashed-changes')
+          : emit('show-stashed-changes'),
+        visible: enableStashing(),
+      },
+      {
         label: 'Toggle Full Screen',
         role: 'togglefullscreen',
       },
@@ -211,15 +238,22 @@ export function buildDefaultMenu({
     ],
   })
 
+  const pushLabel = getPushLabel(
+    isForcePushForCurrentRepository,
+    askForConfirmationOnForcePush
+  )
+
+  const pushEventType = isForcePushForCurrentRepository ? 'force-push' : 'push'
+
   template.push({
     label: 'Repository',
     id: 'repository',
     submenu: [
       {
         id: 'push',
-        label: 'Push',
+        label: pushLabel,
         accelerator: 'CmdOrCtrl+P',
-        click: emit('push'),
+        click: emit(pushEventType),
       },
       {
         id: 'pull',
@@ -228,9 +262,9 @@ export function buildDefaultMenu({
         click: emit('pull'),
       },
       {
-        label: 'Remove',
+        label: removeRepoLabel,
         id: 'remove-repository',
-        accelerator: 'CmdOrCtrl+Delete',
+        accelerator: 'CmdOrCtrl+Backspace',
         click: emit('remove-repository'),
       },
       separator,
@@ -296,7 +330,14 @@ export function buildDefaultMenu({
       },
       separator,
       {
-        label: `Update From ${defaultBranchName}`,
+        label: 'Discard All Changes…',
+        id: 'discard-all-changes',
+        accelerator: 'CmdOrCtrl+Shift+Backspace',
+        click: emit('discard-all-changes'),
+      },
+      separator,
+      {
+        label: `Update from ${defaultBranchName}`,
         id: 'update-branch',
         accelerator: 'CmdOrCtrl+Shift+U',
         click: emit('update-branch'),
@@ -312,6 +353,13 @@ export function buildDefaultMenu({
         id: 'merge-branch',
         accelerator: 'CmdOrCtrl+Shift+M',
         click: emit('merge-branch'),
+      },
+      {
+        label: 'Rebase Current Branch…',
+        id: 'rebase-branch',
+        accelerator: 'CmdOrCtrl+Shift+E',
+        click: emit('rebase-branch'),
+        visible: enableRebaseDialog(),
       },
       separator,
       {
@@ -364,6 +412,15 @@ export function buildDefaultMenu({
     },
   }
 
+  const showKeyboardShortcuts: Electron.MenuItemConstructorOptions = {
+    label: 'Show Keyboard Shortcuts',
+    click() {
+      shell.openExternal(
+        'https://help.github.com/en/desktop/getting-started-with-github-desktop/keyboard-shortcuts-in-github-desktop'
+      )
+    },
+  }
+
   const showLogsLabel = 'Show Logs in Finder'
 
   const showLogsItem: Electron.MenuItemConstructorOptions = {
@@ -384,6 +441,7 @@ export function buildDefaultMenu({
     submitIssueItem,
     contactSupportItem,
     showUserGuides,
+    showKeyboardShortcuts,
     showLogsItem,
   ]
 
@@ -420,6 +478,29 @@ export function buildDefaultMenu({
   ensureItemIds(template)
 
   return Menu.buildFromTemplate(template)
+}
+
+function getPushLabel(
+  isForcePushForCurrentRepository: boolean,
+  askForConfirmationOnForcePush: boolean
+): string {
+  if (!isForcePushForCurrentRepository) {
+    return 'Push'
+  }
+
+  if (askForConfirmationOnForcePush) {
+    return 'Force Push…'
+  }
+
+  return 'Force Push'
+}
+
+function getStashedChangesLabel(isStashedChangesVisible: boolean): string {
+  if (isStashedChangesVisible) {
+    return 'Hide Stashed Changes'
+  }
+
+  return 'Show Stashed Changes'
 }
 
 type ClickHandler = (

@@ -10,7 +10,11 @@ import { FilesChangedBadge } from './changes/files-changed-badge'
 import { SelectedCommit, CompareSidebar } from './history'
 import { Resizable } from './resizable'
 import { TabBar } from './tab-bar'
-import { IRepositoryState, RepositorySectionTab } from '../lib/app-state'
+import {
+  IRepositoryState,
+  RepositorySectionTab,
+  ChangesSelectionKind,
+} from '../lib/app-state'
 import { Dispatcher } from './dispatcher'
 import { IssuesStore, GitHubUserStore } from '../lib/stores'
 import { assertNever } from '../lib/fatal-error'
@@ -19,6 +23,8 @@ import { FocusContainer } from './lib/focus-container'
 import { OcticonSymbol, Octicon } from './octicons'
 import { ImageDiffType } from '../models/diff'
 import { IMenu } from '../models/app-menu'
+import { StashDiffViewer } from './stashing'
+import { StashedChangesLoadStates } from '../models/stash-entry'
 
 /** The widest the sidebar can be with the minimum window size. */
 const MaxSidebarWidth = 495
@@ -30,6 +36,7 @@ interface IRepositoryViewProps {
   readonly emoji: Map<string, string>
   readonly sidebarWidth: number
   readonly commitSummaryWidth: number
+  readonly stashedFilesWidth: number
   readonly issuesStore: IssuesStore
   readonly gitHubUserStore: GitHubUserStore
   readonly onViewCommitOnGitHub: (SHA: string) => void
@@ -243,17 +250,45 @@ export class RepositoryView extends React.Component<
     }
   }
 
+  private renderStashedChangesContent(): JSX.Element | null {
+    const { changesState } = this.props.state
+    const { selection, stashEntry, workingDirectory } = changesState
+    const isWorkingTreeClean = workingDirectory.files.length === 0
+
+    if (selection.kind !== ChangesSelectionKind.Stash || stashEntry === null) {
+      return null
+    }
+
+    if (stashEntry.files.kind === StashedChangesLoadStates.Loaded) {
+      return (
+        <StashDiffViewer
+          stashEntry={stashEntry}
+          selectedStashedFile={selection.selectedStashedFile}
+          stashedFileDiff={selection.selectedStashedFileDiff}
+          imageDiffType={this.props.imageDiffType}
+          fileListWidth={this.props.stashedFilesWidth}
+          repository={this.props.repository}
+          dispatcher={this.props.dispatcher}
+          isWorkingTreeClean={isWorkingTreeClean}
+        />
+      )
+    }
+
+    return null
+  }
+
   private renderContent(): JSX.Element | null {
     const selectedSection = this.props.state.selectedSection
-
     if (selectedSection === RepositorySectionTab.Changes) {
       const { changesState } = this.props.state
-      const {
-        workingDirectory,
-        selectedFileIDs,
-        diff,
-        selectedSketchPart,
-      } = changesState
+      const { workingDirectory, selection } = changesState
+
+      if (selection.kind === ChangesSelectionKind.Stash) {
+        return this.renderStashedChangesContent()
+      }
+
+      const { selectedFileIDs, diff, selectedSketchPart } = selection
+
       const selectedSketchPartID = selectedSketchPart
         ? selectedSketchPart.id
         : null
@@ -280,7 +315,7 @@ export class RepositoryView extends React.Component<
             appMenu={this.props.appMenu}
             repository={this.props.repository}
             repositoryState={this.props.state}
-            loadingDiff={changesState.loadingDiff}
+            loadingDiff={changesState.selection.loadingDiff}
           />
         )
       } else {
@@ -297,9 +332,9 @@ export class RepositoryView extends React.Component<
             imageDiffType={this.props.imageDiffType}
             file={selectedFile}
             selectedSketchPartID={selectedSketchPartID}
-            diff={changesState.diff}
+            diff={diff}
             sketchFile={selectedSketchFile}
-            loadingDiff={changesState.loadingDiff}
+            loadingDiff={changesState.selection.loadingDiff}
           />
         )
       }

@@ -3,13 +3,10 @@ import '../lib/logging/main/install'
 import * as Fs from 'fs'
 import { app, Menu, ipcMain, BrowserWindow, shell } from 'electron'
 
+import { MenuLabelsEvent } from '../models/menu-labels'
+
 import { AppWindow } from './app-window'
-import {
-  buildDefaultMenu,
-  MenuEvent,
-  MenuLabels,
-  getAllMenuItems,
-} from './menu'
+import { buildDefaultMenu, MenuEvent, getAllMenuItems } from './menu'
 import { shellNeedsPatching, updateEnvironmentForProcess } from '../lib/shell'
 import { parseAppURL } from '../lib/parse-app-url'
 import { fatalError } from '../lib/fatal-error'
@@ -37,19 +34,31 @@ type OnDidLoadFn = (window: AppWindow) => void
 let onDidLoadFns: Array<OnDidLoadFn> | null = []
 
 function handleUncaughtException(error: Error) {
+  // If we haven't got a window we'll assume it's because
+  // we've just launched and haven't created it yet.
+  // It could also be because we're encountering an unhandled
+  // exception on shutdown but that's less likely and since
+  // this only affects the presentation of the crash dialog
+  // it's a safe assumption to make.
+  const isLaunchError = mainWindow === null
+
   if (mainWindow) {
     mainWindow.destroy()
     mainWindow = null
   }
 
-  const isLaunchError = !mainWindow
   showUncaughtException(isLaunchError, error)
+}
+
+function getExtraErrorContext(): Record<string, string> {
+  return {
+    time: new Date().toString(),
+  }
 }
 
 process.on('uncaughtException', (error: Error) => {
   error = withSourceMappedStack(error)
-
-  reportError(error)
+  reportError(error, getExtraErrorContext())
   handleUncaughtException(error)
 })
 
@@ -172,11 +181,18 @@ app.on('ready', () => {
 
   createWindow()
 
-  Menu.setApplicationMenu(buildDefaultMenu({}))
+  Menu.setApplicationMenu(
+    buildDefaultMenu({
+      selectedShell: null,
+      selectedExternalEditor: null,
+      askForConfirmationOnRepositoryRemoval: false,
+      askForConfirmationOnForcePush: false,
+    })
+  )
 
   ipcMain.on(
     'update-preferred-app-menu-item-labels',
-    (event: Electron.IpcMessageEvent, labels: MenuLabels) => {
+    (event: Electron.IpcMessageEvent, labels: MenuLabelsEvent) => {
       // The current application menu is mutable and we frequently
       // change whether particular items are enabled or not through
       // the update-menu-state IPC event. This menu that we're creating
@@ -372,11 +388,16 @@ app.on('ready', () => {
     }
   )
 
-  type SendErrorReportArg = { error: Error; extra: { [key: string]: string } }
   ipcMain.on(
     'send-error-report',
-    (event: Electron.IpcMessageEvent, { error, extra }: SendErrorReportArg) => {
-      reportError(error, extra)
+    (
+      event: Electron.IpcMessageEvent,
+      { error, extra }: { error: Error; extra: { [key: string]: string } }
+    ) => {
+      reportError(error, {
+        ...getExtraErrorContext(),
+        ...extra,
+      })
     }
   )
 

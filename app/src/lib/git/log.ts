@@ -181,11 +181,24 @@ export async function getChangedFiles(
   ]
   const result = await git(args, repository.path, 'getChangedFiles')
 
-  const out = result.stdout
-  const lines = out.split('\0')
+  return parseChangedFiles(result.stdout, sketchFiles, sha)
+}
+
+/**
+ * Parses git `log` or `diff` output into a list of changed files
+ * (see `getChangedFiles` for an example of use)
+ *
+ * @param stdout raw ouput from a git `-z` and `--name-status` flags
+ * @param committish commitish command was run against
+ */
+export function parseChangedFiles(
+  stdout: string,
+  sketchFiles: ReadonlyArray<IKactusFile>,
+  committish: string
+): ReadonlyArray<CommittedFileChange> {
+  const lines = stdout.split('\0')
   // Remove the trailing empty line
   lines.splice(-1, 1)
-
   const files: CommittedFileChange[] = []
   for (let i = 0; i < lines.length; i++) {
     const statusText = lines[i]
@@ -205,7 +218,7 @@ export async function getChangedFiles(
 
     const sketchFile = sketchFiles.find(f => path.indexOf(f.id) === 0)
 
-    files.push(new CommittedFileChange(path, status, sha, sketchFile))
+    files.push(new CommittedFileChange(path, status, committish, sketchFile))
   }
 
   return files

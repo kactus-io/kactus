@@ -15,10 +15,10 @@ versions look similar to the below output:
 
 ```shellsession
 $ node -v
-v8.12.0
+v10.15.4
 
 $ python --version
-Python 2.7.13
+Python 2.7.15
 ```
 
 There are also [additional resources](tooling.md) to
@@ -27,8 +27,9 @@ repository.
 
 ## Building Kactus
 
-After cloning the repository, the typical workflow to get up running
-is as follows:
+First, create a fork of `desktop/desktop` and then clone the repository to your local machine. You'll need to be inside the repository in order to build the application locally.
+
+The typical workflow to get up running is as follows:
 
 * Run `npm install` to get all required dependencies on your machine.
 * Run `npm run build:dev` to create a development build of the app.

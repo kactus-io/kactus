@@ -48,9 +48,8 @@ export function renderBanner(
     case BannerType.RebaseConflictsFound:
       return (
         <RebaseConflictsBanner
-          dispatcher={dispatcher}
           targetBranch={banner.targetBranch}
-          popup={banner.popup}
+          onOpenDialog={banner.onOpenDialog}
           onDismissed={onDismissed}
           key={'merge-conflicts'}
         />

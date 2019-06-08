@@ -1,6 +1,12 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.21": [
+      "[New] You can now choose to bring your changes with you to a new branch or stash them on the current branch when switching branches",
+      "[New] Rebase your current branch onto another branch using a guided flow",
+      "[New] Repositories grouped by owner, and recent repositories listed at top",
+      "[New] Suggested next steps now includes suggestion to create a pull request after publishing a branch"
+    ],
     "0.3.20": [
       "[Improved] Prompt to see in kactus instead of opening editor when there are conflicts",
       "[Improved] Actionable blank states",
@@ -31,9 +37,7 @@
       "[New] Allow merging branches directly from branch dropdown",
       "[New] Clear the preview cache periodically"
     ],
-    "0.3.14": [
-      "[Fixed] License not being recognized"
-    ],
+    "0.3.14": ["[Fixed] License not being recognized"],
     "0.3.13": [
       "[Improved] Add instructions to login to GH enterprise",
       "[Improved] Repository indicator background work",
@@ -46,18 +50,12 @@
       "[Improved] Add some padding around image diffs so that it's easier to grab the slider",
       "[Fixed] Closing a sketch file in the changes list would make it disappear"
     ],
-    "0.3.11": [
-      "[Fixed] Fetching the diff for a commit in the history tab"
-    ],
+    "0.3.11": ["[Fixed] Fetching the diff for a commit in the history tab"],
     "0.3.10": [
       "[Fixed] A case where fetching the diff for a conflict would fail"
     ],
-    "0.3.9": [
-      "[Fixed] Handle Sketch files with pages with the same name"
-    ],
-    "0.3.8": [
-      "[Fixed] Bug which crash Kactus on startup"
-    ],
+    "0.3.9": ["[Fixed] Handle Sketch files with pages with the same name"],
+    "0.3.8": ["[Fixed] Bug which crash Kactus on startup"],
     "0.3.7": [
       "[New] New history tab with possibility to compare to a branch",
       "[Improved] Performances when rendering the list of changes",
