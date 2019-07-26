@@ -61,7 +61,7 @@ If the issue involves a specific public repository, including the information ab
 <!--
 Attach your log file (You can simply drag your file here to insert it) to this issue. Please make sure the generated link to your log file is **below** this comment section otherwise it will not appear when you submit your issue.
 
-macOS logs location: `~/Library/Application Support/Kactus/logs/*.kactus.production.log`
+macOS logs accessible from the Help menu or location: `~/Library/Application Support/Kactus/logs/*.kactus.production.log`
 
 The log files are organized by date, so see if anything was generated for today's date.
 -->

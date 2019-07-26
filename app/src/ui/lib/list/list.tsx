@@ -256,7 +256,7 @@ export class List extends React.Component<IListProps, IListState> {
   private list: HTMLDivElement | null = null
   private grid: React.Component<any, any> | null = null
   private readonly resizeObserver: ResizeObserver | null = null
-  private updateSizeTimeoutId: number | null = null
+  private updateSizeTimeoutId: NodeJS.Immediate | null = null
 
   public constructor(props: IListProps) {
     super(props)
@@ -304,7 +304,7 @@ export class List extends React.Component<IListProps, IListState> {
     }
   }
 
-  private onSelectAll = (event: Event) => {
+  private onSelectAll = (event: Event | React.SyntheticEvent<any>) => {
     const selectionMode = this.props.selectionMode
 
     if (selectionMode !== 'range' && selectionMode !== 'multi') {

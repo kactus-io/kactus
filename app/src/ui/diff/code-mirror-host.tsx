@@ -17,6 +17,8 @@ import {
 // This has to be required to support the `simple` scrollbar style.
 import 'codemirror/addon/scroll/simplescrollbars'
 
+import 'codemirror/addon/search/search'
+
 interface ICodeMirrorHostProps {
   /**
    * An optional class name for the wrapper element around the

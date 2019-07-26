@@ -157,6 +157,7 @@ function getInitialRepositoryState(): IRepositoryState {
       showCoAuthoredBy: false,
       conflictState: null,
       stashEntry: null,
+      currentBranchProtected: false,
     },
     selectedSection: RepositorySectionTab.Changes,
     branchesState: {

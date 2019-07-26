@@ -266,7 +266,7 @@ describe('updateConflictState', () => {
       updateConflictState(prevState, status)
     })
 
-    it('increments success counter when conflict resolved and tip has changed', () => {
+    it('does not increment aborted counter when conflict resolved and tip has changed', () => {
       const prevState = createState({
         conflictState: {
           kind: 'rebase',

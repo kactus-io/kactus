@@ -40,7 +40,7 @@ export class SketchVersionOutdated extends React.Component<
   }
 
   private locateSketch = () => {
-    const sketchPath: string[] | null = remote.dialog.showOpenDialog({
+    const sketchPath = remote.dialog.showOpenDialog({
       buttonLabel: 'Select',
       defaultPath: '/Applications/',
       filters: [

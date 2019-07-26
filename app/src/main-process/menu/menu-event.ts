@@ -37,3 +37,5 @@ export type MenuEvent =
   | 'show-release-notes-popup'
   | 'show-stashed-changes'
   | 'hide-stashed-changes'
+  | 'test-prune-branches'
+  | 'find-text'
