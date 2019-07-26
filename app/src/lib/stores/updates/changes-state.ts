@@ -260,7 +260,7 @@ export function selectWorkingDirectoryFiles(
     selectedFileIDs = files.map(x => x.id)
   }
 
-  let selectedSketchPart = selectedPart
+  const selectedSketchPart = selectedPart
     ? {
         id: selectedPart.id,
         type: selectedPart.type,

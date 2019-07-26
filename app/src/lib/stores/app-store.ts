@@ -2366,7 +2366,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       } else {
         this.repositoryStateCache.updateChangesState(repository, state => {
           const stateDiff = getDiff(state)
-          let newDiff =
+          const newDiff =
             !diff || !stateDiff || stateDiff.kind !== DiffType.Sketch
               ? null
               : merge(stateDiff, diff)
