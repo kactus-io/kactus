@@ -50,6 +50,7 @@ interface ISelectedCommitProps {
    * @param path The path of the file relative to the root of the repository
    */
   readonly onOpenInExternalEditor: (path: string) => void
+  readonly hideWhitespaceInDiff: boolean
 }
 
 interface ISelectedCommitState {
@@ -128,6 +129,7 @@ export class SelectedCommit extends React.Component<
         dispatcher={this.props.dispatcher}
         openSketchFile={this.onOpenSketchFile}
         loading={this.props.loadingDiff}
+        hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
       />
     )
   }
@@ -144,6 +146,8 @@ export class SelectedCommit extends React.Component<
         isExpanded={this.state.isExpanded}
         onDescriptionBottomChanged={this.onDescriptionBottomChanged}
         hideDescriptionBorder={this.state.hideDescriptionBorder}
+        hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
+        onHideWhitespaceInDiffChanged={this.onHideWhitespaceInDiffChanged}
       />
     )
   }
@@ -179,6 +183,14 @@ export class SelectedCommit extends React.Component<
         hideDescriptionBorder: descriptionBottom >= historyBottom,
       })
     }
+  }
+
+  private onHideWhitespaceInDiffChanged = (hideWhitespaceInDiff: boolean) => {
+    this.props.dispatcher.onHideWhitespaceInDiffChanged(
+      hideWhitespaceInDiff,
+      this.props.repository,
+      this.props.selectedFile as CommittedFileChange
+    )
   }
 
   private onCommitSummaryReset = () => {

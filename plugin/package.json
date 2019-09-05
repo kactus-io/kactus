@@ -28,6 +28,6 @@
   },
   "manifest": "src/manifest.json",
   "devDependencies": {
-    "@skpm/builder": "^0.4.0"
+    "@skpm/builder": "^0.7.4"
   }
 }

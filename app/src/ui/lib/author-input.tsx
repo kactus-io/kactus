@@ -708,6 +708,12 @@ export class AuthorInput extends React.Component<IAuthorInputProps, {}> {
         'Ctrl-Space': 'autocomplete',
         'Ctrl-Enter': false,
         'Cmd-Enter': false,
+        // Disable all search-related shortcuts.
+        'Cmd-F': false, // find
+        'Cmd-G': false, // findNext
+        'Shift-Cmd-G': false, // findPrev
+        'Cmd-Alt-F': false, // replace
+        'Shift-Cmd-Alt-F': false, // replaceAll
       },
       readOnly: this.props.disabled ? 'nocursor' : false,
       hintOptions: {

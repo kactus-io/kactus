@@ -67,6 +67,9 @@ interface IDiffProps {
   readonly imageDiffType: ImageDiffType
 
   readonly loading: number | null
+
+  /** Hiding whitespace in diff. */
+  readonly hideWhitespaceInDiff: boolean
 }
 
 interface IDiffState {
@@ -225,6 +228,10 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
             The file is in conflict and must be resolved via the command line.
           </div>
         )
+      }
+
+      if (this.props.hideWhitespaceInDiff) {
+        return <div className="panel empty">Only whitespace changes found</div>
       }
 
       return <div className="panel empty">No content changes found</div>

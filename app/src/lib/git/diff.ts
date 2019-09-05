@@ -130,12 +130,14 @@ export async function getCommitDiff<K extends keyof IDiff>(
   kactusFiles: Array<IKactusFile>,
   file: FileChange,
   commitish: string,
+  hideWhitespaceInDiff: boolean = false,
   previousCommitish?: string,
   onSketchPreviews?: IOnSketchPreviews
 ): Promise<IDiff> {
   const args = [
     'log',
     commitish,
+    ...(hideWhitespaceInDiff ? ['-w'] : []),
     '-m',
     '-1',
     '--first-parent',

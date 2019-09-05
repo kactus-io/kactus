@@ -202,6 +202,9 @@ export interface IAppState {
 
   readonly sketchVersion: string | null | undefined
 
+  /** Whether we should hide white space changes in diff */
+  readonly hideWhitespaceInDiff: boolean
+
   /** The user's preferred shell. */
   readonly selectedShell: Shell
 

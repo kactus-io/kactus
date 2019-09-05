@@ -471,7 +471,7 @@ export class ChangesList extends React.Component<
     event.preventDefault()
 
     // need to preserve the working directory state while dealing with conflicts
-    if (this.props.rebaseConflictState !== null) {
+    if (this.props.rebaseConflictState !== null || this.props.isCommitting) {
       return
     }
 
@@ -673,11 +673,27 @@ export class ChangesList extends React.Component<
     return items
   }
 
-  private onRowKeyDown = (row: number, e: React.KeyboardEvent<any>) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+  private onRowKeyDown = (
+    row: number,
+    event: React.KeyboardEvent<HTMLDivElement>
+  ) => {
+    // The commit is already in-flight but this check prevents the
+    // user from changing selection.
+    if (
+      this.props.isCommitting &&
+      (event.key === 'Enter' ||
+        event.key === ' ' ||
+        event.key === 'ArrowRight' ||
+        event.key === 'ArrowLeft')
+    ) {
+      event.preventDefault()
+      return
+    }
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
       const file = this.state.visibleFileList[row]
       if (file.type !== FileType.NormalFile) {
-        return this.onOpenChanged(file.id, e.key === 'ArrowRight')
+        return this.onOpenChanged(file.id, event.key === 'ArrowRight')
       }
     }
   }
@@ -686,6 +702,10 @@ export class ChangesList extends React.Component<
     file: WorkingDirectoryFileChange,
     event: React.MouseEvent<HTMLDivElement>
   ) => {
+    if (this.props.isCommitting) {
+      return
+    }
+
     event.preventDefault()
 
     const items =

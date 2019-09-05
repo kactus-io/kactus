@@ -17,6 +17,10 @@ interface IChangesProps {
   readonly imageDiffType: ImageDiffType
   readonly loadingDiff: number | null
   readonly selectedSketchPartID: string | null
+
+  /** Whether a commit is in progress */
+  readonly isCommitting: boolean
+  readonly hideWhitespaceInDiff: boolean
 }
 
 export class Changes extends React.Component<IChangesProps, {}> {
@@ -52,6 +56,9 @@ export class Changes extends React.Component<IChangesProps, {}> {
   public render() {
     const diff = this.props.diff
     const file = this.props.file
+
+    const isCommitting = this.props.isCommitting
+
     const sketchFile = this.props.sketchFile
     const sketchPart = this.props.selectedSketchPartID
 
@@ -83,11 +90,12 @@ export class Changes extends React.Component<IChangesProps, {}> {
               repository={this.props.repository}
               imageDiffType={this.props.imageDiffType}
               file={file}
-              readOnly={false}
               onIncludeChanged={this.onDiffLineIncludeChanged}
               diff={diff}
               dispatcher={this.props.dispatcher}
+              readOnly={this.props.loadingDiff !== null || isCommitting}
               loading={this.props.loadingDiff}
+              hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
             />
           </div>
         </div>
@@ -107,6 +115,7 @@ export class Changes extends React.Component<IChangesProps, {}> {
               diff={diff}
               dispatcher={this.props.dispatcher}
               loading={this.props.loadingDiff}
+              hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
             />
           </div>
         </div>

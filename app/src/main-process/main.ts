@@ -56,6 +56,15 @@ function getExtraErrorContext(): Record<string, string> {
   }
 }
 
+const possibleProtocols = new Set(['x-github-client'])
+if (__DEV__) {
+  possibleProtocols.add('x-github-desktop-dev-auth')
+} else {
+  possibleProtocols.add('x-github-desktop-auth')
+}
+// Also support Desktop Classic's protocols.
+possibleProtocols.add('github-mac')
+
 process.on('uncaughtException', (error: Error) => {
   error = withSourceMappedStack(error)
   reportError(error, getExtraErrorContext())
@@ -167,17 +176,9 @@ app.on('ready', () => {
     return
   }
 
-  app.setAsDefaultProtocolClient('x-kactus-client')
-
-  if (__DEV__) {
-    app.setAsDefaultProtocolClient('x-kactus-dev-auth')
-  } else {
-    app.setAsDefaultProtocolClient('x-kactus-auth')
-  }
-
-  // Also support Github Desktop's protocols.
-  app.setAsDefaultProtocolClient('x-github-client')
-  app.setAsDefaultProtocolClient('github-mac')
+  possibleProtocols.forEach(protocol =>
+    app.setAsDefaultProtocolClient(protocol)
+  )
 
   createWindow()
 
@@ -303,14 +304,15 @@ app.on('ready', () => {
     ) => {
       let sendMenuChangedEvent = false
 
+      const currentMenu = Menu.getApplicationMenu()
+
+      if (currentMenu === null) {
+        log.debug(`unable to get current menu, bailing out...`)
+        return
+      }
+
       for (const item of items) {
         const { id, state } = item
-
-        const currentMenu = Menu.getApplicationMenu()
-
-        if (currentMenu === null) {
-          return
-        }
 
         const menuItem = currentMenu.getMenuItemById(id)
 
@@ -331,6 +333,7 @@ app.on('ready', () => {
       }
 
       if (sendMenuChangedEvent && mainWindow) {
+        Menu.setApplicationMenu(currentMenu)
         mainWindow.sendAppMenu()
       }
     }

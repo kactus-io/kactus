@@ -179,7 +179,19 @@ const defaultEditorOptions: IEditorConfigurationExtra = {
   lineWrapping: true,
   mode: { name: DiffSyntaxMode.ModeName },
   // Make sure CodeMirror doesn't capture Tab (and Shift-Tab) and thus destroy tab navigation
-  extraKeys: { Tab: false, 'Shift-Tab': false, 'Cmd-F': showSearch },
+  extraKeys: {
+    Tab: false,
+    'Shift-Tab': false,
+    // Steal the default key binding so that we can launch our
+    // custom search UI.
+    'Cmd-F': showSearch,
+    // Disable all other search-related shortcuts so that they
+    // don't interfer with global app shortcuts.
+    'Cmd-G': false, // findNext
+    'Shift-Cmd-G': false, // findPrev
+    'Cmd-Alt-F': false, // replace
+    'Shift-Cmd-Alt-F': false, // replaceAll
+  },
   scrollbarStyle: 'simple',
   styleSelectedText: true,
   lineSeparator: '\n',

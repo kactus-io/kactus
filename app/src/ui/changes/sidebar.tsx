@@ -350,6 +350,7 @@ export class ChangesSidebar extends React.Component<IChangesSidebarProps, {}> {
           commit={commit}
           onUndo={this.onUndo}
           emoji={this.props.emoji}
+          isCommitting={this.props.isCommitting}
         />
       )
     }

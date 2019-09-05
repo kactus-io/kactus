@@ -1,5 +1,12 @@
 {
-  "unreleased": [],
+  "unreleased": [
+    "[Fixed] Menu state not updated after performing some actions",
+    "[Fixed] Error message could appear outside the boundary of its container",
+    "[Fixed] Improved error handling when trying to rebase a ref that doesn't exist",
+    "[Improved] Expand hover area on repository list items",
+    "[Improved] Always fast forward recent branches after fetch",
+    "[Improved] Ensure recent branches are updated during remote interactions"
+  ],
   "releases": {
     "0.3.21": [
       "[New] You can now choose to bring your changes with you to a new branch or stash them on the current branch when switching branches",
