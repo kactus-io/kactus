@@ -20,6 +20,7 @@ interface IPremiumUpsellProps {
   readonly dispatcher: Dispatcher
   readonly user?: Account
   readonly isUnlockingKactusFullAccess: boolean
+  readonly isShowing3DSecure: boolean
   readonly kind: PremiumType | 'choice'
   readonly retryAction?: RetryAction
 }
@@ -91,7 +92,7 @@ export class PremiumUpsell extends React.Component<
       !nextProps.isUnlockingKactusFullAccess &&
       this.props.isUnlockingKactusFullAccess
     ) {
-      setTimeout(() => this.props.onDismissed(), 1000)
+      setTimeout(() => this.props.onDismissed(), 2000)
     }
   }
 
@@ -163,6 +164,11 @@ export class PremiumUpsell extends React.Component<
 
   public render() {
     const { loadingCheckout, showingCheckout, couponState, coupon } = this.state
+
+    if (this.props.isShowing3DSecure) {
+      // the Stripe popup is showing up
+      return null
+    }
 
     if (this.props.isUnlockingKactusFullAccess) {
       return (

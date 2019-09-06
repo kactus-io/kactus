@@ -421,6 +421,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     | null = null
 
   private isUnlockingKactusFullAccess: boolean = false
+  private isShowing3DSecure: boolean = false
   private isCancellingKactusFullAccess: boolean = false
   private sketchVersion: string | null | undefined
   private sketchPath: string = sketchPathDefault
@@ -675,6 +676,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       selectedExternalEditor: this.selectedExternalEditor,
       imageDiffType: this.imageDiffType,
       isUnlockingKactusFullAccess: this.isUnlockingKactusFullAccess,
+      isShowing3DSecure: this.isShowing3DSecure,
       isCancellingKactusFullAccess: this.isCancellingKactusFullAccess,
       sketchVersion: this.sketchVersion,
       hideWhitespaceInDiff: this.hideWhitespaceInDiff,
@@ -5022,10 +5024,25 @@ export class AppStore extends TypedBaseStore<IAppState> {
   ): Promise<void> {
     this.isUnlockingKactusFullAccess = true
     this.emitUpdate()
+
     const result = await unlockKactusFullAccess(user, token, options)
-    if (result) {
+
+    if (!result.ok && result.paymentIntentSecret) {
+      const stripe = new Stripe(__STRIPE_KEY__)
+
+      this.isShowing3DSecure = true
+      this.emitUpdate()
+
+      const { error } = await stripe.handleCardPayment(result.paymentIntentSecret)
+
+      this.isShowing3DSecure = false
+      if (!error) {
+        await this.accountsStore.unlockKactusForAccount(user, options.enterprise)
+      }
+    } else if (result.ok) {
       await this.accountsStore.unlockKactusForAccount(user, options.enterprise)
     }
+
     // update the accounts directly otherwise it will show the stripe checkout again
     this.accounts = await this.accountsStore.getAll()
     if (

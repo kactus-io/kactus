@@ -198,6 +198,7 @@ export interface IAppState {
   readonly imageDiffType: ImageDiffType
 
   readonly isUnlockingKactusFullAccess: boolean
+  readonly isShowing3DSecure: boolean
   readonly isCancellingKactusFullAccess: boolean
 
   readonly sketchVersion: string | null | undefined

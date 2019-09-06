@@ -252,6 +252,15 @@ interface IStripeCheckoutToConfigure {
 }
 
 declare const StripeCheckout: IStripeCheckoutToConfigure
+
+declare class Stripe {
+  public constructor(public_key?: string)
+
+  public handleCardPayment(
+    paymentIntentSecret: string
+  ): Promise<{ paymentIntent: any; error?: Error }>
+}
+
 // https://wicg.github.io/ResizeObserver/#resizeobserverentry
 interface IResizeObserverEntry {
   readonly target: HTMLElement

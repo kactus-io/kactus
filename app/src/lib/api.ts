@@ -1306,7 +1306,7 @@ export async function unlockKactusFullAccess(
     coupon?: string
     metadata?: any
   }
-): Promise<boolean> {
+): Promise<{ ok: boolean; paymentIntentSecret?: string }> {
   try {
     const path = `${KactusAPIEndpoint}/unlock`
     const response = await fetch(path, {
@@ -1326,11 +1326,14 @@ export async function unlockKactusFullAccess(
         metadata: options.metadata,
       }),
     })
-    const res = await parsedResponse<{ ok: boolean }>(response)
-    return res.ok
+    const res = await parsedResponse<{
+      ok: boolean
+      paymentIntentSecret?: string
+    }>(response)
+    return { ok: res.ok, paymentIntentSecret: res.paymentIntentSecret }
   } catch (e) {
     log.warn(`unlockKactusFullAccess: failed for ${account.login}`, e)
-    return false
+    return { ok: false }
   }
 }
 

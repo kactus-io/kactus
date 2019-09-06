@@ -1439,6 +1439,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             dispatcher={this.props.dispatcher}
             onDismissed={this.onPopupDismissed}
             isUnlockingKactusFullAccess={this.state.isUnlockingKactusFullAccess}
+            isShowing3DSecure={this.state.isShowing3DSecure}
           />
         )
       case PopupType.CancelPremium:
