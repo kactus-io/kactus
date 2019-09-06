@@ -5033,11 +5033,16 @@ export class AppStore extends TypedBaseStore<IAppState> {
       this.isShowing3DSecure = true
       this.emitUpdate()
 
-      const { error } = await stripe.handleCardPayment(result.paymentIntentSecret)
+      const { error } = await stripe.handleCardPayment(
+        result.paymentIntentSecret
+      )
 
       this.isShowing3DSecure = false
       if (!error) {
-        await this.accountsStore.unlockKactusForAccount(user, options.enterprise)
+        await this.accountsStore.unlockKactusForAccount(
+          user,
+          options.enterprise
+        )
       }
     } else if (result.ok) {
       await this.accountsStore.unlockKactusForAccount(user, options.enterprise)
