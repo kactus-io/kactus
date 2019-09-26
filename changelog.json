@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.33": [
+      "[Fixed] Notarized the App so that macOS 10.15 doesn't complain."
+    ],
     "0.3.22": [
       "[Fixed] Menu state not updated after performing some actions",
       "[Fixed] Error message could appear outside the boundary of its container",
