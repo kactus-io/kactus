@@ -23,7 +23,7 @@ jobs:
             - node-packages-v1-{{ .Branch }}-
       - run:
           name: Install dependencies
-          command: npm install
+          command: npm install && npm rebuild node-sass
       - save_cache:
           key: node-packages-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
           paths:
