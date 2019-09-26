@@ -88,7 +88,7 @@ export class AppWindow {
 
     this.window.webContents.once('did-finish-load', () => {
       if (process.env.NODE_ENV === 'development') {
-        this.window.webContents.openDevTools()
+        // this.window.webContents.openDevTools()
       }
 
       this._loadTime = now() - startLoad
