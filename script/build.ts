@@ -141,6 +141,14 @@ function packageApp() {
     appCategoryType: 'public.app-category.developer-tools',
     darwinDarkModeSupport: true,
     osxSign: true,
+    ...(process.env.NODE_ENV === 'development'
+      ? {}
+      : {
+          osxNotarize: {
+            appleId: 'mathieu@dutour.me',
+            appleIdPassword: '@keychain:AC_PASSWORD',
+          },
+        }),
     protocols: [
       {
         name: getBundleID(),

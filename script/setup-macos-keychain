@@ -15,3 +15,5 @@ security default-keychain -s $KEY_CHAIN
 # set key partition list to avoid UI permission popup that causes hanging at CI
 security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k travis $KEY_CHAIN
 
+# Add password for notarization
+security add-generic-password -a "AC_USERNAME" -w $APPLE_ID_PASSWORD -s "AC_PASSWORD"
