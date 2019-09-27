@@ -134,7 +134,7 @@ function packageApp() {
       new RegExp('/\\.git($|/)'),
       new RegExp('/node_modules/\\.bin($|/)'),
     ],
-    appCopyright: 'Copyright © 2017 Mathieu Dutour.',
+    appCopyright: 'Copyright © 2019 Mathieu Dutour.',
 
     // macOS
     appBundleId: getBundleID(),
@@ -142,6 +142,8 @@ function packageApp() {
     darwinDarkModeSupport: true,
     osxSign: {
       entitlements: path.join(__dirname, './entitlement.plist'),
+      'entitlements-inherit': path.join(__dirname, './entitlement.plist'),
+      'gatekeeper-assess': false,
     },
     ...(process.env.NODE_ENV === 'development' &&
     process.env.APPLE_ID &&
@@ -149,7 +151,7 @@ function packageApp() {
       ? {}
       : {
           osxNotarize: {
-            ascProvider: process.env.APPLE_TEAM || '',
+            ascProvider: process.env.APPLE_TEAM,
             appleId: process.env.APPLE_ID || '',
             appleIdPassword: process.env.APPLE_ID_PASSWORD || '',
           },
