@@ -146,7 +146,7 @@ function packageApp() {
       : {
           osxNotarize: {
             appleId: 'mathieu@dutour.me',
-            appleIdPassword: '@keychain:AC_PASSWORD',
+            appleIdPassword: process.env.APPLE_ID_PASSWORD,
           },
         }),
     protocols: [
