@@ -101,7 +101,7 @@ export class AppWindow {
     })
 
     this.window.webContents.on('did-fail-load', () => {
-      this.window.webContents.openDevTools()
+      // this.window.webContents.openDevTools()
       this.window.show()
     })
 
