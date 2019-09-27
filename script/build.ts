@@ -149,6 +149,7 @@ function packageApp() {
       ? {}
       : {
           osxNotarize: {
+            ascProvider: process.env.APPLE_TEAM || '',
             appleId: process.env.APPLE_ID || '',
             appleIdPassword: process.env.APPLE_ID_PASSWORD || '',
           },
