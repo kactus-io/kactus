@@ -142,6 +142,9 @@ function packageApp() {
     darwinDarkModeSupport: true,
     osxSign: {
       entitlements: path.join(__dirname, './entitlement.plist'),
+      // @ts-ignore
+      entitlementsInherit: path.join(__dirname, './entitlement.plist'),
+      gatekeeperAssess: false,
       'entitlements-inherit': path.join(__dirname, './entitlement.plist'),
       'gatekeeper-assess': false,
     },
