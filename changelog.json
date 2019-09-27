@@ -1,7 +1,7 @@
 {
   "unreleased": [],
   "releases": {
-    "0.3.33": [
+    "0.3.23": [
       "[Fixed] Notarized the App so that macOS 10.15 doesn't complain."
     ],
     "0.3.22": [
