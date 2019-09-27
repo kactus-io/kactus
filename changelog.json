@@ -1,6 +1,7 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.25": ["[Fixed] Don't show dev tools on startup."],
     "0.3.24": [
       "[Fixed] Notarized the App so that macOS 10.15 doesn't complain."
     ],
