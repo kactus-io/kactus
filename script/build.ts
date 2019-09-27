@@ -143,11 +143,13 @@ function packageApp() {
     osxSign: {
       entitlements: path.join(__dirname, './entitlement.plist'),
     },
-    ...(process.env.NODE_ENV === 'development'
+    ...(process.env.NODE_ENV === 'development' &&
+    process.env.APPLE_ID &&
+    process.env.APPLE_ID_PASSWORD
       ? {}
       : {
           osxNotarize: {
-            appleId: 'mathieu@dutour.me',
+            appleId: process.env.APPLE_ID || '',
             appleIdPassword: process.env.APPLE_ID_PASSWORD || '',
           },
         }),
