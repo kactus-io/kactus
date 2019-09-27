@@ -140,13 +140,15 @@ function packageApp() {
     appBundleId: getBundleID(),
     appCategoryType: 'public.app-category.developer-tools',
     darwinDarkModeSupport: true,
-    osxSign: true,
+    osxSign: {
+      entitlements: path.join(__dirname, './entitlement.plist'),
+    },
     ...(process.env.NODE_ENV === 'development'
       ? {}
       : {
           osxNotarize: {
             appleId: 'mathieu@dutour.me',
-            appleIdPassword: process.env.APPLE_ID_PASSWORD,
+            appleIdPassword: process.env.APPLE_ID_PASSWORD || '',
           },
         }),
     protocols: [
