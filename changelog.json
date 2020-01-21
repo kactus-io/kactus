@@ -1,16 +1,17 @@
 {
-  "unreleased": [
-    "[New] Interactive tutorial for new users to become productive using Git and Kactus more quickly",
-    "[Fixed] File path truncation in merge conflicts dialog",
-    "[Fixed] Support pushing workflow files for GitHub Actions to GitHub.com",
-    "[Improved] Warn when committing to a protected branch",
-    "[Improved] Warn when committing to a repository you don't have write access to",
-    "[New] Users can configure Desktop to always bring or leave changes when switching branches",
-    "[New] Prompt users to re-authorize if required by any of their GitHub organizations",
-    "[Fixed] Recognize if the current branch of a fork has a pull request to the upstream repo",
-    "[New] Add a new Kactus option to limit the diffs to top-levels layers. It should improve a lot the performances but the merge will be less granular."
-  ],
+  "unreleased": [],
   "releases": {
+    "0.3.26": [
+      "[New] Interactive tutorial for new users to become productive using Git and Kactus more quickly",
+      "[Fixed] File path truncation in merge conflicts dialog",
+      "[Fixed] Support pushing workflow files for GitHub Actions to GitHub.com",
+      "[Improved] Warn when committing to a protected branch",
+      "[Improved] Warn when committing to a repository you don't have write access to",
+      "[New] Users can configure Desktop to always bring or leave changes when switching branches",
+      "[New] Prompt users to re-authorize if required by any of their GitHub organizations",
+      "[Fixed] Recognize if the current branch of a fork has a pull request to the upstream repo",
+      "[New] Add a new Kactus option to limit the diffs to top-levels layers. It should improve a lot the performances but the merge will be less granular."
+    ],
     "0.3.25": ["[Fixed] Don't show dev tools on startup."],
     "0.3.24": [
       "[Fixed] Notarized the App so that macOS 10.15 doesn't complain."
