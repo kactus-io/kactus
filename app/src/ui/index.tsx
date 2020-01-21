@@ -21,6 +21,8 @@ import {
   upstreamAlreadyExistsHandler,
   rebaseConflictsHandler,
   localChangesOverwrittenHandler,
+  refusedWorkflowUpdate,
+  samlReauthRequired,
 } from './dispatcher'
 import {
   AppStore,
@@ -53,6 +55,7 @@ import {
 import { RepositoryStateCache } from '../lib/stores/repository-state-cache'
 import { ApiRepositoriesStore } from '../lib/stores/api-repositories-store'
 import { CommitStatusStore } from '../lib/stores/commit-status-store'
+import { PullRequestCoordinator } from '../lib/stores/pull-request-coordinator'
 
 if (__DEV__) {
   installDevGlobals()
@@ -90,7 +93,11 @@ let currentState: IAppState | null = null
 let lastUnhandledRejection: string | null = null
 let lastUnhandledRejectionTime: Date | null = null
 
-process.once('uncaughtException', (error: Error) => {
+const sendErrorWithContext = (
+  error: Error,
+  context: { [key: string]: string } = {},
+  nonFatal?: boolean
+) => {
   error = withSourceMappedStack(error)
 
   console.error('Uncaught exception', error)
@@ -103,6 +110,7 @@ process.once('uncaughtException', (error: Error) => {
     const extra: Record<string, string> = {
       osVersion: getOS(),
       guid: getGUID(),
+      ...context,
     }
 
     try {
@@ -161,11 +169,22 @@ process.once('uncaughtException', (error: Error) => {
       /* ignore */
     }
 
-    sendErrorReport(error, extra)
+    sendErrorReport(error, extra, nonFatal)
   }
+}
 
+process.once('uncaughtException', (error: Error) => {
+  sendErrorWithContext(error)
   reportUncaughtException(error)
 })
+
+// See sendNonFatalException for more information
+process.on(
+  'send-non-fatal-exception',
+  (error: Error, context?: { [key: string]: string }) => {
+    sendErrorWithContext(error, context, true)
+  }
+)
 
 /**
  * Chromium won't crash on an unhandled rejection (similar to how
@@ -209,6 +228,11 @@ const pullRequestStore = new PullRequestStore(
   repositoriesStore
 )
 
+const pullRequestCoordinator = new PullRequestCoordinator(
+  pullRequestStore,
+  repositoriesStore
+)
+
 const repositoryStateManager = new RepositoryStateCache(repo =>
   gitHubUserStore.getUsersForRepository(repo)
 )
@@ -224,7 +248,7 @@ const appStore = new AppStore(
   signInStore,
   accountsStore,
   repositoriesStore,
-  pullRequestStore,
+  pullRequestCoordinator,
   repositoryStateManager,
   apiRepositoriesStore
 )
@@ -247,10 +271,12 @@ dispatcher.registerErrorHandler(mergeConflictHandler)
 dispatcher.registerErrorHandler(lfsAttributeMismatchHandler)
 dispatcher.registerErrorHandler(gitAuthenticationErrorHandler)
 dispatcher.registerErrorHandler(pushNeedsPullHandler)
+dispatcher.registerErrorHandler(samlReauthRequired)
 dispatcher.registerErrorHandler(backgroundTaskHandler)
 dispatcher.registerErrorHandler(missingRepositoryHandler)
 dispatcher.registerErrorHandler(localChangesOverwrittenHandler)
 dispatcher.registerErrorHandler(rebaseConflictsHandler)
+dispatcher.registerErrorHandler(refusedWorkflowUpdate)
 
 document.body.classList.add(`platform-${process.platform}`)
 

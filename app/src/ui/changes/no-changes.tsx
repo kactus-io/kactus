@@ -1,5 +1,4 @@
 import * as React from 'react'
-import * as ReactCSSTransitionReplace from 'react-css-transition-replace'
 
 import { LoadingOverlay } from '../lib/loading'
 import { encodePathAsUrl } from '../../lib/path'
@@ -12,7 +11,10 @@ import { MenuIDs } from '../../models/menu-ids'
 import { IMenu, MenuItem } from '../../models/app-menu'
 import memoizeOne from 'memoize-one'
 import { getPlatformSpecificNameOrSymbolForModifier } from '../../lib/menu-item'
-import { MenuBackedBlankslateAction } from './menu-backed-blankslate-action'
+import {
+  MenuBackedSuggestedAction,
+  SuggestedActionGroup,
+} from '../suggested-actions'
 import { IRepositoryState } from '../../lib/app-state'
 import { TipState, IValidBranch } from '../../models/tip'
 import { Ref } from '../lib/ref'
@@ -202,7 +204,7 @@ export class NoChanges extends React.Component<
     }
 
     return (
-      <MenuBackedBlankslateAction
+      <MenuBackedSuggestedAction
         title={title}
         description={description}
         discoverabilityContent={this.renderDiscoverabilityElements(menuItem)}
@@ -330,7 +332,7 @@ export class NoChanges extends React.Component<
     }
 
     return (
-      <MenuBackedBlankslateAction
+      <MenuBackedSuggestedAction
         key="view-stash-action"
         title="View your stashed changes"
         menuItemId={itemId}
@@ -364,7 +366,7 @@ export class NoChanges extends React.Component<
     )
 
     return (
-      <MenuBackedBlankslateAction
+      <MenuBackedSuggestedAction
         key="publish-repository-action"
         title="Publish your repository to GitHub"
         description="This repository is currently only available on your local machine. By publishing it on GitHub you can share it, and collaborate with others."
@@ -409,7 +411,7 @@ export class NoChanges extends React.Component<
     )
 
     return (
-      <MenuBackedBlankslateAction
+      <MenuBackedSuggestedAction
         key="publish-branch-action"
         title="Publish your branch"
         menuItemId={itemId}
@@ -461,7 +463,7 @@ export class NoChanges extends React.Component<
     const buttonText = `Pull ${remote.name}`
 
     return (
-      <MenuBackedBlankslateAction
+      <MenuBackedSuggestedAction
         key="pull-branch-action"
         title={title}
         menuItemId={itemId}
@@ -511,7 +513,7 @@ export class NoChanges extends React.Component<
     const buttonText = `Push ${remote.name}`
 
     return (
-      <MenuBackedBlankslateAction
+      <MenuBackedSuggestedAction
         key="push-branch-action"
         title={title}
         menuItemId={itemId}
@@ -545,7 +547,7 @@ export class NoChanges extends React.Component<
     const buttonText = `Create Pull Request`
 
     return (
-      <MenuBackedBlankslateAction
+      <MenuBackedSuggestedAction
         key="create-pr-action"
         title={title}
         menuItemId={itemId}
@@ -561,24 +563,18 @@ export class NoChanges extends React.Component<
   private renderActions() {
     return (
       <>
-        <ReactCSSTransitionReplace
-          transitionAppear={false}
-          transitionEnter={this.state.enableTransitions}
-          transitionLeave={this.state.enableTransitions}
-          overflowHidden={false}
-          transitionName="action"
-          component="div"
-          className="actions primary"
-          transitionEnterTimeout={750}
-          transitionLeaveTimeout={500}
+        <SuggestedActionGroup
+          type="primary"
+          transitions={'replace'}
+          enableTransitions={this.state.enableTransitions}
         >
           {this.renderViewStashAction() || this.renderRemoteAction()}
-        </ReactCSSTransitionReplace>
-        <div className="actions">
+        </SuggestedActionGroup>
+        <SuggestedActionGroup>
           {this.renderCreateNewSketchFile()}
           {this.renderShowInFileManager()}
           {this.renderViewOnGitHub()}
-        </div>
+        </SuggestedActionGroup>
       </>
     )
   }

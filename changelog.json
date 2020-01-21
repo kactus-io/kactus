@@ -2,7 +2,12 @@
   "unreleased": [
     "[New] Interactive tutorial for new users to become productive using Git and Kactus more quickly",
     "[Fixed] File path truncation in merge conflicts dialog",
-    "[Fixed] Support pushing workflow files for GitHub Actions to GitHub.com"
+    "[Fixed] Support pushing workflow files for GitHub Actions to GitHub.com",
+    "[New] Warn when committing to a protected branch",
+    "[New] Warn when committing to a repository you don't have write access to",
+    "[Added] Users can configure Desktop to always bring or leave changes when switching branches",
+    "[Added] Prompt users to re-authorize if required by any of their GitHub organizations",
+    "[Fixed] Recognize if the current branch of a fork has a pull request to the upstream repo"
   ],
   "releases": {
     "0.3.25": ["[Fixed] Don't show dev tools on startup."],

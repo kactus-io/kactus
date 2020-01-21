@@ -65,6 +65,16 @@ if (__DEV__) {
 // Also support Desktop Classic's protocols.
 possibleProtocols.add('github-mac')
 
+app.on('window-all-closed', () => {
+  // If we don't subscribe to this event and all windows are closed, the default
+  // behavior is to quit the app. We don't want that though, we control that
+  // behavior through the mainWindow onClose event such that on macOS we only
+  // hide the main window when a user attempts to close it.
+  //
+  // If we don't subscribe to this and change the default behavior we break
+  // the crash process window which is shown after the main window is closed.
+})
+
 process.on('uncaughtException', (error: Error) => {
   error = withSourceMappedStack(error)
   reportError(error, getExtraErrorContext())
@@ -395,12 +405,20 @@ app.on('ready', () => {
     'send-error-report',
     (
       event: Electron.IpcMessageEvent,
-      { error, extra }: { error: Error; extra: { [key: string]: string } }
+      {
+        error,
+        extra,
+        nonFatal,
+      }: { error: Error; extra: { [key: string]: string }; nonFatal?: boolean }
     ) => {
-      reportError(error, {
-        ...getExtraErrorContext(),
-        ...extra,
-      })
+      reportError(
+        error,
+        {
+          ...getExtraErrorContext(),
+          ...extra,
+        },
+        nonFatal
+      )
     }
   )
 

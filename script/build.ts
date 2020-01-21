@@ -33,18 +33,27 @@ const frontMatter: <T>(
 
 import { getBundleID, getProductName } from '../app/package-info'
 
-import { getReleaseChannel, getDistRoot, getExecutableName } from './dist-info'
+import {
+  getChannel,
+  getDistRoot,
+  getExecutableName,
+  isPublishable,
+  getIconFileName,
+} from './dist-info'
 import { isRunningOnFork, isCircleCI } from './build-platforms'
 
 import { updateLicenseDump } from './licenses/update-license-dump'
 import { verifyInjectedSassVariables } from './validate-sass/validate-all'
 
 const projectRoot = path.join(__dirname, '..')
+const entitlementsPath = `${projectRoot}/script/entitlement.plist`
+const extendInfoPath = `${projectRoot}/script/info.plist`
 const outRoot = path.join(projectRoot, 'out')
 
-const isPublishableBuild = getReleaseChannel() !== 'development'
+const isPublishableBuild = isPublishable()
+const isDevelopmentBuild = getChannel() === 'development'
 
-console.log(`Building for ${getReleaseChannel()}…`)
+console.log(`Building for ${getChannel()}…`)
 
 console.log('Removing old distribution…')
 fs.removeSync(getDistRoot())
@@ -74,7 +83,7 @@ verifyInjectedSassVariables(outRoot)
       'Error verifying the Sass variables in the rendered app. This is fatal for a published build.'
     )
 
-    if (isPublishableBuild) {
+    if (!isDevelopmentBuild) {
       process.exit(1)
     }
   })
@@ -86,7 +95,7 @@ verifyInjectedSassVariables(outRoot)
       )
       console.error(err)
 
-      if (isPublishableBuild) {
+      if (!isDevelopmentBuild) {
         process.exit(1)
       }
     })
@@ -113,16 +122,34 @@ interface IPackageAdditionalOptions {
     readonly name: string
     readonly schemes: ReadonlyArray<string>
   }>
+  readonly osxSign: packager.ElectronOsXSignOptions & {
+    readonly hardenedRuntime?: boolean
+  }
 }
 
 function packageApp() {
+  // get notarization deets, unless we're not going to publish this
+  const notarizationCredentials = isPublishableBuild
+    ? getNotarizationCredentials()
+    : undefined
+  if (
+    isPublishableBuild &&
+    isCircleCI() &&
+    notarizationCredentials === undefined
+  ) {
+    // we can't publish a mac build without these
+    throw new Error(
+      'Unable to retreive appleId and/or appleIdPassword to notarize macOS build'
+    )
+  }
+
   const options: packager.Options & IPackageAdditionalOptions = {
     name: getExecutableName(),
     platform: 'darwin',
     arch: 'x64',
     asar: false, // TODO: Probably wanna enable this down the road.
     out: getDistRoot(),
-    icon: path.join(projectRoot, 'app', 'static', 'logos', 'icon-logo'),
+    icon: path.join(projectRoot, 'app', 'static', 'logos', getIconFileName()),
     dir: outRoot,
     overwrite: true,
     tmpdir: false,
@@ -141,29 +168,20 @@ function packageApp() {
     appCategoryType: 'public.app-category.developer-tools',
     darwinDarkModeSupport: true,
     osxSign: {
-      entitlements: path.join(__dirname, './entitlement.plist'),
+      entitlements: entitlementsPath,
       // @ts-ignore
-      entitlementsInherit: path.join(__dirname, './entitlement.plist'),
+      entitlementsInherit: entitlementsPath,
       gatekeeperAssess: false,
-      'entitlements-inherit': path.join(__dirname, './entitlement.plist'),
+      'entitlements-inherit': entitlementsPath,
       'gatekeeper-assess': false,
+      type: isPublishableBuild ? 'distribution' : 'development',
     },
-    ...(process.env.NODE_ENV === 'development' &&
-    process.env.APPLE_ID &&
-    process.env.APPLE_ID_PASSWORD
-      ? {}
-      : {
-          osxNotarize: {
-            ascProvider: process.env.APPLE_TEAM,
-            appleId: process.env.APPLE_ID || '',
-            appleIdPassword: process.env.APPLE_ID_PASSWORD || '',
-          },
-        }),
+    osxNotarize: notarizationCredentials,
     protocols: [
       {
         name: getBundleID(),
         schemes: [
-          isPublishableBuild ? 'x-kactus-auth' : 'x-kactus-dev-auth',
+          !isDevelopmentBuild ? 'x-kactus-auth' : 'x-kactus-dev-auth',
           'x-kactus-client',
           'x-github-client',
           'github-mac',
@@ -171,7 +189,7 @@ function packageApp() {
         ],
       },
     ],
-    extendInfo: `${projectRoot}/script/info.plist`,
+    extendInfo: extendInfoPath,
   }
 
   return packager(options)
@@ -241,7 +259,7 @@ function copyDependencies() {
   const oldDevDependencies = originalPackage.devDependencies
   const newDevDependencies: PackageLookup = {}
 
-  if (!isPublishableBuild) {
+  if (isDevelopmentBuild) {
     for (const name of Object.keys(oldDevDependencies)) {
       const spec = oldDevDependencies[name]
       if (externals.indexOf(name) !== -1) {
@@ -258,7 +276,7 @@ function copyDependencies() {
     devDependencies: newDevDependencies,
   })
 
-  if (isPublishableBuild) {
+  if (!isDevelopmentBuild) {
     delete updatedPackage.devDependencies
   }
 
@@ -277,7 +295,7 @@ function copyDependencies() {
     cp.execSync('npm install', { cwd: outRoot, env: process.env })
   }
 
-  if (!isPublishableBuild) {
+  if (isDevelopmentBuild) {
     console.log(
       '  Installing 7zip (dependency for electron-devtools-installer)'
     )
@@ -359,4 +377,19 @@ ${licenseText}`
 
   // sweep up the choosealicense directory as the important bits have been bundled in the app
   fs.removeSync(chooseALicense)
+}
+
+function getNotarizationCredentials():
+  | packager.ElectronNotarizeOptions
+  | undefined {
+  const appleId = process.env.APPLE_ID
+  const appleIdPassword = process.env.APPLE_ID_PASSWORD
+  if (appleId === undefined || appleIdPassword === undefined) {
+    return undefined
+  }
+  return {
+    ascProvider: process.env.APPLE_TEAM,
+    appleId,
+    appleIdPassword,
+  }
 }

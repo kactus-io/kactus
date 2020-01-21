@@ -1,12 +1,11 @@
-import { remote } from 'electron'
-import * as Path from 'path'
 import * as React from 'react'
+import * as Path from 'path'
 
+import { remote } from 'electron'
 import { Dispatcher } from '../dispatcher'
 import { isGitRepository } from '../../lib/git'
 import { isBareRepository } from '../../lib/git'
 import { Button } from '../lib/button'
-import { ButtonGroup } from '../lib/button-group'
 import { TextBox } from '../lib/text-box'
 import { Row } from '../lib/row'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
@@ -14,6 +13,7 @@ import { Octicon, OcticonSymbol } from '../octicons'
 import { LinkButton } from '../lib/link-button'
 import { PopupType } from '../../models/popup'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
 import untildify = require('untildify')
 
@@ -190,7 +190,6 @@ export class AddExistingRepository extends React.Component<
               label="Local Path"
               placeholder="repository path"
               onValueChanged={this.onPathChanged}
-              autoFocus={true}
             />
             <Button onClick={this.showFilePicker}>Choose…</Button>
           </Row>
@@ -198,12 +197,10 @@ export class AddExistingRepository extends React.Component<
         </DialogContent>
 
         <DialogFooter>
-          <ButtonGroup>
-            <Button disabled={disabled} type="submit">
-              Add Repository
-            </Button>
-            <Button onClick={this.props.onDismissed}>Cancel</Button>
-          </ButtonGroup>
+          <OkCancelButtonGroup
+            okButtonText="Add Repository"
+            okButtonDisabled={disabled}
+          />
         </DialogFooter>
       </Dialog>
     )

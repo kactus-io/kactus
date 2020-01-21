@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { IKactusFile } from '../../lib/kactus'
 import { Loading } from '../lib/loading'
-import { BlankslateAction } from './blankslate-action'
+import { SuggestedAction, SuggestedActionGroup } from '../suggested-actions'
 
 interface ISketchFileViewProps {
   readonly onGetPreview: (file: IKactusFile) => void
@@ -84,8 +84,8 @@ export class SketchFileView extends React.Component<
               </div>
             )}
           </div>
-          <div className="actions primary">
-            <BlankslateAction
+          <SuggestedActionGroup type="primary">
+            <SuggestedAction
               onClick={this.handleOpen}
               title="Open the file in Sketch"
               description={''}
@@ -94,9 +94,9 @@ export class SketchFileView extends React.Component<
               disabled={!imported}
               type={'primary'}
             />
-          </div>
-          <div className="actions">
-            <BlankslateAction
+          </SuggestedActionGroup>
+          <SuggestedActionGroup>
+            <SuggestedAction
               onClick={this.handleImport}
               title="Regenerate Sketch file from JSON"
               description={''}
@@ -108,7 +108,7 @@ export class SketchFileView extends React.Component<
               }
               disabled={!parsed}
             />
-            <BlankslateAction
+            <SuggestedAction
               onClick={this.handleExport}
               title="Export Sketch file to JSON"
               description={''}
@@ -118,14 +118,14 @@ export class SketchFileView extends React.Component<
               }
               disabled={!imported}
             />
-            <BlankslateAction
+            <SuggestedAction
               onClick={this.handleDelete}
               title="Delete Sketch file from the repository"
               description={''}
               discoverabilityContent={''}
               buttonText={'Delete Sketch File'}
             />
-          </div>
+          </SuggestedActionGroup>
         </div>
       </div>
     )

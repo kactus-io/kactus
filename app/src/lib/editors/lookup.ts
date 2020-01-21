@@ -1,7 +1,7 @@
 import {
   ExternalEditor,
   ExternalEditorError,
-  getAvailableEditors,
+  getAvailableEditors as _getAvailableEditors,
 } from './utils'
 import { IFoundEditor } from './found-editor'
 
@@ -11,14 +11,14 @@ let editorCache: ReadonlyArray<IFoundEditor<ExternalEditor>> | null = null
  * Resolve a list of installed editors on the user's machine, using the known
  * install identifiers that each OS supports.
  */
-export async function getCachedAvailableEditors(): Promise<
+export async function getAvailableEditors(): Promise<
   ReadonlyArray<IFoundEditor<ExternalEditor>>
 > {
   if (editorCache && editorCache.length > 0) {
     return editorCache
   }
 
-  editorCache = await getAvailableEditors()
+  editorCache = await _getAvailableEditors()
   return editorCache
 }
 
@@ -30,7 +30,7 @@ export async function getCachedAvailableEditors(): Promise<
  * be found (i.e. it has been removed).
  */
 export async function findEditorOrDefault(
-  name?: string
+  name: string | null
 ): Promise<IFoundEditor<ExternalEditor> | null> {
   const editors = await getAvailableEditors()
   if (editors.length === 0) {

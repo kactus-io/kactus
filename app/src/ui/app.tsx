@@ -73,7 +73,7 @@ import { About } from './about'
 import { Publish } from './publish-repository'
 import { Acknowledgements } from './acknowledgements'
 import { UntrustedCertificate } from './untrusted-certificate'
-import { BlankSlateView } from './blank-slate'
+import { NoRepositoriesView } from './no-repositories'
 import { ConfirmRemoveRepository } from './remove-repository'
 import { TermsAndConditions } from './terms-and-conditions'
 import { PremiumUpsell, CancelPremium } from './premium-upsell'
@@ -104,10 +104,13 @@ import { BannerType } from '../models/banner'
 import { StashAndSwitchBranch } from './stash-changes/stash-and-switch-branch-dialog'
 import { OverwriteStash } from './stash-changes/overwrite-stashed-changes-dialog'
 import { ConfirmDiscardStashDialog } from './stashing/confirm-discard-stash'
-import { CreateTutorialRepositoryDialog } from './blank-slate/create-tutorial-repository-dialog'
+import { CreateTutorialRepositoryDialog } from './no-repositories/create-tutorial-repository-dialog'
 import { enableTutorial } from '../lib/feature-flag'
 import { ConfirmExitTutorial } from './tutorial'
 import { TutorialStep, isValidTutorialStep } from '../models/tutorial-step'
+import { WorkflowPushRejectedDialog } from './workflow-push-rejected/workflow-push-rejected'
+import { getUncommittedChangesStrategy } from '../models/uncommitted-changes-strategy'
+import { SAMLReauthRequiredDialog } from './saml-reauth-required/saml-reauth-required'
 
 const MinuteInMilliseconds = 1000 * 60
 const HourInMilliseconds = MinuteInMilliseconds * 60
@@ -1163,7 +1166,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
 
     const inWelcomeFlow = this.state.showWelcomeFlow
-    const inNoRepositoriesView = this.inNoRepositoriesBlankSlateState()
+    const inNoRepositoriesView = this.inNoRepositoriesViewState()
 
     // The light title bar style should only be used while we're in
     // the welcome flow as well as the no-repositories blank slate
@@ -1230,6 +1233,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             repository={popup.repository}
             branch={popup.branch}
             stash={stash}
+            onDismissed={this.onPopupDismissed}
           />
         )
       case PopupType.DeleteBranch:
@@ -1283,6 +1287,9 @@ export class App extends React.Component<IAppProps, IAppState> {
               this.state.askForConfirmationOnDiscardChanges
             }
             confirmForcePush={this.state.askForConfirmationOnForcePush}
+            uncommittedChangesStrategyKind={
+              this.state.uncommittedChangesStrategyKind
+            }
             selectedExternalEditor={this.state.selectedExternalEditor}
             enterpriseAccount={this.getEnterpriseAccount()}
             onDismissed={this.onPopupDismissed}
@@ -1393,6 +1400,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       case PopupType.CreateBranch: {
         const state = this.props.repositoryStateManager.get(popup.repository)
         const branchesState = state.branchesState
+        const currentBranchProtected = state.changesState.currentBranchProtected
         const repository = popup.repository
 
         if (branchesState.tip.kind === TipState.Unknown) {
@@ -1410,7 +1418,10 @@ export class App extends React.Component<IAppProps, IAppState> {
             onDismissed={this.onPopupDismissed}
             dispatcher={this.props.dispatcher}
             initialName={popup.initialName || ''}
-            handleProtectedBranchWarning={popup.handleProtectedBranchWarning}
+            currentBranchProtected={currentBranchProtected}
+            selectedUncommittedChangesStrategy={getUncommittedChangesStrategy(
+              this.state.uncommittedChangesStrategyKind
+            )}
           />
         )
       }
@@ -1847,6 +1858,25 @@ export class App extends React.Component<IAppProps, IAppState> {
           />
         )
       }
+      case PopupType.PushRejectedDueToMissingWorkflowScope:
+        return (
+          <WorkflowPushRejectedDialog
+            onDismissed={this.onPopupDismissed}
+            rejectedPath={popup.rejectedPath}
+            dispatcher={this.props.dispatcher}
+            repository={popup.repository}
+          />
+        )
+      case PopupType.SAMLReauthRequired:
+        return (
+          <SAMLReauthRequiredDialog
+            onDismissed={this.onPopupDismissed}
+            organizationName={popup.organizationName}
+            endpoint={popup.endpoint}
+            retryAction={popup.retryAction}
+            dispatcher={this.props.dispatcher}
+          />
+        )
       default:
         return assertNever(popup, `Unknown popup type: ${popup}`)
     }
@@ -2043,6 +2073,8 @@ export class App extends React.Component<IAppProps, IAppState> {
       ? this.state.selectedState.repository
       : null
     const externalEditorLabel = this.state.selectedExternalEditor
+      ? this.state.selectedExternalEditor
+      : undefined
     const shellLabel = this.state.selectedShell
     const filterText = this.state.repositoryFilterText
     return (
@@ -2213,6 +2245,9 @@ export class App extends React.Component<IAppProps, IAppState> {
         pullWithRebase={pullWithRebase}
         rebaseInProgress={rebaseInProgress}
         isForcePush={isForcePush}
+        shouldNudge={
+          this.state.currentOnboardingTutorialStep === TutorialStep.PushBranch
+        }
       />
     )
   }
@@ -2235,9 +2270,13 @@ export class App extends React.Component<IAppProps, IAppState> {
 
     const repository = selection.repository
 
+    const state = this.props.repositoryStateManager.get(repository)
+    const currentBranchProtected = state.changesState.currentBranchProtected
+
     return this.props.dispatcher.showPopup({
       type: PopupType.CreateBranch,
       repository,
+      currentBranchProtected,
     })
   }
 
@@ -2304,16 +2343,13 @@ export class App extends React.Component<IAppProps, IAppState> {
 
     const currentFoldout = this.state.currentFoldout
 
-    let isOpen = false
-    let handleProtectedBranchWarning: boolean | undefined
-
-    if (currentFoldout !== null && currentFoldout.type === FoldoutType.Branch) {
-      isOpen = true
-      handleProtectedBranchWarning = currentFoldout.handleProtectedBranchWarning
-    }
+    const isOpen =
+      currentFoldout !== null && currentFoldout.type === FoldoutType.Branch
 
     const repository = selection.repository
-    const branchesState = selection.state.branchesState
+    const { branchesState, changesState } = selection.state
+    const hasAssociatedStash = changesState.stashEntry !== null
+    const hasChanges = changesState.workingDirectory.files.length > 0
 
     return (
       <BranchDropdown
@@ -2326,7 +2362,13 @@ export class App extends React.Component<IAppProps, IAppState> {
         pullRequests={branchesState.openPullRequests}
         currentPullRequest={branchesState.currentPullRequest}
         isLoadingPullRequests={branchesState.isLoadingPullRequests}
-        handleProtectedBranchWarning={handleProtectedBranchWarning}
+        shouldNudge={
+          this.state.currentOnboardingTutorialStep === TutorialStep.CreateBranch
+        }
+        selectedUncommittedChangesStrategy={getUncommittedChangesStrategy(
+          this.state.uncommittedChangesStrategyKind
+        )}
+        couldOverwriteStash={hasChanges && hasAssociatedStash}
       />
     )
   }
@@ -2337,7 +2379,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     // can't support banners at the moment. So for the
     // no-repositories blank slate we'll have to live without
     // them.
-    if (this.inNoRepositoriesBlankSlateState()) {
+    if (this.inNoRepositoriesViewState()) {
       return null
     }
 
@@ -2404,7 +2446,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     /**
      * No toolbar if we're in the blank slate view.
      */
-    if (this.inNoRepositoriesBlankSlateState()) {
+    if (this.inNoRepositoriesViewState()) {
       return null
     }
 
@@ -2424,9 +2466,9 @@ export class App extends React.Component<IAppProps, IAppState> {
 
   private renderRepository() {
     const state = this.state
-    if (this.inNoRepositoriesBlankSlateState()) {
+    if (this.inNoRepositoriesViewState()) {
       return (
-        <BlankSlateView
+        <NoRepositoriesView
           dotComAccount={this.getDotComAccount()}
           enterpriseAccount={this.getEnterpriseAccount()}
           onCreate={this.showCreateRepository}
@@ -2448,6 +2490,8 @@ export class App extends React.Component<IAppProps, IAppState> {
 
     if (selectedState.type === SelectionType.Repository) {
       const externalEditorLabel = state.selectedExternalEditor
+        ? state.selectedExternalEditor
+        : undefined
 
       return (
         <RepositoryView
@@ -2567,7 +2611,7 @@ export class App extends React.Component<IAppProps, IAppState> {
     })
   }
 
-  private inNoRepositoriesBlankSlateState() {
+  private inNoRepositoriesViewState() {
     return this.state.repositories.length === 0 || this.isTutorialPaused()
   }
 

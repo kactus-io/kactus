@@ -3,8 +3,6 @@ import { PublishRepository } from './publish-repository'
 import { Dispatcher } from '../dispatcher'
 import { Account } from '../../models/account'
 import { Repository } from '../../models/repository'
-import { ButtonGroup } from '../lib/button-group'
-import { Button } from '../lib/button'
 import { Dialog, DialogFooter, DialogContent, DialogError } from '../dialog'
 import { TabBar } from '../tab-bar'
 import { getDotComAPIEndpoint } from '../../lib/api'
@@ -18,6 +16,7 @@ import {
   RepositoryPublicationSettings,
   PublishSettingsType,
 } from '../../models/publish-settings'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
 enum PublishTab {
   DotCom = 0,
@@ -255,12 +254,10 @@ export class Publish extends React.Component<IPublishProps, IPublishState> {
     if (user) {
       return (
         <DialogFooter>
-          <ButtonGroup>
-            <Button type="submit" disabled={disabled}>
-              Publish Repository
-            </Button>
-            <Button onClick={this.props.onDismissed}>Cancel</Button>
-          </ButtonGroup>
+          <OkCancelButtonGroup
+            okButtonText="Publish Repository"
+            okButtonDisabled={disabled}
+          />
         </DialogFooter>
       )
     } else {

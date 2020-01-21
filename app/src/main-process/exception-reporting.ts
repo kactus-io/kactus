@@ -1,11 +1,14 @@
 import { app, net } from 'electron'
 
 const ErrorEndpoint = 'https://api.kactus.io/v1/usage/exception'
+const NonFatalErrorEndpoint =
+  'https://api.kactus.io/v1/usage/exception?t=non-fatal'
 
 /** Report the error to Central. */
 export async function reportError(
   error: Error,
-  extra?: { [key: string]: string }
+  extra?: { [key: string]: string },
+  nonFatal?: boolean
 ) {
   if (__DEV__) {
     return
@@ -32,7 +35,7 @@ export async function reportError(
 
   const requestOptions: Electron.RequestOptions = {
     method: 'POST',
-    url: ErrorEndpoint,
+    url: nonFatal ? NonFatalErrorEndpoint : ErrorEndpoint,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },

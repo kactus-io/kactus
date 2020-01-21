@@ -1,8 +1,6 @@
 import * as React from 'react'
 import { Dispatcher } from '../dispatcher'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
-import { ButtonGroup } from '../lib/button-group'
-import { Button } from '../lib/button'
 import { Checkout } from './stripe-checkout'
 import { Account } from '../../models/account'
 import { ThrottledScheduler } from '../lib/throttled-scheduler'
@@ -13,6 +11,7 @@ import { CouponInput } from './coupon-input'
 import { LinkButton } from '../lib/link-button'
 import { CallToAction } from '../lib/call-to-action'
 import { PremiumType } from '../../models/popup'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
 interface IPremiumUpsellProps {
   /** A function called when the dialog is dismissed. */
@@ -207,9 +206,10 @@ export class PremiumUpsell extends React.Component<
           </DialogContent>
 
           <DialogFooter>
-            <ButtonGroup>
-              <Button onClick={this.props.onDismissed}>Not now</Button>
-            </ButtonGroup>
+            <OkCancelButtonGroup
+              okButtonVisible={false}
+              cancelButtonText="Not Now"
+            />
           </DialogFooter>
         </Dialog>
       )
@@ -308,20 +308,14 @@ export class PremiumUpsell extends React.Component<
             </DialogContent>
 
             <DialogFooter>
-              <ButtonGroup>
-                <Button
-                  type="submit"
-                  disabled={
-                    couponState === 'loading' ||
-                    (couponState !== null && !!couponState.error)
-                  }
-                >
-                  Unlock ($
-                  {price.toFixed(2)}
-                  /month)
-                </Button>
-                <Button onClick={this.props.onDismissed}>Not now</Button>
-              </ButtonGroup>
+              <OkCancelButtonGroup
+                okButtonDisabled={
+                  couponState === 'loading' ||
+                  (couponState !== null && !!couponState.error)
+                }
+                okButtonText={`Unlock ($${price.toFixed(2)}/month)`}
+                cancelButtonText="Not Now"
+              />
             </DialogFooter>
           </Dialog>
         )}

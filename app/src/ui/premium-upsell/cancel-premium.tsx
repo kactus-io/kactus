@@ -3,9 +3,8 @@ import { Dispatcher } from '../dispatcher'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { Row } from '../../ui/lib/row'
-import { ButtonGroup } from '../lib/button-group'
-import { Button } from '../lib/button'
 import { Account } from '../../models/account'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
 interface ICancelPremiumProps {
   /** A function called when the dialog is dismissed. */
@@ -97,12 +96,11 @@ export class CancelPremium extends React.Component<
         </DialogContent>
 
         <DialogFooter>
-          <ButtonGroup>
-            <Button type="submit" className="button-danger">
-              Yes, cancel my subscription
-            </Button>
-            <Button onClick={this.props.onDismissed}>Not now</Button>
-          </ButtonGroup>
+          <OkCancelButtonGroup
+            destructive={true}
+            okButtonText="Yes, Cancel My Subscription"
+            cancelButtonText="Not Now"
+          />
         </DialogFooter>
       </Dialog>
     )

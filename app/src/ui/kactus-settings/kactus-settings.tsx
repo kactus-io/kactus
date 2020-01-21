@@ -3,8 +3,7 @@ import { IFullKactusConfig } from '../../lib/kactus'
 import { KactusConfig } from './kactus-config'
 import { Dispatcher } from '../dispatcher'
 import { Repository } from '../../models/repository'
-import { Button } from '../lib/button'
-import { ButtonGroup } from '../lib/button-group'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 import { Dialog, DialogError, DialogFooter } from '../dialog'
 
 interface IKactusSettingsProps {
@@ -60,19 +59,10 @@ export class KactusSettings extends React.Component<
       >
         {this.renderErrors()}
         {this.renderKactusConfig()}
-        {this.renderFooter()}
+        <DialogFooter>
+          <OkCancelButtonGroup okButtonText="Save" />
+        </DialogFooter>
       </Dialog>
-    )
-  }
-
-  private renderFooter() {
-    return (
-      <DialogFooter>
-        <ButtonGroup>
-          <Button type="submit">Save</Button>
-          <Button onClick={this.props.onDismissed}>Cancel</Button>
-        </ButtonGroup>
-      </DialogFooter>
     )
   }
 

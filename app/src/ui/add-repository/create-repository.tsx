@@ -13,7 +13,6 @@ import {
 } from '../../lib/git'
 import { sanitizedRepositoryName } from './sanitized-repository-name'
 import { TextBox } from '../lib/text-box'
-import { ButtonGroup } from '../lib/button-group'
 import { Button } from '../lib/button'
 import { Row } from '../lib/row'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
@@ -34,6 +33,7 @@ import { LinkButton } from '../lib/link-button'
 import { PopupType } from '../../models/popup'
 import { Ref } from '../lib/ref'
 import { enableReadmeOverwriteWarning } from '../../lib/feature-flag'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
 /** The sentinel value used to indicate no gitignore should be used. */
 const NoGitIgnoreValue = 'None'
@@ -546,7 +546,6 @@ export class CreateRepository extends React.Component<
               label="Name"
               placeholder="repository name"
               onValueChanged={this.onNameChanged}
-              autoFocus={true}
             />
           </Row>
 
@@ -593,13 +592,10 @@ export class CreateRepository extends React.Component<
         </DialogContent>
 
         <DialogFooter>
-          <ButtonGroup>
-            <Button type="submit" disabled={disabled}>
-              Create Repository
-            </Button>
-
-            <Button onClick={this.props.onDismissed}>Cancel</Button>
-          </ButtonGroup>
+          <OkCancelButtonGroup
+            okButtonText="Create Repository"
+            okButtonDisabled={disabled}
+          />
         </DialogFooter>
       </Dialog>
     )

@@ -4,8 +4,7 @@ import { Repository } from '../../models/repository'
 import { Dispatcher } from '../dispatcher'
 import { TextBox } from '../lib/text-box'
 import { Row } from '../lib/row'
-import { Button } from '../lib/button'
-import { ButtonGroup } from '../lib/button-group'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 import { Dialog, DialogError, DialogContent, DialogFooter } from '../dialog'
 
 interface ICreateSketchFileProps {
@@ -72,12 +71,10 @@ export class CreateSketchFile extends React.Component<
         </DialogContent>
 
         <DialogFooter>
-          <ButtonGroup>
-            <Button type="submit" disabled={disabled}>
-              Create File
-            </Button>
-            <Button onClick={this.props.onDismissed}>Cancel</Button>
-          </ButtonGroup>
+          <OkCancelButtonGroup
+            okButtonDisabled={disabled}
+            okButtonText="Create File"
+          />
         </DialogFooter>
       </Dialog>
     )

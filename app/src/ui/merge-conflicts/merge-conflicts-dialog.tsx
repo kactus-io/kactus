@@ -1,6 +1,4 @@
 import * as React from 'react'
-import { Button } from '../lib/button'
-import { ButtonGroup } from '../lib/button-group'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
 import { Dispatcher } from '../dispatcher'
 import { PopupType } from '../../models/popup'
@@ -25,6 +23,7 @@ import {
 } from '../lib/conflicts'
 import { ManualConflictResolution } from '../../models/manual-conflict-resolution'
 import { BannerType } from '../../models/banner'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
 interface IMergeConflictsDialogProps {
   readonly dispatcher: Dispatcher
@@ -39,9 +38,6 @@ interface IMergeConflictsDialogProps {
   readonly theirBranch?: string
   readonly manualResolutions: Map<string, ManualConflictResolution>
 }
-
-const submitButtonString = 'Commit merge'
-const cancelButtonString = 'Abort merge'
 
 /**
  * Modal to tell the user their merge encountered conflicts
@@ -77,7 +73,9 @@ export class MergeConflictsDialog extends React.Component<
   /**
    *  dismisses the modal and shows the abort merge warning modal
    */
-  private onCancel = async () => {
+  private onCancel = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+
     const anyResolvedFiles =
       getResolvedFiles(
         this.props.workingDirectory,
@@ -205,16 +203,13 @@ export class MergeConflictsDialog extends React.Component<
           {this.renderContent(unmergedFiles, conflictedFilesCount)}
         </DialogContent>
         <DialogFooter>
-          <ButtonGroup>
-            <Button
-              type="submit"
-              disabled={conflictedFilesCount > 0}
-              tooltip={tooltipString}
-            >
-              {submitButtonString}
-            </Button>
-            <Button onClick={this.onCancel}>{cancelButtonString}</Button>
-          </ButtonGroup>
+          <OkCancelButtonGroup
+            okButtonText="Commit Merge"
+            okButtonDisabled={conflictedFilesCount > 0}
+            okButtonTitle={tooltipString}
+            cancelButtonText="Abort Merge"
+            onCancelButtonClick={this.onCancel}
+          />
         </DialogFooter>
       </Dialog>
     )

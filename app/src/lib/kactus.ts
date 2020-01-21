@@ -16,7 +16,7 @@ import { Image } from '../models/diff'
 import { IGitAccount } from '../models/git-account'
 import { getDotComAPIEndpoint } from './api'
 import { sketchtoolPath, runPluginCommand, getSketchVersion } from './sketch'
-import * as Perf from '../ui/lib/perf'
+import * as Perf from '../ui/lib/git-perf'
 
 export type IFullKactusConfig = IKactusConfig & { sketchVersion?: string }
 export type IKactusFile = _IKactusFile & {
@@ -258,7 +258,7 @@ export function shouldShowPremiumUpsell(
       return { enterprise: true, user: potentialPremiumAccount }
     }
     if (
-      repository.gitHubRepository.private &&
+      repository.gitHubRepository.isPrivate &&
       (!potentialPremiumAccount.unlockedKactus &&
         !potentialPremiumAccount.unlockedEnterpriseKactus)
     ) {

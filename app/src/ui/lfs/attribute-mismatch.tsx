@@ -1,10 +1,9 @@
 import * as React from 'react'
-import { Button } from '../lib/button'
-import { ButtonGroup } from '../lib/button-group'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
 import { LinkButton } from '../lib/link-button'
 import { getGlobalConfigPath } from '../../lib/git'
 import { shell } from '../../lib/app-shell'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
 interface IAttributeMismatchProps {
   /** Called when the dialog should be dismissed. */
@@ -73,10 +72,10 @@ export class AttributeMismatch extends React.Component<
         </DialogContent>
 
         <DialogFooter>
-          <ButtonGroup>
-            <Button type="submit">Update Existing Filters</Button>
-            <Button onClick={this.props.onDismissed}>Not Now</Button>
-          </ButtonGroup>
+          <OkCancelButtonGroup
+            okButtonText="Update Existing Filters"
+            cancelButtonText="Not Now"
+          />
         </DialogFooter>
       </Dialog>
     )

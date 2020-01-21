@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as Path from 'path'
 
 import { getSHA } from './git-info'
-import { getUpdatesURL, getReleaseChannel } from '../script/dist-info'
+import { getUpdatesURL, getChannel } from '../script/dist-info'
 
 const projectRoot = Path.dirname(__dirname)
 
@@ -10,7 +10,7 @@ const devClientId = 'e2192ac9bf572ac04bfb'
 const devClientSecret = 'c9b11bb47ee91ef08545a5355658b37a100d46e1'
 const devStripeKey = 'pk_test_wqDaZ2Vc1Vlja0RflUevsa9K'
 
-const channel = getReleaseChannel()
+const channel = getChannel()
 
 export function getCLICommands() {
   return (

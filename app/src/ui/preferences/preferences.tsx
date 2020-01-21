@@ -3,13 +3,11 @@ import { Account } from '../../models/account'
 import { PreferencesTab } from '../../models/preferences'
 import { ExternalEditor } from '../../lib/editors'
 import { Dispatcher } from '../dispatcher'
-import { TabBar } from '../tab-bar'
+import { TabBar, TabBarType } from '../tab-bar'
 import { Accounts } from './accounts'
 import { Advanced } from './advanced'
 import { Git } from './git'
 import { assertNever } from '../../lib/fatal-error'
-import { Button } from '../lib/button'
-import { ButtonGroup } from '../lib/button-group'
 import { Dialog, DialogFooter, DialogError } from '../dialog'
 import {
   getGlobalConfigValue,
@@ -20,10 +18,17 @@ import {
 import { lookupPreferredEmail } from '../../lib/email'
 import { PopupType } from '../../models/popup'
 import { Shell, getAvailableShells } from '../../lib/shells'
-import { getCachedAvailableEditors } from '../../lib/editors/lookup'
-import { disallowedCharacters } from './identifier-rules'
+import { getAvailableEditors } from '../../lib/editors/lookup'
+import { gitAuthorNameIsValid } from './identifier-rules'
 import { Appearance } from './appearance'
 import { ApplicationTheme } from '../lib/application-theme'
+import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
+import { Integrations } from './integrations'
+import {
+  UncommittedChangesStrategyKind,
+  uncommittedChangesStrategyKindDefault,
+} from '../../models/uncommitted-changes-strategy'
+import { Octicon, OcticonSymbol } from '../octicons'
 
 interface IPreferencesProps {
   readonly dispatcher: Dispatcher
@@ -34,7 +39,8 @@ interface IPreferencesProps {
   readonly confirmRepositoryRemoval: boolean
   readonly confirmDiscardChanges: boolean
   readonly confirmForcePush: boolean
-  readonly selectedExternalEditor?: ExternalEditor
+  readonly uncommittedChangesStrategyKind: UncommittedChangesStrategyKind
+  readonly selectedExternalEditor: ExternalEditor | null
   readonly selectedShell: Shell
   readonly selectedTheme: ApplicationTheme
   readonly kactusClearCacheInterval: number
@@ -51,8 +57,9 @@ interface IPreferencesState {
   readonly confirmDiscardChanges: boolean
   readonly confirmForcePush: boolean
   readonly automaticallySwitchTheme: boolean
+  readonly uncommittedChangesStrategyKind: UncommittedChangesStrategyKind
   readonly availableEditors: ReadonlyArray<ExternalEditor>
-  readonly selectedExternalEditor?: ExternalEditor
+  readonly selectedExternalEditor: ExternalEditor | null
   readonly availableShells: ReadonlyArray<Shell>
   readonly selectedShell: Shell
   readonly mergeTool: IMergeTool | null
@@ -77,6 +84,7 @@ export class Preferences extends React.Component<
       confirmRepositoryRemoval: false,
       confirmDiscardChanges: false,
       confirmForcePush: false,
+      uncommittedChangesStrategyKind: uncommittedChangesStrategyKindDefault,
       automaticallySwitchTheme: false,
       selectedExternalEditor: this.props.selectedExternalEditor,
       availableShells: [],
@@ -111,7 +119,7 @@ export class Preferences extends React.Component<
     committerEmail = committerEmail || ''
 
     const [editors, shells, mergeTool] = await Promise.all([
-      getCachedAvailableEditors(),
+      getAvailableEditors(),
       getAvailableShells(),
       getMergeTool(),
     ])
@@ -125,6 +133,7 @@ export class Preferences extends React.Component<
       confirmRepositoryRemoval: this.props.confirmRepositoryRemoval,
       confirmDiscardChanges: this.props.confirmDiscardChanges,
       confirmForcePush: this.props.confirmForcePush,
+      uncommittedChangesStrategyKind: this.props.uncommittedChangesStrategyKind,
       availableShells,
       availableEditors,
       mergeTool,
@@ -139,18 +148,37 @@ export class Preferences extends React.Component<
         onDismissed={this.props.onDismissed}
         onSubmit={this.onSave}
       >
-        {this.renderDisallowedCharactersError()}
-        <TabBar
-          onTabClicked={this.onTabClicked}
-          selectedIndex={this.state.selectedIndex}
-        >
-          <span>Accounts</span>
-          <span>Git</span>
-          <span>Appearance</span>
-          <span>Advanced</span>
-        </TabBar>
+        <div className="preferences-container">
+          {this.renderDisallowedCharactersError()}
+          <TabBar
+            onTabClicked={this.onTabClicked}
+            selectedIndex={this.state.selectedIndex}
+            type={TabBarType.Vertical}
+          >
+            <span>
+              <Octicon className="icon" symbol={OcticonSymbol.home} />
+              Accounts
+            </span>
+            <span>
+              <Octicon className="icon" symbol={OcticonSymbol.person} />
+              Integrations
+            </span>
+            <span>
+              <Octicon className="icon" symbol={OcticonSymbol.gitCommit} />
+              Git
+            </span>
+            <span>
+              <Octicon className="icon" symbol={OcticonSymbol.paintcan} />
+              Appearance
+            </span>
+            <span>
+              <Octicon className="icon" symbol={OcticonSymbol.settings} />
+              Advanced
+            </span>
+          </TabBar>
 
-        {this.renderActiveTab()}
+          {this.renderActiveTab()}
+        </div>
         {this.renderFooter()}
       </Dialog>
     )
@@ -185,20 +213,6 @@ export class Preferences extends React.Component<
     })
   }
 
-  private disallowedCharacterErrorMessage(name: string, email: string) {
-    const disallowedNameCharacters = disallowedCharacters(name)
-    if (disallowedNameCharacters != null) {
-      return `Git name field cannot be a disallowed character "${disallowedNameCharacters}"`
-    }
-
-    const disallowedEmailCharacters = disallowedCharacters(email)
-    if (disallowedEmailCharacters != null) {
-      return `Git email field cannot be a disallowed character "${disallowedEmailCharacters}"`
-    }
-
-    return null
-  }
-
   private renderDisallowedCharactersError() {
     const message = this.state.disallowedCharactersMessage
     if (message != null) {
@@ -210,9 +224,10 @@ export class Preferences extends React.Component<
 
   private renderActiveTab() {
     const index = this.state.selectedIndex
+    let View
     switch (index) {
       case PreferencesTab.Accounts:
-        return (
+        View = (
           <Accounts
             dotComAccount={this.props.dotComAccount}
             enterpriseAccount={this.props.enterpriseAccount}
@@ -223,8 +238,25 @@ export class Preferences extends React.Component<
             onShowCancelKactusPopup={this.onShowCancelKactusPopup}
           />
         )
+        break
+      case PreferencesTab.Integrations: {
+        View = (
+          <Integrations
+            availableEditors={this.state.availableEditors}
+            selectedExternalEditor={this.state.selectedExternalEditor}
+            onSelectedEditorChanged={this.onSelectedEditorChanged}
+            availableShells={this.state.availableShells}
+            selectedShell={this.state.selectedShell}
+            onSelectedShellChanged={this.onSelectedShellChanged}
+            mergeTool={this.state.mergeTool}
+            onMergeToolCommandChanged={this.onMergeToolCommandChanged}
+            onMergeToolNameChanged={this.onMergeToolNameChanged}
+          />
+        )
+        break
+      }
       case PreferencesTab.Git: {
-        return (
+        View = (
           <Git
             name={this.state.committerName}
             email={this.state.committerEmail}
@@ -232,9 +264,10 @@ export class Preferences extends React.Component<
             onEmailChanged={this.onCommitterEmailChanged}
           />
         )
+        break
       }
       case PreferencesTab.Appearance:
-        return (
+        View = (
           <Appearance
             selectedTheme={this.props.selectedTheme}
             onSelectedThemeChanged={this.onSelectedThemeChanged}
@@ -244,34 +277,35 @@ export class Preferences extends React.Component<
             }
           />
         )
+        break
       case PreferencesTab.Advanced: {
-        return (
+        View = (
           <Advanced
             confirmRepositoryRemoval={this.state.confirmRepositoryRemoval}
             confirmDiscardChanges={this.state.confirmDiscardChanges}
             confirmForcePush={this.state.confirmForcePush}
-            availableEditors={this.state.availableEditors}
-            selectedExternalEditor={this.state.selectedExternalEditor}
+            uncommittedChangesStrategyKind={
+              this.state.uncommittedChangesStrategyKind
+            }
             onConfirmRepositoryRemovalChanged={
               this.onConfirmRepositoryRemovalChanged
             }
             onConfirmDiscardChangesChanged={this.onConfirmDiscardChangesChanged}
             onConfirmForcePushChanged={this.onConfirmForcePushChanged}
-            onSelectedEditorChanged={this.onSelectedEditorChanged}
-            availableShells={this.state.availableShells}
-            selectedShell={this.state.selectedShell}
-            onSelectedShellChanged={this.onSelectedShellChanged}
+            onUncommittedChangesStrategyKindChanged={
+              this.onUncommittedChangesStrategyKindChanged
+            }
             kactusClearCacheInterval={this.state.kactusClearCacheInterval}
             onKactusClearCacheInterval={this.onKactusClearCacheInterval}
-            mergeTool={this.state.mergeTool}
-            onMergeToolCommandChanged={this.onMergeToolCommandChanged}
-            onMergeToolNameChanged={this.onMergeToolNameChanged}
           />
         )
+        break
       }
       default:
         return assertNever(index, `Unknown tab index: ${index}`)
     }
+
+    return <div className="tab-container">{View}</div>
   }
 
   private onConfirmRepositoryRemovalChanged = (value: boolean) => {
@@ -286,22 +320,23 @@ export class Preferences extends React.Component<
     this.setState({ confirmForcePush: value })
   }
 
-  private onCommitterNameChanged = (committerName: string) => {
-    const disallowedCharactersMessage = this.disallowedCharacterErrorMessage(
-      committerName,
-      this.state.committerEmail
-    )
+  private onUncommittedChangesStrategyKindChanged = (
+    value: UncommittedChangesStrategyKind
+  ) => {
+    this.setState({ uncommittedChangesStrategyKind: value })
+  }
 
-    this.setState({ committerName, disallowedCharactersMessage })
+  private onCommitterNameChanged = (committerName: string) => {
+    this.setState({
+      committerName,
+      disallowedCharactersMessage: gitAuthorNameIsValid(committerName)
+        ? null
+        : 'Name is invalid, it consists only of disallowed characters.',
+    })
   }
 
   private onCommitterEmailChanged = (committerEmail: string) => {
-    const disallowedCharactersMessage = this.disallowedCharacterErrorMessage(
-      this.state.committerName,
-      committerEmail
-    )
-
-    this.setState({ committerEmail, disallowedCharactersMessage })
+    this.setState({ committerEmail })
   }
 
   private onSelectedEditorChanged = (editor: ExternalEditor) => {
@@ -336,16 +371,15 @@ export class Preferences extends React.Component<
       case PreferencesTab.Accounts:
       case PreferencesTab.Appearance:
         return null
+      case PreferencesTab.Integrations:
       case PreferencesTab.Advanced:
       case PreferencesTab.Git: {
         return (
           <DialogFooter>
-            <ButtonGroup>
-              <Button type="submit" disabled={hasDisabledError}>
-                Save
-              </Button>
-              <Button onClick={this.props.onDismissed}>Cancel</Button>
-            </ButtonGroup>
+            <OkCancelButtonGroup
+              okButtonText="Save"
+              okButtonDisabled={hasDisabledError}
+            />
           </DialogFooter>
         )
       }
@@ -377,6 +411,10 @@ export class Preferences extends React.Component<
 
     await this.props.dispatcher.setKactusClearCacheInterval(
       this.state.kactusClearCacheInterval
+    )
+
+    await this.props.dispatcher.setUncommittedChangesStrategyKindSetting(
+      this.state.uncommittedChangesStrategyKind
     )
 
     const mergeTool = this.state.mergeTool

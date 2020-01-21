@@ -2,5 +2,5 @@
 export function installDevGlobals() {
   const g: any = global
   // Expose GitPerf as a global so it can be started.
-  g.GitPerf = require('./lib/perf')
+  g.GitPerf = require('./lib/git-perf')
 }

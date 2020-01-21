@@ -229,9 +229,9 @@ body.theme-dark {
   /**
    * Blankslate actions, see `BlankslateAction` component.
    */
-  --primary-blankslate-action-background: #{$green-900};
-  --primary-blankslate-action-border-color: #{$green-700};
-  --blankslate-action-icon-color: #{$green-400};
+  --primary-suggested-action-background: #{$green-900};
+  --primary-suggested-action-border-color: #{$green-700};
+  --suggested-action-icon-color: #{$green-400};
 
   /**
    * Diff view
