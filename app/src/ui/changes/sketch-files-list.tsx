@@ -59,7 +59,14 @@ export class SketchFilesList extends React.Component<
     const filesDescription = `${fileCount} sketch ${filesPlural}`
 
     return (
-      <div className="changes-list-container file-list">
+      <div
+        className="changes-list-container file-list"
+        style={{
+          minHeight: 100,
+          maxHeight: '49%',
+          height: (fileCount + 2) * 29,
+        }}
+      >
         <div className="header">
           <label className="changed-files-count">{filesDescription}</label>
           <Octicon

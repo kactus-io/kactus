@@ -718,9 +718,9 @@ export class ChangesList extends React.Component<
 
   private getPlaceholderMessage(
     files: ReadonlyArray<WorkingDirectoryFileChange>,
-    singleFileCommit: boolean
+    prepopulateCommitSummary: boolean
   ) {
-    if (!singleFileCommit) {
+    if (!prepopulateCommitSummary) {
       return 'Summary (required)'
     }
 
@@ -786,7 +786,13 @@ export class ChangesList extends React.Component<
     const filesSelected = workingDirectory.files.filter(
       f => f.selection.getSelectionType() !== DiffSelectionType.None
     )
-    const singleFileCommit = filesSelected.length === 1
+
+    // When a single file is selected, we use a default commit summary
+    // based on the file name and change status.
+    // However, for onboarding tutorial repositories, we don't want to do this.
+    // See https://github.com/desktop/desktop/issues/8354
+    const prepopulateCommitSummary =
+      filesSelected.length === 1 && !repository.isTutorialRepository
 
     return (
       <CommitMessage
@@ -805,9 +811,9 @@ export class ChangesList extends React.Component<
         coAuthors={this.props.coAuthors}
         placeholder={this.getPlaceholderMessage(
           filesSelected,
-          singleFileCommit
+          prepopulateCommitSummary
         )}
-        singleFileCommit={singleFileCommit}
+        prepopulateCommitSummary={prepopulateCommitSummary}
         key={repository.id}
         currentBranchProtected={currentBranchProtected}
       />

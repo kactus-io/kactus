@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Repository as Repo } from '../models/repository'
+import { Repository } from '../models/repository'
 import { Commit } from '../models/commit'
 import { TipState } from '../models/tip'
 import { UiView } from './ui-view'
@@ -25,12 +25,15 @@ import { ImageDiffType } from '../models/diff'
 import { IMenu } from '../models/app-menu'
 import { StashDiffViewer } from './stashing'
 import { StashedChangesLoadStates } from '../models/stash-entry'
+import { TutorialPanel, TutorialWelcome, TutorialDone } from './tutorial'
+import { enableTutorial } from '../lib/feature-flag'
+import { TutorialStep, isValidTutorialStep } from '../models/tutorial-step'
 
 /** The widest the sidebar can be with the minimum window size. */
 const MaxSidebarWidth = 495
 
 interface IRepositoryViewProps {
-  readonly repository: Repo
+  readonly repository: Repository
   readonly state: IRepositoryState
   readonly dispatcher: Dispatcher
   readonly emoji: Map<string, string>
@@ -49,6 +52,9 @@ interface IRepositoryViewProps {
   /** The name of the currently selected external editor */
   readonly externalEditorLabel?: string
 
+  /** A cached entry representing an external editor found on the user's machine */
+  readonly sketchVersion: string | null | undefined
+
   /**
    * Callback to open a selected file using the configured external editor
    *
@@ -60,6 +66,10 @@ interface IRepositoryViewProps {
    * The top-level application menu item.
    */
   readonly appMenu: IMenu | undefined
+
+  readonly currentTutorialStep: TutorialStep
+
+  readonly onExitTutorial: () => void
 }
 
 interface IRepositoryViewState {
@@ -278,97 +288,125 @@ export class RepositoryView extends React.Component<
     return null
   }
 
+  private renderContentForHistory(): JSX.Element {
+    const { commitSelection } = this.props.state
+
+    const sha = commitSelection.sha
+
+    const selectedCommit =
+      sha != null ? this.props.state.commitLookup.get(sha) || null : null
+
+    const { changedFiles, file, diff } = commitSelection
+
+    return (
+      <SelectedCommit
+        repository={this.props.repository}
+        dispatcher={this.props.dispatcher}
+        selectedCommit={selectedCommit}
+        changedFiles={changedFiles}
+        selectedFile={file}
+        currentDiff={diff}
+        emoji={this.props.emoji}
+        commitSummaryWidth={this.props.commitSummaryWidth}
+        gitHubUsers={this.props.state.gitHubUsers}
+        loadingDiff={this.props.state.commitSelection.loadingDiff}
+        selectedDiffType={this.props.imageDiffType}
+        externalEditorLabel={this.props.externalEditorLabel}
+        onOpenInExternalEditor={this.props.onOpenInExternalEditor}
+        hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
+      />
+    )
+  }
+
+  private renderTutorialPane(): JSX.Element {
+    if (this.props.currentTutorialStep === TutorialStep.AllDone) {
+      return (
+        <TutorialDone
+          dispatcher={this.props.dispatcher}
+          repository={this.props.repository}
+        />
+      )
+    } else {
+      return <TutorialWelcome />
+    }
+  }
+
+  private renderContentForChanges(): JSX.Element | null {
+    const { changesState } = this.props.state
+    const { workingDirectory, selection } = changesState
+
+    if (selection.kind === ChangesSelectionKind.Stash) {
+      return this.renderStashedChangesContent()
+    }
+
+    const { selectedFileIDs, diff, selectedSketchPart } = selection
+
+    if (selectedFileIDs.length > 1) {
+      return <MultipleSelection count={selectedFileIDs.length} />
+    }
+
+    const selectedSketchPartID = selectedSketchPart
+      ? selectedSketchPart.id
+      : null
+    const kactusState = this.props.state.kactus
+    const selectedSketchFileID = kactusState.selectedFileID
+    const selectedSketchFile = selectedSketchFileID
+      ? kactusState.files.find(f => f.id === selectedSketchFileID) || null
+      : null
+
+    if (
+      !selectedSketchFile &&
+      (workingDirectory.files.length === 0 ||
+        selectedFileIDs.length === 0 ||
+        diff === null) &&
+      (!selectedSketchPartID || diff === null)
+    ) {
+      if (
+        enableTutorial() &&
+        this.props.currentTutorialStep !== TutorialStep.NotApplicable
+      ) {
+        return this.renderTutorialPane()
+      }
+
+      return (
+        <NoChanges
+          key={this.props.repository.id}
+          appMenu={this.props.appMenu}
+          repository={this.props.repository}
+          repositoryState={this.props.state}
+          loadingDiff={changesState.selection.loadingDiff}
+        />
+      )
+    }
+
+    const selectedFile = workingDirectory.findFileWithID(selectedFileIDs[0])
+
+    if (selectedFileIDs[0] && selectedFile === null) {
+      return null
+    }
+
+    return (
+      <Changes
+        repository={this.props.repository}
+        dispatcher={this.props.dispatcher}
+        imageDiffType={this.props.imageDiffType}
+        file={selectedFile}
+        selectedSketchPartID={selectedSketchPartID}
+        diff={diff}
+        sketchFile={selectedSketchFile}
+        loadingDiff={changesState.selection.loadingDiff}
+        isCommitting={this.props.state.isCommitting}
+        hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
+      />
+    )
+  }
+
   private renderContent(): JSX.Element | null {
     const selectedSection = this.props.state.selectedSection
     if (selectedSection === RepositorySectionTab.Changes) {
-      const { changesState } = this.props.state
-      const { workingDirectory, selection } = changesState
-
-      if (selection.kind === ChangesSelectionKind.Stash) {
-        return this.renderStashedChangesContent()
-      }
-
-      const { selectedFileIDs, diff, selectedSketchPart } = selection
-
-      const selectedSketchPartID = selectedSketchPart
-        ? selectedSketchPart.id
-        : null
-      const kactusState = this.props.state.kactus
-      const selectedSketchFileID = kactusState.selectedFileID
-      const selectedSketchFile = selectedSketchFileID
-        ? kactusState.files.find(f => f.id === selectedSketchFileID) || null
-        : null
-
-      if (selectedFileIDs.length > 1) {
-        return <MultipleSelection count={selectedFileIDs.length} />
-      }
-
-      if (
-        !selectedSketchFile &&
-        (workingDirectory.files.length === 0 ||
-          selectedFileIDs.length === 0 ||
-          diff === null) &&
-        (!selectedSketchPartID || diff === null)
-      ) {
-        return (
-          <NoChanges
-            key={this.props.repository.id}
-            appMenu={this.props.appMenu}
-            repository={this.props.repository}
-            repositoryState={this.props.state}
-            loadingDiff={changesState.selection.loadingDiff}
-          />
-        )
-      } else {
-        const selectedFile = workingDirectory.findFileWithID(selectedFileIDs[0])
-
-        if (selectedFileIDs[0] && selectedFile === null) {
-          return null
-        }
-
-        return (
-          <Changes
-            repository={this.props.repository}
-            dispatcher={this.props.dispatcher}
-            imageDiffType={this.props.imageDiffType}
-            file={selectedFile}
-            selectedSketchPartID={selectedSketchPartID}
-            diff={diff}
-            sketchFile={selectedSketchFile}
-            loadingDiff={changesState.selection.loadingDiff}
-            isCommitting={this.props.state.isCommitting}
-            hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
-          />
-        )
-      }
+      return this.renderContentForChanges()
     } else if (selectedSection === RepositorySectionTab.History) {
-      const { commitSelection } = this.props.state
-
-      const sha = commitSelection.sha
-
-      const selectedCommit =
-        sha != null ? this.props.state.commitLookup.get(sha) || null : null
-
-      const { changedFiles, file, diff } = commitSelection
-
-      return (
-        <SelectedCommit
-          repository={this.props.repository}
-          dispatcher={this.props.dispatcher}
-          selectedCommit={selectedCommit}
-          changedFiles={changedFiles}
-          selectedFile={file}
-          currentDiff={diff}
-          emoji={this.props.emoji}
-          commitSummaryWidth={this.props.commitSummaryWidth}
-          gitHubUsers={this.props.state.gitHubUsers}
-          loadingDiff={this.props.state.commitSelection.loadingDiff}
-          selectedDiffType={this.props.imageDiffType}
-          externalEditorLabel={this.props.externalEditorLabel}
-          onOpenInExternalEditor={this.props.onOpenInExternalEditor}
-          hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
-        />
-      )
+      return this.renderContentForHistory()
     } else {
       return assertNever(selectedSection, 'Unknown repository section')
     }
@@ -379,6 +417,7 @@ export class RepositoryView extends React.Component<
       <UiView id="repository" onKeyDown={this.onKeyDown}>
         {this.renderSidebar()}
         {this.renderContent()}
+        {this.maybeRenderTutorialPanel()}
       </UiView>
     )
   }
@@ -420,5 +459,23 @@ export class RepositoryView extends React.Component<
         showBranchList: false,
       })
     }
+  }
+
+  private maybeRenderTutorialPanel(): JSX.Element | null {
+    if (
+      enableTutorial() &&
+      isValidTutorialStep(this.props.currentTutorialStep)
+    ) {
+      return (
+        <TutorialPanel
+          dispatcher={this.props.dispatcher}
+          repository={this.props.repository}
+          sketchVersion={this.props.sketchVersion}
+          currentTutorialStep={this.props.currentTutorialStep}
+          onExitTutorial={this.props.onExitTutorial}
+        />
+      )
+    }
+    return null
   }
 }

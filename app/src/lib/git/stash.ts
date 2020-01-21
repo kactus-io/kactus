@@ -1,16 +1,19 @@
 import { GitError as DugiteError } from 'dugite'
-
+import { git, GitError } from './core'
 import { Repository } from '../../models/repository'
 import {
   IStashEntry,
   StashedChangesLoadStates,
   StashedFileChanges,
 } from '../../models/stash-entry'
-import { CommittedFileChange } from '../../models/status'
+import {
+  WorkingDirectoryFileChange,
+  CommittedFileChange,
+} from '../../models/status'
 import { IKactusFile } from '../../lib/kactus'
 
-import { git, GitError } from './core'
 import { parseChangedFiles } from './log'
+import { stageFiles } from './update-index'
 
 export const KactusStashEntryMarker = '!!Kactus'
 
@@ -114,10 +117,20 @@ export function createKactusStashMessage(branchName: string) {
  */
 export async function createKactusStashEntry(
   repository: Repository,
-  branchName: string
+  branchName: string,
+  untrackedFilesToStage: ReadonlyArray<WorkingDirectoryFileChange>
 ): Promise<true> {
+  // We must ensure that no untracked files are present before stashing
+  // See https://github.com/desktop/desktop/pull/8085
+  // First ensure that all changes in file are selected
+  // (in case the user has not explicitly checked the checkboxes for the untracked files)
+  const fullySelectedUntrackedFiles = untrackedFilesToStage.map(x =>
+    x.withIncludeAll(true)
+  )
+  await stageFiles(repository, fullySelectedUntrackedFiles)
+
   const message = createKactusStashMessage(branchName)
-  const args = ['stash', 'push', '--include-untracked', '-m', message]
+  const args = ['stash', 'push', '-m', message]
 
   const result = await git(args, repository.path, 'createStashEntry', {
     successExitCodes: new Set<number>([0, 1]),

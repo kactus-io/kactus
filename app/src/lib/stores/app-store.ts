@@ -86,6 +86,7 @@ import {
   cancelKactusSubscription,
   IAPIOrganization,
   IAPIBranch,
+  IAPIRepository,
 } from '../api'
 import { getCachedAvailableEditors } from '../../lib/editors/lookup'
 import { shell } from '../app-shell'
@@ -232,6 +233,7 @@ import {
   ManualConflictResolutionKind,
 } from '../../models/manual-conflict-resolution'
 import { BranchPruner } from './helpers/branch-pruner'
+import { OnboardingTutorialAssessor } from './helpers/tutorial-assessor'
 import {
   enableBranchPruning,
   enableGroupRepositoriesByOwner,
@@ -259,6 +261,8 @@ import { IStashEntry, StashedChangesLoadStates } from '../../models/stash-entry'
 import { RebaseFlowStep, RebaseStep } from '../../models/rebase-flow-step'
 import { arrayEquals } from '../equality'
 import { MenuLabelsEvent } from '../../models/menu-labels'
+import { TutorialStep } from '../../models/tutorial-step'
+import { getUntrackedFiles } from '../status'
 
 function findNext(
   array: ReadonlyArray<string>,
@@ -432,6 +436,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private selectedTheme = ApplicationTheme.Light
   private automaticallySwitchTheme = false
 
+  /** Which step the user needs to complete next in the onboarding tutorial */
+  private currentOnboardingTutorialStep = TutorialStep.NotApplicable
+  private readonly tutorialAssessor: OnboardingTutorialAssessor
+
   public constructor(
     private readonly gitHubUserStore: GitHubUserStore,
     private readonly cloningRepositoriesStore: CloningRepositoriesStore,
@@ -462,6 +470,50 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.wireupIpcEventHandlers(window)
     this.wireupStoreEventHandlers()
     getAppMenu()
+    this.tutorialAssessor = new OnboardingTutorialAssessor(
+      this.getSketchVersion
+    )
+  }
+
+  /** Figure out what step of the tutorial the user needs to do next */
+  private async updateCurrentTutorialStep(
+    repository: Repository
+  ): Promise<void> {
+    const currentStep = await this.tutorialAssessor.getCurrentStep(
+      repository.isTutorialRepository,
+      this.repositoryStateCache.get(repository)
+    )
+    log.info(`Current tutorial step is ${currentStep}`)
+    // only emit an update if its changed
+    if (currentStep !== this.currentOnboardingTutorialStep) {
+      this.currentOnboardingTutorialStep = currentStep
+      this.emitUpdate()
+    }
+  }
+
+  public async _resumeTutorial(repository: Repository) {
+    this.tutorialAssessor.resumeTutorial()
+    await this.updateCurrentTutorialStep(repository)
+  }
+
+  public async _pauseTutorial(repository: Repository) {
+    this.tutorialAssessor.pauseTutorial()
+    await this.updateCurrentTutorialStep(repository)
+  }
+
+  /** Call via `Dispatcher` when the user opts to skip the pick editor step of the onboarding tutorial */
+  public async _skipInstallSketchTutorialStep(repository: Repository) {
+    this.tutorialAssessor.skipInstallSketch()
+    await this.updateCurrentTutorialStep(repository)
+  }
+
+  /**
+   * Call  via `Dispatcher` when the user has either created a pull request or opts to
+   * skip the create pull request step of the onboarding tutorial
+   */
+  public async _markPullRequestTutorialStepAsComplete(repository: Repository) {
+    this.tutorialAssessor.markPullRequestTutorialStepAsComplete()
+    await this.updateCurrentTutorialStep(repository)
   }
 
   private wireupIpcEventHandlers(window: Electron.BrowserWindow) {
@@ -664,8 +716,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
       commitSummaryWidth: this.commitSummaryWidth,
       stashedFilesWidth: this.stashedFilesWidth,
       appMenuState: this.appMenu ? this.appMenu.openMenus : [],
-      titleBarStyle:
-        this.showWelcomeFlow || repositories.length === 0 ? 'light' : 'dark',
       highlightAccessKeys: this.highlightAccessKeys,
       isUpdateAvailableBannerVisible: this.isUpdateAvailableBannerVisible,
       currentBanner: this.currentBanner,
@@ -689,6 +739,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       selectedTheme: this.selectedTheme,
       automaticallySwitchTheme: this.automaticallySwitchTheme,
       apiRepositories: this.apiRepositoriesStore.getState(),
+      currentOnboardingTutorialStep: this.currentOnboardingTutorialStep,
     }
   }
 
@@ -1374,6 +1425,18 @@ export class AppStore extends TypedBaseStore<IAppState> {
   ): Promise<Repository | null> {
     const previouslySelectedRepository = this.selectedRepository
 
+    // do this quick check to see if we have a tutorial respository
+    // cause if its not we can quickly hide the tutorial pane
+    // in the first `emitUpdate` below
+    const previouslyInTutorial =
+      this.currentOnboardingTutorialStep !== TutorialStep.NotApplicable
+    if (
+      previouslyInTutorial &&
+      (!(repository instanceof Repository) || !repository.isTutorialRepository)
+    ) {
+      this.currentOnboardingTutorialStep = TutorialStep.NotApplicable
+    }
+
     this.selectedRepository = repository
 
     this.emitUpdate()
@@ -1691,11 +1754,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.sketchPath =
       sketchPathValue === null ? sketchPathDefault : sketchPathValue
 
-    const sketchVersion = await getSketchVersion(this.sketchPath)
-    if (typeof sketchVersion !== 'undefined') {
-      this.sketchVersion = sketchVersion
-    }
-
     // doing this that the current user can be found by any of their email addresses
     for (const account of accounts) {
       const userAssociations: ReadonlyArray<IGitHubUser> = account.emails.map(
@@ -1747,6 +1805,17 @@ export class AppStore extends TypedBaseStore<IAppState> {
     if (externalEditorValue) {
       this.selectedExternalEditor = externalEditorValue
     }
+
+    // Deferred, attempts to resolve the user's selected editor (i.e.
+    // ensures that it's actually present on the machine), needs to
+    // happen after the tutorial assessor has been initialized, see:
+    // https://github.com/desktop/desktop/pull/8242#pullrequestreview-289936574
+    this._resolveCurrentEditor().catch(e =>
+      log.error('Failed resolving current editor at startup', e)
+    )
+    this._checkSketchLocation().catch(e =>
+      log.error('Failed resolving Sketch at startup', e)
+    )
 
     const shellValue = localStorage.getItem(shellKey)
     this.selectedShell = shellValue ? parseShell(shellValue) : DefaultShell
@@ -2965,6 +3034,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.updateMenuItemLabels(latestState)
 
     this._initializeCompare(repository)
+
+    this.updateCurrentTutorialStep(repository)
   }
 
   private async updateStashEntryCountMetric(
@@ -3474,7 +3545,11 @@ export class AppStore extends TypedBaseStore<IAppState> {
       if (hasDeletedFiles && !transientStashEntry) {
         const gitStore = this.gitStoreCache.get(repository)
         const stashCreated = await gitStore.performFailableOperation(() => {
-          return createKactusStashEntry(repository, branch.name)
+          return createKactusStashEntry(
+            repository,
+            branch.name,
+            getUntrackedFiles(changesState.workingDirectory)
+          )
         })
 
         if (stashCreated) {
@@ -3521,7 +3596,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
       repository.id,
       skeletonGitHubRepository,
       repository.missing,
-      repository.sketchFiles
+      repository.sketchFiles,
+      false
     )
 
     const account = getAccountForEndpoint(
@@ -4814,14 +4890,16 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return Promise.resolve()
   }
 
-  public _setExternalEditor(selectedEditor: ExternalEditor): Promise<void> {
+  public async _setExternalEditor(selectedEditor: ExternalEditor) {
     this.selectedExternalEditor = selectedEditor
     localStorage.setItem(externalEditorKey, selectedEditor)
     this.emitUpdate()
 
     this.updateMenuLabelsForSelectedRepository()
 
-    return Promise.resolve()
+    // Make sure we keep the resolved (cached) editor
+    // in sync when the user changes their editor choice.
+    await this._resolveCurrentEditor()
   }
 
   public _setShell(shell: Shell): Promise<void> {
@@ -4963,6 +5041,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
     if (this.appIsFocused) {
       if (this.selectedRepository instanceof Repository) {
         this.startPullRequestUpdater(this.selectedRepository)
+        // if we're in the tutorial and we don't have an editor yet, check for one!
+        if (this.currentOnboardingTutorialStep === TutorialStep.InstallSketch) {
+          await this._resolveCurrentEditor()
+        }
       }
     } else {
       this.stopPullRequestUpdater()
@@ -5150,6 +5232,40 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return this.repositoriesStore.updateRepositoryMissing(repository, missing)
   }
 
+  /**
+   * Add a tutorial repository.
+   *
+   * This method differs from the `_addRepositories` method in that it
+   * requires that the repository has been created on the remote and
+   * set up to track it. Given that tutorial repositories are created
+   * from the no-repositories blank slate it shouldn't be possible for
+   * another repository with the same path to exist in the repositories
+   * table but in case that hanges in the future this method will set
+   * the tutorial flag on the existing repository at the given path.
+   */
+  public async _addTutorialRepository(
+    path: string,
+    endpoint: string,
+    apiRepository: IAPIRepository
+  ) {
+    const validatedPath = await validatedRepositoryPath(path)
+    if (validatedPath) {
+      log.info(
+        `[AppStore] adding tutorial repository at ${validatedPath} to store`
+      )
+
+      await this.repositoriesStore.addTutorialRepository(
+        validatedPath,
+        endpoint,
+        apiRepository
+      )
+      this.tutorialAssessor.onNewTutorialRepository()
+    } else {
+      const error = new Error(`${path} isn't a git repository.`)
+      this.emitError(error)
+    }
+  }
+
   public async _addRepositories(
     paths: ReadonlyArray<string>,
     modifyGitignoreToIgnoreSketchFiles?: boolean
@@ -5302,7 +5418,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       this.accounts
     )
 
-    if (premiumType) {
+    if (premiumType && !repository.isTutorialRepository) {
       await this._showPopup({
         type: PopupType.PremiumUpsell,
         kind: premiumType.enterprise ? 'enterprise' : 'premium',
@@ -5315,15 +5431,35 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return fn(updatedRepository, account)
   }
 
+  private async _checkSketchLocation(): Promise<void> {
+    const newVersion = await getSketchVersion(this.sketchPath, true)
+
+    if (newVersion !== this.sketchVersion) {
+      this.sketchVersion = newVersion
+
+      // Make sure we let the tutorial assesor know that we have Sketch
+      // in case it's stuck waiting for it to be installed.
+      if (this.currentOnboardingTutorialStep === TutorialStep.InstallSketch) {
+        if (this.selectedRepository instanceof Repository) {
+          this.updateCurrentTutorialStep(this.selectedRepository)
+        }
+      }
+
+      this.emitUpdate()
+    }
+
+    return Promise.resolve()
+  }
+
   public async _changeSketchLocation(sketchPath: string): Promise<void> {
     this.sketchPath = sketchPath
     localStorage.setItem(sketchPathKey, this.sketchPath)
 
-    this.sketchVersion = await getSketchVersion(this.sketchPath, true)
+    return this._checkSketchLocation()
+  }
 
-    this.emitUpdate()
-
-    return Promise.resolve()
+  public getSketchVersion = () => {
+    return this.sketchVersion
   }
 
   public async _clearKactusCache(): Promise<void> {
@@ -5449,6 +5585,18 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.emitUpdate()
 
     return Promise.resolve()
+  }
+
+  public async _showGitHubExplore(repository: Repository): Promise<void> {
+    const { gitHubRepository } = repository
+    if (!gitHubRepository || gitHubRepository.htmlURL === null) {
+      return
+    }
+
+    const url = new URL(gitHubRepository.htmlURL)
+    url.pathname = '/explore'
+
+    await this._openInBrowser(url.toString())
   }
 
   public async _createPullRequest(repository: Repository): Promise<void> {
@@ -5594,6 +5742,10 @@ export class AppStore extends TypedBaseStore<IAppState> {
     }/pull/new/${urlEncodedBranchName}`
 
     await this._openInBrowser(baseURL)
+
+    if (this.currentOnboardingTutorialStep === TutorialStep.OpenPullRequest) {
+      this._markPullRequestTutorialStepAsComplete(repository)
+    }
   }
 
   public async _updateExistingUpstreamRemote(
@@ -5820,8 +5972,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const resolvedExternalEditor = match != null ? match.editor : null
     if (this.resolvedExternalEditor !== resolvedExternalEditor) {
       this.resolvedExternalEditor = resolvedExternalEditor
+
       this.emitUpdate()
     }
+  }
+
+  public getResolvedExternalEditor = () => {
+    return this.resolvedExternalEditor
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
@@ -5899,7 +6056,15 @@ export class AppStore extends TypedBaseStore<IAppState> {
       )
     }
 
-    await createKactusStashEntry(repository, branchName)
+    const {
+      changesState: { workingDirectory },
+    } = this.repositoryStateCache.get(repository)
+
+    await createKactusStashEntry(
+      repository,
+      branchName,
+      getUntrackedFiles(workingDirectory)
+    )
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
@@ -5911,9 +6076,16 @@ export class AppStore extends TypedBaseStore<IAppState> {
       return
     }
 
+    const {
+      changesState: { workingDirectory },
+    } = this.repositoryStateCache.get(repository)
     const gitStore = this.gitStoreCache.get(repository)
     const isStashCreated = await gitStore.performFailableOperation(() => {
-      return createKactusStashEntry(repository, branchToCheckout)
+      return createKactusStashEntry(
+        repository,
+        branchToCheckout,
+        getUntrackedFiles(workingDirectory)
+      )
     })
 
     if (!isStashCreated) {

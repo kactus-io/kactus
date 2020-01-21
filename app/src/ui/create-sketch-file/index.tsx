@@ -26,7 +26,7 @@ interface ICreateSketchFileState {
   readonly isCreatingFile: boolean
 }
 
-/** The Create Branch component. */
+/** The Create Sketch File component. */
 export class CreateSketchFile extends React.Component<
   ICreateSketchFileProps,
   ICreateSketchFileState

@@ -64,7 +64,7 @@ to see if the problem has already been reported. If it does exist, add a
 :thumbsup: to the issue to indicate this is also an issue for you, and add a
 comment to the existing issue if there is extra information you can contribute.
 
-#### How Do I Submit A (Good) Bug Report?
+#### How Do I Submit A Bug Report?
 
 Bugs are tracked as [GitHub issues](https://guides.github.com/features/issues/).
 
@@ -99,7 +99,7 @@ to see if the enhancement has already been suggested. If it has, add a
 :thumbsup: to indicate your interest in it, or comment if there is additional
 information you would like to add.
 
-#### How Do I Submit A (Good) Enhancement Suggestion?
+#### How Do I Submit An Enhancement Suggestion?
 
 Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com/features/issues/).
 
@@ -113,7 +113,7 @@ Some additional advice:
   This additional context helps the maintainers understand the enhancement from
   your perspective
 * **Explain why this enhancement would be useful** to Kactus users.
-* **Include screenshots and animated GIFs** if relevent to help you demonstrate
+* **Include screenshots and animated GIFs** if relevant to help you demonstrate
   the steps or point out the part of Kactus which the suggestion is
   related to. You can use [this tool](http://www.cockos.com/licecap/) to record
   GIFs on macOS and Windows
@@ -136,12 +136,7 @@ interested in the issue.
 
 ### Set Up Your Machine
 
-Start [here](https://github.com/desktop/desktop/blob/development/docs/contributing/setup.md).
-
-
-## Process Documentation
-
-These documents are useful resources for contributors  to learn more about the project and how it is run:
+Start [here](https://github.com/kactus-io/kactus/blob/master/docs/contributing/setup.md).
 
 #### Type of Issue and Issue State
 

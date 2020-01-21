@@ -436,6 +436,13 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
           loading: false,
           error: new Error(EnterpriseTooOldMessage),
         })
+      } else if (response.kind === AuthorizationResponseKind.WebFlowRequired) {
+        this.setState({
+          ...currentState,
+          loading: false,
+          supportsBasicAuth: false,
+          kind: SignInStep.Authentication,
+        })
       } else {
         return assertNever(response, `Unsupported response: ${response}`)
       }
@@ -691,6 +698,16 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
           break
         case AuthorizationResponseKind.EnterpriseTooOld:
           this.emitError(new Error(EnterpriseTooOldMessage))
+          break
+        case AuthorizationResponseKind.WebFlowRequired:
+          this.setState({
+            ...currentState,
+            forgotPasswordUrl: this.getForgotPasswordURL(currentState.endpoint),
+            loading: false,
+            supportsBasicAuth: false,
+            kind: SignInStep.Authentication,
+            error: null,
+          })
           break
         default:
           assertNever(response, `Unknown response: ${response}`)

@@ -72,8 +72,14 @@ if (!ClientID || !ClientID.length || !ClientSecret || !ClientSecret.length) {
 
 type GitHubAccountType = 'User' | 'Organization'
 
-/** The OAuth scopes we need. */
-const Scopes = ['repo', 'read:user', 'user:email']
+/** The OAuth scopes we want to request from GitHub.com. */
+const DotComOAuthScopes = ['repo', 'read:user', 'user:email', 'workflow']
+
+/**
+ * The OAuth scopes we want to request from GitHub
+ * Enterprise Server.
+ */
+const EnterpriseOAuthScopes = ['repo', 'read:user', 'user:email']
 
 enum HttpStatusCode {
   NotModified = 304,
@@ -920,6 +926,11 @@ export enum AuthorizationResponseKind {
   PersonalAccessTokenBlocked,
   Error,
   EnterpriseTooOld,
+  /**
+   * The API has indicated that the user is required to go through
+   * the web authentication flow.
+   */
+  WebFlowRequired,
 }
 
 export type AuthorizationResponse =
@@ -933,6 +944,7 @@ export type AuthorizationResponse =
   | { kind: AuthorizationResponseKind.UserRequiresVerification }
   | { kind: AuthorizationResponseKind.PersonalAccessTokenBlocked }
   | { kind: AuthorizationResponseKind.EnterpriseTooOld }
+  | { kind: AuthorizationResponseKind.WebFlowRequired }
 
 /**
  * Create an authorization with the given login, password, and one-time
@@ -960,7 +972,7 @@ export async function createAuthorization(
     'POST',
     'authorizations',
     {
-      scopes: Scopes,
+      scopes: getOAuthScopesForEndpoint(endpoint),
       client_id,
       client_secret,
       note: note,
@@ -1017,6 +1029,8 @@ export async function createAuthorization(
       ) {
         // Authorization API does not support providing personal access tokens
         return { kind: AuthorizationResponseKind.PersonalAccessTokenBlocked }
+      } else if (response.status === 410) {
+        return { kind: AuthorizationResponseKind.WebFlowRequired }
       } else if (response.status === 422) {
         if (apiError.errors) {
           for (const error of apiError.errors) {
@@ -1216,7 +1230,8 @@ export function getOAuthAuthorizationURL(
   state: string
 ): string {
   const urlBase = getHTMLURL(endpoint)
-  const scope = encodeURIComponent(Scopes.join(' '))
+  const scopes = getOAuthScopesForEndpoint(endpoint)
+  const scope = encodeURIComponent(scopes.join(' '))
   return `${urlBase}/login/oauth/authorize?client_id=${clientId}&scope=${scope}&state=${state}`
 }
 
@@ -1384,4 +1399,10 @@ export async function fetchCoupon(
     log.warn(`fetchCoupon: failed for ${coupon}`, e)
     throw e
   }
+}
+
+function getOAuthScopesForEndpoint(endpoint: string) {
+  return endpoint === getDotComAPIEndpoint()
+    ? DotComOAuthScopes
+    : EnterpriseOAuthScopes
 }

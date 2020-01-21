@@ -671,14 +671,14 @@ export class List extends React.Component<IListProps, IListState> {
     if (this.resizeObserver) {
       content =
         this.state.width && this.state.height
-          ? this.renderGrid(this.state.width, this.state.height)
+          ? this.renderContents(this.state.width, this.state.height)
           : null
     } else {
       // Legacy in the event that we don't have ResizeObserver
       content = (
         <AutoSizer disableWidth={true} disableHeight={true}>
           {({ width, height }: { width: number; height: number }) =>
-            this.renderGrid(width, height)
+            this.renderContents(width, height)
           }
         </AutoSizer>
       )
@@ -709,6 +709,17 @@ export class List extends React.Component<IListProps, IListState> {
     )
   }
 
+  /**
+   * Renders the react-virtualized Grid component.
+   *
+   * @param width - The width of the Grid as given by AutoSizer
+   * @param height - The height of the Grid as given by AutoSizer
+   *
+   */
+  private renderContents(width: number, height: number) {
+    return this.renderGrid(width, height)
+  }
+
   private onGridRef = (ref: React.Component<any, any> | null) => {
     this.grid = ref
   }
@@ -725,6 +736,11 @@ export class List extends React.Component<IListProps, IListState> {
       scrollToRow = this.scrollToRow
     }
     this.scrollToRow = -1
+
+    // Prefer scrollTop position over scrollToRow
+    if (this.props.setScrollTop !== undefined) {
+      scrollToRow = -1
+    }
 
     // The currently selected list item is focusable but if
     // there's no focused item (and there's items to switch between)

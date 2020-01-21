@@ -2,6 +2,7 @@ import * as Path from 'path'
 
 import { GitHubRepository } from './github-repository'
 import { IAheadBehind } from './branch'
+import { enableTutorial } from '../lib/feature-flag'
 
 function getBaseName(path: string): string {
   const baseName = Path.basename(path)
@@ -38,7 +39,8 @@ export class Repository {
     public readonly id: number,
     public readonly gitHubRepository: GitHubRepository | null,
     public readonly missing: boolean,
-    public readonly sketchFiles: { id: string; lastModified?: number }[]
+    public readonly sketchFiles: { id: string; lastModified?: number }[],
+    private readonly _isTutorialRepository?: boolean
   ) {
     this.mainWorkTree = { path }
     this.name = (gitHubRepository && gitHubRepository.name) || getBaseName(path)
@@ -56,7 +58,17 @@ export class Repository {
   public get hash(): string {
     return `${this.id}+${this.gitHubRepository && this.gitHubRepository.hash}+${
       this.path
-    }+${this.missing}+${this.name}`
+    }+${this.missing}+${this.name}+${this.isTutorialRepository}`
+  }
+
+  /**
+   * True if the repository is a tutorial repository created as part
+   * of the onboarding flow. Tutorial repositories trigger a tutorial
+   * user experience which introduces new users to some core concepts
+   * of Git and GitHub.
+   */
+  public get isTutorialRepository() {
+    return enableTutorial() && this._isTutorialRepository === true
   }
 }
 

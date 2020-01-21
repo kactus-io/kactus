@@ -31,6 +31,9 @@ export class APIError extends Error {
   /** The error as sent from the API, if one could be parsed. */
   public readonly apiError: IAPIError | null
 
+  /** The HTTP response code that the error was delivered with */
+  public readonly responseStatus: number
+
   public constructor(response: Response, apiError: IAPIError | null) {
     let message
     if (apiError && apiError.message) {
@@ -49,6 +52,7 @@ export class APIError extends Error {
 
     super(message)
 
+    this.responseStatus = response.status
     this.apiError = apiError
   }
 }

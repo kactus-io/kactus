@@ -125,7 +125,8 @@ export class RepositoriesStore extends BaseStore {
             repo.id!,
             gitHubRepository,
             repo.missing,
-            repo.sketchFiles
+            repo.sketchFiles,
+            repo.isTutorialRepository
           )
           inflatedRepos.push(inflatedRepo)
         }
@@ -133,6 +134,54 @@ export class RepositoriesStore extends BaseStore {
         return inflatedRepos
       }
     )
+  }
+
+  /**
+   * Add a tutorial repository.
+   *
+   * This method differs from the `addRepository` method in that it
+   * requires that the repository has been created on the remote and
+   * set up to track it. Given that tutorial repositories are created
+   * from the no-repositories blank slate it shouldn't be possible for
+   * another repository with the same path to exist but in case that
+   * changes in the future this method will set the tutorial flag on
+   * the existing repository at the given path.
+   */
+  public async addTutorialRepository(
+    path: string,
+    endpoint: string,
+    apiRepository: IAPIRepository
+  ) {
+    await this.db.transaction(
+      'rw',
+      this.db.repositories,
+      this.db.gitHubRepositories,
+      this.db.owners,
+      async () => {
+        const gitHubRepository = await this.upsertGitHubRepository(
+          endpoint,
+          apiRepository
+        )
+
+        const existingRepo = await this.db.repositories.get({ path })
+        const existingRepoId =
+          existingRepo && existingRepo.id !== null ? existingRepo.id : undefined
+
+        return await this.db.repositories.put(
+          {
+            path,
+            gitHubRepositoryID: gitHubRepository.dbID,
+            missing: false,
+            lastStashCheckDate: null,
+            isTutorialRepository: true,
+            sketchFiles: [],
+          },
+          existingRepoId
+        )
+      }
+    )
+
+    this.emitUpdate()
   }
 
   /**
@@ -198,21 +247,7 @@ export class RepositoriesStore extends BaseStore {
       )
     }
 
-    const gitHubRepositoryID = repository.gitHubRepository
-      ? repository.gitHubRepository.dbID
-      : null
-    const oldRecord = await this.db.repositories.get(repoID)
-    const lastStashCheckDate =
-      oldRecord !== undefined ? oldRecord.lastStashCheckDate : null
-
-    await this.db.repositories.put({
-      id: repository.id,
-      path: repository.path,
-      missing,
-      gitHubRepositoryID,
-      sketchFiles: repository.sketchFiles,
-      lastStashCheckDate,
-    })
+    await this.db.repositories.update(repoID, { missing })
 
     this.emitUpdate()
 
@@ -221,7 +256,8 @@ export class RepositoriesStore extends BaseStore {
       repository.id,
       repository.gitHubRepository,
       missing,
-      repository.sketchFiles
+      repository.sketchFiles,
+      repository.isTutorialRepository
     )
   }
 
@@ -237,20 +273,9 @@ export class RepositoriesStore extends BaseStore {
       )
     }
 
-    const gitHubRepositoryID = repository.gitHubRepository
-      ? repository.gitHubRepository.dbID
-      : null
-    const oldRecord = await this.db.repositories.get(repoID)
-    const lastStashCheckDate =
-      oldRecord !== undefined ? oldRecord.lastStashCheckDate : null
-
-    await this.db.repositories.put({
-      id: repository.id,
+    await this.db.repositories.update(repoID, {
       missing: false,
       path,
-      gitHubRepositoryID,
-      sketchFiles: repository.sketchFiles,
-      lastStashCheckDate,
     })
 
     this.emitUpdate()
@@ -260,7 +285,8 @@ export class RepositoriesStore extends BaseStore {
       repository.id,
       repository.gitHubRepository,
       false,
-      repository.sketchFiles
+      repository.sketchFiles,
+      repository.isTutorialRepository
     )
   }
 
@@ -276,22 +302,11 @@ export class RepositoriesStore extends BaseStore {
       )
     }
 
-    const gitHubRepositoryID = repository.gitHubRepository
-      ? repository.gitHubRepository.dbID
-      : null
-    const oldRecord = await this.db.repositories.get(repoID)
-    const lastStashCheckDate =
-      oldRecord !== undefined ? oldRecord.lastStashCheckDate : null
-    await this.db.repositories.put({
-      id: repository.id,
-      missing: repository.missing,
-      path: repository.path,
-      gitHubRepositoryID,
+    await this.db.repositories.update(repoID, {
       sketchFiles: sketchFiles.map(f => ({
         id: f.id,
         lastModified: f.lastModified,
       })),
-      lastStashCheckDate,
     })
 
     this.emitUpdate()
@@ -301,7 +316,8 @@ export class RepositoriesStore extends BaseStore {
       repository.id,
       repository.gitHubRepository,
       repository.missing,
-      sketchFiles
+      sketchFiles,
+      repository.isTutorialRepository
     )
   }
 
@@ -471,7 +487,8 @@ export class RepositoriesStore extends BaseStore {
       repository.id,
       updatedGitHubRepo,
       repository.missing,
-      repository.sketchFiles
+      repository.sketchFiles,
+      repository.isTutorialRepository
     )
   }
 

@@ -1,5 +1,9 @@
 {
-  "unreleased": [],
+  "unreleased": [
+    "[New] Interactive tutorial for new users to become productive using Git and Kactus more quickly",
+    "[Fixed] File path truncation in merge conflicts dialog",
+    "[Fixed] Support pushing workflow files for GitHub Actions to GitHub.com"
+  ],
   "releases": {
     "0.3.25": ["[Fixed] Don't show dev tools on startup."],
     "0.3.24": [

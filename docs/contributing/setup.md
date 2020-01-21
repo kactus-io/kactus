@@ -54,6 +54,9 @@ reflected in the running app.
 
 - `npm run test` - Runs all unit and integration tests
 - `npm run test:unit` - Runs all unit tests
+  - Add `<file>` or `<pattern>` argument to only run tests in the specified file or files matching a pattern
+  - Add `-t <regex>` to only match tests whose name matches a regex
+  - For more information on these and other arguments, see [Jest CLI options](https://jestjs.io/docs/en/23.x/cli)
 - `npm run test:integration` - Runs all integration tests
 
 ## Debugging

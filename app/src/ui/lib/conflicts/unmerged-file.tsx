@@ -128,7 +128,7 @@ const renderResolvedFile: React.FunctionComponent<{
     <li key={props.path} className="unmerged-file-status-resolved">
       <Octicon symbol={OcticonSymbol.fileCode} className="file-octicon" />
       <div className="column-left">
-        <PathText path={props.path} availableWidth={200} />
+        <PathText path={props.path} />
         {renderResolvedFileStatusSummary({
           path: props.path,
           status: props.status,
@@ -166,7 +166,7 @@ const renderManualConflictedFile: React.FunctionComponent<{
   const content = (
     <>
       <div className="column-left">
-        <PathText path={props.path} availableWidth={200} />
+        <PathText path={props.path} />
         <div className="file-conflicts-status">{manualConflictString}</div>
       </div>
       <div className="action-buttons">
@@ -230,7 +230,7 @@ const renderConflictedFileWithConflictMarkers: React.FunctionComponent<{
   const content = (
     <>
       <div className="column-left">
-        <PathText path={props.path} availableWidth={200} />
+        <PathText path={props.path} />
         <div className="file-conflicts-status">{message}</div>
       </div>
       <div className="action-buttons">
