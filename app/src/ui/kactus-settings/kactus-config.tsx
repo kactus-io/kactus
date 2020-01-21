@@ -45,6 +45,17 @@ export class KactusConfig extends React.Component<
         </p>
         <Row>
           <Checkbox
+            label="Limit diffs to top-level layers"
+            value={
+              config.limitToTopLevelLayers
+                ? CheckboxValue.On
+                : CheckboxValue.Off
+            }
+            onChange={this.onLimitToTopLevelLayersChange}
+          />
+        </Row>
+        <Row>
+          <Checkbox
             label="Share the text styles between sketch files"
             value={
               config.shareTextStyles ? CheckboxValue.On : CheckboxValue.Off
@@ -161,6 +172,15 @@ export class KactusConfig extends React.Component<
     this.props.onKactusChanged({
       ...this.props.config,
       shareLayerStyles: event.currentTarget.checked,
+    })
+  }
+
+  private onLimitToTopLevelLayersChange = (
+    event: React.FormEvent<HTMLInputElement>
+  ) => {
+    this.props.onKactusChanged({
+      ...this.props.config,
+      limitToTopLevelLayers: event.currentTarget.checked,
     })
   }
 }

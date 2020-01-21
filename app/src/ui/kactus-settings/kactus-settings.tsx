@@ -60,7 +60,7 @@ export class KactusSettings extends React.Component<
         {this.renderErrors()}
         {this.renderKactusConfig()}
         <DialogFooter>
-          <OkCancelButtonGroup okButtonText="Save" />
+          <OkCancelButtonGroup okButtonText="Save Configuration" />
         </DialogFooter>
       </Dialog>
     )

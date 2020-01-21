@@ -59,7 +59,7 @@ const commonConfig: webpack.Configuration = {
   ],
   resolve: {
     extensions: ['.js', '.ts', '.tsx'],
-    modules: [path.resolve(__dirname, 'node_modules/')],
+    // modules: [path.resolve(__dirname, 'node_modules/')],
   },
   node: {
     __dirname: false,
