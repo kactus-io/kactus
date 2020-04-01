@@ -176,7 +176,35 @@ function showSearch(cm: Editor) {
   ) {
     searchLabel.style.display = 'none'
     searchField.placeholder = 'Search'
-    searchField.style.width = null
+    delete searchField.style.width
+  }
+}
+
+/**
+ * Scroll the editor vertically by either line or page the number
+ * of times specified by the `step` parameter.
+ *
+ * This differs from the moveV function in CodeMirror in that it
+ * doesn't attempt to scroll by moving the cursor but rather by
+ * actually changing the scrollTop (if possible).
+ */
+function scrollEditorVertically(step: number, unit: 'line' | 'page') {
+  return (cm: Editor) => {
+    // The magic number 4 here is specific to Desktop and it's
+    // the extra padding we put around lines (2px below and 2px
+    // above)
+    const lineHeight = Math.round(cm.defaultTextHeight() + 4)
+    const scrollInfo = cm.getScrollInfo()
+
+    if (unit === 'line') {
+      cm.scrollTo(undefined, scrollInfo.top + step * lineHeight)
+    } else {
+      // We subtract one line from the page height to keep som
+      // continuity when scrolling. Scrolling a full page leaves
+      // the user without any anchor point
+      const pageHeight = scrollInfo.clientHeight - lineHeight
+      cm.scrollTo(undefined, scrollInfo.top + step * pageHeight)
+    }
   }
 }
 
@@ -200,6 +228,10 @@ const defaultEditorOptions: IEditorConfigurationExtra = {
     'Shift-Cmd-G': false, // findPrev
     'Cmd-Alt-F': false, // replace
     'Shift-Cmd-Alt-F': false, // replaceAll
+    Down: scrollEditorVertically(1, 'line'),
+    Up: scrollEditorVertically(-1, 'line'),
+    PageDown: scrollEditorVertically(1, 'page'),
+    PageUp: scrollEditorVertically(-1, 'page'),
   },
   scrollbarStyle: 'simple',
   styleSelectedText: true,

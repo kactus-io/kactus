@@ -27,5 +27,5 @@ export type RetryAction =
   | {
       type: RetryActionType.Checkout
       repository: Repository
-      branch: Branch | string
+      branch: Branch
     }

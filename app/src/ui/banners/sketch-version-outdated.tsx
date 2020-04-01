@@ -39,8 +39,8 @@ export class SketchVersionOutdated extends React.Component<
     )
   }
 
-  private locateSketch = () => {
-    const sketchPath = remote.dialog.showOpenDialog({
+  private locateSketch = async () => {
+    const { filePaths } = await remote.dialog.showOpenDialog({
       buttonLabel: 'Select',
       defaultPath: '/Applications/',
       filters: [
@@ -51,11 +51,11 @@ export class SketchVersionOutdated extends React.Component<
       ],
     })
 
-    if (!sketchPath || !sketchPath.length) {
+    if (!filePaths || !filePaths.length) {
       return
     }
 
-    this.props.dispatcher.changeSketchLocation(sketchPath[0])
+    this.props.dispatcher.changeSketchLocation(filePaths[0])
   }
 
   private downloadNow = () => {

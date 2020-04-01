@@ -1,4 +1,4 @@
-import { Repository } from './repository'
+import { Repository, RepositoryWithGitHubRepository } from './repository'
 import { PullRequest } from './pull-request'
 import { Branch } from './branch'
 import { ReleaseSummary } from './release-notes'
@@ -9,6 +9,7 @@ import { PreferencesTab } from './preferences'
 import { ICommitContext } from './commit'
 import { IStashEntry } from './stash-entry'
 import { Account } from '../models/account'
+import { Progress } from './progress'
 
 export type PremiumType = 'premium' | 'enterprise'
 
@@ -59,6 +60,7 @@ export enum PopupType {
   ConfirmExitTutorial,
   PushRejectedDueToMissingWorkflowScope,
   SAMLReauthRequired,
+  CreateFork,
 }
 
 export type Popup =
@@ -214,6 +216,7 @@ export type Popup =
   | {
       type: PopupType.CreateTutorialRepository
       account: Account
+      progress?: Progress
     }
   | {
       type: PopupType.ConfirmExitTutorial
@@ -228,4 +231,9 @@ export type Popup =
       organizationName: string
       endpoint: string
       retryAction?: RetryAction
+    }
+  | {
+      type: PopupType.CreateFork
+      repository: RepositoryWithGitHubRepository
+      account: Account
     }

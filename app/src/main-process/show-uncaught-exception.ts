@@ -26,24 +26,20 @@ export function showUncaughtException(isLaunchError: boolean, error: Error) {
     crashWindow.show()
   })
 
-  crashWindow.onFailedToLoad(() => {
-    dialog.showMessageBox(
-      {
-        type: 'error',
-        title: 'Unrecoverable Error',
-        message:
-          `Kactus has encountered an unrecoverable error and will need to restart.\n\n` +
-          `This has been reported to the team, but if you encounter this repeatedly please report ` +
-          `this issue to the Kactus issue tracker.\n\n${error.stack ||
-            error.message}`,
-      },
-      response => {
-        if (!__DEV__) {
-          app.relaunch()
-        }
-        app.quit()
-      }
-    )
+  crashWindow.onFailedToLoad(async () => {
+    await dialog.showMessageBox({
+      type: 'error',
+      title: 'Unrecoverable Error',
+      message:
+        `Kactus has encountered an unrecoverable error and will need to restart.\n\n` +
+        `This has been reported to the team, but if you encounter this repeatedly please report ` +
+        `this issue to the Kactus issue tracker.\n\n${error.stack ||
+          error.message}`,
+    })
+    if (!__DEV__) {
+      app.relaunch()
+    }
+    app.quit()
   })
 
   crashWindow.onClose(() => {

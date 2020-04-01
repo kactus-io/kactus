@@ -23,6 +23,7 @@ import {
   localChangesOverwrittenHandler,
   refusedWorkflowUpdate,
   samlReauthRequired,
+  insufficientGitHubRepoPermissions,
 } from './dispatcher'
 import {
   AppStore,
@@ -269,6 +270,7 @@ dispatcher.registerErrorHandler(externalEditorErrorHandler)
 dispatcher.registerErrorHandler(openShellErrorHandler)
 dispatcher.registerErrorHandler(mergeConflictHandler)
 dispatcher.registerErrorHandler(lfsAttributeMismatchHandler)
+dispatcher.registerErrorHandler(insufficientGitHubRepoPermissions)
 dispatcher.registerErrorHandler(gitAuthenticationErrorHandler)
 dispatcher.registerErrorHandler(pushNeedsPullHandler)
 dispatcher.registerErrorHandler(samlReauthRequired)
@@ -305,10 +307,9 @@ ipcRenderer.on('blur', () => {
   dispatcher.setAppFocusState(false)
 })
 
-type URLActionArg = { action: URLActionType }
 ipcRenderer.on(
   'url-action',
-  (event: Electron.IpcMessageEvent, { action }: URLActionArg) => {
+  (event: Electron.IpcRendererEvent, { action }: { action: URLActionType }) => {
     dispatcher.dispatchURLAction(action)
   }
 )

@@ -134,7 +134,7 @@ export class CodeMirrorHost extends React.Component<ICodeMirrorHostProps, {}> {
             cancelAnimationFrame(this.resizeDebounceId)
             this.resizeDebounceId = null
           }
-          requestAnimationFrame(this.onResized)
+          this.resizeDebounceId = requestAnimationFrame(this.onResized)
         }
       }
     })

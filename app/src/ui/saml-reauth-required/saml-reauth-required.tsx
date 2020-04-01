@@ -5,6 +5,8 @@ import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 import { getDotComAPIEndpoint } from '../../lib/api'
 import { RetryAction } from '../../models/retry-actions'
 
+const okButtonText = 'Continue in Browser'
+
 interface ISAMLReauthRequiredDialogProps {
   readonly dispatcher: Dispatcher
   readonly organizationName: string
@@ -54,7 +56,7 @@ export class SAMLReauthRequiredDialog extends React.Component<
           </p>
         </DialogContent>
         <DialogFooter>
-          <OkCancelButtonGroup okButtonText="Grant" />
+          <OkCancelButtonGroup okButtonText={okButtonText} />
         </DialogFooter>
       </Dialog>
     )

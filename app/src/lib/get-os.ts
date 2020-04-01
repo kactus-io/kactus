@@ -1,3 +1,4 @@
+import { compare } from 'compare-versions'
 import { UAParser } from 'ua-parser-js'
 
 /** Get the OS we're currently running on. */
@@ -19,7 +20,5 @@ export function isMojaveOrLater() {
     return false
   }
 
-  const [major, minor] = os.version.split('.')
-
-  return major === '10' && minor > '13'
+  return compare(os.version, '10.13.0', '>=')
 }

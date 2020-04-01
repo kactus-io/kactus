@@ -42,7 +42,7 @@ export class WarnForcePushDialog extends React.Component<
         title={title}
         onDismissed={this.props.onDismissed}
         onSubmit={this.onBeginRebase}
-        disableClickDismissalAlways={true}
+        dismissable={false}
         type="warning"
       >
         <DialogContent>
@@ -51,10 +51,10 @@ export class WarnForcePushDialog extends React.Component<
             <Ref>{baseBranch.name}</Ref>?
           </p>
           <p>
-            At the end of the rebase flow, GitHub Desktop will enable you to
-            force push the branch to update the upstream branch. Force pushing
-            will alter the history on the remote and potentially cause problems
-            for others collaborating on this branch.
+            At the end of the rebase flow, Kactus will enable you to force push
+            the branch to update the upstream branch. Force pushing will alter
+            the history on the remote and potentially cause problems for others
+            collaborating on this branch.
           </p>
           <div>
             <Checkbox

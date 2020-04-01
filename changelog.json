@@ -1,6 +1,19 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.27": [
+      "[New] Set Git proxy environment variables from system configuration automatically",
+      "[Added] Enable creating a GitHub issue from app menu and keyboard shortcut",
+      "[Fixed] Ensure branch protection warning works when branch names contain special characters",
+      "[Fixed] Ensure intro page is responsive when resizing the window",
+      "[Fixed] Ensure local branch is also deleted when deleting a branch that no longer exists on the remote",
+      "[Fixed] Prevent bringing changes to another branch from failing silently",
+      "[Fixed] Save the user's position within \"History\" and \"Changes\" tabs when switching",
+      "[Improved] Update the remote url when a repository's name changes on GitHub",
+      "[Improved] Format errors containing raw Git output with fixed-width font",
+      "[Improved] Modify \"View on GitHub\" menu item to open upstream for local fork repositories",
+      "[Improved] Create new branches in forks from the default branch of the upstream repo"
+    ],
     "0.3.26": [
       "[New] Interactive tutorial for new users to become productive using Git and Kactus more quickly",
       "[Fixed] File path truncation in merge conflicts dialog",

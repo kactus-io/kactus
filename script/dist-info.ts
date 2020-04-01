@@ -89,6 +89,5 @@ export function shouldMakeDelta() {
 }
 
 export function getIconFileName(): string {
-  const baseName = 'icon-logo'
-  return getChannel() === 'development' ? `${baseName}-yellow` : baseName
+  return 'icon-logo'
 }

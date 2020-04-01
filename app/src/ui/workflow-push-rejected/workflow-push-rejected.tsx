@@ -5,6 +5,8 @@ import { Ref } from '../lib/ref'
 import { Repository } from '../../models/repository'
 import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
+const okButtonText = 'Continue in Browser'
+
 interface IWorkflowPushRejectedDialogProps {
   readonly rejectedPath: string
   readonly repository: Repository
@@ -31,7 +33,8 @@ export class WorkflowPushRejectedDialog extends React.Component<
   public render() {
     return (
       <Dialog
-        title="Push Rejected"
+        id="workflow-push-rejected"
+        title={'Push Rejected'}
         loading={this.state.loading}
         onDismissed={this.props.onDismissed}
         onSubmit={this.onSignIn}
@@ -40,17 +43,17 @@ export class WorkflowPushRejectedDialog extends React.Component<
         <DialogContent>
           <p>
             The push was rejected by the server for containing a modification to
-            a workflow file ( <Ref>{this.props.rejectedPath}</Ref>). In order to
-            be able to push to workflow files GitHub Desktop needs to request
-            additional permissions.
+            the workflow file <Ref>{this.props.rejectedPath}</Ref>. In order to
+            be able to push to workflow files Kactus needs to request additional
+            permissions.
           </p>
           <p>
-            Would you like to open a browser to grant GitHub Desktop permission
-            to update workflow files?
+            Would you like to open a browser to grant Kactus permission to
+            update workflow files?
           </p>
         </DialogContent>
         <DialogFooter>
-          <OkCancelButtonGroup okButtonText="Grant" />
+          <OkCancelButtonGroup okButtonText={okButtonText} />
         </DialogFooter>
       </Dialog>
     )
