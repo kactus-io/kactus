@@ -1424,6 +1424,7 @@ export async function checkUnlockedKactus(
         email: emails.find(e => e.primary),
         login: user.login,
         enterprise: endpoint !== getDotComAPIEndpoint(),
+        endpoint,
       }),
     })
     if (response.status === HttpStatusCode.NotFound) {
@@ -1480,6 +1481,7 @@ export async function unlockKactusFullAccess(
         enterprise: options.enterprise,
         coupon: options.coupon,
         metadata: options.metadata,
+        endpoint: account.endpoint,
       }),
     })
     const res = await parsedResponse<{
