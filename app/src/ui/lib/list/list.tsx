@@ -300,7 +300,10 @@ export class List extends React.Component<IListProps, IListState> {
     const [width, height] = [target.offsetWidth, target.offsetHeight]
 
     if (this.state.width !== width || this.state.height !== height) {
-      this.setState({ width, height })
+      this.setState({
+        width,
+        height: Math.min(height, window.outerHeight - 250 - 90),
+      })
     }
   }
 
