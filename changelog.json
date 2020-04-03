@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.29": [
+      "[Fixed] Prevent a bug where the changes' list could grow forever"
+    ],
     "0.3.28": [
       "[Fixed] Prevent a bug where the changes' list could grow forever"
     ],
