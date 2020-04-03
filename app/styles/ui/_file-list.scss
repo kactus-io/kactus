@@ -11,6 +11,10 @@
   }
 
   .list-focus-container {
+    // hack to fix an ever growing list
+    // see https://github.com/kactus-io/kactus/issues/147
+    max-height: 1px;
+
     // Default to using status aware colors for the change type
     // octicons (i.e. green for added, yellowish for modified etc)
     // but fall back to picking up the ambient text color when the
