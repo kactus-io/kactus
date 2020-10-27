@@ -78,7 +78,7 @@ export class KactusConfig extends React.Component<
         <div style={{ paddingLeft: 20 }}>
           {(config.sharedPages || []).map(page => (
             <Row key={page} className="shared-page">
-              <Octicon symbol={OcticonSymbol.primitiveDot} />
+              <Octicon symbol={OcticonSymbol.dot} />
               {page}
               <span
                 className="remove-icon"

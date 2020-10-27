@@ -20,6 +20,7 @@ import { getDotComAPIEndpoint } from '../../lib/api'
 import { hasWritePermission } from '../../models/github-repository'
 import { enableCreateForkFlow } from '../../lib/feature-flag'
 import { RetryActionType } from '../../models/retry-actions'
+import { parseFilesToBeOverwritten } from '../lib/parse-files-to-be-overwritten'
 
 /** An error which also has a code property. */
 interface IErrorWithCode extends Error {
@@ -403,7 +404,7 @@ export async function rebaseConflictsHandler(
     return error
   }
 
-  if (!(gitContext.kind === 'merge' || gitContext.kind === 'pull')) {
+  if (gitContext.kind !== 'merge' && gitContext.kind !== 'pull') {
     return error
   }
 
@@ -418,7 +419,7 @@ export async function rebaseConflictsHandler(
  * Handler for when we attempt to checkout a branch and there are some files that would
  * be overwritten.
  */
-export async function localChangesOverwrittenHandler(
+export async function localChangesOverwrittenOnCheckoutHandler(
   error: Error,
   dispatcher: Dispatcher
 ): Promise<Error | null> {
@@ -613,6 +614,59 @@ export async function insufficientGitHubRepoPermissions(
   }
 
   dispatcher.showCreateForkDialog(repository)
+
+  return null
+}
+
+/**
+ * Handler for when an action the user attempts cannot be done because there are local
+ * changes that would get overwritten.
+ */
+export async function localChangesOverwrittenHandler(
+  error: Error,
+  dispatcher: Dispatcher
+): Promise<Error | null> {
+  const e = asErrorWithMetadata(error)
+  if (e === null) {
+    return error
+  }
+
+  const gitError = asGitError(e.underlyingError)
+  if (gitError === null) {
+    return error
+  }
+
+  const dugiteError = gitError.result.gitError
+  if (dugiteError === null) {
+    return error
+  }
+
+  if (
+    dugiteError !== DugiteError.LocalChangesOverwritten &&
+    dugiteError !== DugiteError.MergeWithLocalChanges &&
+    dugiteError !== DugiteError.RebaseWithLocalChanges
+  ) {
+    return error
+  }
+
+  const { repository } = e.metadata
+
+  if (!(repository instanceof Repository)) {
+    return error
+  }
+
+  if (e.metadata.retryAction === undefined) {
+    return error
+  }
+
+  const files = parseFilesToBeOverwritten(gitError.result.stderr)
+
+  dispatcher.showPopup({
+    type: PopupType.LocalChangesOverwritten,
+    repository,
+    retryAction: e.metadata.retryAction,
+    files,
+  })
 
   return null
 }

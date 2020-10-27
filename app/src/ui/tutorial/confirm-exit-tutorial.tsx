@@ -5,7 +5,7 @@ import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
 interface IConfirmExitTutorialProps {
   readonly onDismissed: () => void
-  readonly onContinue: () => void
+  readonly onContinue: () => boolean
 }
 
 export class ConfirmExitTutorial extends React.Component<
@@ -17,7 +17,7 @@ export class ConfirmExitTutorial extends React.Component<
       <Dialog
         title={'Exit Tutorial'}
         onDismissed={this.props.onDismissed}
-        onSubmit={this.props.onContinue}
+        onSubmit={this.onContinue}
         type="normal"
       >
         <DialogContent>
@@ -31,5 +31,13 @@ export class ConfirmExitTutorial extends React.Component<
         </DialogFooter>
       </Dialog>
     )
+  }
+
+  private onContinue = () => {
+    const dismissPopup = this.props.onContinue()
+
+    if (dismissPopup) {
+      this.props.onDismissed()
+    }
   }
 }

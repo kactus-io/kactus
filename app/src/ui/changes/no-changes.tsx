@@ -3,10 +3,6 @@ import * as React from 'react'
 import { LoadingOverlay } from '../lib/loading'
 import { encodePathAsUrl } from '../../lib/path'
 import { Repository } from '../../models/repository'
-import {
-  enableNoChangesCreatePRBlankslateAction,
-  enableStashing,
-} from '../../lib/feature-flag'
 import { MenuIDs } from '../../models/menu-ids'
 import { IMenu, MenuItem } from '../../models/app-menu'
 import memoizeOne from 'memoize-one'
@@ -158,7 +154,7 @@ export class NoChanges extends React.Component<
 
   /**
    * ID for the timer that's activated when the component
-   * mounts. See componentDidMount/componenWillUnmount.
+   * mounts. See componentDidMount/componentWillUnmount.
    */
   private transitionTimer: number | null = null
 
@@ -244,7 +240,12 @@ export class NoChanges extends React.Component<
   }
 
   private renderRemoteAction() {
-    const { remote, aheadBehind, branchesState } = this.props.repositoryState
+    const {
+      remote,
+      aheadBehind,
+      branchesState,
+      tagsToPush,
+    } = this.props.repositoryState
     const { tip, defaultBranch, currentPullRequest } = branchesState
 
     if (tip.kind !== TipState.Valid) {
@@ -272,29 +273,26 @@ export class NoChanges extends React.Component<
       return this.renderPullBranchAction(tip, remote, aheadBehind)
     }
 
-    if (aheadBehind.ahead > 0) {
-      return this.renderPushBranchAction(tip, remote, aheadBehind)
+    if (
+      aheadBehind.ahead > 0 ||
+      (tagsToPush !== null && tagsToPush.length > 0)
+    ) {
+      return this.renderPushBranchAction(tip, remote, aheadBehind, tagsToPush)
     }
 
-    if (enableNoChangesCreatePRBlankslateAction()) {
-      const isGitHub = this.props.repository.gitHubRepository !== null
-      const hasOpenPullRequest = currentPullRequest !== null
-      const isDefaultBranch =
-        defaultBranch !== null && tip.branch.name === defaultBranch.name
+    const isGitHub = this.props.repository.gitHubRepository !== null
+    const hasOpenPullRequest = currentPullRequest !== null
+    const isDefaultBranch =
+      defaultBranch !== null && tip.branch.name === defaultBranch.name
 
-      if (isGitHub && !hasOpenPullRequest && !isDefaultBranch) {
-        return this.renderCreatePullRequestAction(tip)
-      }
+    if (isGitHub && !hasOpenPullRequest && !isDefaultBranch) {
+      return this.renderCreatePullRequestAction(tip)
     }
 
     return null
   }
 
   private renderViewStashAction() {
-    if (!enableStashing()) {
-      return null
-    }
-
     const { changesState, branchesState } = this.props.repositoryState
 
     const { tip } = branchesState
@@ -479,7 +477,8 @@ export class NoChanges extends React.Component<
   private renderPushBranchAction(
     tip: IValidBranch,
     remote: IRemote,
-    aheadBehind: IAheadBehind
+    aheadBehind: IAheadBehind,
+    tagsToPush: ReadonlyArray<string> | null
   ) {
     const itemId: MenuIDs = 'push'
     const menuItem = this.getMenuItemInfo(itemId)
@@ -491,13 +490,28 @@ export class NoChanges extends React.Component<
 
     const isGitHub = this.props.repository.gitHubRepository !== null
 
-    const description = (
-      <>
-        You have{' '}
-        {aheadBehind.ahead === 1 ? 'one local commit' : 'local commits'} waiting
-        to be pushed to {isGitHub ? 'GitHub' : 'the remote'}.
-      </>
-    )
+    const itemsToPushTypes = []
+    const itemsToPushDescriptions = []
+
+    if (aheadBehind.ahead > 0) {
+      itemsToPushTypes.push('commits')
+      itemsToPushDescriptions.push(
+        aheadBehind.ahead === 1
+          ? '1 local commit'
+          : `${aheadBehind.ahead} local commits`
+      )
+    }
+
+    if (tagsToPush !== null && tagsToPush.length > 0) {
+      itemsToPushTypes.push('tags')
+      itemsToPushDescriptions.push(
+        tagsToPush.length === 1 ? '1 tag' : `${tagsToPush.length} tags`
+      )
+    }
+
+    const description = `You have ${itemsToPushDescriptions.join(
+      ' and '
+    )} waiting to be pushed to ${isGitHub ? 'GitHub' : 'the remote'}.`
 
     const discoverabilityContent = (
       <>
@@ -506,9 +520,9 @@ export class NoChanges extends React.Component<
       </>
     )
 
-    const title = `Push ${aheadBehind.ahead} ${
-      aheadBehind.ahead === 1 ? 'commit' : 'commits'
-    } to the ${remote.name} remote`
+    const title = `Push ${itemsToPushTypes.join(' and ')} to the ${
+      remote.name
+    } remote`
 
     const buttonText = `Push ${remote.name}`
 

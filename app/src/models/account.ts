@@ -11,13 +11,6 @@ export enum Provider {
  * This contains a token that will be used for operations that require authentication.
  */
 export class Account {
-  public readonly unlockedKactus: boolean
-  public readonly unlockedEnterpriseKactus: boolean
-  public readonly unlockedKactusFromOrg: boolean
-  public readonly unlockedEnterpriseKactusFromOrg: boolean
-  public readonly unlockedKactusFromOrgAdmin: boolean
-  public readonly unlockedEnterpriseKactusFromOrgAdmin: boolean
-
   /** Create an account which can be used to perform unauthenticated API actions */
   public static anonymous(): Account {
     return new Account(
@@ -32,6 +25,13 @@ export class Account {
       null
     )
   }
+
+  public readonly unlockedKactus: boolean
+  public readonly unlockedEnterpriseKactus: boolean
+  public readonly unlockedKactusFromOrg: boolean
+  public readonly unlockedEnterpriseKactusFromOrg: boolean
+  public readonly unlockedKactusFromOrgAdmin: boolean
+  public readonly unlockedEnterpriseKactusFromOrgAdmin: boolean
 
   /**
    * Create an instance of an account

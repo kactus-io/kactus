@@ -1,4 +1,3 @@
-import { APIRefState } from '../lib/api'
 import { GitHubRepository } from './github-repository'
 
 export class PullRequestRef {
@@ -15,13 +14,6 @@ export class PullRequestRef {
   ) {}
 }
 
-/** The commit status and metadata for a given ref */
-export interface ICommitStatus {
-  readonly id: number
-  readonly state: APIRefState
-  readonly description: string
-}
-
 export class PullRequest {
   /**
    * @param created The date on which the PR was created.
@@ -30,7 +22,7 @@ export class PullRequest {
    * @param title The title of the PR.
    * @param number The number.
    * @param head The ref from which the pull request's changes are coming.
-   * @param base The ref which the pull request is targetting.
+   * @param base The ref which the pull request is targeting.
    * @param author The author's login.
    */
   public constructor(
@@ -39,6 +31,7 @@ export class PullRequest {
     public readonly pullRequestNumber: number,
     public readonly head: PullRequestRef,
     public readonly base: PullRequestRef,
-    public readonly author: string
+    public readonly author: string,
+    public readonly draft: boolean
   ) {}
 }

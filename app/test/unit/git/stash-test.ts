@@ -55,6 +55,7 @@ describe('git/stash', () => {
       const entries = stash.kactusEntries
       expect(entries).toHaveLength(1)
       expect(entries[0].branchName).toBe('master')
+      expect(entries[0].name).toBe('refs/stash@{0}')
     })
   })
 
@@ -188,7 +189,7 @@ describe('git/stash', () => {
     it('does not fail when attempting to delete when stash is empty', async () => {
       let didFail = false
       const doesNotExist: IStashEntry = {
-        name: 'stash@{0}',
+        name: 'refs/stash@{0}',
         branchName: 'master',
         stashSha: 'xyz',
         files: { kind: StashedChangesLoadStates.NotLoaded },
@@ -206,7 +207,7 @@ describe('git/stash', () => {
     it("does not fail when attempting to delete stash entry that doesn't exist", async () => {
       let didFail = false
       const doesNotExist: IStashEntry = {
-        name: 'stash@{4}',
+        name: 'refs/stash@{4}',
         branchName: 'master',
         stashSha: 'xyz',
         files: { kind: StashedChangesLoadStates.NotLoaded },

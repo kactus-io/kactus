@@ -3,14 +3,11 @@ import {
   createState,
   createStatus,
 } from '../../../helpers/changes-state-helper'
-import {
-  ManualConflictResolution,
-  ManualConflictResolutionKind,
-} from '../../../../src/models/manual-conflict-resolution'
+import { ManualConflictResolution } from '../../../../src/models/manual-conflict-resolution'
 
 describe('updateConflictState', () => {
   const manualResolutions = new Map<string, ManualConflictResolution>([
-    ['foo', ManualConflictResolutionKind.theirs],
+    ['foo', ManualConflictResolution.theirs],
   ])
 
   describe('merge conflicts', () => {

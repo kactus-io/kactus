@@ -17,7 +17,7 @@ import { CloneRepositoryTab } from '../models/clone-repository-tab'
 import { BranchesTab } from '../models/branches-tab'
 import { PullRequest } from '../models/pull-request'
 import { IAuthor } from '../models/author'
-import { MergeResult } from '../models/merge'
+import { MergeTreeResult } from '../models/merge'
 import { ICommitMessage } from '../models/commit-message'
 import {
   IRevertProgress,
@@ -27,7 +27,6 @@ import {
 } from '../models/progress'
 import { Popup } from '../models/popup'
 
-import { IGitHubUser } from './databases/github-user-database'
 import { SignInState } from './stores/sign-in-store'
 
 import { WindowState } from './window-state'
@@ -121,7 +120,7 @@ export interface IAppState {
    * A list of currently open menus with their selected items
    * in the application menu.
    *
-   * The semantics around what constitues an open menu and how
+   * The semantics around what constitutes an open menu and how
    * selection works is defined by the AppMenu class and the
    * individual components transforming that state.
    *
@@ -208,6 +207,9 @@ export interface IAppState {
   /** Whether we should hide white space changes in diff */
   readonly hideWhitespaceInDiff: boolean
 
+  /** Whether we should show side by side diffs */
+  readonly showSideBySideDiff: boolean
+
   /** The user's preferred shell. */
   readonly selectedShell: Shell
 
@@ -246,6 +248,15 @@ export interface IAppState {
 
   /** Which step the user is on in the Onboarding Tutorial */
   readonly currentOnboardingTutorialStep: TutorialStep
+
+  /**
+   * Whether or not the app should update the repository indicators (the
+   * blue dot and the ahead/behind arrows in the repository list used to
+   * indicate that the repository has uncommitted changes or is out of sync
+   * with its remote) in the background. See `RepositoryIndicatorUpdater`
+   * for more information
+   */
+  readonly repositoryIndicatorsEnabled: boolean
 }
 
 export enum FoldoutType {
@@ -375,13 +386,6 @@ export interface IRepositoryState {
 
   readonly rebaseState: IRebaseState
 
-  /**
-   * Mapping from lowercased email addresses to the associated GitHub user. Note
-   * that an email address may not have an associated GitHub user, or the user
-   * may still be loading.
-   */
-  readonly gitHubUsers: Map<string, IGitHubUser>
-
   /** The commits loaded, keyed by their full SHA. */
   readonly commitLookup: Map<string, Commit>
 
@@ -396,6 +400,9 @@ export interface IRepositoryState {
 
   /** The state of the current branch in relation to its upstream. */
   readonly aheadBehind: IAheadBehind | null
+
+  /** The tags that will get pushed if the user performs a push operation. */
+  readonly tagsToPush: ReadonlyArray<string> | null
 
   /** Is a push/pull/fetch in progress? */
   readonly isPushPullFetchInProgress: boolean
@@ -432,6 +439,8 @@ export interface IRepositoryState {
    * null if no such operation is in flight.
    */
   readonly revertProgress: IRevertProgress | null
+
+  readonly localTags: Map<string, string> | null
 }
 
 export interface IBranchesState {
@@ -442,9 +451,14 @@ export interface IBranchesState {
   readonly tip: Tip
 
   /**
-   * The default branch for a given repository. Most commonly this
-   * will be the 'master' branch but GitHub users are able to change
-   * their default branch in the web UI.
+   * The default branch for a given repository. Historically it's been
+   * common to use 'master' as the default branch but as of September 2020
+   * GitHub Desktop and GitHub.com default to using 'main' as the default branch.
+   *
+   * GitHub Desktop users are able to configure the `init.defaultBranch` Git
+   * setting in preferences.
+   *
+   * GitHub.com users are able to change their default branch in the web UI.
    */
   readonly defaultBranch: Branch | null
 
@@ -559,7 +573,7 @@ export type ChangesWorkingDirectorySelection = {
    * The ID of the selected files. The files themselves can be looked up in
    * the `workingDirectory` property in `IChangesState`.
    */
-  readonly selectedFileIDs: string[]
+  readonly selectedFileIDs: ReadonlyArray<string>
   readonly diff: IDiff | null
 
   readonly selectedSketchPart: {
@@ -683,14 +697,14 @@ export interface ICompareBranch {
 }
 
 export interface ICompareState {
-  /** Show the diverging notification banner */
-  readonly isDivergingBranchBannerVisible: boolean
+  /** The current state of the NBBD banner */
+  readonly divergingBranchBannerState: IDivergingBranchBannerState
 
   /** The current state of the compare form, based on user input */
   readonly formState: IDisplayHistory | ICompareBranch
 
   /** The result of merging the compare branch into the current branch, if a branch selected */
-  readonly mergeStatus: MergeResult | null
+  readonly mergeStatus: MergeTreeResult | null
 
   /** Whether the branch list should be expanded or hidden */
   readonly showBranchList: boolean
@@ -716,9 +730,14 @@ export interface ICompareState {
   readonly recentBranches: ReadonlyArray<Branch>
 
   /**
-   * The default branch for a given repository. Most commonly this
-   * will be the 'master' branch but GitHub users are able to change
-   * their default branch in the web UI.
+   * The default branch for a given repository. Historically it's been
+   * common to use 'master' as the default branch but as of September 2020
+   * GitHub Desktop and GitHub.com default to using 'main' as the default branch.
+   *
+   * GitHub Desktop users are able to configure the `init.defaultBranch` Git
+   * setting in preferences.
+   *
+   * GitHub.com users are able to change their default branch in the web UI.
    */
   readonly defaultBranch: Branch | null
 
@@ -736,6 +755,17 @@ export interface ICompareState {
     branch: Branch | null
     aheadBehind: IAheadBehind | null
   }
+}
+
+export interface IDivergingBranchBannerState {
+  /** Show the diverging notification banner */
+  readonly isPromptVisible: boolean
+
+  /** Has the user dismissed the notification banner? */
+  readonly isPromptDismissed: boolean
+
+  /** Show the diverging notification nudge on the tab */
+  readonly isNudgeVisible: boolean
 }
 
 export interface ICompareFormUpdate {

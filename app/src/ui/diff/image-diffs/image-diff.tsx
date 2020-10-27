@@ -50,8 +50,10 @@ export class ImageDiff extends React.Component<IDiffProps, {}> {
           repository={this.props.repository}
           readOnly={this.props.readOnly}
           file={this.props.file}
-          text={this.props.text}
-          hunks={this.props.hunks}
+          diff={{
+            text: this.props.text,
+            hunks: this.props.hunks,
+          }}
           onIncludeChanged={this.props.onIncludeChanged}
         />
       )

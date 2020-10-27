@@ -22,9 +22,7 @@ export class SketchVersionOutdated extends React.Component<
 > {
   public render() {
     const copy = this.props.found
-      ? `Kactus is only compatible with Sketch >= 43. We found ${
-          this.props.found
-        }.`
+      ? `Kactus is only compatible with Sketch >= 43. We found ${this.props.found}.`
       : "Kactus needs Sketch to function properly and we couldn't find it."
     return (
       <Banner id="sketch-outdated" dismissable={false} onDismissed={noOp}>

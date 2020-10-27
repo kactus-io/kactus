@@ -5,10 +5,8 @@ import { Dispatcher } from '../dispatcher'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { Dialog, DialogContent, DialogFooter } from '../dialog'
 import { PathText } from '../lib/path-text'
-import { Monospaced } from '../lib/monospaced'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { TrashNameLabel } from '../lib/context-menu'
-import { toPlatformCase } from '../../lib/platform-case'
 import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
 interface IDiscardChangesProps {
@@ -61,21 +59,23 @@ export class DiscardChanges extends React.Component<
     if (this.props.discardingAllChanges) {
       return 'Discard All Changes'
     }
-    return 'Discard changes'
+    return 'Discard Changes'
+  }
+
+  private getDialogTitle() {
+    if (this.props.discardingAllChanges) {
+      return 'Confirm Discard All Changes'
+    }
+    return 'Confirm Discard Changes'
   }
 
   public render() {
-    const discardingAllChanges = this.props.discardingAllChanges
     const isDiscardingChanges = this.state.isDiscardingChanges
 
     return (
       <Dialog
         id="discard-changes"
-        title={
-          discardingAllChanges
-            ? toPlatformCase('Confirm Discard All Changes')
-            : toPlatformCase('Confirm Discard Changes')
-        }
+        title={this.getDialogTitle()}
         onDismissed={this.props.onDismissed}
         onSubmit={this.discard}
         dismissable={isDiscardingChanges ? false : true}
@@ -138,9 +138,7 @@ export class DiscardChanges extends React.Component<
           <ul>
             {this.props.files.map(p => (
               <li key={p.id}>
-                <Monospaced>
-                  <PathText path={p.path} />
-                </Monospaced>
+                <PathText path={p.path} />
               </li>
             ))}
           </ul>

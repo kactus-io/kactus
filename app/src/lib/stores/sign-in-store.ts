@@ -24,6 +24,7 @@ import { AuthenticationMode } from '../../lib/2fa'
 
 import { minimumSupportedEnterpriseVersion } from '../../lib/enterprise'
 import { TypedBaseStore } from './base-store'
+import { timeout } from '../promise'
 
 const ClientID = process.env.TEST_ENV ? '' : __OAUTH_CLIENT_ID__!
 const ClientSecret = process.env.TEST_ENV ? '' : __OAUTH_SECRET__!
@@ -42,7 +43,7 @@ const EnterpriseTooOldMessage = `The GitHub Enterprise Server version does not s
 
 /**
  * An enumeration of the possible steps that the sign in
- * store can be in save for the unitialized state (null).
+ * store can be in save for the uninitialized state (null).
  */
 export enum SignInStep {
   EndpointEntry = 'EndpointEntry',
@@ -53,7 +54,7 @@ export enum SignInStep {
 
 /**
  * The union type of all possible states that the sign in
- * store can be in save the unitialized state (null).
+ * store can be in save the uninitialized state (null).
  */
 export type SignInState =
   | IEndpointEntryState
@@ -157,13 +158,13 @@ export interface ITwoFactorAuthenticationState extends ISignInState {
   readonly clientSecret: string
 
   /**
-   * The username specified by the user in the preceeding
+   * The username specified by the user in the preceding
    * Authentication step
    */
   readonly username: string
 
   /**
-   * The password specified by the user in the preceeding
+   * The password specified by the user in the preceding
    * Authentication step
    */
   readonly password: string
@@ -206,12 +207,42 @@ interface IAuthenticationEvent {
   readonly retryAction?: RetryAction
 }
 
+interface IDotComSupportsBasicAuthEvent {
+  readonly dotComSupportsBasicAuth: boolean
+}
+
+/** The maximum time to wait for a `/meta` API call in milliseconds */
+const ServerMetaDataTimeout = 2000
+
+/**
+ * GitHub.com is planning on shutting down the ability to authenticate
+ * with username and password on the 13th of November 2020.
+ *
+ * See https://developer.github.com/changes/2020-02-14-deprecating-oauth-auth-endpoint/
+ */
+const DotComAuthorizationAPIRemovalDate = Date.parse('2020-11-13T16:00:00.000Z')
+
+/**
+ * Whether or not the current date and time is before the planned deadline
+ * for the removal of username and password authentication on GitHub.com,
+ * see DotComAuthorizationAPIRemovalDate
+ */
+function isBeforeDotComAuthorizationAPIRemoval() {
+  return Date.now() < DotComAuthorizationAPIRemovalDate
+}
+
 /**
  * A store encapsulating all logic related to signing in a user
  * to GitHub.com, or a GitHub Enterprise Server instance.
  */
 export class SignInStore extends TypedBaseStore<SignInState | null> {
   private state: SignInState | null = null
+  /**
+   * A map keyed on an endpoint url containing the last known
+   * value of the verifiable_password_authentication meta property
+   * for that endpoint.
+   */
+  private endpointSupportBasicAuth = new Map<string, boolean>()
 
   private emitAuthenticate(
     account: Account,
@@ -241,6 +272,54 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
     )
   }
 
+  private emitDotComSupportsBasicAuthUpdated(dotComSupportsBasicAuth: boolean) {
+    const event: IDotComSupportsBasicAuthEvent = { dotComSupportsBasicAuth }
+    this.emitter.emit('dotComSupportsBasicAuthUpdated', event)
+  }
+
+  /**
+   * Subscribe to an event which is emitted whenever the sign in store re-evaluates
+   * whether or not GitHub.com supports username and password authentication.
+   *
+   * Note that this event may fire without the state having changed as it's
+   * fired when refreshed and not when changed.
+   */
+  public onDotComSupportsBasicAuthUpdated(
+    fn: (dotComSupportsBasicAuth: boolean) => void
+  ): Disposable {
+    if (!this.endpointSupportBasicAuth.has(getDotComAPIEndpoint())) {
+      this.endpointSupportsBasicAuth(
+        Provider.GitHub,
+        getDotComAPIEndpoint()
+      ).catch(err => {})
+    }
+
+    return this.emitter.on(
+      'dotComSupportsBasicAuthUpdated',
+      ({ dotComSupportsBasicAuth }: IDotComSupportsBasicAuthEvent) => {
+        fn(dotComSupportsBasicAuth)
+      }
+    )
+  }
+
+  /**
+   * Attempt to _synchronously_ retrieve whether GitHub.com supports
+   * username and password authentication. If the SignInStore has
+   * previously checked the API to determine the actual status that
+   * cached value is returned. If not we attempt to calculate the
+   * most probably state based on the current date and the deprecation
+   * timeline.
+   */
+  public tryGetDotComSupportsBasicAuth(): boolean {
+    const supportsBasicAuth = this.endpointSupportBasicAuth.get(
+      getDotComAPIEndpoint()
+    )
+
+    return supportsBasicAuth === undefined
+      ? isBeforeDotComAuthorizationAPIRemoval()
+      : supportsBasicAuth
+  }
+
   /**
    * Returns the current state of the sign in store or null if
    * no sign in process is in flight.
@@ -262,14 +341,34 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
     provider: Provider,
     endpoint: string
   ): Promise<boolean> {
-    const response = await fetchMetadata(provider, endpoint)
+    const cached = this.endpointSupportBasicAuth.get(endpoint)
+    const fallbackValue =
+      cached === undefined
+        ? null
+        : { verifiable_password_authentication: cached }
 
-    if (response) {
-      if (response.verifiable_password_authentication === false) {
-        return false
-      } else {
-        return true
+    const response = await timeout(
+      fetchMetadata(provider, endpoint),
+      ServerMetaDataTimeout,
+      fallbackValue
+    )
+
+    if (response !== null) {
+      const supportsBasicAuth =
+        response.verifiable_password_authentication === true
+      this.endpointSupportBasicAuth.set(endpoint, supportsBasicAuth)
+
+      if (endpoint === getDotComAPIEndpoint()) {
+        this.emitDotComSupportsBasicAuthUpdated(supportsBasicAuth)
       }
+
+      return supportsBasicAuth
+    }
+
+    if (endpoint === getDotComAPIEndpoint()) {
+      const supportsBasicAuth = isBeforeDotComAuthorizationAPIRemoval()
+      this.emitDotComSupportsBasicAuthUpdated(supportsBasicAuth)
+      return supportsBasicAuth
     } else {
       throw new Error(
         `Unable to authenticate with the GitHub Enterprise Server instance. Verify that the URL is correct, that your GitHub Enterprise Server instance is running version ${minimumSupportedEnterpriseVersion} or later, that you have an internet connection and try again.`
@@ -302,12 +401,31 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       endpoint,
       clientId: ClientID,
       clientSecret: ClientSecret,
-      supportsBasicAuth: true,
+      supportsBasicAuth: this.tryGetDotComSupportsBasicAuth(),
       error: null,
       loading: false,
       forgotPasswordUrl: this.getForgotPasswordURL(endpoint),
       retryAction,
     })
+
+    // Asynchronously refresh our knowledge about whether GitHub.com
+    // support username and password authentication or not.
+    this.endpointSupportsBasicAuth(Provider.GitHub, endpoint)
+      .then(supportsBasicAuth => {
+        if (
+          this.state !== null &&
+          this.state.kind === SignInStep.Authentication &&
+          this.state.endpoint === endpoint
+        ) {
+          this.setState({ ...this.state, supportsBasicAuth })
+        }
+      })
+      .catch(err =>
+        log.error(
+          'Failed resolving whether GitHub.com supports password authentication',
+          err
+        )
+      )
   }
 
   /**
@@ -392,9 +510,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       if (response.kind === AuthorizationResponseKind.Error) {
         this.emitError(
           new Error(
-            `The server responded with an error while attempting to authenticate (${
-              response.response.status
-            })\n\n${response.response.statusText}`
+            `The server responded with an error while attempting to authenticate (${response.response.status})\n\n${response.response.statusText}`
           )
         )
         this.setState({ ...currentState, loading: false })
@@ -620,7 +736,6 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
       fatalError(
         `Sign in step '${stepText}' not compatible with two factor authentication`
       )
-      return
     }
 
     this.setState({ ...currentState, loading: true })
@@ -678,9 +793,7 @@ export class SignInStore extends TypedBaseStore<SignInState | null> {
         case AuthorizationResponseKind.Error:
           this.emitError(
             new Error(
-              `The server responded with an error (${
-                response.response.status
-              })\n\n${response.response.statusText}`
+              `The server responded with an error (${response.response.status})\n\n${response.response.statusText}`
             )
           )
           break

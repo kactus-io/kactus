@@ -11,6 +11,7 @@ import {
   IMouseClickSource,
   IKeyboardSource,
   ISelectAllSource,
+  findLastSelectableRow,
 } from './selection'
 import { createUniqueId, releaseUniqueId } from '../../lib/id-pool'
 import { LoadingOverlay } from '../../lib/loading'
@@ -88,10 +89,10 @@ interface IListProps {
    * Consumers of this event do _not_ have to call event.preventDefault,
    * when this event is subscribed to the list will automatically call it.
    */
-  readonly onRowClick?: (row: number, soure: ClickSource) => void
+  readonly onRowClick?: (row: number, source: ClickSource) => void
 
   /**
-   * This prop defines the behaviour of the selection of items whithin this list.
+   * This prop defines the behaviour of the selection of items within this list.
    *  - 'single' : (default) single list-item selection. [shift] and [ctrl] have
    * no effect. Use in combination with one of:
    *             onSelectedRowChanged(row: number)
@@ -371,15 +372,26 @@ export class List extends React.Component<IListProps, IListState> {
       return
     }
 
-    if (event.key === 'ArrowDown') {
+    const source: SelectionSource = { kind: 'keyboard', event }
+
+    // Home is Cmd+ArrowUp on macOS, end is Cmd+ArrowDown, see
+    // https://github.com/desktop/desktop/pull/8644#issuecomment-645965884
+    const isHomeKey = event.metaKey && event.key === 'ArrowUp'
+    const isEndKey = event.metaKey && event.key === 'ArrowDown'
+
+    if (isHomeKey) {
+      this.moveSelectionToFirstSelectableRow(source)
+    } else if (isEndKey) {
+      this.moveSelectionToLastSelectableRow(source)
+    } else if (event.key === 'ArrowDown') {
       if (
         event.shiftKey &&
         this.props.selectionMode &&
         this.props.selectionMode !== 'single'
       ) {
-        this.addSelection('down', event)
+        this.addSelection('down', source)
       } else {
-        this.moveSelection('down', event)
+        this.moveSelection('down', source)
       }
       event.preventDefault()
     } else if (event.key === 'ArrowUp') {
@@ -388,9 +400,9 @@ export class List extends React.Component<IListProps, IListState> {
         this.props.selectionMode &&
         this.props.selectionMode !== 'single'
       ) {
-        this.addSelection('up', event)
+        this.addSelection('up', source)
       } else {
-        this.moveSelection('up', event)
+        this.moveSelection('up', source)
       }
       event.preventDefault()
     }
@@ -467,12 +479,9 @@ export class List extends React.Component<IListProps, IListState> {
     return this.props.canSelectRow ? this.props.canSelectRow(rowIndex) : true
   }
 
-  private addSelection(
-    direction: SelectionDirection,
-    event: React.KeyboardEvent<any>
-  ) {
+  private addSelection(direction: SelectionDirection, source: SelectionSource) {
     if (this.props.selectedRows.length === 0) {
-      return this.moveSelection(direction, event)
+      return this.moveSelection(direction, source)
     }
 
     const lastSelection = this.props.selectedRows[
@@ -490,17 +499,14 @@ export class List extends React.Component<IListProps, IListState> {
     if (newRow != null) {
       if (this.props.onSelectionChanged) {
         const newSelection = createSelectionBetween(selectionOrigin, newRow)
-        this.props.onSelectionChanged(newSelection, { kind: 'keyboard', event })
+        this.props.onSelectionChanged(newSelection, source)
       }
 
       if (
         this.props.selectionMode === 'range' &&
         this.props.onSelectedRangeChanged
       ) {
-        this.props.onSelectedRangeChanged(selectionOrigin, newRow, {
-          kind: 'keyboard',
-          event,
-        })
+        this.props.onSelectedRangeChanged(selectionOrigin, newRow, source)
       }
 
       this.scrollRowToVisible(newRow)
@@ -509,7 +515,7 @@ export class List extends React.Component<IListProps, IListState> {
 
   private moveSelection(
     direction: SelectionDirection,
-    event: React.KeyboardEvent<any>
+    source: SelectionSource
   ) {
     const lastSelection =
       this.props.selectedRows.length > 0
@@ -523,28 +529,49 @@ export class List extends React.Component<IListProps, IListState> {
     )
 
     if (newRow != null) {
-      if (this.props.onSelectionChanged) {
-        this.props.onSelectionChanged([newRow], { kind: 'keyboard', event })
-      }
-
-      if (this.props.onSelectedRowChanged) {
-        const rowCount = this.props.rowCount
-
-        if (newRow < 0 || newRow >= rowCount) {
-          log.debug(
-            `[List.moveSelection] unable to onSelectedRowChanged for row '${newRow}' as it is outside the bounds of the array [0, ${rowCount}]`
-          )
-          return
-        }
-
-        this.props.onSelectedRowChanged(newRow, {
-          kind: 'keyboard',
-          event,
-        })
-      }
-
-      this.scrollRowToVisible(newRow)
+      this.moveSelectionTo(newRow, source)
     }
+  }
+
+  private moveSelectionToFirstSelectableRow(source: SelectionSource) {
+    const { canSelectRow, props } = this
+    const { rowCount } = props
+    const row = findLastSelectableRow('up', rowCount, canSelectRow)
+
+    if (row !== null) {
+      this.moveSelectionTo(row, source)
+    }
+  }
+
+  private moveSelectionToLastSelectableRow(source: SelectionSource) {
+    const { canSelectRow, props } = this
+    const { rowCount } = props
+    const row = findLastSelectableRow('down', rowCount, canSelectRow)
+
+    if (row !== null) {
+      this.moveSelectionTo(row, source)
+    }
+  }
+
+  private moveSelectionTo(row: number, source: SelectionSource) {
+    if (this.props.onSelectionChanged) {
+      this.props.onSelectionChanged([row], source)
+    }
+
+    if (this.props.onSelectedRowChanged) {
+      const rowCount = this.props.rowCount
+
+      if (row < 0 || row >= rowCount) {
+        log.debug(
+          `[List.moveSelection] unable to onSelectedRowChanged for row '${row}' as it is outside the bounds of the array [0, ${rowCount}]`
+        )
+        return
+      }
+
+      this.props.onSelectedRowChanged(row, source)
+    }
+
+    this.scrollRowToVisible(row)
   }
 
   private scrollRowToVisible(row: number) {

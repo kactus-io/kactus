@@ -8,7 +8,7 @@ import { IKactusFile } from '../../lib/kactus'
 const RowHeight = 29
 
 interface ISketchFilesListProps {
-  readonly files: Array<IKactusFile>
+  readonly files: ReadonlyArray<IKactusFile>
   readonly selectedFileID: string | null
   readonly onFileSelectionChanged: (file: IKactusFile) => void
   readonly onParse: (file: IKactusFile) => void

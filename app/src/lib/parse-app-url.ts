@@ -1,5 +1,5 @@
 import * as URL from 'url'
-import { testForInvalidChars } from './sanitize-branch'
+import { testForInvalidChars } from './sanitize-ref-name'
 
 export interface IOAuthAction {
   readonly name: 'oauth'
@@ -65,7 +65,7 @@ export type URLActionType =
   | IParseSketchFileAction
   | IImportSketchFileAction
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
+// eslint-disable-next-line @typescript-eslint/naming-convention
 interface ParsedUrlQueryWithUndefined {
   // `undefined` is added here to ensure we handle the missing querystring key
   // See https://github.com/Microsoft/TypeScript/issues/13778 for discussion about

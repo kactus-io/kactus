@@ -33,8 +33,9 @@ export function showUncaughtException(isLaunchError: boolean, error: Error) {
       message:
         `Kactus has encountered an unrecoverable error and will need to restart.\n\n` +
         `This has been reported to the team, but if you encounter this repeatedly please report ` +
-        `this issue to the Kactus issue tracker.\n\n${error.stack ||
-          error.message}`,
+        `this issue to the Kactus issue tracker.\n\n${
+          error.stack || error.message
+        }`,
     })
     if (!__DEV__) {
       app.relaunch()

@@ -44,12 +44,12 @@ github
     platforms.getReleaseBranchName(),
     require('../changelog.json').releases[packageInfo.getVersion()] || []
   )
-  .then(function(res) {
+  .then(function (res) {
     releaseId = res.id
     return uploadOSXAssets(releaseId)
   })
   .then(artifacts => {
-    const names = artifacts.map(function(item, index) {
+    const names = artifacts.map(function (item, index) {
       return item.name
     })
     console.log(`Uploaded artifacts: ${names}`)

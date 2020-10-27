@@ -15,7 +15,7 @@ import { PopupType } from '../../models/popup'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 
-import untildify = require('untildify')
+import untildify from 'untildify'
 
 interface IAddExistingRepositoryProps {
   readonly dispatcher: Dispatcher

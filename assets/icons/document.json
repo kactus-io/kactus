@@ -2,6 +2,52 @@
   "_class": "document",
   "assets": {
     "_class": "assetCollection",
+    "colorAssets": [
+      {
+        "_class": "MSImmutableColorAsset",
+        "color": {
+          "_class": "color",
+          "alpha": 1,
+          "blue": 0.6901960784313725,
+          "green": 0.9568627450980393,
+          "red": 0.6862745098039216
+        },
+        "do_objectID": "1B9CDD0C-7BE1-4751-9451-AA9F2C6FE976"
+      },
+      {
+        "_class": "MSImmutableColorAsset",
+        "color": {
+          "_class": "color",
+          "alpha": 1,
+          "blue": 0.3529411764705881,
+          "green": 0.8980392156862745,
+          "red": 0.3568627450980392
+        },
+        "do_objectID": "4BA5BACD-F595-4BDA-B5C2-D33373789D49"
+      },
+      {
+        "_class": "MSImmutableColorAsset",
+        "color": {
+          "_class": "color",
+          "alpha": 1,
+          "blue": 0.2470588235294118,
+          "green": 0.6784313725490196,
+          "red": 0.2431372549019608
+        },
+        "do_objectID": "20D77213-338E-4D7A-922F-32CC24A68DEC"
+      },
+      {
+        "_class": "MSImmutableColorAsset",
+        "color": {
+          "_class": "color",
+          "alpha": 1,
+          "blue": 0.0823529411764706,
+          "green": 0.09803921568627451,
+          "red": 0.0784313725490196
+        },
+        "do_objectID": "3704D6B3-AD97-4DCC-B929-FDCB4350C91B"
+      }
+    ],
     "colors": [
       {
         "_class": "color",
@@ -32,6 +78,11 @@
         "red": 0.0784313725490196
       }
     ],
+    "do_objectID": "7A65AA25-4C34-4A61-A75E-A52061FA3024",
+    "exportPresets": [
+    ],
+    "gradientAssets": [
+    ],
     "gradients": [
     ],
     "imageCollection": {
@@ -44,7 +95,14 @@
   },
   "colorSpace": 0,
   "do_objectID": "F82CAAF4-0E94-448B-ABC3-CD4874730724",
+  "documentState": {
+    "_class": "documentState"
+  },
+  "fontReferences": [
+  ],
   "foreignLayerStyles": [
+  ],
+  "foreignSwatches": [
   ],
   "foreignSymbols": [
   ],
@@ -52,16 +110,71 @@
   ],
   "layerSymbols": {
     "_class": "symbolContainer",
+    "do_objectID": "D7108FDA-0C8F-448B-ABC3-C64A74527E49",
     "objects": [
     ]
   },
   "meta": {
-    "appVersion": "52.3",
-    "build": 67297,
-    "version": 112
+    "appVersion": "69",
+    "build": 107357,
+    "version": 134
   },
   "pages": [
     "Page 1",
     "plugin icons"
-  ]
+  ],
+  "sharedSwatches": {
+    "_class": "swatchContainer",
+    "do_objectID": "C11C8BDA-0C8F-448B-ABC3-C64A74527045",
+    "objects": [
+      {
+        "_class": "swatch",
+        "do_objectID": "68EBBC78-1889-4751-9451-AA9F2C6FE976",
+        "name": "1. #AFF4B0",
+        "value": {
+          "_class": "color",
+          "alpha": 1,
+          "blue": 0.6901960784313725,
+          "green": 0.9568627450980393,
+          "red": 0.6862745098039216
+        }
+      },
+      {
+        "_class": "swatch",
+        "do_objectID": "38D2DBB9-96FD-4BDA-B5C2-D33373789D49",
+        "name": "2. #5BE55A",
+        "value": {
+          "_class": "color",
+          "alpha": 1,
+          "blue": 0.3529411764705881,
+          "green": 0.8980392156862745,
+          "red": 0.3568627450980392
+        }
+      },
+      {
+        "_class": "swatch",
+        "do_objectID": "53A01367-50E6-4D7A-922F-32CC24A68DEC",
+        "name": "3. #3EAD3F",
+        "value": {
+          "_class": "color",
+          "alpha": 1,
+          "blue": 0.2470588235294118,
+          "green": 0.6784313725490196,
+          "red": 0.2431372549019608
+        }
+      },
+      {
+        "_class": "swatch",
+        "do_objectID": "4473B7C7-CEFF-4DCC-B929-FDCB4350C91B",
+        "name": "4. #141915",
+        "value": {
+          "_class": "color",
+          "alpha": 1,
+          "blue": 0.0823529411764706,
+          "green": 0.09803921568627451,
+          "red": 0.0784313725490196
+        }
+      }
+    ]
+  }
 }

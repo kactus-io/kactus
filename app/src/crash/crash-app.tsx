@@ -1,19 +1,16 @@
 import * as React from 'react'
-import { ipcRenderer, remote } from 'electron'
+import { ipcRenderer } from 'electron'
 import { ICrashDetails, ErrorType } from './shared'
 import { TitleBar } from '../ui/window/title-bar'
 import { encodePathAsUrl } from '../lib/path'
-import {
-  WindowState,
-  getWindowState,
-  windowStateChannelName,
-} from '../lib/window-state'
 import { Octicon, OcticonSymbol } from '../ui/octicons'
 import { Button } from '../ui/lib/button'
 import { LinkButton } from '../ui/lib/link-button'
 import { getVersion } from '../ui/lib/app-proxy'
 import { getOS } from '../lib/get-os'
 
+// This is a weird one, let's leave it as a placeholder
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface ICrashAppProps {}
 
 interface ICrashAppState {
@@ -28,11 +25,6 @@ interface ICrashAppState {
    * The error that caused us to spawn the crash process.
    */
   readonly error?: Error
-
-  /**
-   * The current state of the Window, ie maximized, minimized full-screen etc.
-   */
-  readonly windowState: WindowState
 }
 
 // Note that we're reusing the welcome illustration here, any changes to it
@@ -89,19 +81,9 @@ function prepareErrorMessage(error: Error) {
 export class CrashApp extends React.Component<ICrashAppProps, ICrashAppState> {
   public constructor(props: ICrashAppProps) {
     super(props)
-
-    this.state = {
-      windowState: getWindowState(remote.getCurrentWindow()),
-    }
   }
 
   public componentDidMount() {
-    const window = remote.getCurrentWindow()
-
-    ipcRenderer.on(windowStateChannelName, () => {
-      this.setState({ windowState: getWindowState(window) })
-    })
-
     ipcRenderer.on(
       'error',
       (event: Electron.IpcRendererEvent, crashDetails: ICrashDetails) => {

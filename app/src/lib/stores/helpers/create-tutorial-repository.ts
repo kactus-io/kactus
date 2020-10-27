@@ -12,13 +12,17 @@ import { git } from '../../git'
 import { friendlyEndpointName } from '../../friendly-endpoint-name'
 import { IRemote } from '../../../models/remote'
 import { envForRemoteOperation } from '../../git/environment'
+import {
+  DefaultBranchInGit,
+  DefaultBranchInDesktop,
+} from '../../helpers/default-branch'
 
 const nl = '\n'
-const InititalReadmeContents =
+const InitialReadmeContents =
   `# Welcome to Kactus!${nl}${nl}` +
   `This is your README. READMEs are where you can communicate ` +
   `what your project is and how to use it.${nl}`
-const InititalGitignoreContents = `# Sketch files${nl}*.sketch${nl}`
+const InitialGitignoreContents = `# Sketch files${nl}*.sketch${nl}`
 
 async function createAPIRepository(account: Account, name: string) {
   const api = new API(Provider.GitHub, account.endpoint, account.token)
@@ -62,6 +66,7 @@ async function pushRepo(
   path: string,
   account: Account,
   remote: IRemote,
+  remoteBranchName: string,
   progressCb: (title: string, value: number, description?: string) => void
 ) {
   const pushTitle = `Pushing repository to ${friendlyEndpointName(account)}`
@@ -79,7 +84,7 @@ async function pushRepo(
     }
   )
 
-  const args = ['push', '-u', remote.name, 'master']
+  const args = ['push', '-u', remote.name, remoteBranchName]
   await git(args, path, 'tutorial:push', pushOpts)
 }
 
@@ -112,31 +117,30 @@ export async function createTutorialRepository(
   }
 
   const repo = await createAPIRepository(account, name)
-
+  const branch = repo.default_branch ?? DefaultBranchInDesktop
   progressCb('Initializing local repository', 0.2)
 
   await ensureDir(path)
   await git(['init'], path, 'tutorial:init')
 
-  await writeFile(Path.join(path, 'README.md'), InititalReadmeContents)
-  await writeFile(Path.join(path, '.gitignore'), InititalGitignoreContents)
+  if (branch !== DefaultBranchInGit) {
+    await git(['checkout', '-b', branch], path, 'tutorial:rename-branch')
+  }
+
+  await writeFile(Path.join(path, 'README.md'), InitialReadmeContents)
+  await writeFile(Path.join(path, '.gitignore'), InitialGitignoreContents)
 
   await git(['add', '--', 'README.md', '.gitignore'], path, 'tutorial:add')
-  await git(
-    ['commit', '-m', 'Initial commit', '--', 'README.md', '.gitignore'],
-    path,
-    'tutorial:commit'
-  )
+  await git(['commit', '-m', 'Initial commit'], path, 'tutorial:commit')
 
   const remote: IRemote = { name: 'origin', url: repo.clone_url }
-
   await git(
     ['remote', 'add', remote.name, remote.url],
     path,
     'tutorial:add-remote'
   )
 
-  await pushRepo(path, account, remote, (title, value, description) => {
+  await pushRepo(path, account, remote, branch, (title, value, description) => {
     progressCb(title, 0.3 + value * 0.6, description)
   })
 

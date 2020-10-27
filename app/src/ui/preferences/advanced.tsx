@@ -1,34 +1,29 @@
 import * as React from 'react'
-import * as prettyBytes from 'pretty-bytes'
+import prettyBytes from 'pretty-bytes'
 import { DialogContent } from '../dialog'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
 import { Row } from '../../ui/lib/row'
 import { Button } from '../lib/button'
 import { Select } from '../lib/select'
 import { UncommittedChangesStrategyKind } from '../../models/uncommitted-changes-strategy'
+import { RadioButton } from '../lib/radio-button'
 import { getKactusCacheSize, clearKactusCache } from '../../lib/kactus'
+import { Loading } from '../lib/loading'
 
 interface IAdvancedPreferencesProps {
-  readonly confirmRepositoryRemoval: boolean
-  readonly confirmDiscardChanges: boolean
-  readonly confirmForcePush: boolean
+  readonly kactusClearCacheInterval: number
+  readonly onKactusClearCacheInterval: (seconds: number) => void
   readonly uncommittedChangesStrategyKind: UncommittedChangesStrategyKind
-  readonly onConfirmDiscardChangesChanged: (checked: boolean) => void
-  readonly onConfirmRepositoryRemovalChanged: (checked: boolean) => void
-  readonly onConfirmForcePushChanged: (checked: boolean) => void
+  readonly repositoryIndicatorsEnabled: boolean
   readonly onUncommittedChangesStrategyKindChanged: (
     value: UncommittedChangesStrategyKind
   ) => void
-  readonly kactusClearCacheInterval: number
-  readonly onKactusClearCacheInterval: (seconds: number) => void
+  readonly onRepositoryIndicatorsEnabledChanged: (enabled: boolean) => void
 }
 
 interface IAdvancedPreferencesState {
-  readonly confirmRepositoryRemoval: boolean
-  readonly confirmDiscardChanges: boolean
   readonly kactusCacheSize: number | null
   readonly kactusClearCacheInterval: string
-  readonly confirmForcePush: boolean
   readonly uncommittedChangesStrategyKind: UncommittedChangesStrategyKind
 }
 
@@ -40,9 +35,6 @@ export class Advanced extends React.Component<
     super(props)
 
     this.state = {
-      confirmRepositoryRemoval: this.props.confirmRepositoryRemoval,
-      confirmDiscardChanges: this.props.confirmDiscardChanges,
-      confirmForcePush: this.props.confirmForcePush,
       kactusCacheSize: null,
       kactusClearCacheInterval: '' + this.props.kactusClearCacheInterval,
       uncommittedChangesStrategyKind: this.props.uncommittedChangesStrategyKind,
@@ -57,38 +49,9 @@ export class Advanced extends React.Component<
       .catch(log.error)
   }
 
-  private onConfirmDiscardChangesChanged = (
-    event: React.FormEvent<HTMLInputElement>
-  ) => {
-    const value = event.currentTarget.checked
-
-    this.setState({ confirmDiscardChanges: value })
-    this.props.onConfirmDiscardChangesChanged(value)
-  }
-
-  private onConfirmForcePushChanged = (
-    event: React.FormEvent<HTMLInputElement>
-  ) => {
-    const value = event.currentTarget.checked
-
-    this.setState({ confirmForcePush: value })
-    this.props.onConfirmForcePushChanged(value)
-  }
-
-  private onConfirmRepositoryRemovalChanged = (
-    event: React.FormEvent<HTMLInputElement>
-  ) => {
-    const value = event.currentTarget.checked
-
-    this.setState({ confirmRepositoryRemoval: value })
-    this.props.onConfirmRepositoryRemovalChanged(value)
-  }
-
   private onUncommittedChangesStrategyKindChanged = (
-    event: React.FormEvent<HTMLInputElement>
+    value: UncommittedChangesStrategyKind
   ) => {
-    const value = event.currentTarget.value as UncommittedChangesStrategyKind
-
     this.setState({ uncommittedChangesStrategyKind: value })
     this.props.onUncommittedChangesStrategyKindChanged(value)
   }
@@ -99,6 +62,12 @@ export class Advanced extends React.Component<
     const value = parseInt(event.currentTarget.value, 10)
     this.setState({ kactusClearCacheInterval: '' + value })
     this.props.onKactusClearCacheInterval(value)
+  }
+
+  private onRepositoryIndicatorsEnabledChanged = (
+    event: React.FormEvent<HTMLInputElement>
+  ) => {
+    this.props.onRepositoryIndicatorsEnabledChanged(event.currentTarget.checked)
   }
 
   private onClearKactusCache = () => {
@@ -135,9 +104,11 @@ export class Advanced extends React.Component<
         <Row>
           <span className="label-for-button">
             Size of the cache:{' '}
-            {this.state.kactusCacheSize
-              ? prettyBytes(this.state.kactusCacheSize)
-              : 'loading...'}
+            {this.state.kactusCacheSize ? (
+              prettyBytes(this.state.kactusCacheSize)
+            ) : (
+              <Loading />
+            )}
           </span>
           <Button onClick={this.onClearKactusCache}>Clear cache now</Button>
         </Row>
@@ -150,81 +121,52 @@ export class Advanced extends React.Component<
       <DialogContent>
         <div className="advanced-section">
           <h2>If I have changes and I switch branches...</h2>
-          <div className="radio-component">
-            <input
-              type="radio"
-              id={UncommittedChangesStrategyKind.AskForConfirmation}
-              value={UncommittedChangesStrategyKind.AskForConfirmation}
-              checked={
-                this.state.uncommittedChangesStrategyKind ===
-                UncommittedChangesStrategyKind.AskForConfirmation
-              }
-              onChange={this.onUncommittedChangesStrategyKindChanged}
-            />
-            <label htmlFor={UncommittedChangesStrategyKind.AskForConfirmation}>
-              Ask me where I want the changes to go
-            </label>
-          </div>
-          <div className="radio-component">
-            <input
-              type="radio"
-              id={UncommittedChangesStrategyKind.MoveToNewBranch}
-              value={UncommittedChangesStrategyKind.MoveToNewBranch}
-              checked={
-                this.state.uncommittedChangesStrategyKind ===
-                UncommittedChangesStrategyKind.MoveToNewBranch
-              }
-              onChange={this.onUncommittedChangesStrategyKindChanged}
-            />
-            <label htmlFor={UncommittedChangesStrategyKind.MoveToNewBranch}>
-              Always bring my changes to my new branch
-            </label>
-          </div>
-          <div className="radio-component">
-            <input
-              type="radio"
-              id={UncommittedChangesStrategyKind.StashOnCurrentBranch}
-              value={UncommittedChangesStrategyKind.StashOnCurrentBranch}
-              checked={
-                this.state.uncommittedChangesStrategyKind ===
-                UncommittedChangesStrategyKind.StashOnCurrentBranch
-              }
-              onChange={this.onUncommittedChangesStrategyKindChanged}
-            />
-            <label
-              htmlFor={UncommittedChangesStrategyKind.StashOnCurrentBranch}
-            >
-              Always stash and leave my changes on the current branch
-            </label>
-          </div>
+
+          <RadioButton
+            value={UncommittedChangesStrategyKind.AskForConfirmation}
+            checked={
+              this.state.uncommittedChangesStrategyKind ===
+              UncommittedChangesStrategyKind.AskForConfirmation
+            }
+            label="Ask me where I want the changes to go"
+            onSelected={this.onUncommittedChangesStrategyKindChanged}
+          />
+
+          <RadioButton
+            value={UncommittedChangesStrategyKind.MoveToNewBranch}
+            checked={
+              this.state.uncommittedChangesStrategyKind ===
+              UncommittedChangesStrategyKind.MoveToNewBranch
+            }
+            label="Always bring my changes to my new branch"
+            onSelected={this.onUncommittedChangesStrategyKindChanged}
+          />
+
+          <RadioButton
+            value={UncommittedChangesStrategyKind.StashOnCurrentBranch}
+            checked={
+              this.state.uncommittedChangesStrategyKind ===
+              UncommittedChangesStrategyKind.StashOnCurrentBranch
+            }
+            label="Always stash and leave my changes on the current branch"
+            onSelected={this.onUncommittedChangesStrategyKindChanged}
+          />
         </div>
         <div className="advanced-section">
-          <h2>Show a confirmation dialog before...</h2>
+          <h2>Background updates</h2>
           <Checkbox
-            label="Removing repositories"
+            label="Periodically fetch and refresh status of all repositories"
             value={
-              this.state.confirmRepositoryRemoval
+              this.props.repositoryIndicatorsEnabled
                 ? CheckboxValue.On
                 : CheckboxValue.Off
             }
-            onChange={this.onConfirmRepositoryRemovalChanged}
+            onChange={this.onRepositoryIndicatorsEnabledChanged}
           />
-          <Checkbox
-            label="Discarding changes"
-            value={
-              this.state.confirmDiscardChanges
-                ? CheckboxValue.On
-                : CheckboxValue.Off
-            }
-            onChange={this.onConfirmDiscardChangesChanged}
-          />
-          <Checkbox
-            label="Force pushing"
-            value={
-              this.state.confirmForcePush ? CheckboxValue.On : CheckboxValue.Off
-            }
-            onChange={this.onConfirmForcePushChanged}
-          />
+          <p className="git-settings-description">
+            Allows the display of up-to-date status indicators in the repository
+            list. Disabling this may improve performance with many repositories.
+          </p>
         </div>
 
         <div className="advanced-section">

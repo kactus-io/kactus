@@ -8,7 +8,7 @@ import {
   getBranchCheckouts,
 } from '../../../src/lib/git'
 import { setupFixtureRepository } from '../../helpers/repositories'
-import * as moment from 'moment'
+import moment from 'moment'
 import { GitProcess } from 'dugite'
 
 async function createAndCheckout(
@@ -52,7 +52,6 @@ describe('git/reflog', () => {
       await renameBranch(repository, currentBranch!, 'branch-2-test')
 
       const branches = await getRecentBranches(repository, 10)
-      expect(branches).not.toContain('master')
       expect(branches).not.toContain('branch-2')
       expect(branches).toContain('branch-1')
       expect(branches).toContain('branch-2-test')
@@ -78,9 +77,7 @@ describe('git/reflog', () => {
 
       const branches = await getBranchCheckouts(
         repository,
-        moment()
-          .add(1, 'day')
-          .toDate()
+        moment().add(1, 'day').toDate()
       )
       expect(branches.size).toBe(0)
     })
@@ -92,9 +89,7 @@ describe('git/reflog', () => {
 
       const branches = await getBranchCheckouts(
         repository,
-        moment()
-          .subtract(1, 'hour')
-          .toDate()
+        moment().subtract(1, 'hour').toDate()
       )
       expect(branches.size).toBe(2)
     })
@@ -108,9 +103,7 @@ describe('git/reflog', () => {
 
       const branches = await getBranchCheckouts(
         repository,
-        moment()
-          .subtract(1, 'hour')
-          .toDate()
+        moment().subtract(1, 'hour').toDate()
       )
       expect(branches.size).toBe(0)
     })

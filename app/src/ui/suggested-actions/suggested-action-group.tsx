@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import * as ReactCSSTransitionReplace from 'react-css-transition-replace'
+import ReactCSSTransitionReplace from 'react-css-transition-replace'
 
 interface ISuggestedActionGroup {
   /**
@@ -18,7 +18,7 @@ interface ISuggestedActionGroup {
 
   /**
    * Pass `false` to skip enter/exit transitions, which
-   * can be useful during inital component loading. Only used
+   * can be useful during initial component loading. Only used
    * if `transitions` is also included.
    *
    * Defaults to `true` (enabled transitions)
@@ -30,9 +30,7 @@ interface ISuggestedActionGroup {
  * Wraps a list of suggested action components with extra styling
  * and animations.
  */
-export const SuggestedActionGroup: React.FunctionComponent<
-  ISuggestedActionGroup
-> = props => {
+export const SuggestedActionGroup: React.FunctionComponent<ISuggestedActionGroup> = props => {
   const cn = 'suggested-action-group ' + (props.type ? props.type : 'normal')
   if (props.transitions === 'replace') {
     const enableTransitions =

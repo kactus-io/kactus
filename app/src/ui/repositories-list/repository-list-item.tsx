@@ -11,7 +11,6 @@ import {
   RevealInFileManagerLabel,
   DefaultEditorLabel,
 } from '../lib/context-menu'
-import { enableGroupRepositoriesByOwner } from '../../lib/feature-flag'
 
 interface IRepositoryListItemProps {
   readonly repository: Repositoryish
@@ -43,7 +42,7 @@ interface IRepositoryListItemProps {
   /** The characters in the repository name to highlight */
   readonly matches: IMatches
 
-  /** Number of commits this local repo branch is behind or ahead of its remote brance */
+  /** Number of commits this local repo branch is behind or ahead of its remote branch */
   readonly aheadBehind: IAheadBehind | null
 
   /** Number of uncommitted changes */
@@ -71,33 +70,12 @@ export class RepositoryListItem extends React.Component<
       prefix = `${gitHubRepo.owner.login}/`
     }
 
-    const className = enableGroupRepositoriesByOwner()
-      ? 'repository-list-item group-repositories-by-owner'
-      : 'repository-list-item'
-
     return (
       <div
         onContextMenu={this.onContextMenu}
-        className={className}
+        className="repository-list-item"
         title={repoTooltip}
       >
-        {!enableGroupRepositoriesByOwner() && (
-          <div
-            className="change-indicator-wrapper"
-            title={
-              hasChanges
-                ? 'There are uncommitted changes in this repository'
-                : ''
-            }
-          >
-            {hasChanges ? (
-              <Octicon
-                className="change-indicator"
-                symbol={OcticonSymbol.primitiveDot}
-              />
-            ) : null}
-          </div>
-        )}
         <Octicon
           className="icon-for-repository"
           symbol={iconForRepository(repository)}
@@ -113,7 +91,7 @@ export class RepositoryListItem extends React.Component<
         {repository instanceof Repository &&
           renderRepoIndicators({
             aheadBehind: this.props.aheadBehind,
-            hasChanges: enableGroupRepositoriesByOwner() && hasChanges,
+            hasChanges: hasChanges,
           })}
       </div>
     )
@@ -213,22 +191,19 @@ const renderAheadBehindIndicator = (aheadBehind: IAheadBehind) => {
 
   return (
     <div className="ahead-behind" title={aheadBehindTooltip}>
-      {ahead > 0 && <Octicon symbol={OcticonSymbol.arrowSmallUp} />}
-      {behind > 0 && <Octicon symbol={OcticonSymbol.arrowSmallDown} />}
+      {ahead > 0 && <Octicon symbol={OcticonSymbol.arrowUp} />}
+      {behind > 0 && <Octicon symbol={OcticonSymbol.arrowDown} />}
     </div>
   )
 }
 
 const renderChangesIndicator = () => {
-  const classNames = enableGroupRepositoriesByOwner()
-    ? 'change-indicator-wrapper group-repositories-by-owner'
-    : 'change-indicator-wrapper'
   return (
     <div
-      className={classNames}
+      className="change-indicator-wrapper"
       title="There are uncommitted changes in this repository"
     >
-      <Octicon symbol={OcticonSymbol.primitiveDot} />
+      <Octicon symbol={OcticonSymbol.dotFill} />
     </div>
   )
 }

@@ -23,7 +23,7 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
 
   --button-height: 25px;
   --button-background: #{$green};
-  --button-border-radius: 2px;
+  --button-border-radius: 6px;
   --button-hover-background: #{lighten($green, 5%)};
   --button-text-color: #{$white};
   --button-focus-border-color: #{$green-600};
@@ -46,8 +46,9 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   // Typography
   //
   // Font, line-height, and color for body text, headings, and more.
-  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
-  --font-family-monospace: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  $emoji_fallback_fonts: 'Apple Color Emoji', 'Segoe UI', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  --font-family-sans-serif: system-ui, sans-serif, #{$emoji_fallback_fonts};
+  --font-family-monospace: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace, #{$emoji_fallback_fonts};
 
   /**
    * Font weight to use for semibold text
@@ -56,7 +57,10 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   /**
    * Font weight to use for light text
    */
-  --font-weight-light: 300; // Pixel value used to responsively scale all typography. Applied to the `<html>` element.
+  --font-weight-light: 300;
+
+  // Pixel value used to responsively scale all typography. Applied to the `<html>` element.
+  // When adding a new font-size variable, please update the fix-emoji-spacing.ts file.
   --font-size: 12px;
   --font-size-sm: 11px;
   --font-size-md: 14px;
@@ -156,7 +160,12 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   --spacing-quint: calc(var(--spacing) * 5);
   --spacing-half: calc(var(--spacing) / 2);
   --spacing-third: calc(var(--spacing) / 3);
-  --border-radius: 3px;
+
+  --border-radius: 6px;
+  // When we use the regular border radius (6px) the outline
+  // leaves a tiny gap in the corners so we drop down to a
+  // similar value than Chrome's default outline border radius.
+  --outlined-border-radius: 3px;
   --base-border: 1px solid var(--box-border-color);
   --shadow-color: rgba(71, 83, 95, 0.19);
   --base-box-shadow: 0 2px 7px var(--shadow-color);
@@ -264,6 +273,12 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   --focus-color: #{$green};
 
   /**
+   * An alternative focus color to use when the background color of
+   * the focused element is the same as the regular focus color.
+   */
+  --alt-focus-color: #{$blue-800};
+
+  /**
    * Variables for form elements
    */
   --text-field-height: 25px;
@@ -327,6 +342,9 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   --diff-delete-hover-gutter-color: #{$red-300};
   --diff-delete-hover-text-color: var(--text-color);
 
+  --diff-empty-row-background-color: #{$gray-000};
+  --diff-empty-row-gutter-background-color: var(--diff-empty-row-background-color);
+
   // Syntax highlighting text colors
   --syntax-variable-color: #6f42c1;
   --syntax-alt-variable-color: #24292e;
@@ -384,6 +402,13 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   --status-pending-color: #{$yellow-700};
   --status-error-color: #{$red-500};
   --status-success-color: #{$green-500};
+
+  // PR status icon colors
+  --pr-open-icon-color: #{$green-500};
+  --pr-draft-icon-color: #{$gray-500};
+
+  --call-to-action-bubble-border-color: #{$green};
+  --call-to-action-bubble-color: #{$green};
 }
 
 ::backdrop {

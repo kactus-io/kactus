@@ -127,10 +127,7 @@ export async function generatePagePreview(
             if (err) {
               return reject(err)
             }
-            const id = stdout
-              .split('\n')
-              [index].replace('Exported', '')
-              .trim()
+            const id = stdout.split('\n')[index].replace('Exported', '').trim()
             if (!id) {
               return reject(new Error('Failed to generate the preview'))
             }
@@ -259,8 +256,8 @@ export function shouldShowPremiumUpsell(
     }
     if (
       repository.gitHubRepository.isPrivate &&
-      (!potentialPremiumAccount.unlockedKactus &&
-        !potentialPremiumAccount.unlockedEnterpriseKactus)
+      !potentialPremiumAccount.unlockedKactus &&
+      !potentialPremiumAccount.unlockedEnterpriseKactus
     ) {
       return { enterprise: false, user: potentialPremiumAccount }
     }
@@ -337,6 +334,10 @@ export function getKactusStoragePaths(
 }
 
 export const getKactusCacheSize = async () => {
+  if (!(await Fs.pathExists(storageRootPath))) {
+    return 0
+  }
+
   const getSize = async (path: string) => {
     const stats = await Fs.stat(path)
 

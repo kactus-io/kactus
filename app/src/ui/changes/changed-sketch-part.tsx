@@ -10,7 +10,7 @@ interface IChangedSketchPartProps {
   readonly name: string
   readonly id: string
   readonly opened: boolean
-  readonly parts: Array<string>
+  readonly parts: ReadonlyArray<string>
   readonly status?: AppFileStatus
   readonly onOpenChanged: (id: string, opened: boolean) => void
 

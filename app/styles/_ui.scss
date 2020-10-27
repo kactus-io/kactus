@@ -33,6 +33,8 @@
 @import 'ui/configure-git-user';
 @import 'ui/form';
 @import 'ui/text-box';
+@import 'ui/ref-name-text-box';
+@import 'ui/radio-button';
 @import 'ui/button';
 @import 'ui/select';
 @import 'ui/row';
@@ -54,7 +56,6 @@
 @import 'ui/no-repositories';
 @import 'ui/terms-and-conditions';
 @import 'ui/ref';
-@import 'ui/monospaced';
 @import 'ui/initialize-lfs';
 @import 'ui/ci-status';
 @import 'ui/pull-request-badge';
@@ -79,3 +80,6 @@
 @import 'ui/suggested-actions/suggested-action';
 @import 'ui/suggested-actions/suggested-action-group';
 @import 'ui/config-lock-file-exists';
+@import 'ui/local-changes-overwritten';
+@import 'ui/side-by-side-diff';
+@import 'ui/diff-options';

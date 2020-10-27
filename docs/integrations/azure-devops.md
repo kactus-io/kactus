@@ -4,15 +4,15 @@
 
 To authenticate against Azure DevOps repositories you will need to create a personal access token.
 
-1. Go to your Azure DevOps account and select **Security** in the user profile dropdown:
+1. Go to your Azure DevOps account and select **Personal Access Tokens** in the user settings dropdown:
 
-![](https://user-images.githubusercontent.com/4404199/29400833-79755fe0-8337-11e7-8cfb-1d346a6801b4.png)
+![](https://user-images.githubusercontent.com/792378/90431645-f9d9cd80-e08e-11ea-9fb4-ca8ba2a5d769.png)
 
 2. Select **Personal access tokens**
 
-3. Click **New token** to create a new personal access token. Give it a name, select the organizations you would like the token to apply to, and choose when you would like the token to expire.
+   - **Note:** For the **Expiration** dropdown you can select **Custom defined** to select an expiration date up to a year in advance of the current date. This is useful if you do not want to have to periodically go back and generate a new token after your current token expires.
 
-    - **Note:** For the **Expiration** dropdown you can select **Custom defined** to select an expiration date up to a year in advance of the         current date. This is useful if you do not want to have to periodically go back and generate a new token after your current token         expires.
+3 . Under the **Scopes** section choose **Custom defined** and then select **Read & Write** under the **Code** section. This will grant GitHub Desktop read and write access to your Azure DevOps repositories.
 
  4. Under the **Scopes** section choose **Custom defined** and then select **Read & Write** under the **Code** section. This will grant Kactus read and write access to your Azure DevOps repositories.
 

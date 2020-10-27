@@ -4,7 +4,7 @@ function openFile(path) {
   )
 }
 
-export default function(context) {
+export default function (context) {
   if (!context.document.fileURL()) {
     context.document.showMessage('Open a file first ;)')
   } else {

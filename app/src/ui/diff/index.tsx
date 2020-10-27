@@ -3,8 +3,6 @@ import * as React from 'react'
 import { assertNever } from '../../lib/fatal-error'
 import { encodePathAsUrl } from '../../lib/path'
 
-import { Dispatcher } from '../dispatcher'
-
 import { Repository } from '../../models/repository'
 import {
   CommittedFileChange,
@@ -25,13 +23,17 @@ import {
   ILargeTextDiff,
   ImageDiffType,
 } from '../../models/diff'
+import { ManualConflictResolution } from '../../models/manual-conflict-resolution'
 import { Button } from '../lib/button'
 import { ImageDiff } from './image-diffs'
 import { ConflictedSketchDiff } from './conflicted-sketch-diff'
 import { BinaryFile } from './binary-file'
 import { TextDiff } from './text-diff'
-
-import { LoadingOverlay } from '../lib/loading'
+import { SideBySideDiff } from './side-by-side-diff'
+import {
+  enableExperimentalDiffViewer,
+  enableSideBySideDiffs,
+} from '../../lib/feature-flag'
 
 // image used when no diff is displayed
 const NoDiffImage = encodePathAsUrl(__dirname, 'static/ufo-alert.svg')
@@ -58,18 +60,46 @@ interface IDiffProps {
   /** The diff that should be rendered */
   readonly diff: IDiff
 
-  /** propagate errors up to the main application */
-  readonly dispatcher: Dispatcher
-
   readonly openSketchFile?: () => void
 
   /** The type of image diff to display. */
   readonly imageDiffType: ImageDiffType
 
-  readonly loading: number | null
-
   /** Hiding whitespace in diff. */
   readonly hideWhitespaceInDiff: boolean
+
+  /** Whether we should display side by side diffs. */
+  readonly showSideBySideDiff: boolean
+
+  /** Whether we should show a confirmation dialog when the user discards changes */
+  readonly askForConfirmationOnDiscardChanges?: boolean
+
+  /**
+   * Called when the user requests to open a binary file in an the
+   * system-assigned application for said file type.
+   */
+  readonly onOpenBinaryFile: (fullPath: string) => void
+
+  /**
+   * Called when the user is viewing an image diff and requests
+   * to change the diff presentation mode.
+   */
+  readonly onChangeImageDiffType: (type: ImageDiffType) => void
+
+  /*
+   * Called when the user wants to discard a selection of the diff.
+   * Only applicable when readOnly is false.
+   */
+  readonly onDiscardChanges?: (
+    diff: ITextDiffData,
+    diffSelection: DiffSelection
+  ) => void
+
+  readonly onResolveConflict?: (
+    repository: Repository,
+    file: WorkingDirectoryFileChange,
+    option: ManualConflictResolution
+  ) => void
 }
 
 interface IDiffState {
@@ -86,38 +116,40 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
     }
   }
 
-  private onChangeImageDiffType = (type: ImageDiffType) => {
-    this.props.dispatcher.changeImageDiffType(type)
-  }
-
   private onPickOurs = () => {
-    if (!this.props.file) {
+    if (
+      !(this.props.file instanceof WorkingDirectoryFileChange) ||
+      !this.props.onResolveConflict
+    ) {
       log.error('This can not be happening...')
       return
     }
-    this.props.dispatcher.resolveConflict(
+    this.props.onResolveConflict(
       this.props.repository,
-      this.props.file.path,
-      'ours'
+      this.props.file,
+      ManualConflictResolution.ours
     )
   }
 
   private onPickTheirs = () => {
-    if (!this.props.file) {
+    if (
+      !(this.props.file instanceof WorkingDirectoryFileChange) ||
+      !this.props.onResolveConflict
+    ) {
       log.error('This can not be happening...')
       return
     }
-    this.props.dispatcher.resolveConflict(
+    this.props.onResolveConflict(
       this.props.repository,
-      this.props.file.path,
-      'theirs'
+      this.props.file,
+      ManualConflictResolution.theirs
     )
   }
 
   private renderSketchConflictedDiff(diff: ISketchDiff) {
     return (
       <ConflictedSketchDiff
-        onChangeDiffType={this.onChangeImageDiffType}
+        onChangeDiffType={this.props.onChangeImageDiffType}
         diffType={this.props.imageDiffType}
         current={diff.current!}
         previous={diff.previous!}
@@ -128,7 +160,6 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
         repository={this.props.repository}
         readOnly={this.props.readOnly}
         file={this.props.file}
-        loading={this.props.loading}
       />
     )
   }
@@ -144,21 +175,8 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
         text={diff.text}
         hunks={diff.hunks}
         onIncludeChanged={this.props.onIncludeChanged}
-        onChangeImageDiffType={this.onChangeImageDiffType}
+        onChangeImageDiffType={this.props.onChangeImageDiffType}
         imageDiffType={this.props.imageDiffType}
-      />
-    )
-  }
-
-  private renderBinaryFile() {
-    if (!this.props.file) {
-      return null
-    }
-    return (
-      <BinaryFile
-        path={this.props.file.path}
-        repository={this.props.repository}
-        dispatcher={this.props.dispatcher}
       />
     )
   }
@@ -199,6 +217,19 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
     return this.renderText(textDiff)
   }
 
+  private renderBinaryFile() {
+    if (!this.props.file) {
+      return null
+    }
+    return (
+      <BinaryFile
+        path={this.props.file.path}
+        repository={this.props.repository}
+        onOpenBinaryFile={this.props.onOpenBinaryFile}
+      />
+    )
+  }
+
   private renderText(diff: ITextDiffData) {
     if (!this.props.file) {
       return null
@@ -236,15 +267,73 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
 
       return <div className="panel empty">No content changes found</div>
     }
+
+    if (
+      enableExperimentalDiffViewer() ||
+      (enableSideBySideDiffs() && this.props.showSideBySideDiff)
+    ) {
+      return (
+        <SideBySideDiff
+          repository={this.props.repository}
+          file={this.props.file}
+          diff={diff}
+          readOnly={this.props.readOnly}
+          showSideBySideDiff={this.props.showSideBySideDiff}
+          onIncludeChanged={this.props.onIncludeChanged}
+          onDiscardChanges={this.props.onDiscardChanges}
+          askForConfirmationOnDiscardChanges={
+            this.props.askForConfirmationOnDiscardChanges
+          }
+        />
+      )
+    }
+
     return (
       <TextDiff
         repository={this.props.repository}
         file={this.props.file}
         readOnly={this.props.readOnly}
         onIncludeChanged={this.props.onIncludeChanged}
-        text={diff.text}
-        hunks={diff.hunks}
+        onDiscardChanges={this.props.onDiscardChanges}
+        diff={diff}
+        askForConfirmationOnDiscardChanges={
+          this.props.askForConfirmationOnDiscardChanges
+        }
       />
+    )
+  }
+
+  private renderSketchDiff(diff: ISketchDiff) {
+    if (diff.type === IKactusFileType.Style) {
+      return this.renderText(diff)
+    }
+
+    let content
+    const { file } = this.props
+    if (file && file.status.kind === AppFileStatusKind.Conflicted) {
+      content = this.renderSketchConflictedDiff(diff)
+    } else if (
+      file &&
+      (file.status.kind === AppFileStatusKind.New ||
+        file.status.kind === AppFileStatusKind.Untracked) &&
+      diff.isDirectory
+    ) {
+      content = this.renderNewDirectory()
+    } else {
+      content = this.renderImage(diff)
+    }
+
+    return (
+      <div className="sketch-diff-wrapper">
+        {this.props.file && this.props.readOnly && this.props.openSketchFile && (
+          <div className="sketch-diff-checkbox">
+            <Button type="submit" onClick={this.props.openSketchFile}>
+              Open Sketch file
+            </Button>
+          </div>
+        )}
+        {content}
+      </div>
     )
   }
 
@@ -260,53 +349,20 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
 
   private renderDiff(diff: IDiff): JSX.Element | null {
     switch (diff.kind) {
-      case DiffType.Text: {
+      case DiffType.Text:
         return this.renderText(diff)
-      }
       case DiffType.Binary:
         return this.renderBinaryFile()
       case DiffType.Image:
       case DiffType.VisualText:
         return this.renderImage(diff)
-      case DiffType.Sketch: {
-        if (diff.type === IKactusFileType.Style) {
-          return this.renderText(diff)
-        }
-
-        let content
-        const { file } = this.props
-        if (file && file.status.kind === AppFileStatusKind.Conflicted) {
-          content = this.renderSketchConflictedDiff(diff)
-        } else if (
-          file &&
-          (file.status.kind === AppFileStatusKind.New ||
-            file.status.kind === AppFileStatusKind.Untracked) &&
-          diff.isDirectory
-        ) {
-          content = this.renderNewDirectory()
-        } else {
-          content = this.renderImage(diff)
-        }
-
-        return (
-          <div className="sketch-diff-wrapper">
-            {this.props.file &&
-              this.props.readOnly &&
-              this.props.openSketchFile && (
-                <div className="sketch-diff-checkbox">
-                  <Button type="submit" onClick={this.props.openSketchFile}>
-                    Open Sketch file
-                  </Button>
-                </div>
-              )}
-            {content}
-          </div>
-        )
-      }
-      case DiffType.LargeText:
+      case DiffType.LargeText: {
         return this.state.forceShowLargeDiff
           ? this.renderLargeText(diff)
           : this.renderLargeTextDiff()
+      }
+      case DiffType.Sketch:
+        return this.renderSketchDiff(diff)
       case DiffType.Unrenderable:
         return this.renderUnrenderableDiff()
       default:
@@ -329,7 +385,6 @@ export class Diff extends React.Component<IDiffProps, IDiffState> {
         }}
       >
         {this.renderDiff(this.props.diff)}
-        {this.props.loading && <LoadingOverlay />}
       </div>
     )
   }

@@ -6,7 +6,6 @@ describe('GitStoreCache', () => {
   let repository: Repository
 
   const onGitStoreUpdated = () => {}
-  const onDidLoadNewCommits = () => {}
   const onDidError = () => {}
 
   beforeEach(() => {
@@ -14,12 +13,7 @@ describe('GitStoreCache', () => {
   })
 
   it('returns same instance of GitStore', () => {
-    const cache = new GitStoreCache(
-      shell,
-      onGitStoreUpdated,
-      onDidLoadNewCommits,
-      onDidError
-    )
+    const cache = new GitStoreCache(shell, onGitStoreUpdated, onDidError)
 
     const first = cache.get(repository)
     const second = cache.get(repository)
@@ -28,12 +22,7 @@ describe('GitStoreCache', () => {
   })
 
   it('returns different instance of GitStore after removing', () => {
-    const cache = new GitStoreCache(
-      shell,
-      onGitStoreUpdated,
-      onDidLoadNewCommits,
-      onDidError
-    )
+    const cache = new GitStoreCache(shell, onGitStoreUpdated, onDidError)
 
     const first = cache.get(repository)
     cache.remove(repository)

@@ -1,4 +1,8 @@
-import { Repository, RepositoryWithGitHubRepository } from './repository'
+import {
+  Repository,
+  RepositoryWithGitHubRepository,
+  RepositoryWithForkedGitHubRepository,
+} from './repository'
 import { PullRequest } from './pull-request'
 import { Branch } from './branch'
 import { ReleaseSummary } from './release-notes'
@@ -10,6 +14,7 @@ import { ICommitContext } from './commit'
 import { IStashEntry } from './stash-entry'
 import { Account } from '../models/account'
 import { Progress } from './progress'
+import { ITextDiffData, DiffSelection } from './diff'
 
 export type PremiumType = 'premium' | 'enterprise'
 
@@ -61,6 +66,11 @@ export enum PopupType {
   PushRejectedDueToMissingWorkflowScope,
   SAMLReauthRequired,
   CreateFork,
+  CreateTag,
+  DeleteTag,
+  LocalChangesOverwritten,
+  ChooseForkSettings,
+  ConfirmDiscardSelection,
 }
 
 export type Popup =
@@ -77,6 +87,13 @@ export type Popup =
       files: ReadonlyArray<WorkingDirectoryFileChange>
       showDiscardChangesSetting?: boolean
       discardingAllChanges?: boolean
+    }
+  | {
+      type: PopupType.ConfirmDiscardSelection
+      repository: Repository
+      file: WorkingDirectoryFileChange
+      diff: ITextDiffData
+      selection: DiffSelection
     }
   | { type: PopupType.Preferences; initialSelectedTab?: PreferencesTab }
   | {
@@ -206,7 +223,7 @@ export type Popup =
   | {
       type: PopupType.ConfirmOverwriteStash
       repository: Repository
-      branchToCheckout: Branch
+      branchToCheckout: Branch | null
     }
   | {
       type: PopupType.ConfirmDiscardStash
@@ -236,4 +253,26 @@ export type Popup =
       type: PopupType.CreateFork
       repository: RepositoryWithGitHubRepository
       account: Account
+    }
+  | {
+      type: PopupType.CreateTag
+      repository: Repository
+      targetCommitSha: string
+      initialName?: string
+      localTags: Map<string, string> | null
+    }
+  | {
+      type: PopupType.DeleteTag
+      repository: Repository
+      tagName: string
+    }
+  | {
+      type: PopupType.ChooseForkSettings
+      repository: RepositoryWithForkedGitHubRepository
+    }
+  | {
+      type: PopupType.LocalChangesOverwritten
+      repository: Repository
+      retryAction: RetryAction
+      files: ReadonlyArray<string>
     }

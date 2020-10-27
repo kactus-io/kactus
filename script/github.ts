@@ -1,6 +1,6 @@
 import * as path from 'path'
 import * as fs from 'fs'
-import * as _request from 'request'
+import _request from 'request'
 
 function getErrorFromBody(body: string | any, opts: any) {
   if (typeof body === 'string') {
@@ -16,7 +16,7 @@ function getErrorFromBody(body: string | any, opts: any) {
 }
 
 function request<T>(opts: any): Promise<T> {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     _request(opts, (error: any, response: _request.Response, body: any) => {
       if (error) {
         return reject(error)
@@ -55,10 +55,10 @@ export function getOrCreateDraftRelease(
       'https://api.github.com/repos/' + repo + '/releases/tags/' + tag
     )
   )
-    .then(function(res) {
+    .then(function (res) {
       return res
     })
-    .catch(function() {
+    .catch(function () {
       const opts = options(
         token,
         'https://api.github.com/repos/' + repo + '/releases',
@@ -97,14 +97,14 @@ export function updateAsset(
   opts.headers['Content-Length'] = stat.size
   const us = _request(opts)
 
-  return new Promise(function(resolve, reject) {
-    rd.on('error', function(err) {
+  return new Promise(function (resolve, reject) {
+    rd.on('error', function (err) {
       return reject(err)
     })
-    us.on('error', function(err) {
+    us.on('error', function (err) {
       return reject(err)
     })
-    us.on('end', function() {
+    us.on('end', function () {
       resolve({ name: name })
     })
 

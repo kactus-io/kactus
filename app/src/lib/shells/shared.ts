@@ -46,16 +46,20 @@ export async function launchShell(
   if (!exists) {
     const label = 'Preferences'
     throw new ShellError(
-      `Could not find executable for '${shell.shell}' at path '${
-        shell.path
-      }'.  Please open ${label} and select an available shell.`
+      `Could not find executable for '${shell.shell}' at path '${shell.path}'.  Please open ${label} and select an available shell.`
     )
   }
 
   const cp = launch(shell as IFoundShell<Shell>, path)
 
-  addErrorTracing(shell.shell, cp, onError)
-  return Promise.resolve()
+  if (cp != null) {
+    addErrorTracing(shell.shell, cp, onError)
+    return Promise.resolve()
+  } else {
+    return Promise.reject(
+      `Platform not currently supported for launching shells: ${process.platform}`
+    )
+  }
 }
 
 function addErrorTracing(
@@ -63,10 +67,12 @@ function addErrorTracing(
   cp: ChildProcess,
   onError: (error: Error) => void
 ) {
-  cp.stderr.on('data', chunk => {
-    const text = chunk instanceof Buffer ? chunk.toString() : chunk
-    log.debug(`[${shell}] stderr: '${text}'`)
-  })
+  if (cp.stderr !== null) {
+    cp.stderr.on('data', chunk => {
+      const text = chunk instanceof Buffer ? chunk.toString() : chunk
+      log.debug(`[${shell}] stderr: '${text}'`)
+    })
+  }
 
   cp.on('error', err => {
     log.debug(`[${shell}] an error was encountered`, err)

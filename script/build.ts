@@ -4,14 +4,13 @@
 import * as path from 'path'
 import * as cp from 'child_process'
 import * as fs from 'fs-extra'
-import * as packager from 'electron-packager'
-
+import packager, {
+  ElectronNotarizeOptions,
+  ElectronOsXSignOptions,
+  Options,
+} from 'electron-packager'
+import frontMatter from 'front-matter'
 import { externals } from '../app/webpack.common'
-
-interface IFrontMatterResult<T> {
-  readonly attributes: T
-  readonly body: string
-}
 
 interface IChooseALicense {
   readonly title: string
@@ -27,10 +26,6 @@ export interface ILicense {
   readonly hidden: boolean
 }
 
-const frontMatter: <T>(
-  path: string
-) => IFrontMatterResult<T> = require('front-matter')
-
 import { getBundleID, getProductName } from '../app/package-info'
 
 import {
@@ -40,7 +35,7 @@ import {
   isPublishable,
   getIconFileName,
 } from './dist-info'
-import { isRunningOnFork, isCircleCI } from './build-platforms'
+import { isCircleCI, isGitHubActions } from './build-platforms'
 
 import { updateLicenseDump } from './licenses/update-license-dump'
 import { verifyInjectedSassVariables } from './validate-sass/validate-all'
@@ -72,7 +67,7 @@ generateLicenseMetadata(outRoot)
 
 moveAnalysisFiles()
 
-if (isCircleCI() && !isRunningOnFork()) {
+if (isGitHubActions() && process.platform === 'darwin' && isPublishableBuild) {
   console.log('Setting up keychain…')
   cp.execSync(path.join(__dirname, 'setup-macos-keychain'))
 }
@@ -122,7 +117,7 @@ interface IPackageAdditionalOptions {
     readonly name: string
     readonly schemes: ReadonlyArray<string>
   }>
-  readonly osxSign: packager.ElectronOsXSignOptions & {
+  readonly osxSign: ElectronOsXSignOptions & {
     readonly hardenedRuntime?: boolean
   }
 }
@@ -134,7 +129,8 @@ function packageApp() {
     : undefined
   if (
     isPublishableBuild &&
-    isCircleCI() &&
+    (isCircleCI() || isGitHubActions()) &&
+    process.platform === 'darwin' &&
     notarizationCredentials === undefined
   ) {
     // we can't publish a mac build without these
@@ -143,7 +139,7 @@ function packageApp() {
     )
   }
 
-  const options: packager.Options & IPackageAdditionalOptions = {
+  const options: Options & IPackageAdditionalOptions = {
     name: getExecutableName(),
     platform: 'darwin',
     arch: 'x64',
@@ -169,7 +165,8 @@ function packageApp() {
     darwinDarkModeSupport: true,
     osxSign: {
       entitlements: entitlementsPath,
-      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
       entitlementsInherit: entitlementsPath,
       gatekeeperAssess: false,
       'entitlements-inherit': entitlementsPath,
@@ -239,7 +236,6 @@ function moveAnalysisFiles() {
 }
 
 function copyDependencies() {
-  // eslint-disable-next-line import/no-dynamic-require
   const originalPackage: Package = require(path.join(
     projectRoot,
     'app',
@@ -293,18 +289,6 @@ function copyDependencies() {
   ) {
     console.log('  Installing dependencies via npm…')
     cp.execSync('npm install', { cwd: outRoot, env: process.env })
-  }
-
-  if (isDevelopmentBuild) {
-    console.log(
-      '  Installing 7zip (dependency for electron-devtools-installer)'
-    )
-
-    const sevenZipSource = path.resolve(projectRoot, 'app/node_modules/7zip')
-    const sevenZipDestination = path.resolve(outRoot, 'node_modules/7zip')
-
-    fs.mkdirpSync(sevenZipDestination)
-    fs.copySync(sevenZipSource, sevenZipDestination)
   }
 
   console.log('  Copying git environment…')
@@ -379,9 +363,7 @@ ${licenseText}`
   fs.removeSync(chooseALicense)
 }
 
-function getNotarizationCredentials():
-  | packager.ElectronNotarizeOptions
-  | undefined {
+function getNotarizationCredentials(): ElectronNotarizeOptions | undefined {
   const appleId = process.env.APPLE_ID
   const appleIdPassword = process.env.APPLE_ID_PASSWORD
   if (appleId === undefined || appleIdPassword === undefined) {

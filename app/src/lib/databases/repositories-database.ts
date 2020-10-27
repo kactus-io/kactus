@@ -1,5 +1,6 @@
 import Dexie from 'dexie'
 import { BaseDatabase } from './base-database'
+import { WorkflowPreferences } from '../../models/workflow-preferences'
 
 export interface IDatabaseOwner {
   readonly id?: number | null
@@ -34,7 +35,7 @@ export interface IDatabaseProtectedBranch {
   /**
    * The branch name associated with the branch protection settings
    *
-   * NOTE: this is NOT a fully-qualified ref (i.e. `refs/heads/master`)
+   * NOTE: this is NOT a fully-qualified ref (i.e. `refs/heads/main`)
    */
   readonly name: string
 }
@@ -48,6 +49,8 @@ export interface IDatabaseRepository {
 
   /** The last time the stash entries were checked for the repository */
   readonly lastStashCheckDate: number | null
+
+  readonly workflowPreferences?: WorkflowPreferences
 
   /**
    * True if the repository is a tutorial repository created as part

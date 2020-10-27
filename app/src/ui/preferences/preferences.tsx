@@ -32,6 +32,11 @@ import {
   parseConfigLockFilePathFromError,
 } from '../../lib/git'
 import { ConfigLockFileExists } from '../lib/config-lock-file-exists'
+import {
+  setDefaultBranch,
+  getDefaultBranch,
+} from '../../lib/helpers/default-branch'
+import { Prompts } from './prompts'
 
 interface IPreferencesProps {
   readonly dispatcher: Dispatcher
@@ -48,20 +53,21 @@ interface IPreferencesProps {
   readonly selectedTheme: ApplicationTheme
   readonly kactusClearCacheInterval: number
   readonly automaticallySwitchTheme: boolean
+  readonly repositoryIndicatorsEnabled: boolean
 }
 
 interface IPreferencesState {
   readonly selectedIndex: PreferencesTab
   readonly committerName: string
   readonly committerEmail: string
+  readonly defaultBranch: string
   readonly initialCommitterName: string | null
   readonly initialCommitterEmail: string | null
+  readonly initialDefaultBranch: string | null
   readonly disallowedCharactersMessage: string | null
-  readonly optOutOfUsageTracking: boolean
   readonly confirmRepositoryRemoval: boolean
   readonly confirmDiscardChanges: boolean
   readonly confirmForcePush: boolean
-  readonly automaticallySwitchTheme: boolean
   readonly uncommittedChangesStrategyKind: UncommittedChangesStrategyKind
   readonly availableEditors: ReadonlyArray<ExternalEditor>
   readonly selectedExternalEditor: ExternalEditor | null
@@ -76,6 +82,7 @@ interface IPreferencesState {
    * choice to delete the lock file.
    */
   readonly existingLockFilePath?: string
+  readonly repositoryIndicatorsEnabled: boolean
 }
 
 /** The app-level preferences component. */
@@ -90,26 +97,28 @@ export class Preferences extends React.Component<
       selectedIndex: this.props.initialSelectedTab || PreferencesTab.Accounts,
       committerName: '',
       committerEmail: '',
+      defaultBranch: '',
       initialCommitterName: null,
       initialCommitterEmail: null,
+      initialDefaultBranch: null,
       disallowedCharactersMessage: null,
       availableEditors: [],
-      optOutOfUsageTracking: false,
       confirmRepositoryRemoval: false,
       confirmDiscardChanges: false,
       confirmForcePush: false,
       uncommittedChangesStrategyKind: uncommittedChangesStrategyKindDefault,
-      automaticallySwitchTheme: false,
       selectedExternalEditor: this.props.selectedExternalEditor,
       availableShells: [],
       selectedShell: this.props.selectedShell,
       kactusClearCacheInterval: this.props.kactusClearCacheInterval,
+      repositoryIndicatorsEnabled: this.props.repositoryIndicatorsEnabled,
     }
   }
 
   public async componentWillMount() {
     const initialCommitterName = await getGlobalConfigValue('user.name')
     const initialCommitterEmail = await getGlobalConfigValue('user.email')
+    const initialDefaultBranch = await getDefaultBranch()
 
     let committerName = initialCommitterName
     let committerEmail = initialCommitterEmail
@@ -123,10 +132,7 @@ export class Preferences extends React.Component<
         }
 
         if (!committerEmail) {
-          const found = lookupPreferredEmail(account)
-          if (found) {
-            committerEmail = found.email
-          }
+          committerEmail = lookupPreferredEmail(account)
         }
       }
     }
@@ -145,8 +151,10 @@ export class Preferences extends React.Component<
     this.setState({
       committerName,
       committerEmail,
+      defaultBranch: initialDefaultBranch,
       initialCommitterName,
       initialCommitterEmail,
+      initialDefaultBranch,
       confirmRepositoryRemoval: this.props.confirmRepositoryRemoval,
       confirmDiscardChanges: this.props.confirmDiscardChanges,
       confirmForcePush: this.props.confirmForcePush,
@@ -184,8 +192,12 @@ export class Preferences extends React.Component<
               Git
             </span>
             <span>
-              <Octicon className="icon" symbol={OcticonSymbol.paintcan} />
+              <Octicon className="icon" symbol={OcticonSymbol.paintbrush} />
               Appearance
+            </span>
+            <span>
+              <Octicon className="icon" symbol={OcticonSymbol.question} />
+              Prompts
             </span>
             <span>
               <Octicon className="icon" symbol={OcticonSymbol.settings} />
@@ -287,8 +299,10 @@ export class Preferences extends React.Component<
             <Git
               name={this.state.committerName}
               email={this.state.committerEmail}
+              defaultBranch={this.state.defaultBranch}
               onNameChanged={this.onCommitterNameChanged}
               onEmailChanged={this.onCommitterEmailChanged}
+              onDefaultBranchChanged={this.onDefaultBranchChanged}
             />
           </>
         )
@@ -306,25 +320,36 @@ export class Preferences extends React.Component<
           />
         )
         break
-      case PreferencesTab.Advanced: {
+      case PreferencesTab.Prompts: {
         View = (
-          <Advanced
+          <Prompts
             confirmRepositoryRemoval={this.state.confirmRepositoryRemoval}
             confirmDiscardChanges={this.state.confirmDiscardChanges}
             confirmForcePush={this.state.confirmForcePush}
-            uncommittedChangesStrategyKind={
-              this.state.uncommittedChangesStrategyKind
-            }
             onConfirmRepositoryRemovalChanged={
               this.onConfirmRepositoryRemovalChanged
             }
             onConfirmDiscardChangesChanged={this.onConfirmDiscardChangesChanged}
             onConfirmForcePushChanged={this.onConfirmForcePushChanged}
+          />
+        )
+        break
+      }
+      case PreferencesTab.Advanced: {
+        View = (
+          <Advanced
+            repositoryIndicatorsEnabled={this.state.repositoryIndicatorsEnabled}
+            uncommittedChangesStrategyKind={
+              this.state.uncommittedChangesStrategyKind
+            }
             onUncommittedChangesStrategyKindChanged={
               this.onUncommittedChangesStrategyKindChanged
             }
             kactusClearCacheInterval={this.state.kactusClearCacheInterval}
             onKactusClearCacheInterval={this.onKactusClearCacheInterval}
+            onRepositoryIndicatorsEnabledChanged={
+              this.onRepositoryIndicatorsEnabledChanged
+            }
           />
         )
         break
@@ -334,6 +359,12 @@ export class Preferences extends React.Component<
     }
 
     return <div className="tab-container">{View}</div>
+  }
+
+  private onRepositoryIndicatorsEnabledChanged = (
+    repositoryIndicatorsEnabled: boolean
+  ) => {
+    this.setState({ repositoryIndicatorsEnabled })
   }
 
   private onLockFileDeleted = () => {
@@ -375,6 +406,10 @@ export class Preferences extends React.Component<
     this.setState({ committerEmail })
   }
 
+  private onDefaultBranchChanged = (defaultBranch: string) => {
+    this.setState({ defaultBranch })
+  }
+
   private onSelectedEditorChanged = (editor: ExternalEditor) => {
     this.setState({ selectedExternalEditor: editor })
   }
@@ -409,6 +444,7 @@ export class Preferences extends React.Component<
         return null
       case PreferencesTab.Integrations:
       case PreferencesTab.Advanced:
+      case PreferencesTab.Prompts:
       case PreferencesTab.Git: {
         return (
           <DialogFooter>
@@ -432,6 +468,29 @@ export class Preferences extends React.Component<
 
       if (this.state.committerEmail !== this.state.initialCommitterEmail) {
         await setGlobalConfigValue('user.email', this.state.committerEmail)
+      }
+
+      // If the entered default branch is empty, we don't store it and keep
+      // the previous value.
+      // We do this because the preferences dialog doesn't have error states,
+      // and since the preferences dialog have a global "Save" button (that will
+      // save all the changes performed in every single tab), we cannot
+      // block the user from clicking "Save" because the entered branch is not valid
+      // (they will not be able to know the issue if they are in a different tab).
+      if (
+        this.state.defaultBranch.length > 0 &&
+        this.state.defaultBranch !== this.state.initialDefaultBranch
+      ) {
+        await setDefaultBranch(this.state.defaultBranch)
+      }
+
+      if (
+        this.props.repositoryIndicatorsEnabled !==
+        this.state.repositoryIndicatorsEnabled
+      ) {
+        this.props.dispatcher.setRepositoryIndicatorsEnabled(
+          this.state.repositoryIndicatorsEnabled
+        )
       }
     } catch (e) {
       if (isConfigFileLockError(e)) {

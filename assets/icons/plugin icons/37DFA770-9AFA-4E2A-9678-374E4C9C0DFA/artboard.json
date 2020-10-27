@@ -4,7 +4,6 @@
     "_class": "color",
     "alpha": 1,
     "blue": 1,
-    "do_objectID": "2125EB28-B4A0-4F17-9B22-CF3DAAEB5664",
     "green": 1,
     "red": 1
   },
@@ -13,7 +12,6 @@
   "do_objectID": "37DFA770-9AFA-4E2A-9678-374E4C9C0DFA",
   "exportOptions": {
     "_class": "exportOptions",
-    "do_objectID": "87C45B77-356E-4CAA-AD84-51D79DAB933A",
     "exportFormats": [
       {
         "_class": "exportFormat",
@@ -33,11 +31,13 @@
   "frame": {
     "_class": "rect",
     "constrainProportions": false,
-    "do_objectID": "64C28AB7-73D0-4BA3-82B4-1076124B1B68",
     "height": 500,
     "width": 500,
     "x": 2097,
     "y": -188
+  },
+  "groupLayout": {
+    "_class": "MSImmutableFreeformGroupLayout"
   },
   "hasBackgroundColor": false,
   "hasClickThrough": true,
@@ -45,7 +45,6 @@
   "horizontalRulerData": {
     "_class": "rulerData",
     "base": 0,
-    "do_objectID": "9123540F-4A20-4763-8CF8-491CBC2608AC",
     "guides": [
     ]
   },
@@ -70,6 +69,8 @@
   ],
   "name": "refresh",
   "nameIsFixed": true,
+  "presetDictionary": {
+  },
   "resizesContent": false,
   "resizingConstraint": 63,
   "resizingType": 0,
@@ -77,16 +78,53 @@
   "shouldBreakMaskChain": true,
   "style": {
     "_class": "style",
+    "blur": {
+      "_class": "blur",
+      "center": "{0.5, 0.5}",
+      "isEnabled": false,
+      "motionAngle": 0,
+      "radius": 10,
+      "saturation": 1,
+      "type": 0
+    },
+    "borderOptions": {
+      "_class": "borderOptions",
+      "dashPattern": [
+      ],
+      "isEnabled": true,
+      "lineCapStyle": 0,
+      "lineJoinStyle": 0
+    },
+    "borders": [
+    ],
+    "colorControls": {
+      "_class": "colorControls",
+      "brightness": 0,
+      "contrast": 1,
+      "hue": 0,
+      "isEnabled": false,
+      "saturation": 1
+    },
+    "contextSettings": {
+      "_class": "graphicsContextSettings",
+      "blendMode": 0,
+      "opacity": 1
+    },
     "do_objectID": "EC9303E0-AD56-4C0B-B990-7E74A3B8A444",
     "endMarkerType": 0,
+    "fills": [
+    ],
+    "innerShadows": [
+    ],
     "miterLimit": 10,
+    "shadows": [
+    ],
     "startMarkerType": 0,
     "windingRule": 1
   },
   "verticalRulerData": {
     "_class": "rulerData",
     "base": 0,
-    "do_objectID": "EC249ADC-B2F6-40F8-A046-8C3917B94B8A",
     "guides": [
     ]
   }

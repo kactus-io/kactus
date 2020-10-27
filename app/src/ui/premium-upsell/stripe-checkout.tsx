@@ -13,7 +13,6 @@ interface IStripeCheckoutProps {
 
 interface IStripeCheckoutState {
   readonly open: boolean
-  readonly waitingForStripe: boolean
 }
 
 let stripeHandler: IStripeCheckout | undefined
@@ -28,7 +27,6 @@ export class Checkout extends React.Component<
     super(props)
     this.state = {
       open: false,
-      waitingForStripe: false,
     }
   }
 
@@ -42,9 +40,6 @@ export class Checkout extends React.Component<
       })
       return this.showStripeDialog()
     }
-    this.setState({
-      waitingForStripe: true,
-    })
   }
 
   public componentWillUnmount() {

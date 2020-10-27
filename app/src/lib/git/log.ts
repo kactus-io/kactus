@@ -14,6 +14,7 @@ import {
   getTrailerSeparatorCharacters,
   parseRawUnfoldedTrailers,
 } from './interpret-trailers'
+import { getCaptures } from '../helpers/regex'
 
 /**
  * Map the raw status text from Git to an app-friendly value
@@ -80,6 +81,7 @@ export async function getCommits(
     '%cn <%ce> %cd',
     '%P', // parent SHAs,
     '%(trailers:unfold,only)',
+    '%D', // refs
   ].join(`%x${delimiter}`)
 
   const result = await git(
@@ -128,7 +130,9 @@ export async function getCommits(
 
     const parentSHAs = shaList.length ? shaList.split(' ') : []
     const trailers = parseRawUnfoldedTrailers(pieces[7], trailerSeparators)
-
+    const tags = getCaptures(pieces[8], /tag: ([^\s,]+)/g)
+      .filter(i => i[0] !== undefined)
+      .map(i => i[0])
     const author = CommitIdentity.parseIdentity(authorIdentity)
 
     if (!author) {
@@ -149,7 +153,8 @@ export async function getCommits(
       author,
       committer,
       parentSHAs,
-      trailers
+      trailers,
+      tags
     )
   })
 
@@ -188,7 +193,7 @@ export async function getChangedFiles(
  * Parses git `log` or `diff` output into a list of changed files
  * (see `getChangedFiles` for an example of use)
  *
- * @param stdout raw ouput from a git `-z` and `--name-status` flags
+ * @param stdout raw output from a git `-z` and `--name-status` flags
  * @param committish commitish command was run against
  */
 export function parseChangedFiles(

@@ -22,7 +22,7 @@
 
     @include octicon-status;
 
-    .checkbox-component {
+    .diff-options-component {
       margin-right: var(--spacing-half);
     }
 
@@ -64,11 +64,4 @@
       }
     }
   }
-}
-
-.diff-wrapper {
-  display: flex;
-  flex-grow: 1;
-  min-width: 0;
-  overflow: hidden;
 }
