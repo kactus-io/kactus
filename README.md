@@ -8,7 +8,7 @@
   <strong>A proper version control tool for designers</strong>
 </div>
 
-[![CircleCI](https://circleci.com/gh/kactus-io/kactus/tree/master.svg?style=svg)](https://circleci.com/gh/kactus-io/kactus/tree/master)
+![CI](https://github.com/kactus-io/kactus/workflows/CI/badge.svg)
 ![Sketch.app](https://img.shields.io/badge/Sketch.app-43-brightgreen.svg)
 [![license](https://img.shields.io/github/license/kactus-io/kactus.svg?style=flat-square)](https://github.com/kactus-io/kactus/blob/master/LICENSE)
 
