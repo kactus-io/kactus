@@ -5,8 +5,8 @@ import * as path from 'path'
 import * as cp from 'child_process'
 import * as fs from 'fs-extra'
 import packager, {
-  ElectronNotarizeOptions,
-  ElectronOsXSignOptions,
+  OsxNotarizeOptions,
+  OsxSignOptions,
   Options,
 } from 'electron-packager'
 import frontMatter from 'front-matter'
@@ -117,7 +117,7 @@ interface IPackageAdditionalOptions {
     readonly name: string
     readonly schemes: ReadonlyArray<string>
   }>
-  readonly osxSign: ElectronOsXSignOptions & {
+  readonly osxSign: OsxSignOptions & {
     readonly hardenedRuntime?: boolean
   }
 }
@@ -165,10 +165,6 @@ function packageApp() {
     darwinDarkModeSupport: true,
     osxSign: {
       entitlements: entitlementsPath,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore
-      entitlementsInherit: entitlementsPath,
-      gatekeeperAssess: false,
       'entitlements-inherit': entitlementsPath,
       'gatekeeper-assess': false,
       type: isPublishableBuild ? 'distribution' : 'development',
@@ -363,7 +359,7 @@ ${licenseText}`
   fs.removeSync(chooseALicense)
 }
 
-function getNotarizationCredentials(): ElectronNotarizeOptions | undefined {
+function getNotarizationCredentials(): OsxNotarizeOptions | undefined {
   const appleId = process.env.APPLE_ID
   const appleIdPassword = process.env.APPLE_ID_PASSWORD
   if (appleId === undefined || appleIdPassword === undefined) {
