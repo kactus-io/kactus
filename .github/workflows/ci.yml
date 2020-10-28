@@ -43,7 +43,7 @@ jobs:
             ${{ runner.os }}-npm-
 
       - name: Install and build dependencies
-        run: npm install && npm rebuild node-sass
+        run: npm ci && npm rebuild node-sass
       - name: Lint
         run: npm run lint
       - name: Ensure a clean working directory
@@ -55,8 +55,10 @@ jobs:
           KACTUS_OAUTH_CLIENT_SECRET: ${{ secrets.KACTUS_OAUTH_CLIENT_SECRET }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM: ${{ secrets.APPLE_TEAM }}
           KACTUSBOT_TOKEN: ${{ secrets.KACTUSBOT_TOKEN }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STRIPE_KEY: ${{ secrets.KEY_PASSWORD }}
       # - name: Prepare testing environment
       #   run: yarn test:setup
       # - name: Run unit tests
