@@ -237,7 +237,7 @@ async function findApplication(editor: ExternalEditor): Promise<string | null> {
 
       log.debug(`Command line interface for ${editor} not found at '${path}'`)
     } catch (error) {
-      log.debug(`Unable to locate ${editor} installation`, error)
+      log.debug(`Unable to locate ${editor} installation`)
     }
   }
 
