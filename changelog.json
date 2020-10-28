@@ -1,24 +1,25 @@
 {
-  "unreleased": [
-    "[New] Newly created repositories use 'main' as the default branch name",
-    "[New] Users can configure the default branch name in Preferences/Options",
-    "[New] Show status of GitHub Action runs for pull requests",
-    "[New] Differentiate between draft and regular Pull Requests",
-    "[Added] Periodic background fetch and status updates can now be disabled in the Advanced section of Preferences/Options",
-    "[Improved] Show confirmation that branch is already up to date when merging from default branch",
-    "[Improved] Show helpful error when attempting to clone non-existent or inaccessible GitHub repositories",
-    "[Fixed] Update rebase progress parser to parse output from the merge rebase backend",
-    "[Added] Suggest to stash changes when trying to do an operation that requires a clean working directory",
-    "[Added] Stash changes without switching branches",
-    "[Fixed] Display more readable messages for errors when cloning a repository",
-    "[Improved] Automatically disable username and password authentication when the API no longer supports it",
-    "[Added] Indicate which commits have not yet been pushed to the remote in \"History\" tab",
-    "[Fixed] Update embedded Git to address security vulnerability",
-    "[New] Add, push, and view Git tags on commit history in Desktop",
-    "[Improved] Emphasize signing in to GitHub via browser due to username/password deprecation",
-    "[Fixed] Enable setting to more easily work with maintained forks"
-  ],
+  "unreleased": [],
   "releases": {
+    "0.3.30": [
+      "[New] Newly created repositories use 'main' as the default branch name",
+      "[New] Users can configure the default branch name in Preferences/Options",
+      "[New] Show status of GitHub Action runs for pull requests",
+      "[New] Differentiate between draft and regular Pull Requests",
+      "[Added] Periodic background fetch and status updates can now be disabled in the Advanced section of Preferences/Options",
+      "[Improved] Show confirmation that branch is already up to date when merging from default branch",
+      "[Improved] Show helpful error when attempting to clone non-existent or inaccessible GitHub repositories",
+      "[Fixed] Update rebase progress parser to parse output from the merge rebase backend",
+      "[Added] Suggest to stash changes when trying to do an operation that requires a clean working directory",
+      "[Added] Stash changes without switching branches",
+      "[Fixed] Display more readable messages for errors when cloning a repository",
+      "[Improved] Automatically disable username and password authentication when the API no longer supports it",
+      "[Added] Indicate which commits have not yet been pushed to the remote in \"History\" tab",
+      "[Fixed] Update embedded Git to address security vulnerability",
+      "[New] Add, push, and view Git tags on commit history in Desktop",
+      "[Improved] Emphasize signing in to GitHub via browser due to username/password deprecation",
+      "[Fixed] Enable setting to more easily work with maintained forks"
+    ],
     "0.3.29": [
       "[Fixed] Prevent a bug where the changes' list could grow forever"
     ],
