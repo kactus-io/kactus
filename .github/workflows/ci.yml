@@ -43,11 +43,9 @@ jobs:
             ${{ runner.os }}-npm-
 
       - name: Install and build dependencies
-        run: npm ci && npm rebuild node-sass
+        run: npm install && npm rebuild node-sass
       - name: Lint
         run: npm run lint
-      - name: Ensure a clean working directory
-        run: npm run check-modified
       - name: Build production app
         run: NODE_OPTIONS=--max_old_space_size=8192 yarn build:prod
         env:
