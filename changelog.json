@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.31": [
+      "[Fixed] Minified build was broken after some dependencies updates"
+    ],
     "0.3.30": [
       "[New] Newly created repositories use 'main' as the default branch name",
       "[New] Users can configure the default branch name in Preferences/Options",
