@@ -56,7 +56,7 @@ jobs:
           APPLE_TEAM: ${{ secrets.APPLE_TEAM }}
           KACTUSBOT_TOKEN: ${{ secrets.KACTUSBOT_TOKEN }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          STRIPE_KEY: ${{ secrets.KEY_PASSWORD }}
+          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
       # - name: Prepare testing environment
       #   run: yarn test:setup
       # - name: Run unit tests
