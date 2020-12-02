@@ -18,21 +18,38 @@ Please check the [open](https://github.com/kactus-io/kactus/labels/bug) and [clo
 
 ## macOS
 
-### Checking for updates triggers a 'Could not create temporary directory: Permission denied' message - [#4115](https://github.com/desktop/desktop/issues/4115)
+### 'The username or passphrase you entered is not correct' error after signing into account
+
+Related issue: [#3263](https://github.com/desktop/desktop/issues/3263)
+
+This seems to be caused by the Keychain being in an invalid state, affecting applications that try to use the keychain to store or retrieve credentials. This has been reported from macOS High Sierra 10.13 (17A365) to macOS Mojave 10.14.5 (18F132).
+
+**Workaround:**
+
+- Open `Keychain Access.app`
+- Right-click on the `login` keychain and try locking it
+- Right-click on the `login` keychain and try unlocking it
+- Sign into your GitHub account again
+
+### Checking for updates triggers a 'Could not create temporary directory: Permission denied' message
+
+Related issue: [#4115](https://github.com/desktop/desktop/issues/4115)
 
 This issue seems to be caused by missing permissions for the `~/Library/Caches/io.kactus.KactusClient.ShipIt` folder. This is a directory that Desktop uses to create and unpack temporary files as part of updating the application.
 
 **Workaround:**
 
- - Close Kactus
- - Open Finder and navigate to `~/Library/Caches/`
- - Context-click `io.kactus.KactusClient.ShipIt` and select **Get Info**
- - Expand the **Sharing & Permissions** section
- - If you do not see the "You can read and write" message, add yourself with
+- Close Kactus
+- Open Finder and navigate to `~/Library/Caches/`
+- Context-click `io.kactus.KactusClient.ShipIt` and select **Get Info**
+- Expand the **Sharing & Permissions** section
+- If you do not see the "You can read and write" message, add yourself with
    the "Read & Write" permissions
- - Start Kactus again and check for updates
+- Start Kactus again and check for updates
 
-### App frozen or very slow after creating new repository - [#67](https://github.com/kactus-io/kactus/issues/67)
+### App frozen or very slow after creating new repository
+
+Related issue: [#67](https://github.com/kactus-io/kactus/issues/67)
 
 when you first add a file, hundreds (even thousands) of files are created so Kactus has some issue to grab them all.
 
@@ -44,14 +61,3 @@ Once you commit it tho, only the changes are showing up so there are a lot fewer
 - Open a terminal in your git repository (You can do so from Kactus)
 - Run `git add . && git commit -m "first commit"`
 - Reopen Kactus
-
-### 'The username or passphrase you entered is not correct' error after signing into account - [#3263](https://github.com/desktop/desktop/issues/3263)
-
-This seems to be caused by the Keychain being in an invalid state, affecting applications that try to use the keychain to store or retrieve credentials. Seems to be specific to macOS High Sierra (10.13).
-
-**Workaround:**
-
-- Open `Keychain Access.app`
-- Right-click on the `login` keychain and try locking it
-- Right-click on the `login` keychain and try unlocking it
-- Sign into your GitHub account again

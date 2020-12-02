@@ -1,7 +1,14 @@
 import * as React from 'react'
-
+import memoizeOne from 'memoize-one'
 import { remote } from 'electron'
 import { Octicon, OcticonSymbol } from '../octicons'
+import { isMacOSBigSurOrLater } from '../../lib/get-os'
+
+/** Get the height (in pixels) of the title bar depending on the platform */
+export function getTitleBarHeight() {
+  // Big Sur has taller title bars, see #10980
+  return isMacOSBigSurOrLater() ? 26 : 22
+}
 
 interface ITitleBarProps {
   /** Whether we should hide the toolbar (and show inverted window controls) */
@@ -20,23 +27,17 @@ interface ITitleBarProps {
   readonly windowZoomFactor?: number
 }
 
-interface ITitleBarState {
-  readonly style?: React.CSSProperties
-}
+export class TitleBar extends React.Component<ITitleBarProps> {
+  private getStyle = memoizeOne((windowZoomFactor: number | undefined) => {
+    const style: React.CSSProperties = { height: getTitleBarHeight() }
 
-function getState(props: ITitleBarProps): ITitleBarState {
-  return {
-    style: props.windowZoomFactor
-      ? { zoom: 1 / props.windowZoomFactor }
-      : undefined,
-  }
-}
+    // See windowZoomFactor in ITitleBarProps, this is only applicable on macOS.
+    if (windowZoomFactor !== undefined) {
+      style.zoom = 1 / windowZoomFactor
+    }
 
-export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
-  public constructor(props: ITitleBarProps) {
-    super(props)
-    this.state = getState(props)
-  }
+    return style
+  })
 
   private onTitlebarDoubleClick = () => {
     const actionOnDoubleClick = remote.systemPreferences.getUserDefault(
@@ -59,12 +60,6 @@ export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
     }
   }
 
-  public componentWillReceiveProps(nextProps: ITitleBarProps) {
-    if (this.props.windowZoomFactor !== nextProps.windowZoomFactor) {
-      this.setState(getState(nextProps))
-    }
-  }
-
   public render() {
     const titleBarClass =
       this.props.titleBarStyle === 'light' ? 'light-title-bar' : ''
@@ -78,7 +73,7 @@ export class TitleBar extends React.Component<ITitleBarProps, ITitleBarState> {
         className={titleBarClass}
         id="kactus-app-title-bar"
         onDoubleClick={this.onTitlebarDoubleClick}
-        style={this.state.style}
+        style={this.getStyle(this.props.windowZoomFactor)}
       >
         {appIcon}
         {this.props.children}

@@ -1,6 +1,9 @@
 ---
 name: 🐛 Bug report
 about: Report a problem encountered while using Kactus
+title: ''
+labels: ''
+assignees: ''
 
 ---
 

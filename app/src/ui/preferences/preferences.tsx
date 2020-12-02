@@ -23,8 +23,8 @@ import { ApplicationTheme } from '../lib/application-theme'
 import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
 import { Integrations } from './integrations'
 import {
-  UncommittedChangesStrategyKind,
-  uncommittedChangesStrategyKindDefault,
+  UncommittedChangesStrategy,
+  defaultUncommittedChangesStrategy,
 } from '../../models/uncommitted-changes-strategy'
 import { Octicon, OcticonSymbol } from '../octicons'
 import {
@@ -47,7 +47,7 @@ interface IPreferencesProps {
   readonly confirmRepositoryRemoval: boolean
   readonly confirmDiscardChanges: boolean
   readonly confirmForcePush: boolean
-  readonly uncommittedChangesStrategyKind: UncommittedChangesStrategyKind
+  readonly uncommittedChangesStrategy: UncommittedChangesStrategy
   readonly selectedExternalEditor: ExternalEditor | null
   readonly selectedShell: Shell
   readonly selectedTheme: ApplicationTheme
@@ -68,7 +68,7 @@ interface IPreferencesState {
   readonly confirmRepositoryRemoval: boolean
   readonly confirmDiscardChanges: boolean
   readonly confirmForcePush: boolean
-  readonly uncommittedChangesStrategyKind: UncommittedChangesStrategyKind
+  readonly uncommittedChangesStrategy: UncommittedChangesStrategy
   readonly availableEditors: ReadonlyArray<ExternalEditor>
   readonly selectedExternalEditor: ExternalEditor | null
   readonly availableShells: ReadonlyArray<Shell>
@@ -106,7 +106,7 @@ export class Preferences extends React.Component<
       confirmRepositoryRemoval: false,
       confirmDiscardChanges: false,
       confirmForcePush: false,
-      uncommittedChangesStrategyKind: uncommittedChangesStrategyKindDefault,
+      uncommittedChangesStrategy: defaultUncommittedChangesStrategy,
       selectedExternalEditor: this.props.selectedExternalEditor,
       availableShells: [],
       selectedShell: this.props.selectedShell,
@@ -158,7 +158,7 @@ export class Preferences extends React.Component<
       confirmRepositoryRemoval: this.props.confirmRepositoryRemoval,
       confirmDiscardChanges: this.props.confirmDiscardChanges,
       confirmForcePush: this.props.confirmForcePush,
-      uncommittedChangesStrategyKind: this.props.uncommittedChangesStrategyKind,
+      uncommittedChangesStrategy: this.props.uncommittedChangesStrategy,
       availableShells,
       availableEditors,
     })
@@ -339,11 +339,9 @@ export class Preferences extends React.Component<
         View = (
           <Advanced
             repositoryIndicatorsEnabled={this.state.repositoryIndicatorsEnabled}
-            uncommittedChangesStrategyKind={
-              this.state.uncommittedChangesStrategyKind
-            }
-            onUncommittedChangesStrategyKindChanged={
-              this.onUncommittedChangesStrategyKindChanged
+            uncommittedChangesStrategy={this.state.uncommittedChangesStrategy}
+            onUncommittedChangesStrategyChanged={
+              this.onUncommittedChangesStrategyChanged
             }
             kactusClearCacheInterval={this.state.kactusClearCacheInterval}
             onKactusClearCacheInterval={this.onKactusClearCacheInterval}
@@ -387,10 +385,10 @@ export class Preferences extends React.Component<
     this.setState({ confirmForcePush: value })
   }
 
-  private onUncommittedChangesStrategyKindChanged = (
-    value: UncommittedChangesStrategyKind
+  private onUncommittedChangesStrategyChanged = (
+    uncommittedChangesStrategy: UncommittedChangesStrategy
   ) => {
-    this.setState({ uncommittedChangesStrategyKind: value })
+    this.setState({ uncommittedChangesStrategy })
   }
 
   private onCommitterNameChanged = (committerName: string) => {
@@ -532,8 +530,8 @@ export class Preferences extends React.Component<
       this.state.kactusClearCacheInterval
     )
 
-    await this.props.dispatcher.setUncommittedChangesStrategyKindSetting(
-      this.state.uncommittedChangesStrategyKind
+    await this.props.dispatcher.setUncommittedChangesStrategySetting(
+      this.state.uncommittedChangesStrategy
     )
 
     this.props.onDismissed()

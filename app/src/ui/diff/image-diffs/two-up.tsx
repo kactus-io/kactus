@@ -14,13 +14,19 @@ export class TwoUp extends React.Component<ITwoUpProps, {}> {
     const previousImageSize = this.props.previousImageSize || zeroSize
     const currentImageSize = this.props.currentImageSize || zeroSize
 
+    const { current, previous } = this.props
+
+    const style: React.CSSProperties = {
+      maxWidth: this.props.maxSize.width,
+    }
+
     return (
       <div className="image-diff-container" ref={this.props.onContainerRef}>
         <div className="image-diff-two-up">
-          <div className="image-diff-previous">
+          <div className="image-diff-previous" style={style}>
             <div className="image-diff-header">Deleted</div>
             <ImageContainer
-              image={this.props.previous}
+              image={previous}
               onElementLoad={this.props.onPreviousImageLoad}
             />
 
@@ -31,10 +37,10 @@ export class TwoUp extends React.Component<ITwoUpProps, {}> {
             </div>
           </div>
 
-          <div className="image-diff-current">
+          <div className="image-diff-current" style={style}>
             <div className="image-diff-header">Added</div>
             <ImageContainer
-              image={this.props.current}
+              image={current}
               onElementLoad={this.props.onCurrentImageLoad}
             />
 

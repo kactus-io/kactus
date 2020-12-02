@@ -415,58 +415,6 @@ export async function rebaseConflictsHandler(
   return null
 }
 
-/**
- * Handler for when we attempt to checkout a branch and there are some files that would
- * be overwritten.
- */
-export async function localChangesOverwrittenOnCheckoutHandler(
-  error: Error,
-  dispatcher: Dispatcher
-): Promise<Error | null> {
-  const e = asErrorWithMetadata(error)
-  if (!e) {
-    return error
-  }
-
-  const gitError = asGitError(e.underlyingError)
-  if (!gitError) {
-    return error
-  }
-
-  const dugiteError = gitError.result.gitError
-  if (!dugiteError) {
-    return error
-  }
-
-  if (dugiteError !== DugiteError.LocalChangesOverwritten) {
-    return error
-  }
-
-  const { repository, gitContext } = e.metadata
-  if (repository == null) {
-    return error
-  }
-
-  if (!(repository instanceof Repository)) {
-    return error
-  }
-
-  // This indicates to us whether the action which triggered the
-  // LocalChangesOverwritten was the AppStore _checkoutBranch method.
-  // Other actions that might trigger this error such as deleting
-  // a branch will not provide this specific gitContext and that's
-  // how we know we can safely move the changes to the destination
-  // branch.
-  if (gitContext === undefined || gitContext.kind !== 'checkout') {
-    return error
-  }
-
-  const { branchToCheckout } = gitContext
-
-  await dispatcher.moveChangesToBranchAndCheckout(repository, branchToCheckout)
-
-  return null
-}
 const rejectedPathRe = /^ ! \[remote rejected\] .*? -> .*? \(refusing to allow an OAuth App to create or update workflow `(.*?)` without `workflow` scope\)/m
 
 /**
@@ -637,9 +585,6 @@ export async function localChangesOverwrittenHandler(
   }
 
   const dugiteError = gitError.result.gitError
-  if (dugiteError === null) {
-    return error
-  }
 
   if (
     dugiteError !== DugiteError.LocalChangesOverwritten &&
@@ -649,13 +594,13 @@ export async function localChangesOverwrittenHandler(
     return error
   }
 
-  const { repository } = e.metadata
+  const { repository, retryAction } = e.metadata
 
   if (!(repository instanceof Repository)) {
     return error
   }
 
-  if (e.metadata.retryAction === undefined) {
+  if (retryAction === undefined) {
     return error
   }
 
@@ -664,7 +609,7 @@ export async function localChangesOverwrittenHandler(
   dispatcher.showPopup({
     type: PopupType.LocalChangesOverwritten,
     repository,
-    retryAction: e.metadata.retryAction,
+    retryAction,
     files,
   })
 

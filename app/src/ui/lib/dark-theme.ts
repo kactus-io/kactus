@@ -1,8 +1,8 @@
 import { remote } from 'electron'
-import { isMojaveOrLater } from '../../lib/get-os'
+import { isMacOSMojaveOrLater } from '../../lib/get-os'
 
 export function supportsDarkMode() {
-  return isMojaveOrLater()
+  return isMacOSMojaveOrLater()
 }
 
 export function isDarkModeEnabled() {

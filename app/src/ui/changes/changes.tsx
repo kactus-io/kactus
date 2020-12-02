@@ -51,6 +51,9 @@ interface IChangesProps {
    * Whether we should display side by side diffs.
    */
   readonly showSideBySideDiff: boolean
+
+  /** Called when the user opens the diff options popover */
+  readonly onDiffOptionsOpened: () => void
 }
 
 export class Changes extends React.Component<IChangesProps, {}> {
@@ -147,6 +150,7 @@ export class Changes extends React.Component<IChangesProps, {}> {
             diff={diff}
             showSideBySideDiff={this.props.showSideBySideDiff}
             onShowSideBySideDiffChanged={this.onShowSideBySideDiffChanged}
+            onDiffOptionsOpened={this.props.onDiffOptionsOpened}
           />
           <SeamlessDiffSwitcher
             repository={this.props.repository}

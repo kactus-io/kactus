@@ -4,8 +4,8 @@ import Path from 'path'
 
 import {
   IAPIOrganization,
-  IAPIRepository,
   IAPIPullRequest,
+  IAPIFullRepository,
 } from '../../lib/api'
 import { shell } from '../../lib/app-shell'
 import {
@@ -99,10 +99,7 @@ import {
   ICombinedRefCheck,
 } from '../../lib/stores/commit-status-store'
 import { MergeTreeResult } from '../../models/merge'
-import {
-  UncommittedChangesStrategy,
-  UncommittedChangesStrategyKind,
-} from '../../models/uncommitted-changes-strategy'
+import { UncommittedChangesStrategy } from '../../models/uncommitted-changes-strategy'
 import { RebaseFlowStep, RebaseStep } from '../../models/rebase-flow-step'
 import { IStashEntry } from '../../models/stash-entry'
 import { WorkflowPreferences } from '../../models/workflow-preferences'
@@ -170,7 +167,7 @@ export class Dispatcher {
   public addTutorialRepository(
     path: string,
     endpoint: string,
-    apiRepository: IAPIRepository
+    apiRepository: IAPIFullRepository
   ) {
     return this.appStore._addTutorialRepository(path, endpoint, apiRepository)
   }
@@ -537,14 +534,12 @@ export class Dispatcher {
     repository: Repository,
     name: string,
     startPoint: string | null,
-    uncommittedChangesStrategy?: UncommittedChangesStrategy,
     noTrackOption: boolean = false
-  ): Promise<Repository> {
+  ): Promise<void> {
     return this.appStore._createBranch(
       repository,
       name,
       startPoint,
-      uncommittedChangesStrategy,
       noTrackOption
     )
   }
@@ -603,13 +598,9 @@ export class Dispatcher {
   public checkoutBranch(
     repository: Repository,
     branch: Branch,
-    uncommittedChangesStrategy?: UncommittedChangesStrategy
-  ): Promise<Repository> {
-    return this.appStore._checkoutBranch(
-      repository,
-      branch,
-      uncommittedChangesStrategy
-    )
+    strategy?: UncommittedChangesStrategy
+  ): Promise<Repository | undefined> {
+    return this.appStore._checkoutBranch(repository, branch, strategy)
   }
 
   /** Push the current branch. */
@@ -825,27 +816,6 @@ export class Dispatcher {
    */
   public clearBanner(bannerType?: BannerType) {
     return this.appStore._clearBanner(bannerType)
-  }
-
-  /**
-   * Set the diverging branch notification nudge's visibility
-   */
-  public setDivergingBranchNudgeVisibility(
-    repository: Repository,
-    isVisible: boolean
-  ) {
-    return this.appStore._updateDivergingBranchBannerState(repository, {
-      isNudgeVisible: isVisible,
-    })
-  }
-
-  /**
-   * Hide the diverging branch notification banner
-   */
-  public dismissDivergingBranchBanner(repository: Repository) {
-    return this.appStore._updateDivergingBranchBannerState(repository, {
-      isPromptDismissed: true,
-    })
   }
 
   /**
@@ -1359,31 +1329,6 @@ export class Dispatcher {
    */
   public resetSignInState(): Promise<void> {
     return this.appStore._resetSignInState()
-  }
-
-  /**
-   * Subscribe to an event which is emitted whenever the sign in store re-evaluates
-   * whether or not GitHub.com supports username and password authentication.
-   *
-   * Note that this event may fire without the state having changed as it's
-   * fired when refreshed and not when changed.
-   */
-  public onDotComSupportsBasicAuthUpdated(
-    fn: (dotComSupportsBasicAuth: boolean) => void
-  ) {
-    return this.appStore._onDotComSupportsBasicAuthUpdated(fn)
-  }
-
-  /**
-   * Attempt to _synchronously_ retrieve whether GitHub.com supports
-   * username and password authentication. If the SignInStore has
-   * previously checked the API to determine the actual status that
-   * cached value is returned. If not we attempt to calculate the
-   * most probably state based on the current date and the deprecation
-   * timeline.
-   */
-  public tryGetDotComSupportsBasicAuth(): boolean {
-    return this.appStore._tryGetDotComSupportsBasicAuth()
   }
 
   /**
@@ -1964,10 +1909,10 @@ export class Dispatcher {
   /**
    * Sets the user's preference for handling uncommitted changes when switching branches
    */
-  public setUncommittedChangesStrategyKindSetting(
-    value: UncommittedChangesStrategyKind
+  public setUncommittedChangesStrategySetting(
+    value: UncommittedChangesStrategy
   ): Promise<void> {
-    return this.appStore._setUncommittedChangesStrategyKindSetting(value)
+    return this.appStore._setUncommittedChangesStrategySetting(value)
   }
 
   /**
@@ -1988,7 +1933,7 @@ export class Dispatcher {
     return this.appStore._setKactusClearCacheInterval(seconds)
   }
 
-  public async checkoutLocalBranch(repository: Repository, branch: string) {
+  private async checkoutLocalBranch(repository: Repository, branch: string) {
     let shouldCheckoutBranch = true
 
     const state = this.repositoryStateManager.get(repository)
@@ -2439,7 +2384,7 @@ export class Dispatcher {
    */
   public async convertRepositoryToFork(
     repository: RepositoryWithGitHubRepository,
-    fork: IAPIRepository
+    fork: IAPIFullRepository
   ): Promise<Repository> {
     return this.appStore._convertRepositoryToFork(repository, fork)
   }
@@ -2543,19 +2488,6 @@ export class Dispatcher {
   /** Hide the diff for stashed changes */
   public hideStashedChanges(repository: Repository) {
     return this.appStore._hideStashedChanges(repository)
-  }
-
-  /**
-   * Moves uncommitted changes to the branch being checked out
-   */
-  public async moveChangesToBranchAndCheckout(
-    repository: Repository,
-    branchToCheckout: Branch
-  ) {
-    return this.appStore._moveChangesToBranchAndCheckout(
-      repository,
-      branchToCheckout
-    )
   }
 
   /** Call when the user opts to skip the pick editor step of the onboarding tutorial */

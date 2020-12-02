@@ -7,9 +7,8 @@ import { ensureDir } from 'fs-extra'
 import { UNSAFE_openDirectory } from '../shell'
 import { enableCreateGitHubIssueFromMenu } from '../../lib/feature-flag'
 import { MenuLabelsEvent } from '../../models/menu-labels'
-import { DefaultEditorLabel } from '../../ui/lib/context-menu'
 
-const defaultShellLabel = 'Open in Terminal'
+const platformDefaultShell = 'Terminal'
 const createPullRequestLabel = 'Create Pull Request'
 const showPullRequestLabel = 'Show Pull Request'
 const defaultBranchNameValue = 'Default Branch'
@@ -44,14 +43,6 @@ export function buildDefaultMenu({
   const pullRequestLabel = hasCurrentPullRequest
     ? showPullRequestLabel
     : createPullRequestLabel
-
-  const shellLabel =
-    selectedShell === null ? defaultShellLabel : `Open in ${selectedShell}`
-
-  const editorLabel =
-    selectedExternalEditor === null
-      ? DefaultEditorLabel
-      : `Open in ${selectedExternalEditor}`
 
   const template = new Array<Electron.MenuItemConstructorOptions>()
   const separator: Electron.MenuItemConstructorOptions = { type: 'separator' }
@@ -282,7 +273,7 @@ export function buildDefaultMenu({
         click: emit('view-repository-on-github'),
       },
       {
-        label: shellLabel,
+        label: `Open in ${selectedShell ?? platformDefaultShell}`,
         id: 'open-in-shell',
         accelerator: 'Ctrl+`',
         click: emit('open-in-shell'),
@@ -294,7 +285,7 @@ export function buildDefaultMenu({
         click: emit('open-working-directory'),
       },
       {
-        label: editorLabel,
+        label: `Open in ${selectedExternalEditor ?? 'External Editor'}`,
         id: 'open-external-editor',
         accelerator: 'CmdOrCtrl+Shift+A',
         click: emit('open-external-editor'),

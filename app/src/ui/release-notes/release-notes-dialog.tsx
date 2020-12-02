@@ -15,37 +15,20 @@ import { getDotComAPIEndpoint } from '../../lib/api'
 import { shell } from '../../lib/app-shell'
 import { ReleaseNotesUri } from '../lib/releases'
 import { OkCancelButtonGroup } from '../dialog/ok-cancel-button-group'
+import { GitHubRepository } from '../../models/github-repository'
+import { Owner } from '../../models/owner'
 
 // HACK: This is needed because the `Rich`Text` component
 // needs to know what repo to link issues against.
 // Since release notes are Kactus specific, we can't
 // rely on the repo info we keep in state, so we've
 // stubbed out this repo
-const repository = new Repository(
+const desktopOwner = new Owner('desktop', getDotComAPIEndpoint(), -1)
+const desktopUrl = 'https://github.com/desktop/desktop'
+const desktopRepository = new Repository(
   '',
   -1,
-  {
-    dbID: null,
-    name: 'kactus',
-    owner: {
-      id: null,
-      login: 'kactus-io',
-      endpoint: getDotComAPIEndpoint(),
-      hash: '',
-    },
-    isPrivate: false,
-    parent: null,
-    htmlURL: 'https://github.com/kactus-io/kactus',
-    defaultBranch: 'master',
-    cloneURL: 'https://github.com/kactus-io/kactus',
-    endpoint: getDotComAPIEndpoint(),
-    fullName: 'kactus-io/kactus',
-    fork: false,
-    hash: '',
-    issuesEnabled: null,
-    isArchived: false,
-    permissions: null,
-  },
+  new GitHubRepository('desktop', desktopOwner, -1, false, desktopUrl),
   true,
   []
 )
@@ -86,7 +69,7 @@ export class ReleaseNotes extends React.Component<IReleaseNotesProps, {}> {
             text={entry.message}
             emoji={this.props.emoji}
             renderUrlsAsLinks={true}
-            repository={repository}
+            repository={desktopRepository}
           />
         </li>
       )

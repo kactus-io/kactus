@@ -20,13 +20,11 @@ import { IssuesStore, GitHubUserStore } from '../lib/stores'
 import { assertNever } from '../lib/fatal-error'
 import { Account } from '../models/account'
 import { FocusContainer } from './lib/focus-container'
-import { OcticonSymbol, Octicon } from './octicons'
 import { ImageDiffType } from '../models/diff'
 import { IMenu } from '../models/app-menu'
 import { StashDiffViewer } from './stashing'
 import { StashedChangesLoadStates } from '../models/stash-entry'
 import { TutorialPanel, TutorialWelcome, TutorialDone } from './tutorial'
-import { enableNDDBBanner } from '../lib/feature-flag'
 import { TutorialStep, isValidTutorialStep } from '../models/tutorial-step'
 import { openFile } from './lib/open-file'
 
@@ -146,11 +144,6 @@ export class RepositoryView extends React.Component<
 
         <div className="with-indicator">
           <span>History</span>
-          {enableNDDBBanner() &&
-          this.props.state.compareState.divergingBranchBannerState
-            .isNudgeVisible ? (
-            <Octicon className="indicator" symbol={OcticonSymbol.dotFill} />
-          ) : null}
         </div>
       </TabBar>
     )
@@ -353,9 +346,12 @@ export class RepositoryView extends React.Component<
         showSideBySideDiff={this.props.showSideBySideDiff}
         onOpenBinaryFile={this.onOpenBinaryFile}
         onChangeImageDiffType={this.onChangeImageDiffType}
+        onDiffOptionsOpened={this.onDiffOptionsOpened}
       />
     )
   }
+
+  private onDiffOptionsOpened = () => {}
 
   private renderTutorialPane(): JSX.Element {
     if (this.props.currentTutorialStep === TutorialStep.AllDone) {
@@ -423,13 +419,10 @@ export class RepositoryView extends React.Component<
       <Changes
         repository={this.props.repository}
         dispatcher={this.props.dispatcher}
-        imageDiffType={this.props.imageDiffType}
         file={selectedFile}
-        selectedSketchPartID={selectedSketchPartID}
         diff={diff}
-        sketchFile={selectedSketchFile}
-        loadingDiff={changesState.selection.loadingDiff}
         isCommitting={this.props.state.isCommitting}
+        imageDiffType={this.props.imageDiffType}
         hideWhitespaceInDiff={this.props.hideWhitespaceInDiff}
         showSideBySideDiff={this.props.showSideBySideDiff}
         onOpenBinaryFile={this.onOpenBinaryFile}
@@ -437,6 +430,10 @@ export class RepositoryView extends React.Component<
         askForConfirmationOnDiscardChanges={
           this.props.askForConfirmationOnDiscardChanges
         }
+        onDiffOptionsOpened={this.onDiffOptionsOpened}
+        selectedSketchPartID={selectedSketchPartID}
+        sketchFile={selectedSketchFile}
+        loadingDiff={changesState.selection.loadingDiff}
       />
     )
   }
