@@ -1,6 +1,12 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.32": [
+      "[Fixed] Wrong Stripe key shipped in public builds",
+      "[Fixed] Correct title bar height on macOS Big Sur",
+      "[Removed] Sign in to GitHub.com with username/password is no longer supported to improve account security",
+      "[Improved] Upgrade embedded Git LFS"
+    ],
     "0.3.31": [
       "[Fixed] Minified build was broken after some dependencies updates"
     ],
