@@ -738,7 +738,7 @@ describe('git/commit', () => {
         const status = await getStatusOrThrow(repository)
         expect(
           createMergeCommit(repository, status.workingDirectory.files)
-        ).rejects.toThrow(/Commit failed/i)
+        ).rejects.toThrow('There are no changes to commit.')
       })
     })
   })

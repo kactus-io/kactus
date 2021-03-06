@@ -11,11 +11,9 @@ import {
 import { git } from '../../git'
 import { friendlyEndpointName } from '../../friendly-endpoint-name'
 import { IRemote } from '../../../models/remote'
-import { envForRemoteOperation } from '../../git/environment'
-import {
-  DefaultBranchInGit,
-  DefaultBranchInDesktop,
-} from '../../helpers/default-branch'
+import { merge } from '../../merge'
+import { withTrampolineEnvForRemoteOperation } from '../../trampoline/trampoline-environment'
+import { getDefaultBranch } from '../../helpers/default-branch'
 
 const nl = '\n'
 const InitialReadmeContents =
@@ -73,9 +71,7 @@ async function pushRepo(
   progressCb(pushTitle, 0)
 
   const pushOpts = await executionOptionsWithProgress(
-    {
-      env: await envForRemoteOperation(account, remote.url),
-    },
+    {},
     new PushProgressParser(),
     progress => {
       if (progress.kind === 'progress') {
@@ -85,7 +81,13 @@ async function pushRepo(
   )
 
   const args = ['push', '-u', remote.name, remoteBranchName]
-  await git(args, path, 'tutorial:push', pushOpts)
+
+  await withTrampolineEnvForRemoteOperation(account, remote.url, env => {
+    return git(args, path, 'tutorial:push', {
+      ...pushOpts,
+      env: merge(pushOpts.env, env),
+    })
+  })
 }
 
 /**
@@ -117,15 +119,16 @@ export async function createTutorialRepository(
   }
 
   const repo = await createAPIRepository(account, name)
-  const branch = repo.default_branch ?? DefaultBranchInDesktop
+  const branch = repo.default_branch ?? (await getDefaultBranch())
   progressCb('Initializing local repository', 0.2)
 
   await ensureDir(path)
-  await git(['init'], path, 'tutorial:init')
 
-  if (branch !== DefaultBranchInGit) {
-    await git(['checkout', '-b', branch], path, 'tutorial:rename-branch')
-  }
+  await git(
+    ['-c', `init.defaultBranch=${branch}`, 'init'],
+    path,
+    'tutorial:init'
+  )
 
   await writeFile(Path.join(path, 'README.md'), InitialReadmeContents)
   await writeFile(Path.join(path, '.gitignore'), InitialGitignoreContents)

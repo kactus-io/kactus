@@ -14,11 +14,9 @@ import {
   isRepositoryWithGitHubRepository,
 } from '../../models/repository'
 import { Button } from '../lib/button'
-import { Avatar } from '../lib/avatar'
 import { Loading } from '../lib/loading'
 import { AuthorInput } from '../lib/author-input'
 import { FocusContainer } from '../lib/focus-container'
-import { showContextualMenu } from '../main-process-proxy'
 import { Octicon, OcticonSymbol } from '../octicons'
 import { IAuthor } from '../../models/author'
 import { IMenuItem } from '../../lib/menu-item'
@@ -28,6 +26,14 @@ import { PermissionsCommitWarning } from './permissions-commit-warning'
 import { LinkButton } from '../lib/link-button'
 import { FoldoutType } from '../../lib/app-state'
 import { IAvatarUser, getAvatarUserFromAuthor } from '../../models/avatar'
+import { showContextualMenu } from '../main-process-proxy'
+import { Account } from '../../models/account'
+import { CommitMessageAvatar } from './commit-message-avatar'
+import { getDotComAPIEndpoint } from '../../lib/api'
+import { lookupPreferredEmail } from '../../lib/email'
+import { setGlobalConfigValue } from '../../lib/git/config'
+import { PopupType } from '../../models/popup'
+import { RepositorySettingsTab } from '../repository-settings/repository-settings'
 
 const addAuthorIcon = new OcticonSymbol(
   18,
@@ -48,6 +54,7 @@ interface ICommitMessageProps {
   readonly focusCommitMessage: boolean
   readonly commitMessage: ICommitMessage | null
   readonly repository: Repository
+  readonly repositoryAccount: Account | null
   readonly dispatcher: Dispatcher
   readonly autocompletionProviders: ReadonlyArray<IAutocompletionProvider<any>>
   readonly isCommitting: boolean
@@ -73,6 +80,8 @@ interface ICommitMessageProps {
 
   /** Whether this component should show its onboarding tutorial nudge arrow */
   readonly shouldNudge: boolean
+
+  readonly commitSpellcheckEnabled: boolean
 }
 
 interface ICommitMessageState {
@@ -114,7 +123,6 @@ export class CommitMessage extends React.Component<
 
   public constructor(props: ICommitMessageProps) {
     super(props)
-
     const { commitMessage } = this.props
 
     this.state = {
@@ -268,7 +276,47 @@ export class CommitMessage extends React.Component<
         ? getAvatarUserFromAuthor(commitAuthor, gitHubRepository)
         : undefined
 
-    return <Avatar user={avatarUser} title={avatarTitle} />
+    const repositoryAccount = this.props.repositoryAccount
+    const accountEmails = repositoryAccount?.emails.map(e => e.email) ?? []
+    const email = commitAuthor?.email
+
+    const warningBadgeVisible =
+      email !== undefined &&
+      repositoryAccount !== null &&
+      accountEmails.includes(email) === false
+
+    return (
+      <CommitMessageAvatar
+        user={avatarUser}
+        title={avatarTitle}
+        email={commitAuthor?.email}
+        isEnterpriseAccount={
+          repositoryAccount?.endpoint !== getDotComAPIEndpoint()
+        }
+        warningBadgeVisible={warningBadgeVisible}
+        accountEmails={accountEmails}
+        preferredAccountEmail={
+          repositoryAccount !== null
+            ? lookupPreferredEmail(repositoryAccount)
+            : ''
+        }
+        onUpdateEmail={this.onUpdateUserEmail}
+        onOpenRepositorySettings={this.onOpenRepositorySettings}
+      />
+    )
+  }
+
+  private onUpdateUserEmail = async (email: string) => {
+    await setGlobalConfigValue('user.email', email)
+    this.props.dispatcher.refreshAuthor(this.props.repository)
+  }
+
+  private onOpenRepositorySettings = () => {
+    this.props.dispatcher.showPopup({
+      type: PopupType.RepositorySettings,
+      repository: this.props.repository,
+      initialSelectedTab: RepositorySettingsTab.GitConfig,
+    })
   }
 
   private get isCoAuthorInputEnabled() {
@@ -325,27 +373,42 @@ export class CommitMessage extends React.Component<
     }
   }
 
-  private onContextMenu = (event: React.MouseEvent<any>) => {
-    if (event.defaultPrevented) {
+  private onContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (
+      event.target instanceof HTMLTextAreaElement ||
+      event.target instanceof HTMLInputElement
+    ) {
       return
     }
 
-    event.preventDefault()
-
-    const items: IMenuItem[] = [this.getAddRemoveCoAuthorsMenuItem()]
-    showContextualMenu(items)
+    showContextualMenu([this.getAddRemoveCoAuthorsMenuItem()])
   }
 
-  private onAutocompletingInputContextMenu = (event: React.MouseEvent<any>) => {
-    event.preventDefault()
-
+  private onAutocompletingInputContextMenu = () => {
     const items: IMenuItem[] = [
       this.getAddRemoveCoAuthorsMenuItem(),
       { type: 'separator' },
       { role: 'editMenu' },
+      { type: 'separator' },
     ]
 
-    showContextualMenu(items)
+    items.push(
+      this.getCommitSpellcheckEnabilityMenuItem(
+        this.props.commitSpellcheckEnabled
+      )
+    )
+
+    showContextualMenu(items, true)
+  }
+
+  private getCommitSpellcheckEnabilityMenuItem(isEnabled: boolean): IMenuItem {
+    const enableLabel = 'Enable Commit Spellcheck'
+    const disableLabel = 'Disable Commit Spellcheck'
+    return {
+      label: isEnabled ? disableLabel : enableLabel,
+      action: () =>
+        this.props.dispatcher.setCommitSpellcheckEnabled(!isEnabled),
+    }
   }
 
   private onCoAuthorToggleButtonClick = (
@@ -541,6 +604,7 @@ export class CommitMessage extends React.Component<
             autocompletionProviders={this.props.autocompletionProviders}
             onContextMenu={this.onAutocompletingInputContextMenu}
             disabled={this.props.isCommitting}
+            spellcheck={this.props.commitSpellcheckEnabled}
           />
         </div>
 
@@ -558,6 +622,7 @@ export class CommitMessage extends React.Component<
             onElementRef={this.onDescriptionTextAreaRef}
             onContextMenu={this.onAutocompletingInputContextMenu}
             disabled={this.props.isCommitting}
+            spellcheck={this.props.commitSpellcheckEnabled}
           />
           {this.renderActionBar()}
         </FocusContainer>

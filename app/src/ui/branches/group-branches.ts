@@ -54,8 +54,12 @@ export function groupBranches(
   }
 
   const remainingBranches = allBranches.filter(
-    b => b.name !== defaultBranchName && !recentBranchNames.has(b.name)
+    b =>
+      b.name !== defaultBranchName &&
+      !recentBranchNames.has(b.name) &&
+      !b.isKactusForkRemoteBranch
   )
+
   const remainingItems = remainingBranches.map(b => ({
     text: [b.name],
     id: b.name,

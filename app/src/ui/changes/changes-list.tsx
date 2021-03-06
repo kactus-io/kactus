@@ -17,6 +17,7 @@ import { DiffSelectionType } from '../../models/diff'
 import { CommitIdentity } from '../../models/commit-identity'
 import { ICommitMessage } from '../../models/commit-message'
 import { Repository } from '../../models/repository'
+import { Account } from '../../models/account'
 import { IAuthor } from '../../models/author'
 import { List, ClickSource } from '../lib/list'
 import { Checkbox, CheckboxValue } from '../lib/checkbox'
@@ -119,6 +120,7 @@ function getIncludeAllValue(
 
 interface IChangesListProps {
   readonly repository: Repository
+  readonly repositoryAccount: Account | null
   readonly workingDirectory: WorkingDirectoryStatus
   /**
    * An object containing the conflicts in the working directory.
@@ -215,6 +217,8 @@ interface IChangesListProps {
    * arrow pointing at the commit summary box
    */
   readonly shouldNudgeToCommit: boolean
+
+  readonly commitSpellcheckEnabled: boolean
 }
 
 function getFileList(
@@ -786,6 +790,7 @@ export class ChangesList extends React.Component<
       rebaseConflictState,
       workingDirectory,
       repository,
+      repositoryAccount,
       dispatcher,
       isCommitting,
       currentBranchProtected,
@@ -842,6 +847,7 @@ export class ChangesList extends React.Component<
         commitAuthor={this.props.commitAuthor}
         anyFilesSelected={anyFilesSelected}
         repository={repository}
+        repositoryAccount={repositoryAccount}
         dispatcher={dispatcher}
         commitMessage={this.props.commitMessage}
         focusCommitMessage={this.props.focusCommitMessage}
@@ -858,6 +864,7 @@ export class ChangesList extends React.Component<
         showBranchProtected={fileCount > 0 && currentBranchProtected}
         showNoWriteAccess={fileCount > 0 && !hasWritePermissionForRepository}
         shouldNudge={this.props.shouldNudgeToCommit}
+        commitSpellcheckEnabled={this.props.commitSpellcheckEnabled}
       />
     )
   }
@@ -946,7 +953,10 @@ export class ChangesList extends React.Component<
           rowRenderer={this.renderRow}
           selectedRows={[selectedRow]}
           onSelectionChanged={this.onFileSelectionChanged}
-          invalidationProps={this.props.workingDirectory}
+          invalidationProps={{
+            workingDirectory: this.props.workingDirectory,
+            isCommitting: this.props.isCommitting,
+          }}
           onRowClick={this.props.onRowClick}
           loading={this.props.isLoadingStatus}
           onRowKeyDown={this.onRowKeyDown}

@@ -30,9 +30,7 @@ import { Popup } from '../models/popup'
 import { SignInState } from './stores/sign-in-store'
 
 import { WindowState } from './window-state'
-import { ExternalEditor } from './editors'
 import { Shell } from './shells'
-import { ComparisonCache } from './comparison-cache'
 import { IFullKactusConfig, IKactusFile } from './kactus'
 
 import { ApplicationTheme } from '../ui/lib/application-theme'
@@ -183,7 +181,7 @@ export interface IAppState {
   readonly uncommittedChangesStrategy: UncommittedChangesStrategy
 
   /** The external editor to use when opening repositories */
-  readonly selectedExternalEditor: ExternalEditor | null
+  readonly selectedExternalEditor: string | null
 
   /**
    * A cached entry representing an external editor found on the user's machine:
@@ -193,7 +191,7 @@ export interface IAppState {
    *    based on the search order in `app/src/lib/editors/{platform}.ts`
    *  - If no editors found, this will remain `null`
    */
-  readonly resolvedExternalEditor: ExternalEditor | null
+  readonly resolvedExternalEditor: string | null
 
   /** What type of visual diff mode we should use to compare images */
   readonly imageDiffType: ImageDiffType
@@ -257,6 +255,11 @@ export interface IAppState {
    * for more information
    */
   readonly repositoryIndicatorsEnabled: boolean
+
+  /**
+   * Whether or not the app should use spell check on commit summary and description
+   */
+  readonly commitSpellcheckEnabled: boolean
 }
 
 export enum FoldoutType {
@@ -715,8 +718,11 @@ export interface ICompareState {
   /** The SHAs of commits to render in the compare list */
   readonly commitSHAs: ReadonlyArray<string>
 
-  /** A list of all branches (remote and local) currently in the repository. */
-  readonly allBranches: ReadonlyArray<Branch>
+  /**
+   * A list of branches (remote and local) except the current branch, and
+   * Desktop fork remote branches (see `Branch.isKactusForkRemoteBranch`)
+   **/
+  readonly branches: ReadonlyArray<Branch>
 
   /**
    * A list of zero to a few (at time of writing 5 but check loadRecentBranches
@@ -737,11 +743,6 @@ export interface ICompareState {
    * GitHub.com users are able to change their default branch in the web UI.
    */
   readonly defaultBranch: Branch | null
-
-  /**
-   * A local cache of ahead/behind computations to compare other refs to the current branch
-   */
-  readonly aheadBehindCache: ComparisonCache
 }
 
 export interface ICompareFormUpdate {

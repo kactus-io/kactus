@@ -12,7 +12,7 @@ import {
 } from '../../models/branch'
 import { Tip, TipState } from '../../models/tip'
 import { Commit } from '../../models/commit'
-import { IRemote, ForkedRemotePrefix } from '../../models/remote'
+import { IRemote } from '../../models/remote'
 import { IFetchProgress, IRevertProgress } from '../../models/progress'
 import {
   ICommitMessage,
@@ -91,6 +91,7 @@ import { getTagsToPush, storeTagsToPush } from './helpers/tags-to-push-storage'
 import { DiffSelection, ITextDiffData } from '../../models/diff'
 import { getDefaultBranch } from '../helpers/default-branch'
 import { stat } from 'fs-extra'
+import { findForkedRemotesToPrune } from './helpers/find-forked-remotes-to-prune'
 
 /** The number of commits to load from history per batch. */
 const CommitBatchSize = 100
@@ -558,10 +559,15 @@ export class GitStore extends BaseStore {
       return
     }
 
-    const branchesByName = this._allBranches.reduce(
-      (map, branch) => map.set(branch.name, branch),
-      new Map<string, Branch>()
-    )
+    const branchesByName = new Map<string, Branch>()
+
+    for (const branch of this._allBranches) {
+      // This is slightly redundant as remote branches should never show up as
+      // having been checked out in the reflog but it makes the intention clear.
+      if (branch.type === BranchType.Local) {
+        branchesByName.set(branch.name, branch)
+      }
+    }
 
     const recentBranches = new Array<Branch>()
     for (const name of recentBranchNames) {
@@ -973,7 +979,10 @@ export class GitStore extends BaseStore {
     // any new commits available
     if (this.tip.kind === TipState.Valid) {
       const currentBranch = this.tip.branch
-      if (currentBranch.remote !== null && currentBranch.upstream !== null) {
+      if (
+        currentBranch.upstreamRemoteName !== null &&
+        currentBranch.upstream !== null
+      ) {
         const range = revSymmetricDifference(
           currentBranch.name,
           currentBranch.upstream
@@ -1096,7 +1105,8 @@ export class GitStore extends BaseStore {
           currentBranch,
           status.currentUpstreamBranch || null,
           branchTipCommit,
-          BranchType.Local
+          BranchType.Local,
+          `refs/heads/${currentBranch}`
         )
         this._tip = { kind: TipState.Valid, branch }
       } else if (currentTip) {
@@ -1243,8 +1253,9 @@ export class GitStore extends BaseStore {
     this._defaultRemote = findDefaultRemote(remotes)
 
     const currentRemoteName =
-      this.tip.kind === TipState.Valid && this.tip.branch.remote !== null
-        ? this.tip.branch.remote
+      this.tip.kind === TipState.Valid &&
+      this.tip.branch.upstreamRemoteName !== null
+        ? this.tip.branch.upstreamRemoteName
         : null
 
     // Load the remote that the current branch is tracking. If the branch
@@ -1645,18 +1656,12 @@ export class GitStore extends BaseStore {
 
   public async pruneForkedRemotes(openPRs: ReadonlyArray<PullRequest>) {
     const remotes = await getRemotes(this.repository)
-    const prRemotes = new Set<string>()
 
-    for (const pr of openPRs) {
-      if (pr.head.gitHubRepository.cloneURL !== null) {
-        prRemotes.add(pr.head.gitHubRepository.cloneURL)
-      }
-    }
+    const branches = this.allBranches
+    const remotesToPrune = findForkedRemotesToPrune(remotes, openPRs, branches)
 
-    for (const r of remotes) {
-      if (r.name.startsWith(ForkedRemotePrefix) && !prRemotes.has(r.url)) {
-        await removeRemote(this.repository, r.name)
-      }
+    for (const remote of remotesToPrune) {
+      await removeRemote(this.repository, remote.name)
     }
   }
 }

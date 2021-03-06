@@ -15,7 +15,8 @@
     "strict": true,
     "noEmit": true,
     "outDir": "./out",
-    "lib": ["ES2017", "DOM", "DOM.Iterable", "ES2018.Promise", "ES2020.string"]
+    "lib": ["ES2017", "DOM", "DOM.Iterable", "ES2018.Promise", "ES2020.string"],
+    "skipLibCheck": true
   },
   "plugins": [
     {

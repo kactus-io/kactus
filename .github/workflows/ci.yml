@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [12.14.1]
+        node: [14.x]
         os: [macos-10.15]
         include:
           - os: macos-10.15
@@ -43,9 +43,9 @@ jobs:
             ${{ runner.os }}-npm-
 
       - name: Install and build dependencies
-        run: npm install && npm rebuild node-sass
+        run: yarn install && yarn rebuild node-sass
       - name: Lint
-        run: npm run lint
+        run: yarn lint
       - name: Build production app
         run: NODE_OPTIONS=--max_old_space_size=8192 yarn build:prod
         env:
@@ -64,6 +64,7 @@ jobs:
       # - name: Run script tests
       #   run: yarn test:script:cov
       # - name: Run integration tests
+      #   timeout-minutes: 5
       #   run: yarn test:integration
       - name: Publish production app
         run: yarn run publish

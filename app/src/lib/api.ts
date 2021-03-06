@@ -77,7 +77,7 @@ const DotComOAuthScopes = ['repo', 'read:user', 'user:email', 'workflow']
 
 /**
  * The OAuth scopes we want to request from GitHub
- * Enterprise Server.
+ * Enterprise.
  */
 const EnterpriseOAuthScopes = ['repo', 'read:user', 'user:email']
 
@@ -108,6 +108,18 @@ export interface IAPIRepository {
   readonly pushed_at: string
   readonly has_issues: boolean
   readonly archived: boolean
+}
+
+/** Information needed to clone a repository. */
+export interface IAPIRepositoryCloneInfo {
+  /** Canonical clone URL of the repository. */
+  readonly url: string
+
+  /**
+   * Default branch of the repository, if any. This is usually either retrieved
+   * from the API for GitHub repositories, or undefined for other repositories.
+   */
+  readonly defaultBranch?: string
 }
 
 export interface IAPIFullRepository extends IAPIRepository {
@@ -638,8 +650,11 @@ export class API {
   }
 
   /**
-   * Fetch the canonical clone URL for a repository, respecting the protocol
-   * preference if provided.
+   * Fetch info needed to clone a repository. That includes:
+   *  - The canonical clone URL for a repository, respecting the protocol
+   *    preference if provided.
+   *  - The default branch of the repository, in case the repository is empty.
+   *    Only available for GitHub repositories.
    *
    * Returns null if the request returned a 404 (NotFound). NotFound doesn't
    * necessarily mean that the repository doesn't exist, it could exist and
@@ -654,11 +669,11 @@ export class API {
    * @param name     The repository name (node in https://github.com/nodejs/node)
    * @param protocol The preferred Git protocol (https or ssh)
    */
-  public async fetchRepositoryCloneUrl(
+  public async fetchRepositoryCloneInfo(
     owner: string,
     name: string,
     protocol: GitProtocol | undefined
-  ): Promise<string | null> {
+  ): Promise<IAPIRepositoryCloneInfo | null> {
     const response = await this.request('GET', `repos/${owner}/${name}`)
 
     if (response.status === HttpStatusCode.NotFound) {
@@ -666,7 +681,10 @@ export class API {
     }
 
     const repo = await parsedResponse<IAPIRepository>(response)
-    return protocol === 'ssh' ? repo.ssh_url : repo.clone_url
+    return {
+      url: protocol === 'ssh' ? repo.ssh_url : repo.clone_url,
+      defaultBranch: repo.default_branch,
+    }
   }
 
   /** Fetch all repos a user has access to. */
@@ -679,7 +697,7 @@ export class API {
       // Ordinarily you'd be correct but turns out there's super
       // rare circumstances where a user has been deleted but the
       // repository hasn't. Such cases are usually addressed swiftly
-      // but in some cases like GitHub Enterprise Server instances
+      // but in some cases like GitHub Enterprise instances
       // they can linger for longer than we'd like so we'll make
       // sure to exclude any such dangling repository, chances are
       // they won't be cloneable anyway.
@@ -1398,7 +1416,7 @@ export function getHTMLURL(endpoint: string): string {
   // In the case of GitHub.com, the HTML site lives on the parent domain.
   //  E.g., https://api.github.com -> https://github.com
   //
-  // Whereas with Enterprise Server, it lives on the same domain but without the
+  // Whereas with Enterprise, it lives on the same domain but without the
   // API path:
   //  E.g., https://github.mycompany.com/api/v3 -> https://github.mycompany.com
   //

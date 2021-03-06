@@ -12,7 +12,9 @@
     "noUnusedLocals": true,
     "sourceMap": false,
     "noEmit": true,
-    "strict": true
+    "strict": true,
+    "skipLibCheck": true
   },
-  "compileOnSave": false
+  "compileOnSave": false,
+  "exclude": ["node_modules"]
 }

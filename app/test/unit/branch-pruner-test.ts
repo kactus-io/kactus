@@ -20,7 +20,7 @@ describe('BranchPruner', () => {
   let gitStoreCache: GitStoreCache
   let repositoriesStore: RepositoriesStore
   let repositoriesStateCache: RepositoryStateCache
-  let onPruneCompleted: jest.Mock<(repository: Repository) => Promise<void>>
+  let onPruneCompleted: jest.Mock<Promise<void>, [Repository]>
 
   beforeEach(async () => {
     gitStoreCache = new GitStoreCache(shell, onGitStoreUpdated, onDidError)
@@ -29,7 +29,7 @@ describe('BranchPruner', () => {
     await repositoriesDb.reset()
     repositoriesStore = new RepositoriesStore(repositoriesDb)
     repositoriesStateCache = new RepositoryStateCache()
-    onPruneCompleted = jest.fn(() => (_: Repository) => {
+    onPruneCompleted = jest.fn((_: Repository) => {
       return Promise.resolve()
     })
   })

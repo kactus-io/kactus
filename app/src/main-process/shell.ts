@@ -1,4 +1,3 @@
-import * as Url from 'url'
 import { shell } from 'electron'
 
 /**
@@ -16,13 +15,9 @@ import { shell } from 'electron'
  * @param path directory to open
  */
 export function UNSAFE_openDirectory(path: string) {
-  const directoryURL = Url.format({
-    pathname: path,
-    protocol: 'file:',
-    slashes: true,
+  shell.openPath(path).then(err => {
+    if (err !== '') {
+      log.error(`Failed to open directory (${path}): ${err}`)
+    }
   })
-
-  shell
-    .openExternal(directoryURL)
-    .catch(err => log.error(`Failed to open directory (${path})`, err))
 }

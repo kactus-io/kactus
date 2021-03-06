@@ -11,7 +11,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "strictNullChecks": true,
-    "sourceMap": false
+    "sourceMap": false,
+    "skipLibCheck": true
   },
-  "compileOnSave": false
+  "compileOnSave": false,
+  "exclude": ["node_modules"]
 }

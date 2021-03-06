@@ -1,6 +1,12 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.33": [
+      "[Improved] Clearer menu label for reverting commits",
+      "[Fixed] Refresh branches after creating a new branch",
+      "[Fixed] Pull requests no longer fail to update until the user switches repositories",
+      "[Improved] Enable spellcheck on commit summary and description"
+    ],
     "0.3.32": [
       "[Fixed] Wrong Stripe key shipped in public builds",
       "[Fixed] Correct title bar height on macOS Big Sur",

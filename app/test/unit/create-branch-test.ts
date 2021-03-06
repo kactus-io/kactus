@@ -25,9 +25,12 @@ const defaultBranch: Branch = {
   upstream: null,
   tip: stubTip,
   type: BranchType.Local,
-  remote: null,
+  remoteName: null,
+  upstreamRemoteName: null,
   upstreamWithoutRemote: null,
   nameWithoutRemote: 'my-default-branch',
+  isKactusForkRemoteBranch: false,
+  ref: '',
 }
 
 const upstreamDefaultBranch = null
@@ -37,9 +40,12 @@ const someOtherBranch: Branch = {
   upstream: null,
   tip: stubTip,
   type: BranchType.Local,
-  remote: null,
+  remoteName: null,
+  upstreamRemoteName: null,
   upstreamWithoutRemote: null,
   nameWithoutRemote: 'some-other-branch',
+  isKactusForkRemoteBranch: false,
+  ref: '',
 }
 
 describe('create-branch/getStartPoint', () => {

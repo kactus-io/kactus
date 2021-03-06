@@ -21,11 +21,12 @@ const TutorialPanelImage = encodePathAsUrl(
 interface ITutorialPanelProps {
   readonly dispatcher: Dispatcher
   readonly repository: Repository
+  readonly sketchVersion: string | null | undefined
 
   /** name of the configured external editor
    * (`undefined` if none is configured.)
    */
-  readonly sketchVersion: string | null | undefined
+  readonly resolvedExternalEditor: string | null
   readonly currentTutorialStep: ValidTutorialStep
   readonly onExitTutorial: () => void
 }

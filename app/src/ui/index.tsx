@@ -75,6 +75,7 @@ import 'wicg-focus-ring'
 import momentDurationFormatSetup from 'moment-duration-format'
 import { sendNonFatalException } from '../lib/helpers/non-fatal-exception'
 import { enableUnhandledRejectionReporting } from '../lib/feature-flag'
+import { AheadBehindStore } from '../lib/stores/ahead-behind-store'
 
 if (__DEV__) {
   installDevGlobals()
@@ -239,6 +240,7 @@ const repositoryStateManager = new RepositoryStateCache()
 const apiRepositoriesStore = new ApiRepositoriesStore(accountsStore)
 
 const commitStatusStore = new CommitStatusStore(accountsStore)
+const aheadBehindStore = new AheadBehindStore()
 
 const appStore = new AppStore(
   gitHubUserStore,
@@ -319,6 +321,7 @@ ReactDOM.render(
     repositoryStateManager={repositoryStateManager}
     issuesStore={issuesStore}
     gitHubUserStore={gitHubUserStore}
+    aheadBehindStore={aheadBehindStore}
     startTime={startTime}
   />,
   document.getElementById('kactus-app-container')!

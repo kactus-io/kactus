@@ -27,6 +27,7 @@ import { StashedChangesLoadStates } from '../models/stash-entry'
 import { TutorialPanel, TutorialWelcome, TutorialDone } from './tutorial'
 import { TutorialStep, isValidTutorialStep } from '../models/tutorial-step'
 import { openFile } from './lib/open-file'
+import { AheadBehindStore } from '../lib/stores/ahead-behind-store'
 
 /** The widest the sidebar can be with the minimum window size. */
 const MaxSidebarWidth = 495
@@ -47,6 +48,7 @@ interface IRepositoryViewProps {
   readonly showSideBySideDiff: boolean
   readonly askForConfirmationOnDiscardChanges: boolean
   readonly focusCommitMessage: boolean
+  readonly commitSpellcheckEnabled: boolean
   readonly accounts: ReadonlyArray<Account>
 
   /**
@@ -65,6 +67,8 @@ interface IRepositoryViewProps {
   readonly externalEditorLabel?: string
 
   /** A cached entry representing an external editor found on the user's machine */
+  readonly resolvedExternalEditor: string | null
+
   readonly sketchVersion: string | null | undefined
 
   /**
@@ -82,6 +86,7 @@ interface IRepositoryViewProps {
   readonly currentTutorialStep: TutorialStep
 
   readonly onExitTutorial: () => void
+  readonly aheadBehindStore: AheadBehindStore
 }
 
 interface IRepositoryViewState {
@@ -205,6 +210,7 @@ export class RepositoryView extends React.Component<
         shouldNudgeToCommit={
           this.props.currentTutorialStep === TutorialStep.MakeCommit
         }
+        commitSpellcheckEnabled={this.props.commitSpellcheckEnabled}
       />
     )
   }
@@ -236,6 +242,7 @@ export class RepositoryView extends React.Component<
         onCompareListScrolled={this.onCompareListScrolled}
         compareListScrollTop={scrollTop}
         tagsToPush={this.props.state.tagsToPush}
+        aheadBehindStore={this.props.aheadBehindStore}
       />
     )
   }
@@ -535,6 +542,7 @@ export class RepositoryView extends React.Component<
           sketchVersion={this.props.sketchVersion}
           currentTutorialStep={this.props.currentTutorialStep}
           onExitTutorial={this.props.onExitTutorial}
+          resolvedExternalEditor={this.props.resolvedExternalEditor}
         />
       )
     }

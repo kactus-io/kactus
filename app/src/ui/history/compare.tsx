@@ -24,6 +24,7 @@ import { SelectionSource } from '../lib/filter-list'
 import { IMatches } from '../../lib/fuzzy-find'
 import { Ref } from '../lib/ref'
 import { MergeCallToActionWithConflicts } from './merge-call-to-action-with-conflicts'
+import { AheadBehindStore } from '../../lib/stores/ahead-behind-store'
 
 interface ICompareSidebarProps {
   readonly repository: Repository
@@ -41,6 +42,7 @@ interface ICompareSidebarProps {
   readonly compareListScrollTop?: number
   readonly localTags: Map<string, string> | null
   readonly tagsToPush: ReadonlyArray<string> | null
+  readonly aheadBehindStore: AheadBehindStore
 }
 
 interface ICompareSidebarState {
@@ -132,7 +134,7 @@ export class CompareSidebar extends React.Component<
   }
 
   public render() {
-    const { allBranches, filterText, showBranchList } = this.props.compareState
+    const { branches, filterText, showBranchList } = this.props.compareState
     const placeholderText = getPlaceholderText(this.props.compareState)
 
     return (
@@ -144,7 +146,7 @@ export class CompareSidebar extends React.Component<
             placeholder={placeholderText}
             onFocus={this.onTextBoxFocused}
             value={filterText}
-            disabled={allBranches.length === 0}
+            disabled={!branches.some(b => !b.isKactusForkRemoteBranch)}
             onRef={this.onTextBoxRef}
             onValueChanged={this.onBranchFilterTextChanged}
             onKeyDown={this.onBranchFilterKeyDown}
@@ -228,6 +230,7 @@ export class CompareSidebar extends React.Component<
         onScroll={this.onScroll}
         onCreateTag={this.onCreateTag}
         onDeleteTag={this.onDeleteTag}
+        onCherryPick={this.onCherryPick}
         emptyListMessage={emptyListMessage}
         onCompareListScrolled={this.props.onCompareListScrolled}
         compareListScrollTop={this.props.compareListScrollTop}
@@ -250,7 +253,7 @@ export class CompareSidebar extends React.Component<
   private renderFilterList() {
     const {
       defaultBranch,
-      allBranches,
+      branches,
       recentBranches,
       filterText,
     } = this.props.compareState
@@ -260,7 +263,7 @@ export class CompareSidebar extends React.Component<
         ref={this.onBranchesListRef}
         defaultBranch={defaultBranch}
         currentBranch={this.props.currentBranch}
-        allBranches={allBranches}
+        allBranches={branches}
         recentBranches={recentBranches}
         filterText={filterText}
         textbox={this.textbox!}
@@ -329,24 +332,13 @@ export class CompareSidebar extends React.Component<
     item: IBranchListItem,
     matches: IMatches
   ) => {
-    const currentBranch = this.props.currentBranch
-
-    const currentBranchName = currentBranch != null ? currentBranch.name : null
-    const branch = item.branch
-
-    const aheadBehind = currentBranch
-      ? this.props.compareState.aheadBehindCache.get(
-          currentBranch.tip.sha,
-          branch.tip.sha
-        )
-      : null
-
     return (
       <CompareBranchListItem
-        branch={branch}
-        isCurrentBranch={branch.name === currentBranchName}
+        branch={item.branch}
+        currentBranch={this.props.currentBranch}
         matches={matches}
-        aheadBehind={aheadBehind}
+        repository={this.props.repository}
+        aheadBehindStore={this.props.aheadBehindStore}
       />
     )
   }
@@ -513,12 +505,19 @@ export class CompareSidebar extends React.Component<
   private onDeleteTag = (tagName: string) => {
     this.props.dispatcher.showDeleteTagDialog(this.props.repository, tagName)
   }
+
+  private onCherryPick = (commitSha: string) => {
+    this.props.dispatcher.showCherryPickBranchDialog(
+      this.props.repository,
+      commitSha
+    )
+  }
 }
 
 function getPlaceholderText(state: ICompareState) {
-  const { allBranches, formState } = state
+  const { branches, formState } = state
 
-  if (allBranches.length === 0) {
+  if (!branches.some(b => !b.isKactusForkRemoteBranch)) {
     return 'No Branches to Compare'
   } else if (formState.kind === HistoryTabMode.History) {
     return 'Select Branch to Compare...'

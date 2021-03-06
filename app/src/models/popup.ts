@@ -15,12 +15,14 @@ import { IStashEntry } from './stash-entry'
 import { Account } from '../models/account'
 import { Progress } from './progress'
 import { ITextDiffData, DiffSelection } from './diff'
+import { RepositorySettingsTab } from '../ui/repository-settings/repository-settings'
 
 export type PremiumType = 'premium' | 'enterprise'
 
 export enum PopupType {
   RenameBranch = 1,
   DeleteBranch,
+  DeleteRemoteBranch,
   ConfirmDiscardChanges,
   Preferences,
   MergeBranch,
@@ -71,6 +73,7 @@ export enum PopupType {
   LocalChangesOverwritten,
   ChooseForkSettings,
   ConfirmDiscardSelection,
+  CherryPick,
 }
 
 export type Popup =
@@ -80,6 +83,11 @@ export type Popup =
       repository: Repository
       branch: Branch
       existsOnRemote: boolean
+    }
+  | {
+      type: PopupType.DeleteRemoteBranch
+      repository: Repository
+      branch: Branch
     }
   | {
       type: PopupType.ConfirmDiscardChanges
@@ -101,7 +109,11 @@ export type Popup =
       repository: Repository
       branch?: Branch
     }
-  | { type: PopupType.RepositorySettings; repository: Repository }
+  | {
+      type: PopupType.RepositorySettings
+      repository: Repository
+      initialSelectedTab?: RepositorySettingsTab
+    }
   | { type: PopupType.KactusSettings; repository: Repository }
   | { type: PopupType.CreateSketchFile; repository: Repository }
   | {
@@ -152,7 +164,7 @@ export type Popup =
   | {
       type: PopupType.ExternalEditorFailed
       message: string
-      suggestAtom?: boolean
+      suggestDefaultEditor?: boolean
       openPreferences?: boolean
     }
   | { type: PopupType.OpenShellFailed; message: string }
@@ -273,4 +285,9 @@ export type Popup =
       repository: Repository
       retryAction: RetryAction
       files: ReadonlyArray<string>
+    }
+  | {
+      type: PopupType.CherryPick
+      repository: Repository
+      commitSha: string
     }

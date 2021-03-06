@@ -1,5 +1,7 @@
 import * as path from 'path'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
+// eslint-disable-next-line
+// @ts-ignore
 import CleanWebpackPlugin from 'clean-webpack-plugin'
 import webpack from 'webpack'
 import merge from 'webpack-merge'

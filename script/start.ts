@@ -58,12 +58,7 @@ if (process.env.NODE_ENV === 'production') {
 
   server.use(hotMiddleware(compiler))
 
-  server.listen(port, 'localhost', (err: Error | null) => {
-    if (err) {
-      console.log(err)
-      process.exit(1)
-    }
-
+  server.listen(port, 'localhost', () => {
     console.log(`Server running at http://localhost:${port}`)
     startApp()
   })
