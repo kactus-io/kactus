@@ -160,6 +160,18 @@ function getConflictState(
     }
   }
 
+  if (status.isCherryPickingHeadFound) {
+    const { currentBranch: targetBranchName } = status
+    if (targetBranchName == null) {
+      return null
+    }
+    return {
+      kind: 'cherryPick',
+      manualResolutions,
+      targetBranchName,
+    }
+  }
+
   return null
 }
 

@@ -1,12 +1,13 @@
 import * as React from 'react'
 
-import { Commit } from '../../models/commit'
+import { Commit, CommitOneLine } from '../../models/commit'
 import {
   HistoryTabMode,
   ICompareState,
   ICompareBranch,
   ComparisonMode,
   IDisplayHistory,
+  FoldoutType,
 } from '../../lib/app-state'
 import { CommitList } from './commit-list'
 import { Repository } from '../../models/repository'
@@ -25,6 +26,7 @@ import { IMatches } from '../../lib/fuzzy-find'
 import { Ref } from '../lib/ref'
 import { MergeCallToActionWithConflicts } from './merge-call-to-action-with-conflicts'
 import { AheadBehindStore } from '../../lib/stores/ahead-behind-store'
+import { CherryPickStepKind } from '../../models/cherry-pick'
 
 interface ICompareSidebarProps {
   readonly repository: Repository
@@ -39,6 +41,10 @@ interface ICompareSidebarProps {
   readonly onRevertCommit: (commit: Commit) => void
   readonly onViewCommitOnGitHub: (sha: string) => void
   readonly onCompareListScrolled: (scrollTop: number) => void
+  readonly onCherryPick: (
+    repository: Repository,
+    commits: ReadonlyArray<CommitOneLine>
+  ) => void
   readonly compareListScrollTop?: number
   readonly localTags: Map<string, string> | null
   readonly tagsToPush: ReadonlyArray<string> | null
@@ -235,6 +241,8 @@ export class CompareSidebar extends React.Component<
         onCompareListScrolled={this.props.onCompareListScrolled}
         compareListScrollTop={this.props.compareListScrollTop}
         tagsToPush={this.props.tagsToPush}
+        onDragCommitStart={this.onDragCommitStart}
+        onDragCommitEnd={this.onDragCommitEnd}
       />
     )
   }
@@ -506,11 +514,31 @@ export class CompareSidebar extends React.Component<
     this.props.dispatcher.showDeleteTagDialog(this.props.repository, tagName)
   }
 
-  private onCherryPick = (commitSha: string) => {
-    this.props.dispatcher.showCherryPickBranchDialog(
-      this.props.repository,
-      commitSha
-    )
+  private onCherryPick = (commits: ReadonlyArray<CommitOneLine>) => {
+    this.props.onCherryPick(this.props.repository, commits)
+  }
+
+  /**
+   * This method is a generic event handler for when a commit has started being
+   * dragged.
+   *
+   * Currently only used for cherry picking, but this could be more generic.
+   */
+  private onDragCommitStart = (commits: ReadonlyArray<CommitOneLine>) => {
+    this.props.dispatcher.setCherryPickFlowStep(this.props.repository, {
+      kind: CherryPickStepKind.CommitsChosen,
+      commits,
+    })
+  }
+
+  /**
+   * This method is a generic event handler for when a commit has ended being
+   * dragged.
+   *
+   * Currently only used for cherry picking, but this could be more generic.
+   */
+  private onDragCommitEnd = () => {
+    this.props.dispatcher.closeFoldout(FoldoutType.Branch)
   }
 }
 

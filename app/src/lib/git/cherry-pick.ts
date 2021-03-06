@@ -17,6 +17,8 @@ import { ChildProcess } from 'child_process'
 import { round } from '../../ui/lib/round'
 import byline from 'byline'
 import { ICherryPickSnapshot } from '../../models/cherry-pick'
+import { ManualConflictResolution } from '../../models/manual-conflict-resolution'
+import { stageManualConflictResolution } from './stage'
 
 /** The app-specific results from attempting to cherry pick commits*/
 export enum CherryPickResult {
@@ -203,8 +205,7 @@ function parseCherryPickResult(result: IGitResult): CherryPickResult {
 export async function getCherryPickSnapshot(
   repository: Repository
 ): Promise<ICherryPickSnapshot | null> {
-  const cherryPickHead = readCherryPickHead(repository)
-  if (cherryPickHead === null) {
+  if (!isCherryPickHeadFound(repository)) {
     // If there no cherry pick head, there is no cherry pick in progress.
     return null
   }
@@ -276,6 +277,7 @@ export async function getCherryPickSnapshot(
   }
 
   const count = commits.length - remainingShas.length
+  const commitSummaryIndex = count > 0 ? count - 1 : 0
   return {
     progress: {
       kind: 'cherryPick',
@@ -283,9 +285,10 @@ export async function getCherryPickSnapshot(
       value: round(count / commits.length, 2),
       cherryPickCommitCount: count,
       totalCommitCount: commits.length,
-      currentCommitSummary: commits[count - 1].summary ?? '',
+      currentCommitSummary: commits[commitSummaryIndex].summary ?? '',
     },
     remainingCommits: commits.slice(count, commits.length),
+    commits,
   }
 }
 
@@ -303,13 +306,28 @@ export async function getCherryPickSnapshot(
 export async function continueCherryPick(
   repository: Repository,
   files: ReadonlyArray<WorkingDirectoryFileChange>,
+  manualResolutions: ReadonlyMap<string, ManualConflictResolution> = new Map(),
   progressCallback?: (progress: ICherryPickProgress) => void
 ): Promise<CherryPickResult> {
   // only stage files related to cherry pick
   const trackedFiles = files.filter(f => {
     return f.status.kind !== AppFileStatusKind.Untracked
   })
-  await stageFiles(repository, trackedFiles)
+
+  // apply conflict resolutions
+  for (const [path, resolution] of manualResolutions) {
+    const file = files.find(f => f.path === path)
+    if (file === undefined) {
+      log.error(
+        `[continueCherryPick] couldn't find file ${path} even though there's a manual resolution for it`
+      )
+      continue
+    }
+    await stageManualConflictResolution(repository, file, resolution)
+  }
+
+  const otherFiles = trackedFiles.filter(f => !manualResolutions.has(f.path))
+  await stageFiles(repository, otherFiles)
 
   const status = await getStatus(repository, [])
   if (status == null) {
@@ -321,8 +339,7 @@ export async function continueCherryPick(
   }
 
   // make sure cherry pick is still in progress to continue
-  const cherryPickCurrentCommit = await readCherryPickHead(repository)
-  if (cherryPickCurrentCommit === null) {
+  if (await !isCherryPickHeadFound(repository)) {
     return CherryPickResult.Aborted
   }
 
@@ -352,6 +369,27 @@ export async function continueCherryPick(
     )
   }
 
+  const trackedFilesAfter = status.workingDirectory.files.filter(
+    f => f.status.kind !== AppFileStatusKind.Untracked
+  )
+
+  if (trackedFilesAfter.length === 0) {
+    log.warn(
+      `[cherryPick] no tracked changes to commit, continuing cherry pick but skipping this commit`
+    )
+
+    // This commits the empty commit so that the cherry picked commit still
+    // shows up in the target branches history.
+    const result = await git(
+      ['commit', '--allow-empty'],
+      repository.path,
+      'continueCherryPickSkipCurrentCommit',
+      options
+    )
+
+    return parseCherryPickResult(result)
+  }
+
   const result = await git(
     ['cherry-pick', '--continue'],
     repository.path,
@@ -368,29 +406,24 @@ export async function abortCherryPick(repository: Repository) {
 }
 
 /**
- * Attempt to read the `.git/CHERRY_PICK_HEAD` file inside a repository to confirm
- * the cherry pick is still active.
+ * Check if the `.git/CHERRY_PICK_HEAD` file exists
  */
-async function readCherryPickHead(
+export async function isCherryPickHeadFound(
   repository: Repository
-): Promise<string | null> {
+): Promise<boolean> {
   try {
-    const cherryPickHead = Path.join(
+    const cherryPickHeadPath = Path.join(
       repository.path,
       '.git',
       'CHERRY_PICK_HEAD'
     )
-    const cherryPickCurrentCommitOutput = await FSE.readFile(
-      cherryPickHead,
-      'utf8'
-    )
-    return cherryPickCurrentCommitOutput.trim()
+    return FSE.pathExists(cherryPickHeadPath)
   } catch (err) {
     log.warn(
       `[cherryPick] a problem was encountered reading .git/CHERRY_PICK_HEAD,
        so it is unsafe to continue cherry picking`,
       err
     )
-    return null
+    return false
   }
 }

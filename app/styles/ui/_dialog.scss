@@ -3,7 +3,7 @@
 @import 'dialogs/premium-upsell';
 @import 'dialogs/merge-conflicts';
 @import 'dialogs/rebase';
-@import 'dialogs/rebase-progress';
+@import 'dialogs/progress-dialog';
 @import 'dialogs/abort-merge';
 @import 'dialogs/push-needs-pull';
 @import 'dialogs/publish-repository';
@@ -15,6 +15,7 @@
 @import 'dialogs/create-tutorial-repository';
 @import 'dialogs/create-fork';
 @import 'dialogs/fork-settings';
+@import 'dialogs/cherry-pick';
 
 // The styles herein attempt to follow a flow where margins are only applied
 // to the bottom of elements (with the exception of the last child). This to
