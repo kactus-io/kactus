@@ -1984,7 +1984,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         await Promise.all(
           modifiedFiles.map(f => {
             return this.isParsing(repository, f, async () => {
-              await parseSketchFile(repository, f, kactusStatus.config)
+              await this._parseSketchFile(repository, f)
             })
           })
         )
@@ -3317,9 +3317,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const branch = await gitStore.createBranch(name, startPoint, noTrackOption)
 
     if (branch !== undefined) {
-      await this._checkoutBranch(repository, branch, undefined, {
-        refreshKactus: true,
-      })
+      await this._checkoutBranch(repository, branch)
     }
   }
 
@@ -3369,12 +3367,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         }
         if (f.parsed) {
           try {
-            await importSketchFile(
-              repository,
-              this.sketchPath,
-              f,
-              kactus.config
-            )
+            await this._importSketchFile(repository, f)
             this.repositoryStateCache.updateKactusState(repository, state => ({
               files: state.files.map(file =>
                 file.id !== f.id ? { ...file, imported: true } : file
@@ -3583,7 +3576,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private async refreshAfterCheckout(
     repository: Repository,
     branch: Branch,
-    previousKactusState: any,
+    previousKactusState: IKactusState,
     refreshKactus?: boolean
   ) {
     this.updateCheckoutProgress(repository, {
@@ -4457,9 +4450,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     await Promise.all(
       kactus.files
         .filter(f => f.parsed)
-        .map(f =>
-          importSketchFile(repository, this.sketchPath, f, kactus.config)
-        )
+        .map(f => this._importSketchFile(repository, f))
     )
 
     await this._refreshRepository(repository)
@@ -4760,9 +4751,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       await Promise.all(
         kactus.files
           .filter(f => f.parsed)
-          .map(f =>
-            importSketchFile(repository, this.sketchPath, f, kactus.config)
-          )
+          .map(f => this._importSketchFile(repository, f))
       )
     } catch (err) {
       // probably conflicts

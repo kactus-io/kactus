@@ -2,6 +2,7 @@
   "unreleased": [],
   "releases": {
     "0.3.33": [
+      "[Improved] Add loading indicator when parsing Sketch files when ckecking out a branch",
       "[Improved] Clearer menu label for reverting commits",
       "[Fixed] Refresh branches after creating a new branch",
       "[Fixed] Pull requests no longer fail to update until the user switches repositories",
