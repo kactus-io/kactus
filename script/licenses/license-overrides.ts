@@ -45,7 +45,7 @@ COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR CONSEQ
 The name and trademarks of copyright holders may NOT be used in advertising or publicity pertaining to the work without specific, written prior permission. Title to copyright in this work will at all times remain with copyright holders.`,
   },
 
-  'tslib@2.0.3': {
+  'tslib@2.1.0': {
     repository: 'git+https://github.com/microsoft/tslib',
     license: 'BSD',
     source:
