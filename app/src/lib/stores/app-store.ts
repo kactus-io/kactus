@@ -1983,9 +1983,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       if (modifiedFiles && modifiedFiles.length) {
         await Promise.all(
           modifiedFiles.map(f => {
-            return this.isParsing(repository, f, async () => {
-              await this._parseSketchFile(repository, f)
-            })
+            return this._parseSketchFile(repository, f, false)
           })
         )
       }
@@ -2260,30 +2258,36 @@ export class AppStore extends TypedBaseStore<IAppState> {
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _parseSketchFile(
     repository: Repository,
-    file: IKactusFile
+    file: IKactusFile,
+    loadStatus: boolean = true
   ): Promise<void> {
     await this.isParsing(repository, file, async () => {
       const kactusConfig = this.repositoryStateCache.get(repository).kactus
         .config
       await parseSketchFile(repository, file, kactusConfig)
-      await this._loadStatus(repository, {
-        skipParsingModifiedSketchFiles: true,
-      })
+      if (loadStatus) {
+        await this._loadStatus(repository, {
+          skipParsingModifiedSketchFiles: true,
+        })
+      }
     })
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
   public async _importSketchFile(
     repository: Repository,
-    file: IKactusFile
+    file: IKactusFile,
+    loadStatus: boolean = true
   ): Promise<void> {
     await this.isImporting(repository, file, async () => {
       const kactusConfig = this.repositoryStateCache.get(repository).kactus
         .config
       await importSketchFile(repository, this.sketchPath, file, kactusConfig)
-      await this._loadStatus(repository, {
-        skipParsingModifiedSketchFiles: true,
-      })
+      if (loadStatus) {
+        await this._loadStatus(repository, {
+          skipParsingModifiedSketchFiles: true,
+        })
+      }
     })
   }
 
@@ -3367,12 +3371,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
         }
         if (f.parsed) {
           try {
-            await this._importSketchFile(repository, f)
-            this.repositoryStateCache.updateKactusState(repository, state => ({
-              files: state.files.map(file =>
-                file.id !== f.id ? { ...file, imported: true } : file
-              ),
-            }))
+            await this._importSketchFile(repository, f, false)
           } catch (err) {
             // probably a merge conflict
             log.error(`Could not import the sketch file ${f.path}`, err)
@@ -4111,6 +4110,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     repository: Repository,
     file: IKactusFile,
     key: 'isParsing' | 'isImporting',
+    doneKey: 'parsed' | 'imported',
     fn: () => Promise<void>
   ): Promise<boolean | void> {
     const state = this.repositoryStateCache.get(repository)
@@ -4134,7 +4134,18 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.emitUpdate()
 
     try {
-      return await fn()
+      await fn()
+      this.repositoryStateCache.updateKactusState(repository, state => ({
+        files: state.files.map(f => {
+          if (f.id === file.id) {
+            return {
+              ...f,
+              [doneKey]: true,
+            }
+          }
+          return f
+        }),
+      }))
     } finally {
       this.repositoryStateCache.updateKactusState(repository, state => ({
         files: state.files.map(f => {
@@ -4156,7 +4167,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
     file: IKactusFile,
     fn: () => Promise<void>
   ): Promise<boolean | void> {
-    return this.isParsingOrImporting(repository, file, 'isParsing', fn)
+    return this.isParsingOrImporting(
+      repository,
+      file,
+      'isParsing',
+      'parsed',
+      fn
+    )
   }
 
   private async isImporting(
@@ -4164,7 +4181,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
     file: IKactusFile,
     fn: () => Promise<void>
   ): Promise<boolean | void> {
-    return this.isParsingOrImporting(repository, file, 'isImporting', fn)
+    return this.isParsingOrImporting(
+      repository,
+      file,
+      'isImporting',
+      'imported',
+      fn
+    )
   }
 
   private async withPushPullFetch(
@@ -4450,7 +4473,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     await Promise.all(
       kactus.files
         .filter(f => f.parsed)
-        .map(f => this._importSketchFile(repository, f))
+        .map(f => this._importSketchFile(repository, f, false))
     )
 
     await this._refreshRepository(repository)
@@ -4751,7 +4774,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       await Promise.all(
         kactus.files
           .filter(f => f.parsed)
-          .map(f => this._importSketchFile(repository, f))
+          .map(f => this._importSketchFile(repository, f, false))
       )
     } catch (err) {
       // probably conflicts
