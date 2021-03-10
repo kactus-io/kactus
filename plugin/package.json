@@ -1,6 +1,6 @@
 {
   "name": "kactus",
-  "version": "0.3.33",
+  "version": "0.3.34",
   "skpm": {
     "description": "A proper version control tool for designers",
     "main": "../out/plugin.sketchplugin",

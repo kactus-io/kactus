@@ -1,6 +1,9 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.34": [
+      "[Fixed] Fixed a bug when loading the Kactus state after focusing the window"
+    ],
     "0.3.33": [
       "[Improved] Add loading indicator when parsing Sketch files when ckecking out a branch",
       "[Improved] Clearer menu label for reverting commits",
