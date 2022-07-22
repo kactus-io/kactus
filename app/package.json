@@ -38,7 +38,7 @@
     "fs-admin": "^0.15.0",
     "fs-extra": "^9.0.1",
     "fuzzaldrin-plus": "^0.6.0",
-    "kactus-cli": "^0.6.1",
+    "kactus-cli": "^0.6.2",
     "keytar": "^7.2.0",
     "mem": "^4.3.0",
     "memoize-one": "^4.0.3",
