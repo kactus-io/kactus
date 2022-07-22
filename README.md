@@ -10,7 +10,7 @@
 
 ![CI](https://github.com/kactus-io/kactus/workflows/CI/badge.svg)
 ![Sketch.app](https://img.shields.io/badge/Sketch.app-43-brightgreen.svg)
-[![license](https://img.shields.io/github/license/kactus-io/kactus.svg?style=flat-square)](https://github.com/kactus-io/kactus/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/kactus-io/kactus.svg?style=flat-square)](https://github.com/kactus-io/kactus/blob/main/LICENSE)
 
 Kactus is a tool to bring proper version control _(as in git)_ to designers _(only sketch users for now, but we need to start somewhere, right?)_.
 
@@ -30,7 +30,7 @@ Download the installer for your operating system:
 
 ## Is Kactus right for me? What are the primary areas of focus?
 
-[This document](https://github.com/kactus-io/kactus/blob/master/docs/process/what-is-kactus.md) describes the focus of Kactus and who the product is most useful for.
+[This document](https://github.com/kactus-io/kactus/blob/main/docs/process/what-is-kactus.md) describes the focus of Kactus and who the product is most useful for.
 
 ## :cactus: I have a problem with Kactus
 
@@ -38,7 +38,7 @@ First, please search the [open issues](https://github.com/kactus-io/kactus/issue
 and [closed issues](https://github.com/kactus-io/kactus/issues?q=is%3Aclosed)
 to see if your issue hasn't already been reported (it may also be fixed).
 
-There is also a list of [known issues](https://github.com/kactus-io/kactus/blob/master/docs/known-issues.md)
+There is also a list of [known issues](https://github.com/kactus-io/kactus/blob/main/docs/known-issues.md)
 that are being tracked against Kactus, and some of these issues have workarounds.
 
 If you can't find an issue that matches what you're seeing, open a [new issue](https://github.com/kactus-io/kactus/issues/new)

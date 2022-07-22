@@ -82,7 +82,7 @@ export function getReleaseSummary(
 
 async function getChangeLog(): Promise<ReleaseMetadata[]> {
   const changelogURL =
-    'https://raw.githubusercontent.com/kactus-io/kactus/master/changelog.json'
+    'https://raw.githubusercontent.com/kactus-io/kactus/main/changelog.json'
   const releasesURL = 'https://api.github.com/repos/Kactus-io/kactus/releases'
   const query = __RELEASE_CHANNEL__ === 'beta' ? '?env=beta' : ''
 

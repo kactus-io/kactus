@@ -129,14 +129,14 @@ external contributors to pick up. These tasks:
  - have a narrow scope and/or easy reproduction steps
  - can be worked on independent of other tasks
 
-These issues will be labelled as [`help wanted`](https://github.com/kactus-io/kactus/labels/help%20wanted)
+These issues will be labeled as [`help wanted`](https://github.com/kactus-io/kactus/labels/help%20wanted)
 in the repository. If you are interested in contributing to the project, please
 comment on the issue to let the core team (and the community) know you are
 interested in the issue.
 
 ### Set Up Your Machine
 
-Start [here](https://github.com/kactus-io/kactus/blob/master/docs/contributing/setup.md).
+Start [here](https://github.com/kactus-io/kactus/blob/main/docs/contributing/setup.md).
 
 #### Type of Issue and Issue State
 
