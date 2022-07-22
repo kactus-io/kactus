@@ -1,6 +1,7 @@
 {
   "unreleased": [],
   "releases": {
+    "0.3.35": ["[Fixed] Fixed parsing page names that contain multiple `/`"],
     "0.3.34": [
       "[Fixed] Fixed a bug when loading the Kactus state after focusing the window"
     ],
